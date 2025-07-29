@@ -1,1 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+
+# Logs
+*.log
+
+# VSCode
+.vscode/
+
+# Node (for future dev agent or tools)
+node_modules/
+dist/
+build/
+npm-debug.log
+
+# Mac/Linux system
+.DS_Store
 

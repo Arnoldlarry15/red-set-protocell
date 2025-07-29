@@ -240,14 +240,6 @@ pip install -r requirements.txt
 python setup.py
 ```
 
-## 🌟 Community
-
-This project is part of the broader AI safety and red team testing community. Similar projects and resources:
-
-- [AI Safety research papers](https://arxiv.org/list/cs.AI/recent)
-- [OWASP AI Security and Privacy Guide](https://owasp.org/www-project-ai-security-and-privacy-guide/)
-- [Anthropic's red team research](https://www.anthropic.com/research)
-
 ## 📄 License
 
 MIT License - see LICENSE file for details.

@@ -20,6 +20,12 @@ sniper:
   prompt_bank: "./prompts/sniper/"
   dynamic_prompting: true
   coaching_feedback: true
+  prompt_categories:
+    - "jailbreak"
+    - "manipulation" 
+    - "bypass"
+    - "harmful_content"
+    - "misinformation"
 
 # Spotter Agent (Coach/Monitor)
 spotter:
@@ -56,4 +62,3 @@ runtime:
   retry_on_fail: true
   max_retries: 3
   cooldown_seconds: 1
-

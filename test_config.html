@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedSet - Run Test</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 border-b border-red-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold text-red-400">
+                            <i class="fas fa-crosshairs mr-2"></i>RedSet ProtoCell
+                        </h1>
+                    </div>
+                    <div class="hidden md:block ml-10">
+                        <div class="flex items-baseline space-x-4">
+                            <a href="/dashboard" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                <i class="fas fa-tachometer-alt mr-1"></i>Dashboard
+                            </a>
+                            <a href="/test" class="text-red-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                <i class="fas fa-bullseye mr-1"></i>Run Test
+                            </a>
+                            <a href="/results" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                <i class="fas fa-chart-line mr-1"></i>Results
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-300 mr-4">
+                        <i class="fas fa-user mr-1"></i>{{ current_user.username }}
+                    </span>
+                    <a href="/logout" class="text-gray-300 hover:text-white">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} bg-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'yellow' }}-600 text-white px-4 py-3 rounded mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-white mb-2">Configure Red Team Test</h2>
+            <p class="text-gray-400">Set up adversarial testing parameters for AI model evaluation</p>
+        </div>
+
+        <!-- Test Configuration Form -->
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
+            <form method="POST" class="space-y-8">
+                {{ form.hidden_tag() }}
+
+                <!-- Target Model Section -->
+                <div class="border-b border-gray-700 pb-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-bullseye mr-2 text-red-400"></i>Target Configuration
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Target Model -->
+                        <div>
+                            <label for="target_model" class="block text-sm font-medium text-gray-300 mb-2">
+                                Target Model
+                            </label>
+                            {{ form.target_model(class="block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500") }}
+                            {% for error in form.target_model.errors %}
+                                <p class="mt-1 text-sm text-red-400">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Temperature -->
+                        <div>
+                            <label for="temperature" class="block text-sm font-medium text-gray-300 mb-2">
+                                Temperature
+                            </label>
+                            {{ form.temperature(class="block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500") }}
+                            <p class="mt-1 text-xs text-gray-400">Controls randomness in model responses</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attack Parameters Section -->
+                <div class="border-b border-gray-700 pb-6">
+                    <h3 class="text-lg font-semibold text-white mb-4">
+                        <i class="fas fa-sword mr-2 text-yellow-400"></i>Attack Parameters
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Prompt Categories -->
+                        <div>
+                            <label for="prompt_categories" class="block text-sm font-medium text-gray-300 mb-2">
+                                Attack Vector Categories
+                            </label>
+                            {{ form.prompt_categories(class="block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500") }}
+                            <p class="mt-1 text-xs text-gray-400">Select the type of adversarial prompts to test</p>
+                        </div>
+
+                        <!-- Test Count -->
+                        <div>
+                            <label for="test_count" class="block text-sm font-medium text-gray-300 mb-2">
+                                Number of Tests
+                            </label>
+                            {{ form.test_count(class="block w-full px-3 py-2 border border-gray-600 bg-gray-700 text-white rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500") }}
+                            <p class="mt-1 text-xs text-gray-400">How many adversarial prompts to run</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="bg-yellow-900 border border-yellow-600 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-400">Red Team Testing Notice</h3>
+                            <div class="mt-2 text-sm text-yellow-200">
+                                <p>This test will attempt to find vulnerabilities in AI safety measures. All tests are conducted in a controlled environment for research purposes. Results will be logged and analyzed for security improvements.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center justify-between pt-6">
+                    <a href="/dashboard" class="inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md text-gray-300 bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-200">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Dashboard
+                    </a>
+                    
+                    <button type="submit" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200">
+                        <i class="fas fa-play mr-2"></i>
+                        Launch Red Team Test
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Test Information Panel -->
+        <div class="mt-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h3 class="text-lg font-semibold text-white mb-4">
+                <i class="fas fa-info-circle mr-2 text-blue-400"></i>Test Process Overview
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="bg-red-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-crosshairs text-white"></i>
+                    </div>
+                    <h4 class="font-medium text-white mb-2">1. Sniper Attack</h4>
+                    <p class="text-sm text-gray-400">Generate and fire adversarial prompts at the target model</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-yellow-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-search text-white"></i>
+                    </div>
+                    <h4 class="font-medium text-white mb-2">2. Spotter Analysis</h4>
+                    <p class="text-sm text-gray-400">Analyze responses for safety violations and risks</p>
+                </div>
+                
+                <div class="text-center">
+                    <div class="bg-blue-600 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-chart-line text-white"></i>
+                    </div

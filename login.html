@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RedSet Login</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 min-h-screen flex items-center justify-center">
+    <div class="max-w-md w-full space-y-8">
+        <!-- Header -->
+        <div class="text-center">
+            <div class="mx-auto h-20 w-20 bg-red-600 rounded-full flex items-center justify-center mb-4">
+                <i class="fas fa-crosshairs text-3xl text-white"></i>
+            </div>
+            <h2 class="text-3xl font-bold text-white">RedSet ProtoCell</h2>
+            <p class="mt-2 text-gray-400">AI Red Team Security Dashboard</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-2">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} bg-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'yellow' }}-600 text-white px-4 py-3 rounded">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Login Form -->
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700">
+            <form method="POST" class="space-y-6">
+                {{ form.hidden_tag() }}
+                
+                <!-- Username Field -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-300">
+                        <i class="fas fa-user mr-2"></i>Username
+                    </label>
+                    <div class="mt-1 relative">
+                        {{ form.username(class="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm", placeholder="Enter your username") }}
+                        {% if form.username.errors %}
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for error in form.username.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-300">
+                        <i class="fas fa-lock mr-2"></i>Password
+                    </label>
+                    <div class="mt-1 relative">
+                        {{ form.password(class="appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-400 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 sm:text-sm", placeholder="Enter your password") }}
+                        {% if form.password.errors %}
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i class="fas fa-exclamation-circle text-red-500"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% for error in form.password.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Login Button -->
+                <div>
+                    <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-200">
+                        <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                            <i class="fas fa-sign-in-alt text-red-300 group-hover:text-red-200"></i>
+                        </span>
+                        Sign In
+                    </button>
+                </div>
+
+                <!-- Security Notice -->
+                <div class="mt-6 p-4 bg-gray-700 border border-gray-600 rounded-md">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-shield-alt text-yellow-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-400">Security Notice</h3>
+                            <div class="mt-2 text-sm text-gray-300">
+                                <p>This is a secure red team testing environment. All access is logged and monitored. Unauthorized access is prohibited.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-gray-500 text-sm">
+            <p>&copy; 2024 RedSet ProtoCell. Secure AI Testing Platform.</p>
+        </div>
+    </div>
+
+    <script>
+        // Add some subtle animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const inputs = form.querySelectorAll('input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('ring-2', 'ring-red-500');
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('ring-2', 'ring-red-500');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

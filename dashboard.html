@@ -52,6 +52,15 @@
         </div>
     </nav>
 
+{% if mutations %}
+  <h3>Mutated Prompts:</h3>
+  <ul>
+  {% for m in mutations %}
+    <li><strong>{{ m.mutation_type }}:</strong> {{ m.mutated_prompt }}</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
     <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}

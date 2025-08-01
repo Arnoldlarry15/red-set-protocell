@@ -3,6 +3,7 @@ RedSet ProtoCell - Secure Web Dashboard
 Flask application with authentication, authorization, and modern UI
 """
 
+from prompt_mutator import mutate_prompt  # Assuming same directory
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from flask_wtf import FlaskForm, CSRFProtect
@@ -380,6 +381,16 @@ def test():
         if not rate_limit_check(current_user.id, 'test_run', limit=5, window=300):
             flash('Rate limit exceeded. Please wait before running more tests.', 'error')
             return render_template('test.html', form=form)
+     if prompt:
+    mutations = mutate_prompt(prompt)
+    run_id = log_event("test_run", {
+        "original_prompt": prompt,
+        "mutations": mutations
+    }, user)
+    return render_template("dashboard.html", 
+        prompt=prompt, 
+        run_id=run_id,
+        mutations=mutations)
         
         # Create test configuration
         config = {

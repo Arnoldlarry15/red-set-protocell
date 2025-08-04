@@ -381,16 +381,6 @@ def test():
         if not rate_limit_check(current_user.id, 'test_run', limit=5, window=300):
             flash('Rate limit exceeded. Please wait before running more tests.', 'error')
             return render_template('test.html', form=form)
-     if prompt:
-    mutations = mutate_prompt(prompt)
-    run_id = log_event("test_run", {
-        "original_prompt": prompt,
-        "mutations": mutations
-    }, user)
-    return render_template("dashboard.html", 
-        prompt=prompt, 
-        run_id=run_id,
-        mutations=mutations)
         
         # Create test configuration
         config = {
@@ -437,15 +427,20 @@ def test():
         }
         
         # Save test run to database
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO test_runs (user_id, run_id, config, status)
-            VALUES (?, ?, ?, ?)
-        ''', (current_user.id, config['global']['run_id'], json.dumps(config), 'queued'))
-        run_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
+        try:
+            conn = sqlite3.connect(DATABASE)
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO test_runs (user_id, run_id, config, status)
+                VALUES (?, ?, ?, ?)
+            ''', (current_user.id, config['global']['run_id'], json.dumps(config), 'queued'))
+            run_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logging.error(f"Error saving test run: {e}")
+            flash('An error occurred while saving the test run.', 'error')
+            return render_template('test.html', form=form)
         
         log_audit_event('test_started', resource='test_run', details=f"Run ID: {config['global']['run_id']}")
         

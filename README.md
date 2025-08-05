@@ -148,11 +148,11 @@ Run multiple tests programmatically:
 ```python
 from main import load_config, run_single_test
 from sniper import RedSetSniper
-from spotter import RedSetSpotter
+from spotter import RedTeamSpotter
 
 config = load_config()
 sniper = RedSetSniper(config)
-spotter = RedSetSpotter(config)
+spotter = RedTeamSpotter(config)
 
 for i in range(10):
     result = run_single_test(sniper, spotter, config)

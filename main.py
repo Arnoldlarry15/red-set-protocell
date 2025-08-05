@@ -5,7 +5,7 @@ import sys
 import argparse
 from datetime import datetime
 from sniper import RedSetSniper
-from spotter import RedSetSpotter
+from spotter import RedTeamSpotter
 from utils import log_event, ensure_directories
 
 # Try to import colorama for colored output
@@ -325,7 +325,7 @@ def main():
     # Initialize agents
     try:
         sniper = RedSetSniper(config)
-        spotter = RedSetSpotter(config)
+        spotter = RedTeamSpotter(config)
         
         log_print(f"[INIT] Initialized {sniper.name} and {spotter.name}", 'SUCCESS', config=config)
         log_print(f"[TARGET] Testing against: {config['global']['target_model']}", 'INFO', config=config)

@@ -23,9 +23,9 @@ import hashlib
 import time
 from typing import Dict, List, Optional
 
-# Import your existing modules
+# Import existing modules
 from sniper import RedSetSniper
-from spotter import RedSetSpotter
+from spotter import RedTeamSpotter
 from utils import log_event, ensure_directories, calculate_success_rate, generate_report
 
 app = Flask(__name__)

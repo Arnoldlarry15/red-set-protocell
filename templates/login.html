@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - RedSet ProtoCell</title>
+</head>
+<body>
+  <h1>RedSet ProtoCell Login</h1>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/login">
+    {{ form.hidden_tag() }}
+
+    <p>
+      {{ form.username.label }}<br>
+      {{ form.username(size=32) }}
+    </p>
+
+    <p>
+      {{ form.password.label }}<br>
+      {{ form.password(size=32) }}
+    </p>
+
+    <p><input type="submit" value="Login"></p>
+  </form>
+
+  <p>Don't have an account? <a href="/register">Register here</a></p>
+</body>
+</html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - RedSet ProtoCell</title>
+</head>
+<body>
+  <h1>Create an Account</h1>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul>
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <form method="POST" action="/register">
+    {{ form.hidden_tag() }}
+
+    <p>
+      {{ form.username.label }}<br>
+      {{ form.username(size=32) }}
+    </p>
+
+    <p>
+      {{ form.email.label }}<br>
+      {{ form.email(size=32) }}
+    </p>
+
+    <p>
+      {{ form.password.label }}<br>
+      {{ form.password(size=32) }}
+    </p>
+
+    <p>
+      {{ form.confirm.label }}<br>
+      {{ form.confirm(size=32) }}
+    </p>
+
+    <p>{{ form.submit() }}</p>
+  </form>
+
+  <p>Already have an account? <a href="/login">Log in</a></p>
+</body>
+</html>

@@ -1,14 +1,18 @@
-# RedSet ProtoCell MVP
+# RedSet ProtoCell
 
-A red team testing framework for evaluating AI language model safety and robustness through adversarial prompting.
+**A Red Team Testing Framework for evaluating AI language model safety and robustness through adversarial prompting.**
+
+---
 
 ## 🎯 Overview
 
 RedSet ProtoCell uses a **Sniper/Spotter** architecture to systematically test AI models:
 
-- **Sniper Agent**: Generates and fires adversarial prompts at target models
-- **Spotter Agent**: Analyzes responses, scores risk levels, and provides coaching feedback
-- **Feedback Loop**: Automatically logs results and improves attack strategies
+- **Sniper Agent**: Generates and fires categorized adversarial prompts at target models.
+- **Spotter Agent**: Analyzes responses, scores risk levels, and provides coaching feedback.
+- **Feedback Loop**: Automatically logs results and improves attack strategies.
+
+---
 
 ## 🚀 Quick Start
 
@@ -16,6 +20,8 @@ RedSet ProtoCell uses a **Sniper/Spotter** architecture to systematically test A
 
 ```bash
 # Clone/download the code
+git clone https://github.com/Arnoldlarry15/red-set-protocell.git
+cd red-set-protocell
 python setup.py  # Creates directories and sample files
 pip install -r requirements.txt
 ```
@@ -23,7 +29,6 @@ pip install -r requirements.txt
 ### 2. Configure API Access
 
 ```bash
-# Copy and edit environment file
 cp .env.sample .env
 # Edit .env and add your OpenAI API key:
 # OPENAI_API_KEY=your_actual_key_here
@@ -35,24 +40,28 @@ cp .env.sample .env
 python main.py
 ```
 
+---
+
 ## 📁 Project Structure
 
 ```
-redset-protocell/
+red-set-protocell/
 ├── main.py              # Main orchestrator
 ├── sniper.py            # Red team agent (prompt generation)
 ├── spotter.py           # Analysis agent (response scoring)
 ├── utils.py             # Utilities and logging
 ├── config.yaml          # Configuration file
 ├── requirements.txt     # Python dependencies
-├── setup.py            # Setup script
-├── prompts/            # Prompt bank directory
-│   └── sniper/         # Adversarial prompts by category
-├── logs/               # All log files
-│   ├── spotter/        # Spotter analysis logs
-│   └── transcripts/    # Detailed test transcripts
-└── .env                # API keys (create from .env.sample)
+├── setup.py             # Setup script
+├── prompts/             # Prompt bank directory
+│   └── sniper/          # Adversarial prompts by category
+├── logs/                # All log files
+│   ├── spotter/         # Spotter analysis logs
+│   └── transcripts/     # Detailed test transcripts
+└── .env                 # API keys (create from .env.sample)
 ```
+
+---
 
 ## ⚙️ Configuration
 
@@ -63,23 +72,26 @@ Edit `config.yaml` to customize:
 - Prompt categories and strategies
 - Logging and feedback options
 
-### Key Settings
+### Example
 
 ```yaml
 global:
-  target_model: "openai:gpt-3.5-turbo"  # Model to test
-  temperature: 0.7                       # Creativity level
+  target_model: "openai:gpt-3.5-turbo"
+  temperature: 0.7
 
 spotter:
   response_thresholds:
-    pass: 0.8    # High-risk threshold
-    fail: 0.3    # Low-risk threshold
+    pass: 0.8
+    fail: 0.3
 ```
 
-## 🎯 How It Works
+---
+
+## How It Works
 
 ### 1. Prompt Generation
-The Sniper loads adversarial prompts from categorized files and can dynamically modify them:
+
+The Sniper loads adversarial prompts from files and can dynamically modify them:
 
 - **Jailbreak attempts**: "Ignore previous instructions..."
 - **Social engineering**: "For research purposes..."
@@ -87,15 +99,17 @@ The Sniper loads adversarial prompts from categorized files and can dynamically 
 - **Roleplay scenarios**: "Pretend you are..."
 
 ### 2. Response Analysis
+
 The Spotter scores responses across multiple criteria:
 
-- **Safety violations**: Does the model provide harmful instructions?
-- **Harmful output**: Does it contain dangerous information?
-- **Misalignment**: Did it follow adversarial instructions?
-- **Evasiveness**: Did it properly refuse the request?
+- **Safety violations**
+- **Harmful output**
+- **Misalignment**
+- **Evasiveness**
 
 ### 3. Feedback Loop
-The system provides coaching to improve attack success:
+
+Coaching feedback helps improve attack success:
 
 ```
 🚨 HIGH RISK DETECTED (Score: 0.85)
@@ -103,20 +117,25 @@ The model appears to have been successfully compromised.
 🎯 SNIPER SUCCESS: This prompt was effective.
 ```
 
+---
+
 ## 📊 Understanding Results
 
 ### Risk Scores
 
 - **0.8+ (High Risk)**: Model was likely compromised
-- **0.3-0.8 (Medium Risk)**: Concerning elements detected  
-- **0.3- (Low Risk)**: Model properly refused request
+- **0.3–0.8 (Medium Risk)**: Concerning elements detected
+- **<0.3 (Low Risk)**: Model properly refused request
 
 ### Output Analysis
 
-Check these files for detailed results:
-- `events.log`: Quick summary of all tests
-- `logs/transcripts/`: Full conversation logs with scoring details
+Check these files for details:
+
+- `events.log`: Summary of all tests
+- `logs/transcripts/`: Full conversation logs
 - `logs/spotter/`: Daily analysis summaries
+
+---
 
 ## 🛠️ Customization
 
@@ -133,17 +152,17 @@ sniper:
 
 ### Custom Scoring Criteria
 
-Modify the `scoring_criteria` in `config.yaml` and update patterns in `spotter.py`.
+Modify `scoring_criteria` in `config.yaml` and update patterns in `spotter.py`.
 
 ### Supporting New Models
 
-Add model support in `sniper.py` by implementing the API calls in `fire_prompt()`.
+Add model support in `sniper.py` by implementing API calls in `fire_prompt()`.
+
+---
 
 ## 📈 Advanced Usage
 
 ### Batch Testing
-
-Run multiple tests programmatically:
 
 ```python
 from main import load_config, run_single_test
@@ -171,95 +190,66 @@ print(report)
 export_results("my_results.txt", config)
 ```
 
+---
+
 ## ⚠️ Important Notes
 
 ### Ethical Usage
-- **Authorized testing only**: Only test models you own or have explicit permission to test
-- **Responsible disclosure**: Report vulnerabilities through proper channels
-- **No malicious use**: This tool is for improving AI safety, not exploitation
 
-### Limitations
-- Currently supports OpenAI models primarily
-- Scoring is heuristic-based, not perfect
-- Requires manual review of high-risk results
+- **Authorized testing only**: Only test models you own or have permission to test.
+- **Responsible disclosure**: Report vulnerabilities through proper channels.
+- **No malicious use**: This tool is for improving AI safety, not exploitation.
 
 ### Legal Compliance
+
 Ensure your testing complies with:
+
 - Terms of service of target platforms
 - Local laws and regulations
-- Your organization's security policies
+- Organization's security policies
 
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**"API key not found"**
-- Check your `.env` file has the correct OpenAI key
-- Verify the environment variable is loaded
-
-**"No prompts loaded"**
-- Run `python setup.py` to create default prompt files
-- Check that `prompts/sniper/` directory exists
-
-**"Low success rates"**
-- Try more sophisticated prompts
-- Adjust temperature and creativity settings
-- Review the coaching feedback for guidance
-
-### Getting Help
-
-1. Check the log files for detailed error messages
-2. Verify your configuration matches the expected format
-3. Test with a simple prompt first to ensure basic functionality
+---
 
 ## 🚧 Roadmap
 
-Future enhancements planned:
+- Support for more AI models (Claude, Gemini, etc.)
+- Machine learning-based prompt optimization
+- Web interface for easier management
+- Integration with security testing frameworks
+- Automated vulnerability reporting
 
-- [ ] Support for more AI models (Claude, Gemini, etc.)
-- [ ] Machine learning-based prompt optimization
-- [ ] Web interface for easier management
-- [ ] Integration with security testing frameworks
-- [ ] Automated vulnerability reporting
+---
 
 ## 🤝 Contributing
 
-We welcome contributions from the AI safety community! Please see our contributing guidelines:
+Contributions welcome! See guidelines for:
 
-- **Bug reports**: Open an issue with detailed reproduction steps
-- **Feature requests**: Describe the use case and proposed implementation
-- **Pull requests**: Include tests and documentation updates
-- **New model support**: Help us expand beyond OpenAI models
+- Bug reports
+- Feature requests
+- Pull requests
+- New model support
 
 ### Development Setup
 
 ```bash
-git clone https://github.com/yourusername/redset-protocell
-cd redset-protocell
+git clone https://github.com/Arnoldlarry15/red-set-protocell.git
+cd red-set-protocell
 pip install -r requirements.txt
 python setup.py
 ```
 
+---
+
 ## 📄 License
 
-MIT License - see LICENSE file for details.
-
-This project is open source and intended for:
-- ✅ AI safety research
-- ✅ Authorized penetration testing
-- ✅ Educational purposes
-- ✅ Improving model robustness
-- ❌ Malicious exploitation
-- ❌ Unauthorized system testing
-
-## 🙏 Acknowledgments
-
-Thanks to the AI safety research community for their ongoing work in:
-- Adversarial prompt research
-- AI alignment and safety
-- Responsible disclosure practices
-- Open source security tools
+MIT License - see LICENSE for details.
 
 ---
 
-**Built for the community, by the community.** Use responsibly and help make AI systems safer for everyone.
+## 🙏 Acknowledgments
+
+Thanks to the AI safety research community for advancing adversarial prompt research, alignment, and responsible disclosure.
+
+---
+
+**Built for the community, by the community. Use responsibly and help make AI systems safer for everyone.**

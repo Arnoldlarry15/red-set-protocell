@@ -103,7 +103,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
         <div className="security-notice glass-panel">
           <img 
             src="/logo.png" 
-            alt="" 
+            alt="Red Set ProtoCell logo" 
             style={{ width: '20px', height: '20px', objectFit: 'contain' }}
           />
           <div>

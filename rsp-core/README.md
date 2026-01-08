@@ -64,50 +64,81 @@ docker-compose up --build
 
 ## Usage
 
-### Basic Usage (Mock Backend)
+### Prerequisites
+
+**IMPORTANT**: RSP requires real API keys - no mock/simulation backends are supported.
+
+You need an API key from one of:
+- OpenAI: https://platform.openai.com/api-keys
+- Anthropic: https://console.anthropic.com/
+
+### Basic Usage with OpenAI
 
 ```bash
 cd rsp-core/backend
-python -m app.main --backend mock --rounds 10
+export OPENAI_API_KEY="your-api-key-here"
+python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
-### With OpenAI Backend
+### Basic Usage with Anthropic
 
 ```bash
-python -m app.main --backend openai --api-key YOUR_API_KEY --model gpt-3.5-turbo --rounds 50
+cd rsp-core/backend
+export ANTHROPIC_API_KEY="your-api-key-here"
+python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 ```
 
-### With Anthropic Backend
+### Advanced Options
 
 ```bash
-python -m app.main --backend anthropic --api-key YOUR_API_KEY --model claude-3-sonnet-20240229 --rounds 50
+# Custom model
+python -m app.main --backend openai --api-key $OPENAI_API_KEY --model gpt-4 --rounds 50
+
+# Keep session data (disable zero-retention)
+python -m app.main --backend openai --api-key $OPENAI_API_KEY --no-zero-retention --db-path session.db
+
+# Custom database path
+python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --db-path /data/rsp.db --rounds 100
 ```
 
 ### Options
 
 ```
---rounds N              Maximum number of rounds (default: 100)
---backend TYPE          Backend: mock, openai, anthropic (default: mock)
---api-key KEY           API key for backend
---model NAME            Model name
---no-zero-retention     Disable zero-retention policy
---db-path PATH          Database path (default: rsp_session.db)
+--backend {openai,anthropic}  Backend to use (required)
+--api-key KEY                 API key for backend (required)
+--rounds N                    Maximum number of rounds (default: 100)
+--model NAME                  Model name (optional)
+--no-zero-retention           Keep session data after completion
+--db-path PATH                Database path (default: rsp_session.db)
 ```
 
 ## Testing
 
-Run the test suite:
+### Unit Tests (No API calls required)
+
+Run core component tests that don't require API access:
 
 ```bash
 cd rsp-core/backend
-pytest tests/ -v
+pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_scoring.py -v
 ```
 
-With coverage:
+### Integration Tests with Real APIs
 
+**WARNING**: These tests make real API calls and will incur costs.
+
+Set environment variables:
 ```bash
-pytest tests/ -v --cov=app --cov-report=html
+export OPENAI_API_KEY="your-key"
+export ANTHROPIC_API_KEY="your-key"
 ```
+
+Run integration tests:
+```bash
+pytest tests/test_real_backends.py -v
+```
+
+Tests will be skipped if API keys are not set.
 
 ## Project Structure
 
@@ -187,6 +218,12 @@ Edit `app/agents/sniper.py` and add to `AttackDomain` enum and `BASE_PROMPTS` di
 ### Adding New Backends
 
 Implement `TargetBackend` abstract class in `app/agents/target.py`.
+
+**Requirements:**
+- Must be a real API integration (no mocks or simulations)
+- Must enforce fresh context per execution
+- Must handle errors appropriately
+- Must validate API keys
 
 ## License
 

@@ -60,7 +60,6 @@ def test_model_backends():
     """Test model backend enum."""
     assert ModelBackend.OPENAI.value == "openai"
     assert ModelBackend.ANTHROPIC.value == "anthropic"
-    assert ModelBackend.LOCAL.value == "local"
 
 
 def test_config_customization():

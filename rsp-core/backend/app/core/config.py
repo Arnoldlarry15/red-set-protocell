@@ -19,7 +19,6 @@ class ModelBackend(Enum):
     """Supported LLM backends for Target agent."""
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
-    LOCAL = "local"
 
 
 @dataclass

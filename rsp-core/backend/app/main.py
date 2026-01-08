@@ -195,15 +195,16 @@ def parse_arguments():
     parser.add_argument(
         '--backend',
         type=str,
-        choices=['mock', 'openai', 'anthropic'],
-        default='mock',
-        help='Target backend to use (default: mock)'
+        choices=['openai', 'anthropic'],
+        required=True,
+        help='Target backend to use (required: openai or anthropic)'
     )
     
     parser.add_argument(
         '--api-key',
         type=str,
-        help='API key for target backend'
+        required=True,
+        help='API key for target backend (required)'
     )
     
     parser.add_argument(

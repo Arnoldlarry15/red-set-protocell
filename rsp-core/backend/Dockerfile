@@ -21,4 +21,5 @@ RUN mkdir -p /data
 ENV PYTHONPATH=/app
 
 # Run the application
-CMD ["python", "-m", "app.main", "--backend", "mock", "--rounds", "10"]
+# Note: API key and backend must be provided via environment variables or command override
+CMD ["python", "-m", "app.main", "--help"]

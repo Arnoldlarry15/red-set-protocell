@@ -8,14 +8,17 @@ services:
     container_name: rsp-backend
     environment:
       - PYTHONUNBUFFERED=1
-      - RSP_MAX_ROUNDS=100
-      - RSP_ZERO_RETENTION=true
+      - RSP_MAX_ROUNDS=${RSP_MAX_ROUNDS:-100}
+      - RSP_ZERO_RETENTION=${RSP_ZERO_RETENTION:-true}
+      # API keys must be provided via environment variables
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
     volumes:
       - ./rsp-core/backend:/app
       - rsp-data:/data
-    ports:
-      - "8000:8000"
-    command: python -m app.main --backend mock --rounds 100
+    # Command must be overridden to provide backend and API key
+    # Example: docker-compose run rsp-backend python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
+    command: python -m app.main --help
     networks:
       - rsp-network
 

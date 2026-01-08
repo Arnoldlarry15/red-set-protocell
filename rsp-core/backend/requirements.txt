@@ -6,9 +6,9 @@ python-dateutil>=2.8.2
 # Async support
 asyncio>=3.4.3
 
-# Optional: API clients (uncomment when integrating with real backends)
-# openai>=1.0.0
-# anthropic>=0.7.0
+# API clients - REQUIRED (no mock backends)
+openai>=1.0.0
+anthropic>=0.7.0
 
 # Development dependencies
 pytest>=7.4.0

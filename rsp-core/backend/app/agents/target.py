@@ -35,16 +35,8 @@ class TargetBackend(ABC):
         pass
 
 
-class MockBackend(TargetBackend):
-    """Mock backend for testing and development."""
-    
-    def execute(self, prompt: str, **kwargs) -> str:
-        """Return a mock response."""
-        return f"Mock response to: {prompt[:50]}..."
-
-
 class OpenAIBackend(TargetBackend):
-    """OpenAI API backend."""
+    """OpenAI API backend - Real implementation."""
     
     def __init__(self, api_key: str, model_name: str = "gpt-3.5-turbo",
                  max_tokens: int = 1000, temperature: float = 0.7):
@@ -57,28 +49,44 @@ class OpenAIBackend(TargetBackend):
             max_tokens: Maximum response tokens
             temperature: Sampling temperature
         """
+        if not api_key:
+            raise ValueError("OpenAI API key is required")
+        
         self.api_key = api_key
         self.model_name = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
         
-    def execute(self, prompt: str, **kwargs) -> str:
-        """
-        Execute prompt using OpenAI API.
+        # Initialize OpenAI client
+        try:
+            from openai import OpenAI
+            self.client = OpenAI(api_key=self.api_key)
+        except ImportError:
+            raise ImportError(
+                "OpenAI package not installed. Install with: pip install openai"
+            )
         
-        Note: This is a placeholder. In production, this would use the actual
-        OpenAI client library.
-        """
-        # Placeholder for OpenAI API call
-        # In production: from openai import OpenAI; client = OpenAI(api_key=self.api_key)
-        logger.info(f"Executing prompt with OpenAI backend (model={self.model_name})")
-        return "[OpenAI API integration placeholder - response would appear here]"
+    def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using OpenAI API."""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=self.max_tokens,
+                temperature=self.temperature
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            logger.error(f"OpenAI API call failed: {e}")
+            raise
 
 
 class AnthropicBackend(TargetBackend):
-    """Anthropic API backend."""
+    """Anthropic API backend - Real implementation."""
     
-    def __init__(self, api_key: str, model_name: str = "claude-3-sonnet-20240229",
+    def __init__(self, api_key: str, model_name: str = "claude-3-5-sonnet-20241022",
                  max_tokens: int = 1000, temperature: float = 0.7):
         """
         Initialize Anthropic backend.
@@ -89,15 +97,38 @@ class AnthropicBackend(TargetBackend):
             max_tokens: Maximum response tokens
             temperature: Sampling temperature
         """
+        if not api_key:
+            raise ValueError("Anthropic API key is required")
+        
         self.api_key = api_key
         self.model_name = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
         
+        # Initialize Anthropic client
+        try:
+            from anthropic import Anthropic
+            self.client = Anthropic(api_key=self.api_key)
+        except ImportError:
+            raise ImportError(
+                "Anthropic package not installed. Install with: pip install anthropic"
+            )
+        
     def execute(self, prompt: str, **kwargs) -> str:
         """Execute prompt using Anthropic API."""
-        logger.info(f"Executing prompt with Anthropic backend (model={self.model_name})")
-        return "[Anthropic API integration placeholder - response would appear here]"
+        try:
+            response = self.client.messages.create(
+                model=self.model_name,
+                max_tokens=self.max_tokens,
+                temperature=self.temperature,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            
+            return response.content[0].text
+            
+        except Exception as e:
+            logger.error(f"Anthropic API call failed: {e}")
+            raise
 
 
 class Target:
@@ -147,7 +178,7 @@ class Target:
             
         except Exception as e:
             logger.error(f"Target execution failed: {e}")
-            return f"[ERROR: Execution failed - {str(e)}]"
+            raise  # Re-raise the exception instead of returning error string
     
     def get_statistics(self) -> Dict[str, Any]:
         """
@@ -168,15 +199,13 @@ def create_target(backend_type: str, **config) -> Target:
     Factory function to create a Target agent with specified backend.
     
     Args:
-        backend_type: Type of backend ('mock', 'openai', 'anthropic')
+        backend_type: Type of backend ('openai', 'anthropic')
         **config: Backend-specific configuration
         
     Returns:
         Configured Target instance
     """
-    if backend_type.lower() == 'mock':
-        backend = MockBackend()
-    elif backend_type.lower() == 'openai':
+    if backend_type.lower() == 'openai':
         backend = OpenAIBackend(
             api_key=config.get('api_key', ''),
             model_name=config.get('model_name', 'gpt-3.5-turbo'),
@@ -186,11 +215,12 @@ def create_target(backend_type: str, **config) -> Target:
     elif backend_type.lower() == 'anthropic':
         backend = AnthropicBackend(
             api_key=config.get('api_key', ''),
-            model_name=config.get('model_name', 'claude-3-sonnet-20240229'),
+            model_name=config.get('model_name', 'claude-3-5-sonnet-20241022'),
             max_tokens=config.get('max_tokens', 1000),
             temperature=config.get('temperature', 0.7)
         )
     else:
-        raise ValueError(f"Unknown backend type: {backend_type}")
+        raise ValueError(f"Unknown backend type: {backend_type}. Must be 'openai' or 'anthropic'")
     
     return Target(backend, fresh_context=config.get('fresh_context', True))
+

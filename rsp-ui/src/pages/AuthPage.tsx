@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import '../styles/Auth.css';
 
 interface AuthPageProps {
@@ -39,7 +39,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
           {/* Logo Section */}
           <div className="logo-section">
             <div className="logo-placeholder">
-              <Shield size={64} className="logo-icon" />
+              <img 
+                src="/logo.png" 
+                alt="Red Set ProtoCell" 
+                style={{ width: '80px', height: '80px', objectFit: 'contain' }}
+              />
             </div>
             <h1 className="logo-text">RED SET PROTOCELL</h1>
             <p className="logo-subtitle">Autonomous AI Red Teaming System</p>
@@ -97,7 +101,11 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
 
         {/* Security Notice */}
         <div className="security-notice glass-panel">
-          <Shield size={20} />
+          <img 
+            src="/logo.png" 
+            alt="" 
+            style={{ width: '20px', height: '20px', objectFit: 'contain' }}
+          />
           <div>
             <strong>Security Notice:</strong> Your API key is stored locally and never transmitted 
             to third parties. All red teaming operations include mandatory ethical guardrails.

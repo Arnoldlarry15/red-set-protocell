@@ -438,11 +438,11 @@ In case of a security incident affecting users:
 
 ## Security Contact
 
-**Primary Contact**: security@[domain].com
+**Primary Contact**: Use [GitHub Security Advisories](https://github.com/Arnoldlarry15/red-set-protocell/security/advisories/new) for private vulnerability reports
 
-**PGP Key**: [Public key for encrypted communications]
+**Alternative**: Contact repository maintainer via GitHub profile
 
-**Response Time**: Within 24 hours
+**Response Time**: Within 24 hours (best effort)
 
 ---
 

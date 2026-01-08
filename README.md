@@ -1411,7 +1411,7 @@ Special thanks to the AI safety research community for inspiration and guidance.
 
 - **Issues**: [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Arnoldlarry15/red-set-protocell/discussions)
-- **Security**: security@[domain].com
+- **Security**: Use [GitHub Security Advisories](https://github.com/Arnoldlarry15/red-set-protocell/security/advisories/new) for private vulnerability reports
 
 ---
 

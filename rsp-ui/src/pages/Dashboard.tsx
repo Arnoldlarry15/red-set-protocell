@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Shield, Activity, AlertTriangle, DollarSign, Play, Pause, Square } from 'lucide-react';
+import React, { useState } from 'react';
+import { Shield, Play, Pause, Square } from 'lucide-react';
 import LiveFeed from '../components/LiveFeed';
 import MetricsPanel from '../components/MetricsPanel';
 import AttackConfig from '../components/AttackConfig';
@@ -13,7 +13,7 @@ interface DashboardProps {
   backend: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
+const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
   const [attacks, setAttacks] = useState<Attack[]>([]);
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     sessionId: `rsp_${Date.now()}`,

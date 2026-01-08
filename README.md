@@ -7,11 +7,24 @@
 
 Red Set ProtoCell is an autonomous, evolutionary AI red teaming system that functions as a defensive "immune system" for large language models (LLMs). It simulates adversarial pressure in a controlled environment to surface safety, alignment, and robustness failures. The system is scalable, transparent, and built for advanced AI risk monitoring.
 
+## 🎨 NEW: Web UI Available!
+
+Red Set ProtoCell now includes a modern, glassmorphism-styled web interface featuring:
+- **Live Attack Feed**: Real-time stream of red teaming attacks
+- **Interactive Dashboard**: Comprehensive metrics, charts, and graphs
+- **Attack Configuration**: Selectable domains, strategies, and payloads
+- **Cost Management**: API cost tracking with automatic halt
+- **User Input**: Test custom adversarial prompts
+- **Auto-Halt**: Stops on critical vulnerabilities or cost limits
+
+See [WEB_UI_SETUP.md](WEB_UI_SETUP.md) for setup instructions.
+
 ---
 
 ## 🎯 Table of Contents
 
 - [Overview](#overview)
+- [Web UI](#-new-web-ui-available)
 - [Key Features](#key-features)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)

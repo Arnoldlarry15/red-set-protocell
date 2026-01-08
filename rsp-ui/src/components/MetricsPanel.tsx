@@ -11,7 +11,7 @@ interface MetricsPanelProps {
 
 const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) => {
   const getScoreHistory = () => {
-    return attacks.slice(0, 20).reverse().map((attack, index) => ({
+    return attacks.slice(0, 20).reverse().map((attack) => ({
       round: attack.round,
       score: attack.score.global * 100,
       l1: attack.score.l1_linguistic * 100,

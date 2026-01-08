@@ -8,7 +8,7 @@ interface CostTrackerProps {
   status: string;
 }
 
-const CostTracker: React.FC<CostTrackerProps> = ({ currentCost, maxCost, status }) => {
+const CostTracker: React.FC<CostTrackerProps> = ({ currentCost, maxCost }) => {
   const percentage = (currentCost / maxCost) * 100;
   const isNearLimit = percentage >= 80;
   const isAtLimit = percentage >= 100;

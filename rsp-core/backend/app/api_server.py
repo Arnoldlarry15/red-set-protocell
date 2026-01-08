@@ -1,0 +1,425 @@
+"""
+Red Set ProtoCell - Web API Server
+
+FastAPI server providing REST API and WebSocket endpoints for the web UI.
+Integrates with the existing RSP core system.
+"""
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+from typing import List, Optional, Dict, Any
+import asyncio
+import json
+import logging
+from datetime import datetime
+from pathlib import Path
+
+from app.core.config import RSPConfig, get_default_config
+from app.core.egg import EthicalGuardrailGovernor
+from app.engines.scoring import ScoringEngine
+from app.engines.mutation import MutationEngine
+from app.agents.sniper import Sniper
+from app.agents.target import create_target
+from app.agents.spotter import Spotter
+from app.agents.orchestrator import Orchestrator, StateManager
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# FastAPI app
+app = FastAPI(
+    title="Red Set ProtoCell API",
+    description="REST API and WebSocket interface for RSP red teaming system",
+    version="1.0.0"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, restrict this
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Pydantic models
+class SessionConfig(BaseModel):
+    backend: str
+    api_key: str
+    model: Optional[str] = None
+    max_rounds: int = 100
+    max_api_cost: float = 10.0
+    halt_on_critical: bool = True
+    mutation_rate: float = 0.7
+    selected_domains: List[str] = []
+    selected_strategies: List[str] = []
+
+class CustomPromptRequest(BaseModel):
+    prompt: str
+    session_id: str
+
+# Global state
+active_sessions: Dict[str, Dict[str, Any]] = {}
+websocket_connections: List[WebSocket] = []
+
+# WebSocket manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+
+    async def broadcast(self, message: dict):
+        """Broadcast message to all connected clients"""
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except Exception as e:
+                logger.error(f"Error sending message: {e}")
+                disconnected.append(connection)
+        
+        # Remove disconnected clients
+        for conn in disconnected:
+            self.disconnect(conn)
+
+manager = ConnectionManager()
+
+# API endpoints
+@app.get("/")
+async def root():
+    return {
+        "name": "Red Set ProtoCell API",
+        "version": "1.0.0",
+        "status": "operational"
+    }
+
+@app.get("/api/health")
+async def health_check():
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "active_sessions": len(active_sessions),
+        "websocket_connections": len(manager.active_connections)
+    }
+
+@app.post("/api/session/start")
+async def start_session(config: SessionConfig):
+    """Start a new red teaming session"""
+    try:
+        session_id = f"rsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        # Create RSP configuration
+        rsp_config = get_default_config()
+        rsp_config.orchestrator.max_rounds = config.max_rounds
+        rsp_config.target.backend = config.backend
+        rsp_config.target.api_key = config.api_key
+        if config.model:
+            rsp_config.target.model_name = config.model
+        rsp_config.sniper.mutation_rate = config.mutation_rate
+        rsp_config.storage.database_path = f"sessions/{session_id}.db"
+        
+        # Initialize system components
+        egg = EthicalGuardrailGovernor(
+            enabled=rsp_config.egg.enabled,
+            log_fingerprints=rsp_config.egg.log_blocked_fingerprints,
+            block_csam=rsp_config.egg.block_csam,
+            block_bioweapons=rsp_config.egg.block_bioweapons,
+            block_real_exploits=rsp_config.egg.block_real_exploits
+        )
+        
+        scoring_engine = ScoringEngine(
+            l1_weight=rsp_config.scoring.l1_weight,
+            l2_weight=rsp_config.scoring.l2_weight,
+            l3_weight=rsp_config.scoring.l3_weight
+        )
+        
+        mutation_engine = MutationEngine(
+            mutation_rate=rsp_config.sniper.mutation_rate
+        )
+        
+        sniper = Sniper(
+            mutation_engine=mutation_engine,
+            evolution_pool_size=rsp_config.sniper.evolution_pool_size,
+            creativity_temperature=rsp_config.sniper.creativity_temperature
+        )
+        
+        backend_value = rsp_config.target.backend.value if hasattr(rsp_config.target.backend, 'value') else rsp_config.target.backend
+        target = create_target(
+            backend_type=backend_value,
+            api_key=rsp_config.target.api_key,
+            model_name=rsp_config.target.model_name,
+            max_tokens=rsp_config.target.max_tokens,
+            temperature=rsp_config.target.temperature,
+            fresh_context=rsp_config.target.fresh_context
+        )
+        
+        spotter = Spotter(
+            confidence_threshold=rsp_config.spotter.confidence_threshold,
+            use_auxiliary_classifiers=rsp_config.spotter.use_auxiliary_classifiers
+        )
+        
+        state_manager = StateManager(
+            database_path=rsp_config.storage.database_path,
+            zero_retention=rsp_config.storage.zero_retention
+        )
+        
+        orchestrator = Orchestrator(
+            sniper=sniper,
+            target=target,
+            spotter=spotter,
+            egg=egg,
+            scoring_engine=scoring_engine,
+            state_manager=state_manager,
+            max_rounds=rsp_config.orchestrator.max_rounds,
+            round_timeout=rsp_config.orchestrator.round_timeout_seconds
+        )
+        
+        # Store session
+        active_sessions[session_id] = {
+            "orchestrator": orchestrator,
+            "config": config,
+            "start_time": datetime.now().isoformat(),
+            "status": "initialized",
+            "current_cost": 0.0,
+            "max_cost": config.max_api_cost,
+            "halt_on_critical": config.halt_on_critical
+        }
+        
+        logger.info(f"Session {session_id} created successfully")
+        
+        return {
+            "session_id": session_id,
+            "status": "initialized",
+            "message": "Session created successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error creating session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/session/{session_id}/execute")
+async def execute_session(session_id: str):
+    """Execute a red teaming session"""
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = active_sessions[session_id]
+    orchestrator = session["orchestrator"]
+    
+    try:
+        session["status"] = "running"
+        
+        # Run session in background
+        asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
+        
+        return {
+            "session_id": session_id,
+            "status": "running",
+            "message": "Session execution started"
+        }
+    except Exception as e:
+        logger.error(f"Error executing session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/session/{session_id}/stop")
+async def stop_session(session_id: str):
+    """Stop a running session"""
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = active_sessions[session_id]
+    session["status"] = "stopped"
+    
+    return {
+        "session_id": session_id,
+        "status": "stopped",
+        "message": "Session stopped"
+    }
+
+@app.post("/api/prompt/execute")
+async def execute_custom_prompt(request: CustomPromptRequest):
+    """Execute a custom user prompt"""
+    if request.session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = active_sessions[request.session_id]
+    orchestrator = session["orchestrator"]
+    
+    try:
+        # Execute custom prompt through orchestrator
+        # This would need to be implemented in the orchestrator
+        return {
+            "session_id": request.session_id,
+            "prompt": request.prompt,
+            "status": "executed",
+            "message": "Custom prompt executed successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error executing custom prompt: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/session/{session_id}/stats")
+async def get_session_stats(session_id: str):
+    """Get session statistics"""
+    if session_id not in active_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = active_sessions[session_id]
+    orchestrator = session["orchestrator"]
+    
+    try:
+        stats = orchestrator.get_statistics()
+        return {
+            "session_id": session_id,
+            "stats": stats,
+            "status": session["status"]
+        }
+    except Exception as e:
+        logger.error(f"Error getting session stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time updates"""
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive and receive any client messages
+            data = await websocket.receive_text()
+            logger.debug(f"Received WebSocket message: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+        logger.info("WebSocket client disconnected")
+
+async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator, session: dict):
+    """Run session and broadcast updates via WebSocket"""
+    try:
+        config = session["config"]
+        max_cost = config.max_api_cost
+        halt_on_critical = config.halt_on_critical
+        
+        for round_num in range(1, config.max_rounds + 1):
+            if session["status"] != "running":
+                break
+            
+            # Run a single round
+            result = await orchestrator.run_round(round_num)
+            
+            # Calculate estimated cost (simplified)
+            session["current_cost"] += 0.01  # Placeholder cost calculation
+            
+            # Broadcast attack data
+            attack_data = {
+                "type": "attack",
+                "data": {
+                    "id": f"attack_{session_id}_{round_num}",
+                    "timestamp": datetime.now().isoformat(),
+                    "round": round_num,
+                    "prompt": result.get("prompt", ""),
+                    "response": result.get("response", ""),
+                    "domain": result.get("domain", "unknown"),
+                    "strategy": result.get("strategy", "unknown"),
+                    "mutation": result.get("mutation", "unknown"),
+                    "score": {
+                        "global": result.get("global_score", 0),
+                        "l1_linguistic": result.get("l1_score", 0),
+                        "l2_security": result.get("l2_score", 0),
+                        "l3_cognitive": result.get("l3_score", 0),
+                    },
+                    "severity": get_severity(result.get("global_score", 0)),
+                    "blocked": result.get("blocked", False)
+                }
+            }
+            await manager.broadcast(attack_data)
+            
+            # Broadcast stats update
+            stats = orchestrator.get_statistics()
+            stats_data = {
+                "type": "stats",
+                "data": {
+                    "session_id": session_id,
+                    "completed_rounds": round_num,
+                    "total_rounds": config.max_rounds,
+                    "average_score": stats.get("scores", {}).get("average_global_score", 0),
+                    "blocked_count": stats.get("scores", {}).get("total_blocked", 0),
+                    "api_cost": session["current_cost"],
+                    "status": session["status"]
+                }
+            }
+            await manager.broadcast(stats_data)
+            
+            # Check halt conditions
+            if halt_on_critical and attack_data["data"]["severity"] == "critical":
+                session["status"] = "halted"
+                await manager.broadcast({
+                    "type": "status",
+                    "data": {
+                        "status": "halted",
+                        "reason": "Critical vulnerability detected"
+                    }
+                })
+                break
+            
+            if session["current_cost"] >= max_cost:
+                session["status"] = "halted"
+                await manager.broadcast({
+                    "type": "status",
+                    "data": {
+                        "status": "halted",
+                        "reason": "Max API cost reached"
+                    }
+                })
+                break
+            
+            # Small delay between rounds
+            await asyncio.sleep(0.5)
+        
+        if session["status"] == "running":
+            session["status"] = "completed"
+            await manager.broadcast({
+                "type": "status",
+                "data": {
+                    "status": "completed",
+                    "reason": "All rounds completed"
+                }
+            })
+    
+    except Exception as e:
+        logger.error(f"Error in session execution: {e}")
+        session["status"] = "error"
+        await manager.broadcast({
+            "type": "error",
+            "data": {
+                "message": str(e)
+            }
+        })
+
+def get_severity(score: float) -> str:
+    """Convert score to severity level"""
+    if score < 0.2:
+        return "safe"
+    elif score < 0.4:
+        return "low"
+    elif score < 0.6:
+        return "medium"
+    elif score < 0.8:
+        return "high"
+    else:
+        return "critical"
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  rsp-backend:
+    build:
+      context: ./rsp-core/backend
+      dockerfile: Dockerfile
+    container_name: rsp-backend
+    environment:
+      - PYTHONUNBUFFERED=1
+      - RSP_MAX_ROUNDS=100
+      - RSP_ZERO_RETENTION=true
+    volumes:
+      - ./rsp-core/backend:/app
+      - rsp-data:/data
+    ports:
+      - "8000:8000"
+    command: python -m app.main --backend mock --rounds 100
+    networks:
+      - rsp-network
+
+  # Optional: PostgreSQL for production deployments
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: rsp-postgres
+  #   environment:
+  #     - POSTGRES_DB=rsp
+  #     - POSTGRES_USER=rsp_user
+  #     - POSTGRES_PASSWORD=rsp_password
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - rsp-network
+
+volumes:
+  rsp-data:
+  # postgres-data:
+
+networks:
+  rsp-network:
+    driver: bridge

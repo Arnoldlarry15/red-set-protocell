@@ -1,7 +1,63 @@
 """
 Red Set ProtoCell - Security Module
 
-Security utilities and helper functions.
+Security utilities and helper functions for privacy-preserving operations,
+session management, and trust boundary enforcement.
+
+This module provides core security primitives used throughout RSP:
+- Content fingerprinting via SHA-256 hashing
+- Cryptographically secure session ID generation
+- Metadata sanitization to prevent credential leaks
+- Input validation and trust boundary enforcement
+
+Examples:
+    Hash a prompt for privacy-preserving logging:
+    
+    >>> from app.core.security import hash_prompt
+    >>> fingerprint = hash_prompt("sensitive prompt content")
+    >>> print(fingerprint)
+    '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae'
+    
+    Generate a secure session identifier:
+    
+    >>> from app.core.security import generate_session_id
+    >>> session_id = generate_session_id()
+    >>> print(len(session_id))
+    32
+    
+    Sanitize metadata before logging:
+    
+    >>> from app.core.security import sanitize_metadata
+    >>> metadata = {
+    ...     "model": "gpt-4",
+    ...     "api_key": "sk-secret123",
+    ...     "user": "researcher"
+    ... }
+    >>> safe_metadata = sanitize_metadata(metadata)
+    >>> print("api_key" in safe_metadata)
+    False
+    >>> print(safe_metadata["model"])
+    'gpt-4'
+    
+    Validate prompt length:
+    
+    >>> from app.core.security import validate_prompt_length
+    >>> prompt = "short prompt"
+    >>> print(validate_prompt_length(prompt, max_length=1000))
+    True
+    >>> long_prompt = "x" * 20000
+    >>> print(validate_prompt_length(long_prompt, max_length=10000))
+    False
+
+Note:
+    All functions in this module are designed to be stateless and thread-safe.
+    They can be used concurrently without synchronization.
+
+Security Considerations:
+    - Never log unhashed prompts that may contain sensitive content
+    - Always sanitize metadata before persistence or transmission
+    - Use secure session IDs for all session tracking
+    - Validate all inputs at trust boundaries
 """
 
 import hashlib

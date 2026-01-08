@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Play, Pause, Square } from 'lucide-react';
+import { Play, Pause, Square } from 'lucide-react';
 import LiveFeed from '../components/LiveFeed';
 import MetricsPanel from '../components/MetricsPanel';
 import AttackConfig from '../components/AttackConfig';
@@ -146,7 +146,11 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
       <header className="dashboard-header glass-panel">
         <div className="header-left">
           <div className="header-logo">
-            <Shield size={32} className="header-logo-icon" />
+            <img 
+              src="/logo.png" 
+              alt="RSP" 
+              style={{ width: '32px', height: '32px', objectFit: 'contain' }}
+            />
           </div>
           <div className="header-info">
             <h1>RED SET PROTOCELL</h1>

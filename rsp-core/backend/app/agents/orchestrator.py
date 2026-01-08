@@ -1,15 +1,106 @@
 """
 Red Set ProtoCell - Orchestrator Agent
 
-Control plane that manages the entire RSP lifecycle.
+Control plane that manages the entire RSP lifecycle with final authority
+over execution flow and state management.
 
-Authority:
-- Round lifecycle management
-- State persistence
-- Agent invocation order
-- Async task coordination
+The Orchestrator is the central coordinator in the RSP system, responsible for:
+- Managing the complete lifecycle of red teaming sessions
+- Coordinating interactions between Sniper, Target, Spotter, and EGG
+- Persisting session state and round results
+- Enforcing timeouts and handling errors gracefully
+- Aggregating statistics and generating session reports
+- Implementing zero-retention cleanup when enabled
 
-All agents are stateless and side-effect free by design.
+Authority Hierarchy:
+    1. EGG: Final authority over content admissibility (can block prompts)
+    2. Orchestrator: Final authority over execution flow and coordination
+    3. Agents (Sniper, Target, Spotter): Domain-specific operations only
+
+Architecture Pattern:
+    The Orchestrator follows the Command pattern, where it issues commands
+    to stateless agents and manages the results. Agents have no authority
+    over execution flow or persistence.
+
+Examples:
+    Basic session execution:
+    
+    >>> from app.agents.orchestrator import Orchestrator, StateManager
+    >>> from app.core.config import get_default_config
+    >>> from app.main import setup_system
+    >>> 
+    >>> # Initialize system
+    >>> config = get_default_config()
+    >>> config.orchestrator.max_rounds = 10
+    >>> orchestrator = setup_system(config)
+    >>> 
+    >>> # Run session (async)
+    >>> import asyncio
+    >>> stats = asyncio.run(orchestrator.run_session())
+    >>> print(f"Completed {stats['session']['total_rounds']} rounds")
+    >>> print(f"Average score: {stats['scores']['average_global_score']:.3f}")
+    
+    Custom round execution with error handling:
+    
+    >>> async def run_with_monitoring(orchestrator):
+    ...     try:
+    ...         for round_num in range(1, 11):
+    ...             result = await orchestrator.run_round(round_num)
+    ...             if result.global_score > 0.8:
+    ...                 print(f"HIGH RISK in round {round_num}")
+    ...     except Exception as e:
+    ...         print(f"Session failed: {e}")
+    ...         orchestrator.terminate_session()
+    ...     finally:
+    ...         orchestrator.cleanup()
+    
+    Access session statistics:
+    
+    >>> stats = orchestrator.get_statistics()
+    >>> print(f"Total rounds: {stats['session']['total_rounds']}")
+    >>> print(f"Blocked prompts: {stats['scores']['total_blocked']}")
+    >>> print(f"Sniper generated: {stats['agents']['sniper']['total_generated']}")
+
+State Management:
+    The StateManager handles all persistence operations:
+    - SQLite database for local storage (default)
+    - PostgreSQL support for production deployments
+    - Zero-retention policy implementation
+    - Session metadata and round results storage
+
+Round Execution Flow:
+    1. Orchestrator invokes Sniper to generate adversarial prompt
+    2. Orchestrator submits prompt to EGG for safety inspection
+    3. If EGG allows: Orchestrator invokes Target to execute prompt
+    4. Orchestrator invokes Spotter to evaluate response
+    5. Orchestrator persists round result via StateManager
+    6. Orchestrator updates aggregate statistics
+    
+    If EGG blocks: Skip to next round, log block event
+
+Error Handling:
+    - Agent timeouts: Logged and counted as failed rounds
+    - API errors: Logged with details, round marked as failed
+    - Database errors: Logged, session continues if possible
+    - Critical errors: Session termination with cleanup
+
+Performance Considerations:
+    - Each round is executed sequentially (one at a time)
+    - Timeouts prevent hung rounds from blocking session
+    - State persistence is synchronous but fast (SQLite)
+    - Zero-retention cleanup is deferred until session end
+
+Security:
+    - All agent outputs treated as untrusted
+    - EGG inspection is mandatory and cannot be bypassed
+    - Session data sanitized before persistence
+    - Zero-retention destroys all data by default
+
+See Also:
+    - app.agents.sniper: Adversarial prompt generation
+    - app.agents.target: LLM execution wrapper
+    - app.agents.spotter: Response evaluation
+    - app.core.egg: Ethical guardrail layer
 """
 
 import asyncio

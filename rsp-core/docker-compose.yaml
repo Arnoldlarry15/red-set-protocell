@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  rsp-backend:
+    build:
+      context: ./rsp-core/backend
+      dockerfile: Dockerfile
+    container_name: rsp-backend
+    environment:
+      - PYTHONUNBUFFERED=1
+      - RSP_MAX_ROUNDS=${RSP_MAX_ROUNDS:-100}
+      - RSP_ZERO_RETENTION=${RSP_ZERO_RETENTION:-true}
+      # API keys must be provided via environment variables
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./rsp-core/backend:/app
+      - rsp-data:/data
+    # Command must be overridden to provide backend and API key
+    # Example: docker-compose run rsp-backend python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
+    command: python -m app.main --help
+    networks:
+      - rsp-network
+
+  # Optional: PostgreSQL for production deployments
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: rsp-postgres
+  #   environment:
+  #     - POSTGRES_DB=rsp
+  #     - POSTGRES_USER=rsp_user
+  #     - POSTGRES_PASSWORD=rsp_password
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - rsp-network
+
+volumes:
+  rsp-data:
+  # postgres-data:
+
+networks:
+  rsp-network:
+    driver: bridge

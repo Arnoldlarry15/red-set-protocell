@@ -207,7 +207,7 @@ class CustomHTTPBackend(TargetBackend):
             api_key: Optional API key
             max_tokens: Maximum response tokens
             temperature: Sampling temperature
-            request_format: Request format ('openai' or 'anthropic' compatible)
+            request_format: Request format ('openai', 'anthropic', or 'generic')
             headers: Additional HTTP headers
         """
         if not api_url:

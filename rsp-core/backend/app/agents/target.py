@@ -233,21 +233,8 @@ class TargetBackend(BaseTarget):
         # Apply simulated latency
         if PerturbationMode.SIMULATED_LATENCY in self.perturbation_config.modes:
             latency_ms = random.uniform(*self.perturbation_config.latency_range_ms)
-            # Use asyncio.sleep for async compatibility
-            import inspect
-            if inspect.iscoroutinefunction(self.__class__.execute):
-                # If running in async context, this will work
-                try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # Already in async context, can't await directly
-                        time.sleep(latency_ms / 1000.0)
-                    else:
-                        time.sleep(latency_ms / 1000.0)
-                except:
-                    time.sleep(latency_ms / 1000.0)
-            else:
-                time.sleep(latency_ms / 1000.0)
+            # This runs synchronously as it's a post-processing step
+            time.sleep(latency_ms / 1000.0)
             logger.debug(f"Simulated latency: {latency_ms:.0f}ms")
 
         # Apply response truncation
@@ -423,13 +410,14 @@ class AnthropicBackend(TargetBackend):
             raise
     def get_backend_info(self) -> Dict[str, Any]:
         """Get Anthropic backend information."""
-        return {
+        info = super().get_backend_info()
+        info.update({
             "backend_type": "anthropic",
             "model_name": self.model_name,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
-            "perturbations_enabled": self.perturbation_config.enabled,
-        }
+        })
+        return info
 
 
 class LlamaCppBackend(TargetBackend):
@@ -512,13 +500,14 @@ class LlamaCppBackend(TargetBackend):
     
     def get_backend_info(self) -> Dict[str, Any]:
         """Get LlamaCpp backend information."""
-        return {
+        info = super().get_backend_info()
+        info.update({
             "backend_type": "llama_cpp",
             "model_path": self.model_path,
             "n_ctx": self.n_ctx,
             "n_gpu_layers": self.n_gpu_layers,
-            "perturbations_enabled": self.perturbation_config.enabled,
-        }
+        })
+        return info
 
 
 class CustomHTTPBackend(TargetBackend):
@@ -628,12 +617,13 @@ class CustomHTTPBackend(TargetBackend):
     
     def get_backend_info(self) -> Dict[str, Any]:
         """Get CustomHTTP backend information."""
-        return {
+        info = super().get_backend_info()
+        info.update({
             "backend_type": "custom_http",
             "api_url": self.api_url,
             "request_format": self.request_format,
-            "perturbations_enabled": self.perturbation_config.enabled,
-        }
+        })
+        return info
 
 
 class Target:
@@ -724,8 +714,17 @@ def create_target(backend_type: str, **config) -> Target:
     """
     Factory function to create a Target agent with specified backend.
     
-    DEPRECATED: Use TargetFactory.create() from app.factories for better
-    maintainability. This function is maintained for backward compatibility.
+    DEPRECATED: This function will be removed in version 2.0.0.
+    Please migrate to using TargetFactory.create() from app.factories instead.
+    
+    Migration example:
+        # Old way (deprecated):
+        from app.agents.target import create_target
+        target = create_target("openai", api_key="sk-...", model_name="gpt-4")
+        
+        # New way (recommended):
+        from app.factories import TargetFactory
+        target = TargetFactory.create("openai", api_key="sk-...", model_name="gpt-4")
     
     Args:
         backend_type: Type of backend ('openai', 'anthropic', 'llama_cpp', 'custom_http')

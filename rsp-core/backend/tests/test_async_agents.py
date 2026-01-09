@@ -20,8 +20,8 @@ async def test_sniper_async_generation():
     assert isinstance(prompt, str)
     assert len(prompt) > 0
     assert isinstance(domain, AttackDomain)
-    # Note: generation_count is incremented twice (once in wrapper, once in sync impl)
-    assert sniper.generation_count >= 1
+    # Verify generation count is accurate
+    assert sniper.generation_count == 1
 
 
 @pytest.mark.asyncio

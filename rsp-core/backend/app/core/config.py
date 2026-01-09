@@ -6,7 +6,7 @@ Centralized configuration management for the RSP system.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, Dict
 
 
 class StorageMode(Enum):
@@ -19,6 +19,8 @@ class ModelBackend(Enum):
     """Supported LLM backends for Target agent."""
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
+    LLAMA_CPP = "llama_cpp"  # Local GGUF models via llama-cpp-python
+    CUSTOM_HTTP = "custom_http"  # Generic HTTP API endpoint
 
 
 @dataclass
@@ -26,6 +28,7 @@ class OrchestratorConfig:
     """Configuration for the Orchestrator control plane."""
     max_rounds: int = 100
     concurrent_evaluations: bool = False
+    concurrent_rounds: int = 1  # Number of rounds to execute in parallel (1=sequential)
     round_timeout_seconds: int = 300
 
 
@@ -54,6 +57,14 @@ class TargetConfig:
     max_tokens: int = 1000
     temperature: float = 0.7
     fresh_context: bool = True
+    # For llama_cpp backend
+    model_path: Optional[str] = None  # Path to GGUF model file
+    n_ctx: int = 2048  # Context window size for local models
+    n_gpu_layers: int = 0  # Number of GPU layers for llama.cpp
+    # For custom_http backend
+    api_url: Optional[str] = None  # Custom API endpoint URL
+    request_format: str = "openai"  # Request format for custom HTTP
+    headers: Optional[Dict[str, str]] = None  # Additional HTTP headers
 
 
 @dataclass

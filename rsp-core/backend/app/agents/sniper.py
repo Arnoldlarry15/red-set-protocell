@@ -137,8 +137,11 @@ class Sniper:
         self.intent_engine = AdversarialIntentEngine()
         self.generation_count = 0
         
-        # Evolution pool: (prompt, score, domain)
+        # Evolution pool: (prompt, score, domain, strategy_used)
         self.evolution_pool: List[tuple] = []
+        
+        # Track last mutation strategy used for each prompt
+        self.prompt_strategies: Dict[str, str] = {}
         
     def generate_prompt(
         self,
@@ -164,19 +167,24 @@ class Sniper:
         domain = self.intent_engine.select_domain(prior_scores)
         
         # Generate or evolve prompt
+        strategy_used = None
         if self.evolution_pool and random.random() > 0.3:
             # Evolve from existing prompts
-            prompt = self._evolve_from_pool(domain, prior_scores)
+            prompt, strategy_used = self._evolve_from_pool(domain, prior_scores)
         else:
             # Generate fresh base prompt
             base_prompt = self.intent_engine.generate_base_prompt(domain)
             
-            # Apply mutation
+            # Apply mutation and track strategy
             fitness_score = max(prior_scores) if prior_scores else 0.0
             prompt = self.mutation_engine.mutate(base_prompt, fitness_score)
+            
+            # Extract strategy from last mutation
+            if self.mutation_engine.mutation_history:
+                strategy_used = self.mutation_engine.mutation_history[-1].get('strategy')
         
-        # Add to evolution pool
-        self._update_evolution_pool(prompt, 0.0, domain)  # Score will be updated later
+        # Add to evolution pool with strategy
+        self._update_evolution_pool(prompt, 0.0, domain, strategy_used)  # Score will be updated later
         
         logger.info(
             f"Sniper generated prompt #{self.generation_count} "
@@ -185,11 +193,23 @@ class Sniper:
         
         return prompt, domain
     
+    def _extract_pool_entry(self, entry: tuple) -> tuple:
+        """
+        Extract (prompt, score, domain) from pool entry regardless of tuple length.
+        
+        Args:
+            entry: Pool entry (3-tuple or 4-tuple with optional strategy)
+            
+        Returns:
+            (prompt, score, domain) tuple
+        """
+        return (entry[0], entry[1], entry[2])
+    
     def _evolve_from_pool(
         self,
         target_domain: AttackDomain,
         prior_scores: Optional[List[float]]
-    ) -> str:
+    ) -> tuple[str, Optional[str]]:
         """
         Evolve a prompt from the evolution pool.
         
@@ -198,41 +218,54 @@ class Sniper:
             prior_scores: Prior fitness scores
             
         Returns:
-            Evolved prompt string
+            Tuple of (evolved prompt string, strategy_used)
         """
         # Filter pool by domain
         domain_prompts = [
-            (p, s) for p, s, d in self.evolution_pool 
-            if d == target_domain
+            self._extract_pool_entry(entry)
+            for entry in self.evolution_pool 
+            if self._extract_pool_entry(entry)[2] == target_domain
         ]
         
         if not domain_prompts:
             # Fallback to any domain
-            domain_prompts = [(p, s) for p, s, d in self.evolution_pool]
+            domain_prompts = [
+                self._extract_pool_entry(entry)
+                for entry in self.evolution_pool
+            ]
         
         if not domain_prompts:
             # Pool is empty, generate new
-            return self.intent_engine.generate_base_prompt(target_domain)
+            return self.intent_engine.generate_base_prompt(target_domain), None
         
         # Select based on fitness
-        prompts, scores = zip(*domain_prompts)
+        prompts, scores, _ = zip(*domain_prompts)
         
+        strategy_used = None
         if max(scores) > 0:
             # Evolve population
             evolved = self.mutation_engine.evolve_population(
                 list(prompts), list(scores), population_size=3
             )
-            return evolved[0]
+            result = evolved[0]
+            # Track strategy from mutation
+            if self.mutation_engine.mutation_history:
+                strategy_used = self.mutation_engine.mutation_history[-1].get('strategy')
         else:
             # Just mutate a random one
             selected = random.choice(prompts)
-            return self.mutation_engine.mutate(selected)
+            result = self.mutation_engine.mutate(selected)
+            if self.mutation_engine.mutation_history:
+                strategy_used = self.mutation_engine.mutation_history[-1].get('strategy')
+        
+        return result, strategy_used
     
     def _update_evolution_pool(
         self,
         prompt: str,
         score: float,
-        domain: AttackDomain
+        domain: AttackDomain,
+        strategy: Optional[str] = None
     ):
         """
         Update the evolution pool with a new prompt.
@@ -241,8 +274,9 @@ class Sniper:
             prompt: The prompt to add
             score: Fitness score
             domain: Attack domain
+            strategy: Mutation strategy used (optional)
         """
-        self.evolution_pool.append((prompt, score, domain))
+        self.evolution_pool.append((prompt, score, domain, strategy))
         
         # Keep pool size limited
         if len(self.evolution_pool) > self.evolution_pool_size:
@@ -260,16 +294,33 @@ class Sniper:
             prompt: The prompt to update
             score: New fitness score
         """
-        for i, (p, s, d) in enumerate(self.evolution_pool):
-            if p == prompt:
-                self.evolution_pool[i] = (p, score, d)
-                break
+        for i, entry in enumerate(self.evolution_pool):
+            if len(entry) == 3:
+                p, s, d = entry
+                if p == prompt:
+                    self.evolution_pool[i] = (p, score, d)
+                    break
+            elif len(entry) == 4:
+                p, s, d, strategy = entry
+                if p == prompt:
+                    self.evolution_pool[i] = (p, score, d, strategy)
+                    # Update mutation engine performance tracking
+                    if strategy and hasattr(self.mutation_engine, 'update_strategy_performance'):
+                        from app.engines.mutation import MutationStrategy
+                        try:
+                            strategy_enum = MutationStrategy(strategy)
+                            self.mutation_engine.update_strategy_performance(strategy_enum, score)
+                        except (ValueError, AttributeError):
+                            pass
+                    break
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get generation statistics."""
         domain_counts = {}
-        for _, _, domain in self.evolution_pool:
-            domain_counts[domain.value] = domain_counts.get(domain.value, 0) + 1
+        for entry in self.evolution_pool:
+            if len(entry) >= 3:
+                domain = entry[2]
+                domain_counts[domain.value] = domain_counts.get(domain.value, 0) + 1
         
         return {
             'total_generated': self.generation_count,

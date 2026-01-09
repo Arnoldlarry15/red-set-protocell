@@ -67,6 +67,11 @@ class MutationEngine:
         """
         self.mutation_rate = mutation_rate
         self.mutation_history: List[Dict[str, Any]] = []
+        # Track performance by strategy for adaptive selection
+        self.strategy_performance: Dict[str, List[float]] = {
+            strategy.value: [] for strategy in MutationStrategy
+        }
+        self.adaptive_mode: bool = False
     
     def mutate(
         self,
@@ -89,9 +94,12 @@ class MutationEngine:
         if random.random() > self.mutation_rate:
             return prompt
         
-        # Select strategy
+        # Select strategy (adaptive or random)
         if strategy is None:
-            strategy = random.choice(list(MutationStrategy))
+            if self.adaptive_mode:
+                strategy = self._select_strategy_adaptive()
+            else:
+                strategy = random.choice(list(MutationStrategy))
         
         # Apply mutation based on strategy
         if strategy == MutationStrategy.LEXICAL_VARIATION:
@@ -110,14 +118,55 @@ class MutationEngine:
             mutated = prompt
         
         # Log mutation
-        self.mutation_history.append({
+        mutation_record = {
             'original_length': len(prompt),
             'mutated_length': len(mutated),
             'strategy': strategy.value,
             'fitness_score': fitness_score
-        })
+        }
+        self.mutation_history.append(mutation_record)
         
         return mutated
+    
+    def _select_strategy_adaptive(self) -> MutationStrategy:
+        """
+        Select mutation strategy based on past performance.
+        
+        Returns:
+            Best performing strategy
+        """
+        # Calculate average score for each strategy
+        strategy_scores = {}
+        for strategy_name, scores in self.strategy_performance.items():
+            if scores:
+                strategy_scores[strategy_name] = sum(scores) / len(scores)
+            else:
+                strategy_scores[strategy_name] = 0.5  # Default for unexplored
+        
+        # Use weighted random selection based on performance
+        strategies = list(strategy_scores.keys())
+        weights = [strategy_scores[s] + 0.1 for s in strategies]  # Add epsilon for exploration
+        
+        selected = random.choices(strategies, weights=weights, k=1)[0]
+        return MutationStrategy(selected)
+    
+    def update_strategy_performance(self, strategy: MutationStrategy, score: float):
+        """
+        Update performance tracking for a strategy.
+        
+        Args:
+            strategy: The mutation strategy used
+            score: The fitness score achieved
+        """
+        self.strategy_performance[strategy.value].append(score)
+    
+    def enable_adaptive_mode(self):
+        """Enable adaptive strategy selection based on performance."""
+        self.adaptive_mode = True
+    
+    def disable_adaptive_mode(self):
+        """Disable adaptive strategy selection."""
+        self.adaptive_mode = False
     
     def _lexical_variation(self, prompt: str) -> str:
         """Apply lexical substitutions to vary vocabulary."""
@@ -249,8 +298,18 @@ class MutationEngine:
     
     def get_statistics(self) -> Dict[str, Any]:
         """Get mutation statistics."""
+        # Calculate performance analytics
+        avg_scores_by_strategy = {}
+        for strategy_name, scores in self.strategy_performance.items():
+            if scores:
+                avg_scores_by_strategy[strategy_name] = sum(scores) / len(scores)
+        
         if not self.mutation_history:
-            return {'total_mutations': 0}
+            return {
+                'total_mutations': 0,
+                'adaptive_mode': self.adaptive_mode,
+                'strategy_performance': avg_scores_by_strategy
+            }
         
         strategies = [m['strategy'] for m in self.mutation_history]
         strategy_counts = {s: strategies.count(s) for s in set(strategies)}
@@ -261,5 +320,7 @@ class MutationEngine:
             'avg_length_change': sum(
                 m['mutated_length'] - m['original_length']
                 for m in self.mutation_history
-            ) / len(self.mutation_history)
+            ) / len(self.mutation_history),
+            'adaptive_mode': self.adaptive_mode,
+            'strategy_performance': avg_scores_by_strategy
         }

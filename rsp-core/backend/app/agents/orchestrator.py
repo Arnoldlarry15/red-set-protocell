@@ -317,7 +317,7 @@ class Orchestrator:
     
     def __init__(self, sniper, target, spotter, egg, scoring_engine: ScoringEngine,
                  state_manager: StateManager, max_rounds: int = 100,
-                 round_timeout: int = 300):
+                 round_timeout: int = 300, concurrent_rounds: int = 1):
         """
         Initialize Orchestrator.
         
@@ -330,6 +330,7 @@ class Orchestrator:
             state_manager: State manager instance
             max_rounds: Maximum number of rounds
             round_timeout: Timeout per round in seconds
+            concurrent_rounds: Number of rounds to execute concurrently (1=sequential)
         """
         self.sniper = sniper
         self.target = target
@@ -339,6 +340,7 @@ class Orchestrator:
         self.state_manager = state_manager
         self.max_rounds = max_rounds
         self.round_timeout = round_timeout
+        self.concurrent_rounds = concurrent_rounds
         
         self.current_round = 0
         self.session_active = False
@@ -351,38 +353,16 @@ class Orchestrator:
             Session statistics and results
         """
         self.session_active = True
-        logger.info(f"Starting RSP session - Max rounds: {self.max_rounds}")
+        logger.info(f"Starting RSP session - Max rounds: {self.max_rounds}, "
+                   f"Concurrent: {self.concurrent_rounds}")
         
         try:
-            for round_num in range(1, self.max_rounds + 1):
-                if not self.session_active:
-                    logger.info("Session terminated early")
-                    break
-                
-                self.current_round = round_num
-                
-                try:
-                    # Execute round with timeout
-                    result = await asyncio.wait_for(
-                        self._execute_round(round_num),
-                        timeout=self.round_timeout
-                    )
-                    
-                    # Save result
-                    self.state_manager.save_round(result)
-                    
-                    logger.info(
-                        f"Round {round_num} completed - "
-                        f"Score: {result.global_score:.3f}, "
-                        f"Blocked: {result.blocked_by_egg}"
-                    )
-                    
-                except asyncio.TimeoutError:
-                    logger.error(f"Round {round_num} timed out")
-                    continue
-                except Exception as e:
-                    logger.error(f"Round {round_num} failed: {e}")
-                    continue
+            if self.concurrent_rounds > 1:
+                # Parallel execution mode
+                await self._run_session_parallel()
+            else:
+                # Sequential execution mode
+                await self._run_session_sequential()
         
         finally:
             self.session_active = False
@@ -393,6 +373,93 @@ class Orchestrator:
         logger.info(f"Session completed - Total rounds: {self.current_round}")
         
         return stats
+    
+    async def _run_session_sequential(self):
+        """Run session with sequential round execution."""
+        for round_num in range(1, self.max_rounds + 1):
+            if not self.session_active:
+                logger.info("Session terminated early")
+                break
+            
+            self.current_round = round_num
+            
+            try:
+                # Execute round with timeout
+                result = await asyncio.wait_for(
+                    self._execute_round(round_num),
+                    timeout=self.round_timeout
+                )
+                
+                # Save result
+                self.state_manager.save_round(result)
+                
+                logger.info(
+                    f"Round {round_num} completed - "
+                    f"Score: {result.global_score:.3f}, "
+                    f"Blocked: {result.blocked_by_egg}"
+                )
+                
+            except asyncio.TimeoutError:
+                logger.error(f"Round {round_num} timed out")
+                continue
+            except Exception as e:
+                logger.error(f"Round {round_num} failed: {e}")
+                continue
+    
+    async def _run_session_parallel(self):
+        """Run session with parallel round execution."""
+        round_num = 0
+        
+        while round_num < self.max_rounds:
+            if not self.session_active:
+                logger.info("Session terminated early")
+                break
+            
+            # Create batch of rounds to execute
+            batch_size = min(self.concurrent_rounds, self.max_rounds - round_num)
+            batch_rounds = list(range(round_num + 1, round_num + batch_size + 1))
+            
+            # Execute batch concurrently
+            tasks = [
+                asyncio.create_task(self._execute_round_with_timeout(rnum))
+                for rnum in batch_rounds
+            ]
+            
+            # Wait for all tasks in batch to complete
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Process results
+            for rnum, result in zip(batch_rounds, results):
+                self.current_round = rnum
+                
+                if isinstance(result, Exception):
+                    logger.error(f"Round {rnum} failed: {result}")
+                    continue
+                
+                if result is None:
+                    logger.error(f"Round {rnum} timed out")
+                    continue
+                
+                # Save result
+                self.state_manager.save_round(result)
+                
+                logger.info(
+                    f"Round {rnum} completed - "
+                    f"Score: {result.global_score:.3f}, "
+                    f"Blocked: {result.blocked_by_egg}"
+                )
+            
+            round_num += batch_size
+    
+    async def _execute_round_with_timeout(self, round_number: int) -> Optional[RoundResult]:
+        """Execute a round with timeout handling."""
+        try:
+            return await asyncio.wait_for(
+                self._execute_round(round_number),
+                timeout=self.round_timeout
+            )
+        except asyncio.TimeoutError:
+            return None
     
     async def _execute_round(self, round_number: int) -> RoundResult:
         """

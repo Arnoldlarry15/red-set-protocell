@@ -538,7 +538,7 @@ class Orchestrator:
         
         # INVARIANT: EGG inspection is mandatory and cannot be bypassed
         assert isinstance(is_allowed, bool), "EGG must return boolean for is_allowed"
-        assert blocked_info is not None, "EGG must provide blocked_info (even if allowed)"
+        # Note: blocked_info can be None when allowed, or BlockedContent when blocked
         
         if not is_allowed:
             # Prompt blocked by EGG

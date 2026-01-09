@@ -8,6 +8,7 @@ from app.telemetry.exporter import (
     TelemetryExporter,
     ExportFormat,
     MetricsSnapshot,
+    create_metrics_snapshot,
 )
 from app.telemetry.extractors import (
     SessionMetricsExtractor,
@@ -18,6 +19,7 @@ __all__ = [
     "TelemetryExporter",
     "ExportFormat",
     "MetricsSnapshot",
+    "create_metrics_snapshot",
     "SessionMetricsExtractor",
     "RoundMetricsExtractor",
 ]

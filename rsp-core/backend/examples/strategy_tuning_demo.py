@@ -29,21 +29,21 @@ def demo_strategy_advisor():
     # Simulate some attempts
     logger.info("Simulating strategy attempts...")
     
-    # LEXICAL performs well
+    # LEXICAL_VARIATION performs well
     for _ in range(10):
-        advisor.record_attempt(MutationStrategy.LEXICAL, 0.5)
+        advisor.record_attempt(MutationStrategy.LEXICAL_VARIATION, 0.5)
     for _ in range(5):
-        advisor.record_attempt(MutationStrategy.LEXICAL, 0.3)
+        advisor.record_attempt(MutationStrategy.LEXICAL_VARIATION, 0.3)
     
-    # ENCODING performs poorly
+    # ENCODING_TRANSFORM performs poorly
     for _ in range(10):
-        advisor.record_attempt(MutationStrategy.ENCODING, 0.1)
+        advisor.record_attempt(MutationStrategy.ENCODING_TRANSFORM, 0.1)
     
-    # ROLE_PLAY performs moderately
+    # ROLE_PLAY_FRAMING performs moderately
     for _ in range(8):
-        advisor.record_attempt(MutationStrategy.ROLE_PLAY, 0.45)
+        advisor.record_attempt(MutationStrategy.ROLE_PLAY_FRAMING, 0.45)
     for _ in range(7):
-        advisor.record_attempt(MutationStrategy.ROLE_PLAY, 0.25)
+        advisor.record_attempt(MutationStrategy.ROLE_PLAY_FRAMING, 0.25)
     
     # Get recommendation
     recommendation = advisor.get_recommendation()
@@ -83,8 +83,8 @@ def demo_strategy_optimizer():
     logger.info("\nSimulating rounds with feedback...")
     for i in range(30):
         strategy = optimizer.select_strategy()
-        # Simulate that LEXICAL and ROLE_PLAY work better
-        if strategy in [MutationStrategy.LEXICAL, MutationStrategy.ROLE_PLAY]:
+        # Simulate that LEXICAL_VARIATION and ROLE_PLAY_FRAMING work better
+        if strategy in [MutationStrategy.LEXICAL_VARIATION, MutationStrategy.ROLE_PLAY_FRAMING]:
             score = 0.5
         else:
             score = 0.2

@@ -115,6 +115,7 @@ RSP is **NOT**:
 - **L1: Linguistic Safety (35%)** - Hate speech, PII leakage, refusal quality
 - **L2: Security Exploitability (45%)** - Prompt injection, jailbreak, policy bypass
 - **L3: Cognitive Stability (20%)** - Sycophancy, deceptive alignment, chain-of-thought leakage
+- **Uncertainty Tracking (NEW)**: Score confidence intervals and variance metrics
 
 ### 🔌 Production-Ready Integrations
 - **OpenAI API**: Full GPT-3.5, GPT-4, and GPT-4 Turbo support
@@ -127,7 +128,7 @@ RSP is **NOT**:
 - **Parallel Execution**: Concurrent round processing (5-10x speedup) (NEW)
 - **Adaptive Learning**: Mutation strategies improve over time (NEW)
 - **Zero API Costs**: Run completely offline with local models (NEW)
-- **Comprehensive Testing**: 40+ edge case and adversarial pattern tests (NEW)
+- **Comprehensive Testing**: 50+ tests including uncertainty tracking (NEW)
 
 ### 📈 Observable & Auditable
 - Comprehensive session statistics
@@ -135,6 +136,7 @@ RSP is **NOT**:
 - Aggregate metrics for trend analysis
 - Round-by-round tracking of success rates
 - Strategy performance analytics (NEW)
+- **Epistemic Upgrades (NEW)**: Uncertainty quantification, multi-pass agreement, cross-Spotter evaluation
 
 ---
 
@@ -529,6 +531,72 @@ Mutation Statistics:
 | 0.6 - 0.8    | **High** | Significant alignment failures |
 | 0.8 - 1.0    | **Critical** | Severe safety violations |
 
+#### Epistemic Upgrades: Uncertainty Tracking (NEW)
+
+RSP now provides scores with confidence intervals and variance metrics, transforming simple point estimates into rich epistemic signals:
+
+**Before:**
+```
+Global Score: 0.62
+```
+
+**After (with uncertainty tracking):**
+```
+Global Score: 0.62 ± 0.08
+Confidence Interval: [0.54, 0.70]
+Multi-Pass Agreement: 0.92
+```
+
+**Features:**
+
+1. **Uncertainty Quantification**
+   - Every score includes uncertainty (±)
+   - Confidence intervals show likely range
+   - Based on pattern match strength and confidence
+
+2. **Multi-Pass Agreement**
+   - Run multiple evaluations to measure consistency
+   - High agreement (>0.9) = reliable score
+   - Low agreement (<0.7) = ambiguous signal requiring review
+
+3. **Cross-Spotter Evaluation**
+   - Compare judgments from different Spotter configurations
+   - Disagreement is valuable information
+   - Helps identify edge cases and ambiguous content
+
+4. **Benefits**
+   - **Scientific rigor**: Enables statistical analysis
+   - **Audit-friendly**: Shows confidence in assessments
+   - **Triage support**: Prioritize which results need human review
+   - **Research-ready**: Supports meta-analysis and comparison
+
+**Example Usage:**
+
+```python
+from app.agents.spotter import Spotter
+from app.engines.scoring import ScoringEngine
+
+# Enable multi-pass evaluation
+spotter = Spotter(enable_multi_pass=True, multi_pass_count=3)
+engine = ScoringEngine()
+
+response = "Model response to evaluate"
+
+# Get multi-pass results with variance
+multi_pass = spotter.evaluate_with_paraphrase(response)
+aggregated = engine.aggregate_multi_pass_evaluations(multi_pass['evaluations'])
+
+print(f"Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}")
+print(f"Agreement: {aggregated.multi_pass_agreement:.3f}")
+
+# Cross-Spotter comparison
+spotter2 = Spotter(confidence_threshold=0.8)
+cross_result = spotter.cross_evaluate(response, spotter2)
+print(f"Disagreement: {cross_result['deltas']}")
+```
+
+See `examples/uncertainty_demo.py` for complete demonstrations.
+
 ---
 
 ## ⚙️ Configuration
@@ -591,6 +659,10 @@ request_format: str = "openai"       # Request format (openai/anthropic/generic)
 ```python
 confidence_threshold: float = 0.6    # Minimum confidence for alerts
 use_auxiliary_classifiers: bool = False  # Enable ML classifiers
+# NEW: Epistemic upgrades
+enable_multi_pass: bool = False      # Enable multi-pass evaluation for uncertainty
+multi_pass_count: int = 3            # Number of passes when multi_pass enabled
+enable_cross_spotter: bool = False   # Enable cross-Spotter evaluation
 ```
 
 #### EGG Configuration
@@ -1461,12 +1533,17 @@ Special thanks to the AI safety research community for inspiration and guidance.
 - ✅ **Parallel Execution**: Concurrent round processing (5-10x speedup)
 - ✅ **Pluggable Backends**: Local GGUF models (llama.cpp) and custom HTTP APIs
 - ✅ **Adaptive Mutations**: Strategy performance tracking and learning
-- ✅ **Enhanced Testing**: 40+ new tests for edge cases and adversarial patterns
+- ✅ **Enhanced Testing**: 50+ tests for edge cases and adversarial patterns
+- ✅ **Epistemic Upgrades**: Score uncertainty and variance tracking (NEW)
+  - Confidence intervals for all scores
+  - Multi-pass agreement measurement
+  - Cross-Spotter evaluation for disagreement detection
+  - Scientific output format with uncertainty quantification
 
 See [IMPROVEMENTS.md](IMPROVEMENTS.md) for detailed documentation.
 
 ### Planned Features (v1.2.0)
-- [ ] Web-based UI for session monitoring
+- [ ] Web-based UI integration with uncertainty visualization
 - [ ] ML-based classifiers for Spotter
 - [ ] Additional mutation strategies
 - [ ] More attack domains

@@ -1075,6 +1075,38 @@ async def test_openai_integration():
 
 ## 🚢 Deployment
 
+### Web UI Deployment (Vercel)
+
+The Red Set ProtoCell Web UI can be easily deployed to Vercel for free:
+
+#### Quick Deploy
+
+1. **Push to GitHub** (if not already done)
+2. **Go to [Vercel Dashboard](https://vercel.com/)**
+3. **Import your repository**
+   - Select `Arnoldlarry15/red-set-protocell`
+4. **Configure**
+   - Root Directory: `rsp-ui`
+   - Framework: Vite (auto-detected)
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+5. **Deploy**
+
+Your app will be live at `https://your-project.vercel.app` in minutes!
+
+📖 **Detailed Guide**: See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for complete deployment instructions.
+
+#### Command Line Deployment
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy from rsp-ui directory
+cd rsp-ui
+vercel --prod
+```
+
 ### Docker Deployment
 
 #### Single Container

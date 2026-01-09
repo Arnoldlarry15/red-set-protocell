@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Save, Upload, Sliders, Settings } from 'lucide-react';
+import { Play, Save, Sliders, Settings } from 'lucide-react';
 import axios from 'axios';
 import { ExperimentConfig } from '../types';
 

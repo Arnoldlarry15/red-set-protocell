@@ -55,7 +55,7 @@ export function useSessionStream({
   });
 
   const wsRef = useRef<WebSocket | null>(null);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryTimeoutRef = useRef<number | null>(null);
   const shouldReconnectRef = useRef(true);
   const retryCountRef = useRef(0);
 

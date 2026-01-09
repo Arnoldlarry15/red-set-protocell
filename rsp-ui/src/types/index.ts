@@ -73,7 +73,7 @@ export interface SessionConfig {
 }
 
 export interface WebSocketMessage {
-  type: 'attack' | 'stats' | 'status' | 'error';
+  type: 'attack' | 'stats' | 'status' | 'error' | 'ping' | 'pong';
   data: any;
 }
 

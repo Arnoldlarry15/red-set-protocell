@@ -1622,13 +1622,32 @@ See [IMPROVEMENTS.md](IMPROVEMENTS.md) and [TIME_TRACKING.md](TIME_TRACKING.md) 
 
 See [NEW_FEATURES.md](NEW_FEATURES.md) for complete documentation and usage examples.
 
-### Planned Features (v1.3.0)
-- [ ] Web-based UI integration with benchmark visualization
+### Latest Enhancements (v1.3.0) - Dashboard & Management Features
+- ✅ **Unified Infrastructure Dashboard**: Complete monitoring and analysis platform
+  - Live session monitoring with auto-refresh
+  - Historical session comparison and analysis
+  - Model version comparison with statistical metrics
+  - Export capabilities (CSV/JSON/JSONL)
+- ✅ **User Roles & Permissions**: Fine-grained access control
+  - Role-based authorization (Admin/Researcher/Observer)
+  - User management interface
+  - Authentication system with secure token management
+  - Permission-based UI access control
+- ✅ **Remote Triggering**: UI-based run control
+  - Start runs from web interface with custom parameters
+  - Save and load experiment configurations
+  - Configure mutation weights and severity thresholds
+  - Real-time feedback and monitoring
+
+See [DASHBOARD_FEATURES.md](DASHBOARD_FEATURES.md) for complete documentation and [QUICKSTART_DASHBOARD.md](QUICKSTART_DASHBOARD.md) for a quick start guide.
+
+### Planned Features (v1.4.0)
 - [ ] ML-based classifiers for Spotter
 - [ ] Additional mutation strategies
 - [ ] More attack domains
 - [ ] PostgreSQL integration hardening
 - [ ] CLI commands for benchmarking and exports
+- [ ] Advanced analytics visualizations
 
 ### Future Considerations (v2.0.0)
 - [ ] Distributed execution support

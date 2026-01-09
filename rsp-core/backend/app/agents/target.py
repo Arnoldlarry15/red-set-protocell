@@ -3,6 +3,29 @@ Red Set ProtoCell - Target Agent
 
 Stateless execution wrapper for the LLM under test.
 
+⚠️ UNSAFE BY DESIGN - EXTENSION POINT WARNING ⚠️
+================================================================
+This module executes adversarial prompts against live LLM APIs.
+When extending with new backend implementations:
+
+1. DO NOT execute prompts against production systems without authorization
+2. DO NOT store or log API keys in plain text
+3. DO NOT introduce side-effects (file writes, API calls beyond LLM)
+4. DO maintain stateless operation (no context between rounds)
+5. DO enforce fresh context per invocation
+6. DO implement proper error handling for API failures
+
+New backends MUST:
+- Inherit from TargetBackend abstract class
+- Implement the execute() method
+- Return string responses only
+- Handle API errors gracefully
+- Respect the fresh_context requirement
+
+Violations compromise the controlled testing environment and
+may expose real systems to adversarial content.
+================================================================
+
 Role: Execute prompts against configured model backend
 Constraints:
 - No memory of prior rounds

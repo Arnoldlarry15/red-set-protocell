@@ -3,6 +3,23 @@ Red Set ProtoCell - Mutation Engine
 
 Heuristic transformation engine for evolving adversarial prompts.
 
+⚠️ UNSAFE BY DESIGN - EXTENSION POINT WARNING ⚠️
+================================================================
+This module is designed to generate adversarial text patterns that
+may attempt to elicit unsafe behaviors from LLMs. When extending
+or modifying this engine:
+
+1. DO NOT add real exploit payloads (shellcode, malware, etc.)
+2. DO NOT add instructions for harmful real-world actions
+3. DO NOT bypass the EGG (Ethical Guardrail Governor)
+4. DO ensure all mutations pass through EGG inspection
+5. DO maintain the heuristic-only approach (no live system probing)
+
+All mutations MUST be filtered by EGG before execution on target LLMs.
+Violations of these principles will compromise the defense-only nature
+of this system.
+================================================================
+
 Explicitly out of scope:
 - Real exploit chains
 - Live system probing

@@ -247,6 +247,57 @@ feat: Add support for Gemini API backend
 Closes #123
 ```
 
+## Extension Points & Templates
+
+### Using Contributor Templates
+
+RSP provides **ready-to-use templates** to guide you in extending the system safely and correctly. These templates include safety warnings, integration steps, and example code.
+
+**📁 Location**: `rsp-core/backend/templates/`
+
+**Available Templates**:
+
+1. **new_agent_template.py**
+   - For: Creating new agents (e.g., custom evaluators)
+   - Includes: Stateless design patterns, integration checklist
+   
+2. **new_engine_template.py**
+   - For: Creating processing engines (e.g., custom selection)
+   - Includes: Pure function patterns, batch processing examples
+   
+3. **new_target_backend_template.py**
+   - For: Adding LLM provider support (e.g., Gemini, Cohere)
+   - Includes: API integration patterns, security guidelines
+   
+4. **new_mutation_strategy_template.py**
+   - For: Adding adversarial transformation techniques
+   - Includes: Safety constraints, testing examples
+
+**Quick Start**:
+
+```bash
+cd rsp-core/backend
+
+# Copy template
+cp templates/new_agent_template.py app/agents/my_agent.py
+
+# Follow TODO comments in the file
+# Create tests
+touch tests/test_my_agent.py
+
+# See template README for detailed guide
+cat templates/README.md
+```
+
+**Why use templates?**
+- ✅ Avoid common mistakes (stateful agents, EGG bypass, etc.)
+- ✅ Follow architectural patterns automatically
+- ✅ Include safety guidelines and warnings
+- ✅ Get integration steps and test examples
+- ✅ Maintain consistency across codebase
+
+**Detailed documentation**: See `rsp-core/backend/templates/README.md`
+
 ## Coding Standards
 
 ### Python Style Guide

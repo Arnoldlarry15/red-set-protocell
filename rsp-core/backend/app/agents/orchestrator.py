@@ -356,6 +356,22 @@ class Orchestrator:
             round_timeout: Timeout per round in seconds
             concurrent_rounds: Number of rounds to execute concurrently (1=sequential)
         """
+        # INVARIANT: All agents must be initialized
+        assert sniper is not None, "Sniper agent must not be None"
+        assert target is not None, "Target agent must not be None"
+        assert spotter is not None, "Spotter agent must not be None"
+        assert egg is not None, "EGG (Ethical Guardrail Governor) must not be None"
+        assert scoring_engine is not None, "Scoring engine must not be None"
+        assert state_manager is not None, "State manager must not be None"
+        
+        # INVARIANT: Configuration values must be valid
+        assert max_rounds > 0, f"max_rounds must be > 0, got {max_rounds}"
+        assert round_timeout > 0, f"round_timeout must be > 0, got {round_timeout}"
+        assert concurrent_rounds > 0, f"concurrent_rounds must be > 0, got {concurrent_rounds}"
+        
+        # INVARIANT: EGG must be enabled (cannot be bypassed)
+        assert hasattr(egg, 'inspect_prompt'), "EGG must implement inspect_prompt method"
+        
         self.sniper = sniper
         self.target = target
         self.spotter = spotter
@@ -368,6 +384,8 @@ class Orchestrator:
         
         self.current_round = 0
         self.session_active = False
+        
+        logger.info("Orchestrator initialized with invariant checks passed")
         
     async def run_session(self) -> Dict[str, Any]:
         """
@@ -502,14 +520,25 @@ class Orchestrator:
         Returns:
             RoundResult with complete round data
         """
+        # INVARIANT: Round number must be positive
+        assert round_number > 0, f"Round number must be > 0, got {round_number}"
+        
         timestamp = datetime.now(timezone.utc).isoformat()
         
         # Step 1: Sniper generates adversarial prompt
         prior_metadata = self.state_manager.get_prior_rounds(limit=10)
         prompt, attack_domain = self.sniper.generate_prompt(prior_metadata)
         
+        # INVARIANT: Sniper must produce valid outputs
+        assert isinstance(prompt, str) and len(prompt) > 0, "Sniper must generate non-empty prompt"
+        assert attack_domain is not None, "Sniper must specify attack domain"
+        
         # Step 2: EGG inspects prompt
         is_allowed, blocked_info = self.egg.inspect_prompt(prompt)
+        
+        # INVARIANT: EGG inspection is mandatory and cannot be bypassed
+        assert isinstance(is_allowed, bool), "EGG must return boolean for is_allowed"
+        assert blocked_info is not None, "EGG must provide blocked_info (even if allowed)"
         
         if not is_allowed:
             # Prompt blocked by EGG
@@ -537,6 +566,9 @@ class Orchestrator:
             metadata={'round': round_number, 'domain': attack_domain.value}
         )
         
+        # INVARIANT: Target must produce valid response
+        assert isinstance(target_response, str), "Target must return string response"
+        
         # Step 4: Spotter evaluates response
         evaluation = self.spotter.evaluate(
             target_response,
@@ -544,12 +576,23 @@ class Orchestrator:
             prompt=prompt
         )
         
+        # INVARIANT: Spotter must produce valid evaluation structure
+        assert isinstance(evaluation, dict), "Spotter must return dict evaluation"
+        assert 'l1' in evaluation and 'l2' in evaluation and 'l3' in evaluation, \
+            "Evaluation must contain l1, l2, and l3 layers"
+        assert all('score' in evaluation[layer] for layer in ['l1', 'l2', 'l3']), \
+            "Each layer must have a score field"
+        
         # Step 5: Compute global score
         global_score = self.scoring_engine.compute_global_score(
             evaluation['l1']['score'],
             evaluation['l2']['score'],
             evaluation['l3']['score']
         )
+        
+        # INVARIANT: Global score must be in valid range [0.0, 1.0]
+        assert 0.0 <= global_score <= 1.0, \
+            f"Global score must be in [0.0, 1.0], got {global_score}"
         
         # Update Sniper with score for evolution
         self.sniper.update_prompt_score(prompt, global_score)

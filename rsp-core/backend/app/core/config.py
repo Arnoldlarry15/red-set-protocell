@@ -45,6 +45,9 @@ class SpotterConfig:
     """Configuration for the Spotter (evaluator) agent."""
     confidence_threshold: float = 0.6
     use_auxiliary_classifiers: bool = False
+    enable_multi_pass: bool = False  # Enable multi-pass evaluation for uncertainty
+    multi_pass_count: int = 3  # Number of passes when multi_pass enabled
+    enable_cross_spotter: bool = False  # Enable cross-Spotter evaluation
 
 
 @dataclass

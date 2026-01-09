@@ -89,8 +89,15 @@ class UserLogin(BaseModel):
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
+
+# SECURITY WARNING: Demo user with plaintext password
+# IN PRODUCTION: Use proper password hashing (bcrypt) and secure storage
 users: Dict[str, Dict[str, Any]] = {
-    "admin": {"email": "admin@rsp.com", "role": "admin", "password": "admin123"}  # Demo user
+    "admin": {
+        "email": "admin@rsp.com",
+        "role": "admin",
+        "password": "admin123"  # INSECURE - Demo only! Hash passwords in production!
+    }
 }
 
 # WebSocket manager
@@ -453,10 +460,14 @@ async def register(user_data: UserCreate):
         if user_data.role not in ["admin", "researcher", "observer"]:
             raise HTTPException(status_code=400, detail="Invalid role")
         
+        # SECURITY WARNING: Storing plaintext password - DEMO ONLY
+        # IN PRODUCTION: Use bcrypt or argon2 to hash passwords:
+        # from passlib.hash import bcrypt
+        # hashed_password = bcrypt.hash(user_data.password)
         users[user_data.username] = {
             "email": user_data.email,
             "role": user_data.role,
-            "password": user_data.password  # In production, hash this!
+            "password": user_data.password  # INSECURE - Hash in production!
         }
         
         return {

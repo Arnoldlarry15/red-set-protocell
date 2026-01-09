@@ -130,7 +130,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
               <label>Role</label>
               <select
                 value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as any })}
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as 'admin' | 'researcher' | 'observer' })}
                 className="form-control"
               >
                 <option value="observer">Observer</option>

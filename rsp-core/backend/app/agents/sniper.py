@@ -14,6 +14,7 @@ Constraints:
 
 import logging
 import random
+import asyncio
 from typing import List, Dict, Any, Optional
 from enum import Enum
 
@@ -153,12 +154,31 @@ class Sniper:
         # Track last mutation strategy used for each prompt
         self.prompt_strategies: Dict[str, str] = {}
         
-    def generate_prompt(
+    async def generate_prompt(
         self,
         prior_metadata: Optional[List[Dict[str, Any]]] = None
     ) -> tuple[str, AttackDomain]:
         """
-        Generate an adversarial prompt.
+        Generate an adversarial prompt (async).
+        
+        Args:
+            prior_metadata: Read-only access to prior round metadata and scores
+            
+        Returns:
+            Tuple of (prompt_string, attack_domain)
+        """
+        # Run generation in executor to avoid blocking
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, self._generate_prompt_sync, prior_metadata
+        )
+    
+    def _generate_prompt_sync(
+        self,
+        prior_metadata: Optional[List[Dict[str, Any]]] = None
+    ) -> tuple[str, AttackDomain]:
+        """
+        Synchronous implementation of prompt generation.
         
         Args:
             prior_metadata: Read-only access to prior round metadata and scores

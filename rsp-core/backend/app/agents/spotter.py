@@ -13,6 +13,7 @@ Constraints:
 
 import logging
 import re
+import asyncio
 from typing import Dict, Any, Optional, List
 
 from app.engines.scoring import FailureArchetype
@@ -152,10 +153,10 @@ class Spotter:
         self.multi_pass_count = multi_pass_count
         self.evaluation_count = 0
         
-    def evaluate(self, response: str, attack_domain: Optional[str] = None,
+    async def evaluate(self, response: str, attack_domain: Optional[str] = None,
                  prompt: Optional[str] = None) -> Dict[str, Any]:
         """
-        Evaluate a Target response for safety failures.
+        Evaluate a Target response for safety failures (async).
         
         Args:
             response: The model response to evaluate
@@ -167,10 +168,13 @@ class Spotter:
         """
         self.evaluation_count += 1
         
-        # Evaluate each layer
-        l1_result = self._evaluate_l1_linguistic_safety(response)
-        l2_result = self._evaluate_l2_security_exploitability(response, prompt)
-        l3_result = self._evaluate_l3_cognitive_stability(response)
+        # Evaluate each layer (run concurrently for performance)
+        l1_task = asyncio.create_task(self._evaluate_l1_linguistic_safety_async(response))
+        l2_task = asyncio.create_task(self._evaluate_l2_security_exploitability_async(response, prompt))
+        l3_task = asyncio.create_task(self._evaluate_l3_cognitive_stability_async(response))
+        
+        # Wait for all evaluations to complete
+        l1_result, l2_result, l3_result = await asyncio.gather(l1_task, l2_task, l3_task)
         
         # Generate mutation guidance based on scores
         mutation_guidance = self._generate_mutation_guidance(
@@ -197,6 +201,16 @@ class Spotter:
         )
         
         return evaluation
+    
+    async def _evaluate_l1_linguistic_safety_async(self, response: str) -> Dict[str, Any]:
+        """
+        Evaluate L1: Linguistic Safety (async wrapper).
+        
+        Focus: Hate speech, PII leakage, refusal quality degradation
+        """
+        # Run synchronous evaluation in executor for non-blocking
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._evaluate_l1_linguistic_safety, response)
     
     def _evaluate_l1_linguistic_safety(self, response: str) -> Dict[str, Any]:
         """
@@ -253,6 +267,20 @@ class Spotter:
             'indicators': indicators,
             'archetypes': archetypes
         }
+    
+    async def _evaluate_l2_security_exploitability_async(
+        self, response: str, prompt: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Evaluate L2: Security Exploitability (async wrapper).
+        
+        Focus: Prompt injection, jailbreak, policy bypass
+        """
+        # Run synchronous evaluation in executor for non-blocking
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, self._evaluate_l2_security_exploitability, response, prompt
+        )
     
     def _evaluate_l2_security_exploitability(
         self, response: str, prompt: Optional[str] = None
@@ -311,6 +339,16 @@ class Spotter:
             'indicators': indicators,
             'archetypes': archetypes
         }
+    
+    async def _evaluate_l3_cognitive_stability_async(self, response: str) -> Dict[str, Any]:
+        """
+        Evaluate L3: Cognitive Stability (async wrapper).
+        
+        Focus: Sycophancy, deceptive alignment, chain-of-thought leakage
+        """
+        # Run synchronous evaluation in executor for non-blocking
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._evaluate_l3_cognitive_stability, response)
     
     def _evaluate_l3_cognitive_stability(self, response: str) -> Dict[str, Any]:
         """

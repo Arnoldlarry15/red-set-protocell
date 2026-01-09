@@ -43,6 +43,11 @@ class EthicalGuardrailGovernor:
     EGG decisions are final and cannot be overridden by any agent.
     """
     
+    # Class constants
+    STOPWORDS = {'this', 'that', 'with', 'from', 'have', 'the', 'and', 'for'}
+    DEFAULT_SHADOW_MATCH_LIMIT = 10
+    DEFAULT_TEST_COUNT = 50
+    
     # Patterns for content that must be blocked
     BLOCKED_PATTERNS = {
         'csam': [
@@ -278,8 +283,7 @@ class EthicalGuardrailGovernor:
         # Extract keywords from the pattern (simplified approach)
         # Remove regex special chars and split on word boundaries
         keywords = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
-        keywords = [k.lower() for k in keywords if len(k) > 3 and k not in 
-                   ['this', 'that', 'with', 'from', 'have']]
+        keywords = [k.lower() for k in keywords if len(k) > 3 and k not in self.STOPWORDS]
         
         if not keywords:
             return 0.0
@@ -290,9 +294,13 @@ class EthicalGuardrailGovernor:
         
         return score
     
-    def get_telemetry(self) -> Dict:
+    def get_telemetry(self, shadow_match_limit: int = None) -> Dict:
         """
         Get comprehensive telemetry data for monitoring.
+        
+        Args:
+            shadow_match_limit: Maximum number of recent shadow matches to include
+                               (default: 10). Use None for all matches.
         
         Returns:
             Dictionary with telemetry data including:
@@ -301,6 +309,9 @@ class EthicalGuardrailGovernor:
             - coverage_metrics: Which patterns are being used vs never used
             - total_inspections: Total number of prompts inspected
         """
+        if shadow_match_limit is None:
+            shadow_match_limit = self.DEFAULT_SHADOW_MATCH_LIMIT
+        
         # Calculate coverage metrics
         coverage_metrics = {}
         for category, patterns in self.BLOCKED_PATTERNS.items():
@@ -324,7 +335,8 @@ class EthicalGuardrailGovernor:
                     'match_score': sm.match_score,
                     'fingerprint': sm.prompt_fingerprint
                 }
-                for sm in self.shadow_matches[-10:]  # Last 10 for brevity
+                for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0 
+                          else self.shadow_matches)
             ],
             'coverage_metrics': coverage_metrics,
             'total_inspections': self.total_inspections,
@@ -332,18 +344,21 @@ class EthicalGuardrailGovernor:
                          if self.total_inspections > 0 else 0.0
         }
     
-    def generate_adversarial_test_prompts(self, count: int = 10) -> List[str]:
+    def generate_adversarial_test_prompts(self, count: int = None) -> List[str]:
         """
         Generate synthetic prompts to test guard coverage (adversarial testing).
         These prompts are for internal safety testing only and are never forwarded
         to the target LLM.
         
         Args:
-            count: Number of test prompts to generate
+            count: Number of test prompts to generate (default: 10)
             
         Returns:
             List of synthetic test prompts
         """
+        if count is None:
+            count = 10
+        
         test_prompts = []
         
         # Generate prompts that test each category
@@ -390,14 +405,20 @@ class EthicalGuardrailGovernor:
         else:
             return f"Test prompt for {category}: {' '.join(terms[:3])} [SYNTHETIC TEST]"
     
-    def test_guard_coverage(self) -> Dict:
+    def test_guard_coverage(self, test_count: int = None) -> Dict:
         """
         Run adversarial testing against the guard to measure coverage.
+        
+        Args:
+            test_count: Number of test prompts to generate (default: 50)
         
         Returns:
             Dictionary with coverage test results
         """
-        test_prompts = self.generate_adversarial_test_prompts(count=50)
+        if test_count is None:
+            test_count = self.DEFAULT_TEST_COUNT
+        
+        test_prompts = self.generate_adversarial_test_prompts(count=test_count)
         
         results = {
             'total_tests': len(test_prompts),

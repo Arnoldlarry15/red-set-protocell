@@ -2,6 +2,33 @@
 Red Set ProtoCell - Configuration Module
 
 Centralized configuration management for the RSP system.
+
+PRODUCTION DEPLOYMENT NOTES:
+===========================
+
+Required Environment Variables for Production:
+- None are strictly required (system uses secure defaults)
+
+Recommended Environment Variables for Production:
+- RSP_ENVIRONMENT: Set to "production" to enable production mode checks
+- RSP_ALLOWED_ORIGINS: Comma-separated list of allowed CORS origins for API server
+- RSP_DEMO_PASSWORD: Override default demo password (or disable demo auth entirely)
+
+Configuration Security:
+- No defaults silently weaken security
+- All values validated in __post_init__
+- Secrets never logged (handled by security module)
+- Invalid configurations raise ValueError immediately
+
+Validation Checks:
+1. Scoring weights must sum to 1.0 (±0.01 tolerance for floating point)
+2. Mutation rate must be in [0.0, 1.0]
+3. Confidence threshold must be in [0.0, 1.0]
+4. Round counts and timeouts must be positive
+
+Fail-Fast Philosophy:
+If a configuration is invalid, the system raises an exception immediately
+at initialization rather than silently using unsafe defaults.
 """
 
 from dataclasses import dataclass, field

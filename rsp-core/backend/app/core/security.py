@@ -10,6 +10,46 @@ This module provides core security primitives used throughout RSP:
 - Metadata sanitization to prevent credential leaks
 - Input validation and trust boundary enforcement
 
+THREAT MODEL:
+============
+
+Assumptions:
+1. The execution environment (server/container) is trusted
+2. Network transport uses TLS/HTTPS in production
+3. API keys are stored securely by the deployment infrastructure
+4. Database files have appropriate filesystem permissions
+
+Trust Boundaries:
+1. External Input → EGG: All external prompts/content must pass through EGG
+2. Agent Outputs → Orchestrator: Agent outputs are untrusted and validated
+3. Database → Application: Database contents are trusted (controlled by StateManager)
+4. API Keys → Target: API keys are sensitive and never logged
+
+Threats Mitigated:
+- Credential Leakage: Sensitive fields sanitized before logging/persistence
+- Session Hijacking: Cryptographically secure session IDs (128-bit entropy)
+- Content Tracking: SHA-256 fingerprints prevent plaintext prompt logging
+- Input Injection: Prompt length validation prevents resource exhaustion
+
+Threats NOT Mitigated (out of scope):
+- Infrastructure attacks (OS/container compromise, network attacks)
+- Side-channel attacks (timing, memory access patterns)
+- Physical access to database files
+- API key compromise at source (OpenAI/Anthropic account breach)
+- Zero-day vulnerabilities in dependencies
+
+Residual Risks:
+- Hash collision (SHA-256): Negligible (2^128 security level)
+- Session ID collision: Negligible (2^128 entropy)
+- Metadata leakage in logs: Mitigated by sanitization, but requires log review
+- API rate limiting bypass: Handled by provider, not RSP
+
+Security Invariants:
+1. API keys NEVER appear in logs or database
+2. Prompts NEVER stored in plaintext (fingerprints only)
+3. Session IDs MUST be unpredictable (CSPRNG-generated)
+4. All agent outputs treated as untrusted until validated
+
 Examples:
     Hash a prompt for privacy-preserving logging:
     

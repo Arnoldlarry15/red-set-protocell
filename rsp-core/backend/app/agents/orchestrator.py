@@ -109,7 +109,7 @@ import sqlite3
 import json
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.security import generate_session_id, sanitize_metadata
 from app.engines.scoring import ScoringEngine
@@ -128,6 +128,8 @@ class RoundResult:
     global_score: float
     blocked_by_egg: bool
     timestamp: str
+    model_version: str = "unknown"
+    session_start_time: Optional[str] = None
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -143,17 +145,21 @@ class StateManager:
     """
     
     def __init__(self, database_path: str = "rsp_session.db",
-                 zero_retention: bool = True):
+                 zero_retention: bool = True,
+                 model_version: str = "unknown"):
         """
         Initialize state manager.
         
         Args:
             database_path: Path to SQLite database
             zero_retention: Enable zero-retention policy
+            model_version: Version identifier for the model being tested
         """
         self.database_path = database_path
         self.zero_retention = zero_retention
         self.session_id = generate_session_id()
+        self.model_version = model_version
+        self.session_start_time = datetime.now(timezone.utc).isoformat()
         
         # Initialize database
         self._init_database()
@@ -163,7 +169,7 @@ class StateManager:
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
         
-        # Create rounds table
+        # Create rounds table with model_version and session_start_time
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS rounds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -175,7 +181,9 @@ class StateManager:
                 evaluation TEXT NOT NULL,
                 global_score REAL NOT NULL,
                 blocked_by_egg INTEGER NOT NULL,
-                timestamp TEXT NOT NULL
+                timestamp TEXT NOT NULL,
+                model_version TEXT DEFAULT 'unknown',
+                session_start_time TEXT
             )
         ''')
         
@@ -184,14 +192,27 @@ class StateManager:
             CREATE TABLE IF NOT EXISTS metadata (
                 session_id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
-                config TEXT NOT NULL
+                config TEXT NOT NULL,
+                model_version TEXT DEFAULT 'unknown'
             )
         ''')
+        
+        # Add model_version column if it doesn't exist (migration)
+        try:
+            cursor.execute('ALTER TABLE rounds ADD COLUMN model_version TEXT DEFAULT "unknown"')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        
+        # Add session_start_time column if it doesn't exist (migration)
+        try:
+            cursor.execute('ALTER TABLE rounds ADD COLUMN session_start_time TEXT')
+        except sqlite3.OperationalError:
+            pass  # Column already exists
         
         conn.commit()
         conn.close()
         
-        logger.info(f"State manager initialized - Session: {self.session_id}")
+        logger.info(f"State manager initialized - Session: {self.session_id}, Model: {self.model_version}")
     
     def save_round(self, round_result: RoundResult):
         """Save round result to database."""
@@ -201,8 +222,9 @@ class StateManager:
         cursor.execute('''
             INSERT INTO rounds (
                 session_id, round_number, prompt, attack_domain,
-                target_response, evaluation, global_score, blocked_by_egg, timestamp
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                target_response, evaluation, global_score, blocked_by_egg, 
+                timestamp, model_version, session_start_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             self.session_id,
             round_result.round_number,
@@ -212,7 +234,9 @@ class StateManager:
             json.dumps(round_result.evaluation),
             round_result.global_score,
             1 if round_result.blocked_by_egg else 0,
-            round_result.timestamp
+            round_result.timestamp,
+            round_result.model_version,
+            round_result.session_start_time
         ))
         
         conn.commit()
@@ -478,7 +502,7 @@ class Orchestrator:
         Returns:
             RoundResult with complete round data
         """
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         
         # Step 1: Sniper generates adversarial prompt
         prior_metadata = self.state_manager.get_prior_rounds(limit=10)
@@ -502,7 +526,9 @@ class Orchestrator:
                 evaluation={},
                 global_score=0.0,
                 blocked_by_egg=True,
-                timestamp=timestamp
+                timestamp=timestamp,
+                model_version=self.state_manager.model_version,
+                session_start_time=self.state_manager.session_start_time
             )
         
         # Step 3: Target executes prompt
@@ -536,18 +562,48 @@ class Orchestrator:
             evaluation=evaluation,
             global_score=global_score,
             blocked_by_egg=False,
-            timestamp=timestamp
+            timestamp=timestamp,
+            model_version=self.state_manager.model_version,
+            session_start_time=self.state_manager.session_start_time
         )
     
     def _compile_statistics(self) -> Dict[str, Any]:
         """Compile comprehensive session statistics."""
         state_stats = self.state_manager.get_statistics()
         
-        return {
+        # Import time analytics
+        try:
+            from app.analytics.time_tracking import (
+                FatigueTracker, ScoreDriftAnalyzer
+            )
+            
+            # Analyze fatigue
+            fatigue_tracker = FatigueTracker(self.state_manager.database_path)
+            fatigue_report = fatigue_tracker.analyze_fatigue(
+                self.state_manager.session_id
+            )
+            
+            # Analyze score drift
+            drift_analyzer = ScoreDriftAnalyzer(self.state_manager.database_path)
+            drift_metrics = drift_analyzer.analyze_drift(
+                self.state_manager.session_id
+            )
+            
+            time_analytics = {
+                'fatigue': fatigue_report.to_dict(),
+                'drift': drift_metrics.to_dict()
+            }
+        except Exception as e:
+            logger.warning(f"Time analytics failed: {e}")
+            time_analytics = None
+        
+        stats = {
             'session': {
                 'session_id': self.state_manager.session_id,
                 'total_rounds': self.current_round,
-                'max_rounds': self.max_rounds
+                'max_rounds': self.max_rounds,
+                'model_version': self.state_manager.model_version,
+                'session_start_time': self.state_manager.session_start_time
             },
             'scores': {
                 'average_global_score': state_stats['average_score'],
@@ -561,6 +617,12 @@ class Orchestrator:
             },
             'mutation': self.sniper.mutation_engine.get_statistics()
         }
+        
+        # Add time analytics if available
+        if time_analytics:
+            stats['time_analytics'] = time_analytics
+        
+        return stats
     
     def terminate_session(self):
         """Terminate the current session."""

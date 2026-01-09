@@ -137,6 +137,7 @@ RSP is **NOT**:
 - Round-by-round tracking of success rates
 - Strategy performance analytics (NEW)
 - **Epistemic Upgrades (NEW)**: Uncertainty quantification, multi-pass agreement, cross-Spotter evaluation
+- **Time Analytics (NEW)**: Fatigue tracking, regression detection, score drift analysis
 
 ---
 
@@ -596,6 +597,54 @@ print(f"Disagreement: {cross_result['deltas']}")
 ```
 
 See `examples/uncertainty_demo.py` for complete demonstrations.
+
+#### Time Analytics: Tracking Model Behavior Over Time (NEW)
+
+RSP tracks time as a first-class dimension, enabling analysis of model behavior over extended sessions:
+
+**Key Questions Answered:**
+1. "Does this model get worse after sustained pressure?" → **Fatigue Tracking**
+2. "Did the new version improve, or just shift failure modes?" → **Regression Detection**
+3. "What are the performance trends?" → **Score Drift Analysis**
+
+**Example Usage:**
+
+```python
+from app.analytics.time_tracking import FatigueTracker, RegressionDetector
+
+# Detect model fatigue
+tracker = FatigueTracker('rsp_session.db')
+report = tracker.analyze_fatigue(session_id='rsp_20260109_123456')
+
+if report.is_fatigued:
+    print(f"⚠️  Model fatigued after {report.rounds_analyzed} rounds")
+    print(f"Degradation: {report.degradation_rate:.4f} per round")
+
+# Compare model versions
+detector = RegressionDetector('rsp_session.db')
+report = detector.compare_versions('model-v1', 'model-v2')
+
+print(f"Verdict: {report.verdict}")
+print(f"Score delta: {report.score_delta:+.3f}")
+```
+
+**Features:**
+- **Fatigue Detection**: Identifies if model performance degrades over many rounds
+- **Regression Analysis**: Compares two model versions objectively
+- **Drift Classification**: Categorizes trends as improving, degrading, stable, or volatile
+- **Automatic Integration**: Time analytics included in session statistics
+
+**Command Line:**
+```bash
+python -m app.main \
+  --backend openai \
+  --api-key $OPENAI_API_KEY \
+  --model-version "gpt-4-v2.0-2026-01-09" \
+  --rounds 50 \
+  --no-zero-retention
+```
+
+See `examples/time_analytics_demo.py` and [TIME_TRACKING.md](TIME_TRACKING.md) for complete documentation.
 
 ---
 
@@ -1539,8 +1588,13 @@ Special thanks to the AI safety research community for inspiration and guidance.
   - Multi-pass agreement measurement
   - Cross-Spotter evaluation for disagreement detection
   - Scientific output format with uncertainty quantification
+- ✅ **Time as First-Class Dimension**: Temporal analytics for model behavior (NEW)
+  - Fatigue tracking: Does the model degrade over many rounds?
+  - Regression detection: Compare model versions objectively
+  - Score drift analysis: Identify performance trends over time
+  - Answer questions like "Does this model get worse after sustained pressure?"
 
-See [IMPROVEMENTS.md](IMPROVEMENTS.md) for detailed documentation.
+See [IMPROVEMENTS.md](IMPROVEMENTS.md) and [TIME_TRACKING.md](TIME_TRACKING.md) for detailed documentation.
 
 ### Planned Features (v1.2.0)
 - [ ] Web-based UI integration with uncertainty visualization

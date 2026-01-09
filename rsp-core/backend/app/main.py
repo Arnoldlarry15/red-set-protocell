@@ -14,6 +14,7 @@ import argparse
 import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
 from app.core.config import RSPConfig, get_default_config
 from app.core.egg import EthicalGuardrailGovernor
@@ -38,12 +39,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def setup_system(config: RSPConfig) -> Orchestrator:
+def setup_system(config: RSPConfig, model_version_override: Optional[str] = None) -> Orchestrator:
     """
     Setup and initialize the RSP system.
     
     Args:
         config: RSP configuration
+        model_version_override: Optional override for model version tracking
         
     Returns:
         Configured Orchestrator instance
@@ -136,9 +138,11 @@ def setup_system(config: RSPConfig) -> Orchestrator:
     logger.info("✓ Spotter Agent initialized")
     
     # Initialize State Manager
+    model_version = model_version_override or config.target.model_name
     state_manager = StateManager(
         database_path=config.storage.database_path,
-        zero_retention=config.storage.zero_retention
+        zero_retention=config.storage.zero_retention,
+        model_version=model_version
     )
     logger.info(f"✓ State Manager initialized (zero_retention={config.storage.zero_retention})")
     
@@ -165,17 +169,18 @@ def setup_system(config: RSPConfig) -> Orchestrator:
     return orchestrator
 
 
-async def main(config: RSPConfig):
+async def main(config: RSPConfig, model_version_override: Optional[str] = None):
     """
     Main execution function.
     
     Args:
         config: RSP configuration
+        model_version_override: Optional override for model version tracking
     """
     logger.info("Starting Red Set ProtoCell...")
     
     # Setup system
-    orchestrator = setup_system(config)
+    orchestrator = setup_system(config, model_version_override)
     
     try:
         # Run session
@@ -187,8 +192,23 @@ async def main(config: RSPConfig):
         logger.info("SESSION COMPLETED")
         logger.info("=" * 60)
         logger.info(f"Total Rounds: {stats['session']['total_rounds']}")
+        logger.info(f"Model Version: {stats['session']['model_version']}")
         logger.info(f"Average Score: {stats['scores']['average_global_score']:.3f}")
         logger.info(f"Blocked by EGG: {stats['scores']['total_blocked']}")
+        
+        # Display time analytics if available
+        if 'time_analytics' in stats:
+            logger.info("")
+            logger.info("Time Analytics:")
+            fatigue = stats['time_analytics']['fatigue']
+            drift = stats['time_analytics']['drift']
+            logger.info(f"  Fatigue Detected: {fatigue['is_fatigued']}")
+            if fatigue['is_fatigued']:
+                logger.info(f"  Fatigue Score: {fatigue['fatigue_score']:.3f}")
+                logger.info(f"  Degradation Rate: {fatigue['degradation_rate']:.4f} per round")
+            logger.info(f"  Score Drift: {drift['drift_direction']}")
+            logger.info(f"  Trend Slope: {drift['trend_slope']:+.4f}")
+        
         logger.info("")
         logger.info("Agent Statistics:")
         logger.info(f"  Sniper: {stats['agents']['sniper']['total_generated']} prompts generated")
@@ -260,6 +280,12 @@ def parse_arguments():
         help='Database path (default: rsp_session.db)'
     )
     
+    parser.add_argument(
+        '--model-version',
+        type=str,
+        help='Model version identifier for tracking (optional, defaults to model name)'
+    )
+    
     return parser.parse_args()
 
 
@@ -292,9 +318,9 @@ if __name__ == "__main__":
     if args.model:
         config.target.model_name = args.model
     
-    # Run main
+    # Run main with model_version override if provided
     try:
-        asyncio.run(main(config))
+        asyncio.run(main(config, model_version_override=args.model_version))
     except Exception as e:
         logger.error(f"Fatal error: {e}", exc_info=True)
         sys.exit(1)

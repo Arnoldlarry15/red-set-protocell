@@ -6,10 +6,19 @@ Tests for the new API endpoints:
 """
 
 import pytest
+import os
 from fastapi.testclient import TestClient
+
+# Set demo password for tests before importing app
+os.environ["RSP_DEMO_PASSWORD"] = "test_password_123"
+
 from app.api_server import app
 
 client = TestClient(app)
+
+# Demo credentials for tests
+DEMO_USERNAME = "admin"
+DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD", "changeme")
 
 
 class TestInfraDashboard:
@@ -58,14 +67,14 @@ class TestUserManagement:
         """Test successful login"""
         response = client.post(
             "/api/auth/login",
-            json={"username": "admin", "password": "admin123"}
+            json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
         )
         assert response.status_code == 200
         data = response.json()
         assert "username" in data
         assert "role" in data
         assert "token" in data
-        assert data["username"] == "admin"
+        assert data["username"] == DEMO_USERNAME
 
     def test_login_failure(self):
         """Test failed login with invalid credentials"""
@@ -231,7 +240,7 @@ class TestAPIIntegration:
         # 1. Login
         login_response = client.post(
             "/api/auth/login",
-            json={"username": "admin", "password": "admin123"}
+            json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
         )
         assert login_response.status_code == 200
 

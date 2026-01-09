@@ -17,6 +17,16 @@ cd rsp-core/backend
 pip install -r requirements.txt
 ```
 
+### Configure Demo Password (Optional)
+
+The demo admin account uses a password from the environment variable. Set it before starting the server:
+
+```bash
+export RSP_DEMO_PASSWORD="your_secure_password_here"
+```
+
+If not set, the default is `changeme`.
+
 ### Start the API Server
 
 ```bash
@@ -24,6 +34,10 @@ python -m uvicorn app.api_server:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 The API server will be available at `http://localhost:8000`.
+
+**Demo Credentials:**
+- Username: `admin`
+- Password: Value of `RSP_DEMO_PASSWORD` environment variable (default: `changeme`)
 
 ### Verify Installation
 
@@ -148,10 +162,13 @@ curl "http://localhost:8000/api/dashboard/export/rsp_20260109_123456?format=json
 ### Login
 
 ```bash
+# Use the password set in RSP_DEMO_PASSWORD environment variable
 curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
+  -d '{"username": "admin", "password": "changeme"}'
 ```
+
+**Note:** Replace `changeme` with the value you set in `RSP_DEMO_PASSWORD`.
 
 ### Save Configuration
 
@@ -275,7 +292,7 @@ npm install
 
 **Error:** "Admin Access Required"
 
-**Solution:** Make sure you're logged in with the admin account (username: `admin`, password: `admin123`).
+**Solution:** Make sure you're logged in with the admin account (username: `admin`, password: value from `RSP_DEMO_PASSWORD` environment variable).
 
 ### Session not found
 

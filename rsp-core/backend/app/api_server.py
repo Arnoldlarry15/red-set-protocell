@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -90,13 +91,16 @@ active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
 
-# SECURITY WARNING: Demo user with plaintext password
-# IN PRODUCTION: Use proper password hashing (bcrypt) and secure storage
+# SECURITY WARNING: Demo authentication system
+# IN PRODUCTION: Use proper password hashing (bcrypt), database storage, and secure secrets
+# Set RSP_DEMO_PASSWORD environment variable to change the demo password
+DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD", "changeme")
+
 users: Dict[str, Dict[str, Any]] = {
     "admin": {
         "email": "admin@rsp.com",
         "role": "admin",
-        "password": "admin123"  # INSECURE - Demo only! Hash passwords in production!
+        "password": DEMO_PASSWORD  # Load from environment variable
     }
 }
 

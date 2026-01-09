@@ -147,6 +147,18 @@ All current users are displayed with:
 4. System authenticates and assigns role
 5. Redirected to appropriate dashboard
 
+#### Demo Credentials
+
+The demo system includes a default admin account:
+- **Username:** `admin`
+- **Password:** Set via `RSP_DEMO_PASSWORD` environment variable (default: `changeme`)
+
+To customize the demo password:
+```bash
+export RSP_DEMO_PASSWORD="your_secure_password"
+python -m uvicorn app.api_server:app --reload
+```
+
 **Note:** In production, API keys should be validated against the provider before authentication. The current implementation uses a simplified demo authentication.
 
 ---

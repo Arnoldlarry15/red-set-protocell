@@ -42,9 +42,12 @@ Perturbation Modes:
 import logging
 import random
 import time
+import asyncio
 from typing import Optional, Dict, Any, List
 from abc import ABC, abstractmethod
 from enum import Enum
+
+from app.interfaces.target import BaseTarget
 
 logger = logging.getLogger(__name__)
 
@@ -114,16 +117,21 @@ class PerturbationConfig:
         self.truncation_ratio_range = truncation_ratio_range
 
 
-class TargetBackend(ABC):
-    """Abstract base class for Target backend implementations."""
+class TargetBackend(BaseTarget):
+    """
+    Abstract base class for Target backend implementations.
+    
+    Now inherits from BaseTarget interface for industry-grade abstraction.
+    Maintains backward compatibility while supporting async execution.
+    """
 
     def __init__(self):
         self.perturbation_config = PerturbationConfig()
 
     @abstractmethod
-    def execute(self, prompt: str, **kwargs) -> str:
+    async def execute(self, prompt: str, **kwargs) -> str:
         """
-        Execute a prompt against the backend.
+        Execute a prompt against the backend (async).
 
         Args:
             prompt: The prompt to execute
@@ -133,6 +141,13 @@ class TargetBackend(ABC):
             Model response string
         """
         pass
+    
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get backend information."""
+        return {
+            "backend_type": self.__class__.__name__,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
     def set_perturbation_config(self, config: PerturbationConfig):
         """Set perturbation configuration."""
@@ -218,7 +233,21 @@ class TargetBackend(ABC):
         # Apply simulated latency
         if PerturbationMode.SIMULATED_LATENCY in self.perturbation_config.modes:
             latency_ms = random.uniform(*self.perturbation_config.latency_range_ms)
-            time.sleep(latency_ms / 1000.0)
+            # Use asyncio.sleep for async compatibility
+            import inspect
+            if inspect.iscoroutinefunction(self.__class__.execute):
+                # If running in async context, this will work
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # Already in async context, can't await directly
+                        time.sleep(latency_ms / 1000.0)
+                    else:
+                        time.sleep(latency_ms / 1000.0)
+                except:
+                    time.sleep(latency_ms / 1000.0)
+            else:
+                time.sleep(latency_ms / 1000.0)
             logger.debug(f"Simulated latency: {latency_ms:.0f}ms")
 
         # Apply response truncation
@@ -265,16 +294,16 @@ class OpenAIBackend(TargetBackend):
 
         # Initialize OpenAI client
         try:
-            from openai import OpenAI
+            from openai import AsyncOpenAI
 
-            self.client = OpenAI(api_key=self.api_key)
+            self.client = AsyncOpenAI(api_key=self.api_key)
         except ImportError:
             raise ImportError(
                 "OpenAI package not installed. Install with: pip install openai"
             )
 
-    def execute(self, prompt: str, **kwargs) -> str:
-        """Execute prompt using OpenAI API."""
+    async def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using OpenAI API (async)."""
         try:
             # Prepare messages
             messages = [{"role": "user", "content": prompt}]
@@ -284,7 +313,7 @@ class OpenAIBackend(TargetBackend):
                 self._apply_perturbations(prompt, self.temperature, messages)
             )
 
-            response = self.client.chat.completions.create(
+            response = await self.client.chat.completions.create(
                 model=self.model_name,
                 messages=modified_messages,
                 max_tokens=self.max_tokens,
@@ -301,6 +330,15 @@ class OpenAIBackend(TargetBackend):
         except Exception as e:
             logger.error(f"OpenAI API call failed: {e}")
             raise
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get OpenAI backend information."""
+        return {
+            "backend_type": "openai",
+            "model_name": self.model_name,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
 
 class AnthropicBackend(TargetBackend):
@@ -333,16 +371,16 @@ class AnthropicBackend(TargetBackend):
 
         # Initialize Anthropic client
         try:
-            from anthropic import Anthropic
+            from anthropic import AsyncAnthropic
 
-            self.client = Anthropic(api_key=self.api_key)
+            self.client = AsyncAnthropic(api_key=self.api_key)
         except ImportError:
             raise ImportError(
                 "Anthropic package not installed. Install with: pip install anthropic"
             )
 
-    def execute(self, prompt: str, **kwargs) -> str:
-        """Execute prompt using Anthropic API."""
+    async def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using Anthropic API (async)."""
         try:
             # Prepare messages
             messages = [{"role": "user", "content": prompt}]
@@ -371,7 +409,7 @@ class AnthropicBackend(TargetBackend):
             if system_prompt:
                 api_params["system"] = system_prompt
 
-            response = self.client.messages.create(**api_params)
+            response = await self.client.messages.create(**api_params)
 
             result = response.content[0].text
 
@@ -383,6 +421,15 @@ class AnthropicBackend(TargetBackend):
         except Exception as e:
             logger.error(f"Anthropic API call failed: {e}")
             raise
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get Anthropic backend information."""
+        return {
+            "backend_type": "anthropic",
+            "model_name": self.model_name,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
 
 class LlamaCppBackend(TargetBackend):
@@ -432,19 +479,24 @@ class LlamaCppBackend(TargetBackend):
         except Exception as e:
             raise RuntimeError(f"Failed to load GGUF model from {model_path}: {e}")
 
-    def execute(self, prompt: str, **kwargs) -> str:
-        """Execute prompt using local GGUF model."""
+    async def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using local GGUF model (async wrapper for sync call)."""
         try:
             # Apply perturbations
             modified_prompt, modified_temperature, _ = self._apply_perturbations(
                 prompt, self.temperature, None
             )
 
-            response = self.model(
-                modified_prompt,
-                max_tokens=self.max_tokens,
-                temperature=modified_temperature,
-                echo=False,
+            # llama-cpp-python is synchronous, so we run it in executor
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: self.model(
+                    modified_prompt,
+                    max_tokens=self.max_tokens,
+                    temperature=modified_temperature,
+                    echo=False,
+                )
             )
 
             result = response["choices"][0]["text"]
@@ -457,6 +509,16 @@ class LlamaCppBackend(TargetBackend):
         except Exception as e:
             logger.error(f"LlamaCpp execution failed: {e}")
             raise
+    
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get LlamaCpp backend information."""
+        return {
+            "backend_type": "llama_cpp",
+            "model_path": self.model_path,
+            "n_ctx": self.n_ctx,
+            "n_gpu_layers": self.n_gpu_layers,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
 
 class CustomHTTPBackend(TargetBackend):
@@ -501,8 +563,8 @@ class CustomHTTPBackend(TargetBackend):
                 "requests package not installed. Install with: pip install requests"
             )
 
-    def execute(self, prompt: str, **kwargs) -> str:
-        """Execute prompt using custom HTTP API."""
+    async def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using custom HTTP API (async)."""
         try:
             # Apply perturbations
             modified_prompt, modified_temperature, modified_messages = (
@@ -532,8 +594,13 @@ class CustomHTTPBackend(TargetBackend):
                     "temperature": modified_temperature,
                 }
 
-            response = requests.post(
-                self.api_url, json=payload, headers=self.headers, timeout=60
+            # Use asyncio to run requests in executor (requests is sync)
+            loop = asyncio.get_event_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: requests.post(
+                    self.api_url, json=payload, headers=self.headers, timeout=60
+                )
             )
             response.raise_for_status()
 
@@ -558,6 +625,15 @@ class CustomHTTPBackend(TargetBackend):
         except Exception as e:
             logger.error(f"Custom HTTP API call failed: {e}")
             raise
+    
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get CustomHTTP backend information."""
+        return {
+            "backend_type": "custom_http",
+            "api_url": self.api_url,
+            "request_format": self.request_format,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
 
 class Target:
@@ -591,9 +667,9 @@ class Target:
         if perturbation_config:
             self.backend.set_perturbation_config(perturbation_config)
 
-    def execute(self, prompt: str, metadata: Optional[Dict[str, Any]] = None) -> str:
+    async def execute(self, prompt: str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """
-        Execute a prompt against the configured backend.
+        Execute a prompt against the configured backend (async).
 
         This is a stateless operation with no memory of prior executions.
 
@@ -610,7 +686,7 @@ class Target:
 
         # Execute prompt
         try:
-            response = self.backend.execute(prompt)
+            response = await self.backend.execute(prompt)
             self.execution_count += 1
 
             logger.info(f"Target execution #{self.execution_count} completed")

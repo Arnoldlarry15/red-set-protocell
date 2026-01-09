@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 class NewAgent:
     """
     [Brief description of what this agent does]
-    
+
     Role: [Specific role in the RSP system]
     Inputs: [What data this agent receives]
     Outputs: [What data this agent produces]
@@ -37,43 +37,43 @@ class NewAgent:
         - [Constraint 1]
         - [Constraint 2]
         - [Constraint 3]
-    
+
     Examples:
         >>> agent = NewAgent(config_param="value")
         >>> result = agent.process_data(input_data)
         >>> print(result)
     """
-    
+
     def __init__(self, config_param: str = "default"):
         """
         Initialize the agent.
-        
+
         Args:
             config_param: Description of configuration parameter
         """
         self.config_param = config_param
         self._statistics = {
-            'total_operations': 0,
-            'successful_operations': 0,
-            'failed_operations': 0
+            "total_operations": 0,
+            "successful_operations": 0,
+            "failed_operations": 0,
         }
-        
+
         logger.info(f"NewAgent initialized with config_param={config_param}")
-    
+
     def process_data(self, input_data: str) -> Dict[str, Any]:
         """
         Main processing method for this agent.
-        
+
         Args:
             input_data: Description of input parameter
-            
+
         Returns:
             Dictionary with processing results
-            
+
         Raises:
             ValueError: If input_data is invalid
             RuntimeError: If processing fails
-            
+
         Examples:
             >>> agent = NewAgent()
             >>> result = agent.process_data("test input")
@@ -82,7 +82,7 @@ class NewAgent:
         # Validate inputs
         if not input_data:
             raise ValueError("input_data cannot be empty")
-        
+
         try:
             # TODO: Implement your agent's core logic here
             # Remember:
@@ -90,41 +90,38 @@ class NewAgent:
             # 2. Validate all outputs before returning
             # 3. Handle errors gracefully
             # 4. Log important operations
-            
+
             result = {
-                'output': f"Processed: {input_data}",
-                'metadata': {
-                    'timestamp': 'ISO-8601 timestamp',
-                    'success': True
-                }
+                "output": f"Processed: {input_data}",
+                "metadata": {"timestamp": "ISO-8601 timestamp", "success": True},
             }
-            
-            self._statistics['total_operations'] += 1
-            self._statistics['successful_operations'] += 1
-            
+
+            self._statistics["total_operations"] += 1
+            self._statistics["successful_operations"] += 1
+
             return result
-            
+
         except Exception as e:
-            self._statistics['total_operations'] += 1
-            self._statistics['failed_operations'] += 1
+            self._statistics["total_operations"] += 1
+            self._statistics["failed_operations"] += 1
             logger.error(f"NewAgent processing failed: {e}")
             raise RuntimeError(f"Processing failed: {e}")
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """
         Return agent statistics for monitoring.
-        
+
         Returns:
             Dictionary with statistics
         """
         return self._statistics.copy()
-    
+
     def reset_statistics(self):
         """Reset statistics counters."""
         self._statistics = {
-            'total_operations': 0,
-            'successful_operations': 0,
-            'failed_operations': 0
+            "total_operations": 0,
+            "successful_operations": 0,
+            "failed_operations": 0,
         }
         logger.info("NewAgent statistics reset")
 
@@ -133,10 +130,10 @@ class NewAgent:
 def helper_function(param: str) -> str:
     """
     Helper function description.
-    
+
     Args:
         param: Parameter description
-        
+
     Returns:
         Result description
     """

@@ -41,37 +41,37 @@ logger = logging.getLogger(__name__)
 class TargetBackend(ABC):
     """
     Abstract base class for all Target backends.
-    
+
     All LLM backend implementations must inherit from this class and
     implement the execute() method.
     """
-    
+
     def __init__(self):
         """Initialize backend."""
         self._statistics = {
-            'total_executions': 0,
-            'successful_executions': 0,
-            'failed_executions': 0,
-            'total_tokens': 0
+            "total_executions": 0,
+            "successful_executions": 0,
+            "failed_executions": 0,
+            "total_tokens": 0,
         }
-    
+
     @abstractmethod
     def execute(self, prompt: str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """
         Execute a prompt on the target LLM.
-        
+
         Args:
             prompt: The prompt to execute
             metadata: Optional metadata (round number, domain, etc.)
-            
+
         Returns:
             LLM response as string
-            
+
         Raises:
             RuntimeError: If execution fails
         """
         pass
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Return execution statistics."""
         return self._statistics.copy()
@@ -80,22 +80,22 @@ class TargetBackend(ABC):
 class NewBackend(TargetBackend):
     """
     Target backend for [LLM Provider Name] API.
-    
+
     This backend integrates with [Provider]'s API to execute prompts
     on their LLM models.
-    
+
     Requirements:
         - API key from [Provider]
         - Python package: [package-name]
         - Network access to [Provider] API endpoint
-    
+
     Configuration:
         - api_key: API authentication key
         - model_name: Specific model identifier
         - max_tokens: Maximum response length
         - temperature: Sampling temperature (0.0-1.0)
         - fresh_context: Always use fresh context (required=True)
-    
+
     Examples:
         >>> backend = NewBackend(
         ...     api_key="your-api-key",
@@ -106,51 +106,51 @@ class NewBackend(TargetBackend):
         >>> print(response)
         '4'
     """
-    
+
     def __init__(
         self,
         api_key: str,
         model_name: str = "default-model",
         max_tokens: int = 1000,
         temperature: float = 0.7,
-        fresh_context: bool = True
+        fresh_context: bool = True,
     ):
         """
         Initialize the new backend.
-        
+
         Args:
             api_key: API authentication key
             model_name: Model identifier for this provider
             max_tokens: Maximum tokens in response
             temperature: Sampling temperature
             fresh_context: Use fresh context per round (must be True)
-            
+
         Raises:
             ValueError: If configuration is invalid
             ImportError: If required package is not installed
         """
         super().__init__()
-        
+
         # Validate inputs
         if not api_key:
             raise ValueError("api_key is required")
-        
+
         if not fresh_context:
             raise ValueError("fresh_context must be True for RSP compliance")
-        
+
         if not 0.0 <= temperature <= 1.0:
             raise ValueError(f"temperature must be in [0.0, 1.0], got {temperature}")
-        
+
         if max_tokens <= 0:
             raise ValueError(f"max_tokens must be > 0, got {max_tokens}")
-        
+
         # Store configuration
         self.api_key = api_key  # NOTE: Never log this!
         self.model_name = model_name
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.fresh_context = fresh_context
-        
+
         # Initialize API client
         try:
             # TODO: Import and initialize your API client here
@@ -163,28 +163,28 @@ class NewBackend(TargetBackend):
                 f"Required package not installed. "
                 f"Install with: pip install [package-name]"
             ) from e
-        
+
         logger.info(
             f"NewBackend initialized (model={model_name}, "
             f"max_tokens={max_tokens}, temperature={temperature})"
         )
         # NOTE: Never log API keys!
-    
+
     def execute(self, prompt: str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """
         Execute a prompt on the [Provider] LLM.
-        
+
         Args:
             prompt: The adversarial prompt to execute
             metadata: Optional metadata (not used by backend, for logging only)
-            
+
         Returns:
             LLM response as string
-            
+
         Raises:
             RuntimeError: If API call fails
             ValueError: If prompt is empty
-            
+
         Examples:
             >>> backend = NewBackend(api_key="key", model_name="model")
             >>> response = backend.execute("Hello!")
@@ -194,13 +194,13 @@ class NewBackend(TargetBackend):
         # Validate prompt
         if not prompt or not isinstance(prompt, str):
             raise ValueError("Prompt must be a non-empty string")
-        
+
         # Log execution attempt (but not API keys or sensitive data!)
         logger.debug(
             f"Executing prompt on {self.model_name} "
             f"(length={len(prompt)}, round={metadata.get('round', 'N/A') if metadata else 'N/A'})"
         )
-        
+
         try:
             # TODO: Implement API call to your LLM provider
             # Example structure:
@@ -213,37 +213,37 @@ class NewBackend(TargetBackend):
                 max_tokens=self.max_tokens,
                 temperature=self.temperature
             )
-            
+
             # Extract text from response
             response_text = response.choices[0].message.content
-            
+
             # Update statistics
             self._statistics['total_tokens'] += response.usage.total_tokens
             """
-            
+
             # Placeholder implementation
             response_text = f"[NewBackend] Response to: {prompt[:50]}..."
-            
+
             # Update statistics
-            self._statistics['total_executions'] += 1
-            self._statistics['successful_executions'] += 1
-            
+            self._statistics["total_executions"] += 1
+            self._statistics["successful_executions"] += 1
+
             # Validate response
             if not isinstance(response_text, str):
                 raise RuntimeError("API returned non-string response")
-            
+
             logger.debug(f"Execution successful (response_length={len(response_text)})")
-            
+
             return response_text
-            
+
         except Exception as e:
             # Update failure statistics
-            self._statistics['total_executions'] += 1
-            self._statistics['failed_executions'] += 1
-            
+            self._statistics["total_executions"] += 1
+            self._statistics["failed_executions"] += 1
+
             # Log error (but not sensitive details!)
             logger.error(f"NewBackend execution failed: {type(e).__name__}")
-            
+
             # Re-raise as RuntimeError
             raise RuntimeError(f"LLM execution failed: {e}") from e
 

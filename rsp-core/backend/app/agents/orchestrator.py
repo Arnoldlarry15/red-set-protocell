@@ -24,24 +24,24 @@ Architecture Pattern:
 
 Examples:
     Basic session execution:
-    
+
     >>> from app.agents.orchestrator import Orchestrator, StateManager
     >>> from app.core.config import get_default_config
     >>> from app.main import setup_system
-    >>> 
+    >>>
     >>> # Initialize system
     >>> config = get_default_config()
     >>> config.orchestrator.max_rounds = 10
     >>> orchestrator = setup_system(config)
-    >>> 
+    >>>
     >>> # Run session (async)
     >>> import asyncio
     >>> stats = asyncio.run(orchestrator.run_session())
     >>> print(f"Completed {stats['session']['total_rounds']} rounds")
     >>> print(f"Average score: {stats['scores']['average_global_score']:.3f}")
-    
+
     Custom round execution with error handling:
-    
+
     >>> async def run_with_monitoring(orchestrator):
     ...     try:
     ...         for round_num in range(1, 11):
@@ -53,9 +53,9 @@ Examples:
     ...         orchestrator.terminate_session()
     ...     finally:
     ...         orchestrator.cleanup()
-    
+
     Access session statistics:
-    
+
     >>> stats = orchestrator.get_statistics()
     >>> print(f"Total rounds: {stats['session']['total_rounds']}")
     >>> print(f"Blocked prompts: {stats['scores']['total_blocked']}")
@@ -75,7 +75,7 @@ Round Execution Flow:
     4. Orchestrator invokes Spotter to evaluate response
     5. Orchestrator persists round result via StateManager
     6. Orchestrator updates aggregate statistics
-    
+
     If EGG blocks: Skip to next round, log block event
 
 Error Handling:
@@ -120,6 +120,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class RoundResult:
     """Result of a single round execution."""
+
     round_number: int
     prompt: str
     attack_domain: str
@@ -130,7 +131,7 @@ class RoundResult:
     timestamp: str
     model_version: str = "unknown"
     session_start_time: Optional[str] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
@@ -139,17 +140,20 @@ class RoundResult:
 class StateManager:
     """
     Manages state persistence for the Orchestrator.
-    
+
     Supports SQLite (default) and PostgreSQL backends.
     Implements Zero-Retention Policy when enabled.
     """
-    
-    def __init__(self, database_path: str = "rsp_session.db",
-                 zero_retention: bool = True,
-                 model_version: str = "unknown"):
+
+    def __init__(
+        self,
+        database_path: str = "rsp_session.db",
+        zero_retention: bool = True,
+        model_version: str = "unknown",
+    ):
         """
         Initialize state manager.
-        
+
         Args:
             database_path: Path to SQLite database
             zero_retention: Enable zero-retention policy
@@ -160,17 +164,18 @@ class StateManager:
         self.session_id = generate_session_id()
         self.model_version = model_version
         self.session_start_time = datetime.now(timezone.utc).isoformat()
-        
+
         # Initialize database
         self._init_database()
-        
+
     def _init_database(self):
         """Initialize database schema."""
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         # Create rounds table with model_version and session_start_time
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS rounds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
@@ -185,166 +190,188 @@ class StateManager:
                 model_version TEXT DEFAULT 'unknown',
                 session_start_time TEXT
             )
-        ''')
-        
+        """
+        )
+
         # Create metadata table
-        cursor.execute('''
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS metadata (
                 session_id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
                 config TEXT NOT NULL,
                 model_version TEXT DEFAULT 'unknown'
             )
-        ''')
-        
+        """
+        )
+
         # Add model_version column if it doesn't exist (migration)
         try:
-            cursor.execute('ALTER TABLE rounds ADD COLUMN model_version TEXT DEFAULT "unknown"')
+            cursor.execute(
+                'ALTER TABLE rounds ADD COLUMN model_version TEXT DEFAULT "unknown"'
+            )
         except sqlite3.OperationalError:
             pass  # Column already exists
-        
+
         # Add session_start_time column if it doesn't exist (migration)
         try:
-            cursor.execute('ALTER TABLE rounds ADD COLUMN session_start_time TEXT')
+            cursor.execute("ALTER TABLE rounds ADD COLUMN session_start_time TEXT")
         except sqlite3.OperationalError:
             pass  # Column already exists
-        
+
         conn.commit()
         conn.close()
-        
-        logger.info(f"State manager initialized - Session: {self.session_id}, Model: {self.model_version}")
-    
+
+        logger.info(
+            f"State manager initialized - Session: {self.session_id}, Model: {self.model_version}"
+        )
+
     def save_round(self, round_result: RoundResult):
         """Save round result to database."""
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
-        cursor.execute('''
+
+        cursor.execute(
+            """
             INSERT INTO rounds (
                 session_id, round_number, prompt, attack_domain,
                 target_response, evaluation, global_score, blocked_by_egg, 
                 timestamp, model_version, session_start_time
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            self.session_id,
-            round_result.round_number,
-            round_result.prompt,
-            round_result.attack_domain,
-            round_result.target_response,
-            json.dumps(round_result.evaluation),
-            round_result.global_score,
-            1 if round_result.blocked_by_egg else 0,
-            round_result.timestamp,
-            round_result.model_version,
-            round_result.session_start_time
-        ))
-        
+        """,
+            (
+                self.session_id,
+                round_result.round_number,
+                round_result.prompt,
+                round_result.attack_domain,
+                round_result.target_response,
+                json.dumps(round_result.evaluation),
+                round_result.global_score,
+                1 if round_result.blocked_by_egg else 0,
+                round_result.timestamp,
+                round_result.model_version,
+                round_result.session_start_time,
+            ),
+        )
+
         conn.commit()
         conn.close()
-    
+
     def get_prior_rounds(self, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Retrieve prior round metadata.
-        
+
         Args:
             limit: Maximum number of rounds to retrieve
-            
+
         Returns:
             List of round metadata dictionaries
         """
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
-        cursor.execute('''
+
+        cursor.execute(
+            """
             SELECT round_number, attack_domain, global_score, timestamp
             FROM rounds
             WHERE session_id = ?
             ORDER BY round_number DESC
             LIMIT ?
-        ''', (self.session_id, limit))
-        
+        """,
+            (self.session_id, limit),
+        )
+
         rows = cursor.fetchall()
         conn.close()
-        
+
         return [
             {
-                'round_number': row[0],
-                'attack_domain': row[1],
-                'global_score': row[2],
-                'timestamp': row[3]
+                "round_number": row[0],
+                "attack_domain": row[1],
+                "global_score": row[2],
+                "timestamp": row[3],
             }
             for row in rows
         ]
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """Get aggregate statistics."""
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         # Total rounds
         cursor.execute(
-            'SELECT COUNT(*) FROM rounds WHERE session_id = ?',
-            (self.session_id,)
+            "SELECT COUNT(*) FROM rounds WHERE session_id = ?", (self.session_id,)
         )
         total_rounds = cursor.fetchone()[0]
-        
+
         # Average score
         cursor.execute(
-            'SELECT AVG(global_score) FROM rounds WHERE session_id = ?',
-            (self.session_id,)
+            "SELECT AVG(global_score) FROM rounds WHERE session_id = ?",
+            (self.session_id,),
         )
         avg_score = cursor.fetchone()[0] or 0.0
-        
+
         # Blocked count
         cursor.execute(
-            'SELECT COUNT(*) FROM rounds WHERE session_id = ? AND blocked_by_egg = 1',
-            (self.session_id,)
+            "SELECT COUNT(*) FROM rounds WHERE session_id = ? AND blocked_by_egg = 1",
+            (self.session_id,),
         )
         blocked_count = cursor.fetchone()[0]
-        
+
         conn.close()
-        
+
         return {
-            'total_rounds': total_rounds,
-            'average_score': avg_score,
-            'blocked_count': blocked_count,
-            'session_id': self.session_id
+            "total_rounds": total_rounds,
+            "average_score": avg_score,
+            "blocked_count": blocked_count,
+            "session_id": self.session_id,
         }
-    
+
     def cleanup(self):
         """Cleanup session data (Zero-Retention Policy)."""
         if self.zero_retention:
             conn = sqlite3.connect(self.database_path)
             cursor = conn.cursor()
-            
+
             cursor.execute(
-                'DELETE FROM rounds WHERE session_id = ?',
-                (self.session_id,)
+                "DELETE FROM rounds WHERE session_id = ?", (self.session_id,)
             )
-            
+
             conn.commit()
             conn.close()
-            
-            logger.info(f"Zero-retention cleanup completed for session {self.session_id}")
+
+            logger.info(
+                f"Zero-retention cleanup completed for session {self.session_id}"
+            )
 
 
 class Orchestrator:
     """
     The Orchestrator is the control plane for the Red Set ProtoCell system.
-    
+
     It has final authority over:
     - Execution flow
     - State persistence
     - Agent coordination
     - Round lifecycle
     """
-    
-    def __init__(self, sniper, target, spotter, egg, scoring_engine: ScoringEngine,
-                 state_manager: StateManager, max_rounds: int = 100,
-                 round_timeout: int = 300, concurrent_rounds: int = 1):
+
+    def __init__(
+        self,
+        sniper,
+        target,
+        spotter,
+        egg,
+        scoring_engine: ScoringEngine,
+        state_manager: StateManager,
+        max_rounds: int = 100,
+        round_timeout: int = 300,
+        concurrent_rounds: int = 1,
+    ):
         """
         Initialize Orchestrator.
-        
+
         Args:
             sniper: Sniper agent instance
             target: Target agent instance
@@ -363,15 +390,19 @@ class Orchestrator:
         assert egg is not None, "EGG (Ethical Guardrail Governor) must not be None"
         assert scoring_engine is not None, "Scoring engine must not be None"
         assert state_manager is not None, "State manager must not be None"
-        
+
         # INVARIANT: Configuration values must be valid
         assert max_rounds > 0, f"max_rounds must be > 0, got {max_rounds}"
         assert round_timeout > 0, f"round_timeout must be > 0, got {round_timeout}"
-        assert concurrent_rounds > 0, f"concurrent_rounds must be > 0, got {concurrent_rounds}"
-        
+        assert (
+            concurrent_rounds > 0
+        ), f"concurrent_rounds must be > 0, got {concurrent_rounds}"
+
         # INVARIANT: EGG must be enabled (cannot be bypassed)
-        assert hasattr(egg, 'inspect_prompt'), "EGG must implement inspect_prompt method"
-        
+        assert hasattr(
+            egg, "inspect_prompt"
+        ), "EGG must implement inspect_prompt method"
+
         self.sniper = sniper
         self.target = target
         self.spotter = spotter
@@ -381,23 +412,25 @@ class Orchestrator:
         self.max_rounds = max_rounds
         self.round_timeout = round_timeout
         self.concurrent_rounds = concurrent_rounds
-        
+
         self.current_round = 0
         self.session_active = False
-        
+
         logger.info("Orchestrator initialized with invariant checks passed")
-        
+
     async def run_session(self) -> Dict[str, Any]:
         """
         Run a complete RSP session.
-        
+
         Returns:
             Session statistics and results
         """
         self.session_active = True
-        logger.info(f"Starting RSP session - Max rounds: {self.max_rounds}, "
-                   f"Concurrent: {self.concurrent_rounds}")
-        
+        logger.info(
+            f"Starting RSP session - Max rounds: {self.max_rounds}, "
+            f"Concurrent: {self.concurrent_rounds}"
+        )
+
         try:
             if self.concurrent_rounds > 1:
                 # Parallel execution mode
@@ -405,148 +438,150 @@ class Orchestrator:
             else:
                 # Sequential execution mode
                 await self._run_session_sequential()
-        
+
         finally:
             self.session_active = False
-            
+
         # Get final statistics
         stats = self._compile_statistics()
-        
+
         logger.info(f"Session completed - Total rounds: {self.current_round}")
-        
+
         return stats
-    
+
     async def _run_session_sequential(self):
         """Run session with sequential round execution."""
         for round_num in range(1, self.max_rounds + 1):
             if not self.session_active:
                 logger.info("Session terminated early")
                 break
-            
+
             self.current_round = round_num
-            
+
             try:
                 # Execute round with timeout
                 result = await asyncio.wait_for(
-                    self._execute_round(round_num),
-                    timeout=self.round_timeout
+                    self._execute_round(round_num), timeout=self.round_timeout
                 )
-                
+
                 # Save result
                 self.state_manager.save_round(result)
-                
+
                 logger.info(
                     f"Round {round_num} completed - "
                     f"Score: {result.global_score:.3f}, "
                     f"Blocked: {result.blocked_by_egg}"
                 )
-                
+
             except asyncio.TimeoutError:
                 logger.error(f"Round {round_num} timed out")
                 continue
             except Exception as e:
                 logger.error(f"Round {round_num} failed: {e}")
                 continue
-    
+
     async def _run_session_parallel(self):
         """Run session with parallel round execution."""
         round_num = 0
-        
+
         while round_num < self.max_rounds:
             if not self.session_active:
                 logger.info("Session terminated early")
                 break
-            
+
             # Create batch of rounds to execute
             batch_size = min(self.concurrent_rounds, self.max_rounds - round_num)
             batch_rounds = list(range(round_num + 1, round_num + batch_size + 1))
-            
+
             # Execute batch concurrently
             tasks = [
                 asyncio.create_task(self._execute_round_with_timeout(rnum))
                 for rnum in batch_rounds
             ]
-            
+
             # Wait for all tasks in batch to complete
             results = await asyncio.gather(*tasks, return_exceptions=True)
-            
+
             # Process results
             for rnum, result in zip(batch_rounds, results):
                 self.current_round = rnum
-                
+
                 if isinstance(result, Exception):
                     logger.error(f"Round {rnum} failed: {result}")
                     continue
-                
+
                 if result is None:
                     logger.error(f"Round {rnum} timed out")
                     continue
-                
+
                 # Save result
                 self.state_manager.save_round(result)
-                
+
                 logger.info(
                     f"Round {rnum} completed - "
                     f"Score: {result.global_score:.3f}, "
                     f"Blocked: {result.blocked_by_egg}"
                 )
-            
+
             round_num += batch_size
-    
-    async def _execute_round_with_timeout(self, round_number: int) -> Optional[RoundResult]:
+
+    async def _execute_round_with_timeout(
+        self, round_number: int
+    ) -> Optional[RoundResult]:
         """Execute a round with timeout handling."""
         try:
             return await asyncio.wait_for(
-                self._execute_round(round_number),
-                timeout=self.round_timeout
+                self._execute_round(round_number), timeout=self.round_timeout
             )
         except asyncio.TimeoutError:
             return None
-    
+
     async def _execute_round(self, round_number: int) -> RoundResult:
         """
         Execute a single round of the RSP cycle.
-        
+
         Flow:
         1. Sniper generates prompt
         2. EGG inspects prompt
         3. If passed, Target executes prompt
         4. Spotter evaluates response
         5. Update Sniper with score
-        
+
         Args:
             round_number: Current round number
-            
+
         Returns:
             RoundResult with complete round data
         """
         # INVARIANT: Round number must be positive
         assert round_number > 0, f"Round number must be > 0, got {round_number}"
-        
+
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         # Step 1: Sniper generates adversarial prompt
         prior_metadata = self.state_manager.get_prior_rounds(limit=10)
         prompt, attack_domain = self.sniper.generate_prompt(prior_metadata)
-        
+
         # INVARIANT: Sniper must produce valid outputs
-        assert isinstance(prompt, str) and len(prompt) > 0, "Sniper must generate non-empty prompt"
+        assert (
+            isinstance(prompt, str) and len(prompt) > 0
+        ), "Sniper must generate non-empty prompt"
         assert attack_domain is not None, "Sniper must specify attack domain"
-        
+
         # Step 2: EGG inspects prompt
         is_allowed, blocked_info = self.egg.inspect_prompt(prompt)
-        
+
         # INVARIANT: EGG inspection is mandatory and cannot be bypassed
         assert isinstance(is_allowed, bool), "EGG must return boolean for is_allowed"
         # Note: blocked_info can be None when allowed, or BlockedContent when blocked
-        
+
         if not is_allowed:
             # Prompt blocked by EGG
             logger.warning(
                 f"Round {round_number} blocked by EGG - "
                 f"Category: {blocked_info.category}"
             )
-            
+
             return RoundResult(
                 round_number=round_number,
                 prompt=prompt,
@@ -557,46 +592,46 @@ class Orchestrator:
                 blocked_by_egg=True,
                 timestamp=timestamp,
                 model_version=self.state_manager.model_version,
-                session_start_time=self.state_manager.session_start_time
+                session_start_time=self.state_manager.session_start_time,
             )
-        
+
         # Step 3: Target executes prompt
         target_response = self.target.execute(
-            prompt,
-            metadata={'round': round_number, 'domain': attack_domain.value}
+            prompt, metadata={"round": round_number, "domain": attack_domain.value}
         )
-        
+
         # INVARIANT: Target must produce valid response
         assert isinstance(target_response, str), "Target must return string response"
-        
+
         # Step 4: Spotter evaluates response
         evaluation = self.spotter.evaluate(
-            target_response,
-            attack_domain=attack_domain.value,
-            prompt=prompt
+            target_response, attack_domain=attack_domain.value, prompt=prompt
         )
-        
+
         # INVARIANT: Spotter must produce valid evaluation structure
         assert isinstance(evaluation, dict), "Spotter must return dict evaluation"
-        assert 'l1' in evaluation and 'l2' in evaluation and 'l3' in evaluation, \
-            "Evaluation must contain l1, l2, and l3 layers"
-        assert all('score' in evaluation[layer] for layer in ['l1', 'l2', 'l3']), \
-            "Each layer must have a score field"
-        
+        assert (
+            "l1" in evaluation and "l2" in evaluation and "l3" in evaluation
+        ), "Evaluation must contain l1, l2, and l3 layers"
+        assert all(
+            "score" in evaluation[layer] for layer in ["l1", "l2", "l3"]
+        ), "Each layer must have a score field"
+
         # Step 5: Compute global score
         global_score = self.scoring_engine.compute_global_score(
-            evaluation['l1']['score'],
-            evaluation['l2']['score'],
-            evaluation['l3']['score']
+            evaluation["l1"]["score"],
+            evaluation["l2"]["score"],
+            evaluation["l3"]["score"],
         )
-        
+
         # INVARIANT: Global score must be in valid range [0.0, 1.0]
-        assert 0.0 <= global_score <= 1.0, \
-            f"Global score must be in [0.0, 1.0], got {global_score}"
-        
+        assert (
+            0.0 <= global_score <= 1.0
+        ), f"Global score must be in [0.0, 1.0], got {global_score}"
+
         # Update Sniper with score for evolution
         self.sniper.update_prompt_score(prompt, global_score)
-        
+
         return RoundResult(
             round_number=round_number,
             prompt=prompt,
@@ -607,71 +642,67 @@ class Orchestrator:
             blocked_by_egg=False,
             timestamp=timestamp,
             model_version=self.state_manager.model_version,
-            session_start_time=self.state_manager.session_start_time
+            session_start_time=self.state_manager.session_start_time,
         )
-    
+
     def _compile_statistics(self) -> Dict[str, Any]:
         """Compile comprehensive session statistics."""
         state_stats = self.state_manager.get_statistics()
-        
+
         # Import time analytics
         try:
-            from app.analytics.time_tracking import (
-                FatigueTracker, ScoreDriftAnalyzer
-            )
-            
+            from app.analytics.time_tracking import FatigueTracker, ScoreDriftAnalyzer
+
             # Analyze fatigue
             fatigue_tracker = FatigueTracker(self.state_manager.database_path)
             fatigue_report = fatigue_tracker.analyze_fatigue(
                 self.state_manager.session_id
             )
-            
+
             # Analyze score drift
             drift_analyzer = ScoreDriftAnalyzer(self.state_manager.database_path)
-            drift_metrics = drift_analyzer.analyze_drift(
-                self.state_manager.session_id
-            )
-            
+            drift_metrics = drift_analyzer.analyze_drift(self.state_manager.session_id)
+
             time_analytics = {
-                'fatigue': fatigue_report.to_dict(),
-                'drift': drift_metrics.to_dict()
+                "fatigue": fatigue_report.to_dict(),
+                "drift": drift_metrics.to_dict(),
             }
         except Exception as e:
             logger.warning(f"Time analytics failed: {e}")
             time_analytics = None
-        
+
         stats = {
-            'session': {
-                'session_id': self.state_manager.session_id,
-                'total_rounds': self.current_round,
-                'max_rounds': self.max_rounds,
-                'model_version': self.state_manager.model_version,
-                'session_start_time': self.state_manager.session_start_time
+            "session": {
+                "session_id": self.state_manager.session_id,
+                "total_rounds": self.current_round,
+                "max_rounds": self.max_rounds,
+                "model_version": self.state_manager.model_version,
+                "session_start_time": self.state_manager.session_start_time,
             },
-            'scores': {
-                'average_global_score': state_stats['average_score'],
-                'total_blocked': state_stats['blocked_count']
+            "scores": {
+                "average_global_score": state_stats["average_score"],
+                "total_blocked": state_stats["blocked_count"],
             },
-            'agents': {
-                'sniper': self.sniper.get_statistics(),
-                'target': self.target.get_statistics(),
-                'spotter': self.spotter.get_statistics(),
-                'egg': self.egg.get_statistics()
+            "agents": {
+                "sniper": self.sniper.get_statistics(),
+                "target": self.target.get_statistics(),
+                "spotter": self.spotter.get_statistics(),
+                "egg": self.egg.get_statistics(),
             },
-            'mutation': self.sniper.mutation_engine.get_statistics()
+            "mutation": self.sniper.mutation_engine.get_statistics(),
         }
-        
+
         # Add time analytics if available
         if time_analytics:
-            stats['time_analytics'] = time_analytics
-        
+            stats["time_analytics"] = time_analytics
+
         return stats
-    
+
     def terminate_session(self):
         """Terminate the current session."""
         self.session_active = False
         logger.info("Session termination requested")
-    
+
     def cleanup(self):
         """Cleanup session data (Zero-Retention Policy)."""
         self.state_manager.cleanup()

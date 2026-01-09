@@ -144,13 +144,15 @@ def demo_cross_spotter_evaluation():
     eval1 = engine.create_evaluation(
         cross_result['evaluation_1']['l1'],
         cross_result['evaluation_1']['l2'],
-        cross_result['evaluation_1']['l3']
+        cross_result['evaluation_1']['l3'],
+        cross_result['evaluation_1'].get('mutation_guidance', {})
     )
     
     eval2 = engine.create_evaluation(
         cross_result['evaluation_2']['l1'],
         cross_result['evaluation_2']['l2'],
-        cross_result['evaluation_2']['l3']
+        cross_result['evaluation_2']['l3'],
+        cross_result['evaluation_2'].get('mutation_guidance', {})
     )
     
     # Compute delta

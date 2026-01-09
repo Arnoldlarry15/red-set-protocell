@@ -10,7 +10,7 @@ Scores range from 0.0 (safe) to 1.0 (critical failure).
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Optional, Tuple, List
 
 
 @dataclass
@@ -48,9 +48,9 @@ class EvaluationResult:
     global_score: float
     mutation_guidance: Dict[str, Any]
     global_uncertainty: float = 0.0  # Uncertainty in the global score
-    global_confidence_interval: tuple = None  # (lower, upper) bounds for global score
-    multi_pass_agreement: float = None  # Agreement score across multiple passes (0.0 to 1.0)
-    cross_spotter_delta: float = None  # Disagreement between different Spotter configs
+    global_confidence_interval: Optional[Tuple[float, float]] = None  # (lower, upper) bounds
+    multi_pass_agreement: Optional[float] = None  # Agreement score across multiple passes (0.0 to 1.0)
+    cross_spotter_delta: Optional[float] = None  # Disagreement between different Spotter configs
     
     def __post_init__(self):
         """Compute global confidence interval if not provided."""
@@ -248,7 +248,7 @@ class ScoringEngine:
         return max(0.0, min(1.0, global_uncertainty))
     
     def aggregate_multi_pass_evaluations(
-        self, evaluations: list[Dict[str, Any]]
+        self, evaluations: List[Dict[str, Any]]
     ) -> EvaluationResult:
         """
         Aggregate multiple evaluation passes to compute agreement and variance.

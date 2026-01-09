@@ -203,18 +203,6 @@ class Sniper:
         
         return prompt, domain
     
-    def _extract_pool_entry(self, entry: tuple) -> tuple:
-        """
-        Extract (prompt, score, domain) from pool entry regardless of tuple length.
-        
-        Args:
-            entry: Pool entry (3-tuple or 4-tuple with optional strategy)
-            
-        Returns:
-            (prompt, score, domain) tuple
-        """
-        return (entry[0], entry[1], entry[2])
-    
     def _evolve_from_pool(
         self,
         target_domain: AttackDomain,

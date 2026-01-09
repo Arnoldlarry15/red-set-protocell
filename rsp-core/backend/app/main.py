@@ -103,6 +103,8 @@ def setup_system(config: RSPConfig) -> Orchestrator:
             SelectionStrategy.HYBRID
         )
         logger.info(f"✓ Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
+    else:
+        selection_strategy_enum = SelectionStrategy.HYBRID
     
     # Initialize Sniper Agent
     sniper = Sniper(
@@ -110,7 +112,7 @@ def setup_system(config: RSPConfig) -> Orchestrator:
         evolution_pool_size=config.sniper.evolution_pool_size,
         creativity_temperature=config.sniper.creativity_temperature,
         selection_engine=selection_engine,
-        selection_strategy=selection_strategy_enum or SelectionStrategy.HYBRID
+        selection_strategy=selection_strategy_enum
     )
     logger.info("✓ Sniper Agent initialized")
     

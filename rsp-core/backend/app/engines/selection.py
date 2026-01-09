@@ -226,29 +226,17 @@ class SelectionEngine:
         Old "winning" prompts lose dominance over time, encouraging
         exploration of new patterns.
         """
-        decayed = []
+        # Modify scores in-place to preserve object identity
         for candidate in candidates:
             age_seconds = candidate.age_in_seconds()
             decay_periods = int(age_seconds / self.decay_interval)
             
-            # Apply exponential decay
-            decay_factor = self.decay_rate ** decay_periods
-            
-            # Create new candidate with decayed score
-            decayed_candidate = PromptCandidate(
-                prompt=candidate.prompt,
-                score=candidate.score * decay_factor,
-                domain=candidate.domain,
-                strategy=candidate.strategy,
-                timestamp=candidate.timestamp,
-                usage_count=candidate.usage_count,
-                structural_hash=candidate.structural_hash,
-                diversity_score=candidate.diversity_score,
-                novelty_score=candidate.novelty_score
-            )
-            decayed.append(decayed_candidate)
+            if decay_periods > 0:
+                # Apply exponential decay
+                decay_factor = self.decay_rate ** decay_periods
+                candidate.score = candidate.score * decay_factor
         
-        return decayed
+        return candidates
     
     def _update_novelty_scores(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
@@ -294,32 +282,16 @@ class SelectionEngine:
         
         This prevents overfitting to a single exploit style.
         """
-        penalized = []
+        # Modify scores in-place to preserve object identity
         for candidate in candidates:
             usage = self.pattern_usage[candidate.structural_hash]
             
             if usage >= self.overfitting_threshold:
                 # Apply penalty that increases with usage
                 penalty_factor = 0.5 ** (usage - self.overfitting_threshold + 1)
-                penalized_score = candidate.score * penalty_factor
-            else:
-                penalized_score = candidate.score
-            
-            # Create new candidate with penalized score
-            penalized_candidate = PromptCandidate(
-                prompt=candidate.prompt,
-                score=penalized_score,
-                domain=candidate.domain,
-                strategy=candidate.strategy,
-                timestamp=candidate.timestamp,
-                usage_count=candidate.usage_count,
-                structural_hash=candidate.structural_hash,
-                diversity_score=candidate.diversity_score,
-                novelty_score=candidate.novelty_score
-            )
-            penalized.append(penalized_candidate)
+                candidate.score = candidate.score * penalty_factor
         
-        return penalized
+        return candidates
     
     def _elitism_select(
         self,
@@ -420,19 +392,22 @@ class SelectionEngine:
             num_diverse = num_select - num_elite - num_novelty
         
         selected = []
+        selected_set = set()  # Track IDs for O(1) lookup
         
         # Elite selection
         elite = self._elitism_select(candidates, num_elite)
         selected.extend(elite)
+        selected_set.update(id(c) for c in elite)
         
-        # Remove selected from candidates
-        remaining = [c for c in candidates if c not in selected]
+        # Remove selected from candidates using set for efficient lookup
+        remaining = [c for c in candidates if id(c) not in selected_set]
         
         # Novelty selection
         if remaining and num_novelty > 0:
             novelty = self._novelty_select(remaining, min(num_novelty, len(remaining)))
             selected.extend(novelty)
-            remaining = [c for c in remaining if c not in selected]
+            selected_set.update(id(c) for c in novelty)
+            remaining = [c for c in remaining if id(c) not in selected_set]
         
         # Diversity selection
         if remaining and num_diverse > 0:

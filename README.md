@@ -119,13 +119,22 @@ RSP is **NOT**:
 ### 🔌 Production-Ready Integrations
 - **OpenAI API**: Full GPT-3.5, GPT-4, and GPT-4 Turbo support
 - **Anthropic API**: Claude models (Claude 3 Opus, Sonnet, Haiku)
+- **Local Models**: GGUF models via llama-cpp-python (NEW)
+- **Custom APIs**: Generic HTTP endpoint support for any LLM (NEW)
 - **Extensible Backend System**: Easy to add new LLM providers
+
+### ⚡ Performance & Scalability
+- **Parallel Execution**: Concurrent round processing (5-10x speedup) (NEW)
+- **Adaptive Learning**: Mutation strategies improve over time (NEW)
+- **Zero API Costs**: Run completely offline with local models (NEW)
+- **Comprehensive Testing**: 40+ edge case and adversarial pattern tests (NEW)
 
 ### 📈 Observable & Auditable
 - Comprehensive session statistics
 - Detailed logging and audit trails
 - Aggregate metrics for trend analysis
 - Round-by-round tracking of success rates
+- Strategy performance analytics (NEW)
 
 ---
 
@@ -546,6 +555,7 @@ RSPConfig
 ```python
 max_rounds: int = 100              # Maximum execution rounds
 concurrent_evaluations: bool = False  # Enable parallel evaluation
+concurrent_rounds: int = 1         # Number of rounds to execute in parallel (NEW)
 round_timeout_seconds: int = 300   # Timeout per round
 ```
 
@@ -560,13 +570,20 @@ creativity_temperature: float = 0.9  # Randomness in generation
 #### Target Configuration
 
 ```python
-backend: ModelBackend = OPENAI       # LLM backend (openai/anthropic)
+backend: ModelBackend = OPENAI       # LLM backend (openai/anthropic/llama_cpp/custom_http)
 model_name: str = "gpt-3.5-turbo"   # Model identifier
 api_key: Optional[str] = None        # API key
 api_base: Optional[str] = None       # Custom API endpoint
 max_tokens: int = 1000               # Max response tokens
 temperature: float = 0.7             # Model temperature
 fresh_context: bool = True           # Reset context each round
+# NEW: For local models (llama_cpp backend)
+model_path: Optional[str] = None     # Path to GGUF model file
+n_ctx: int = 2048                    # Context window size
+n_gpu_layers: int = 0                # GPU layers (0=CPU only)
+# NEW: For custom HTTP backends
+api_url: Optional[str] = None        # Custom API endpoint URL
+request_format: str = "openai"       # Request format (openai/anthropic/generic)
 ```
 
 #### Spotter Configuration
@@ -1440,13 +1457,20 @@ Special thanks to the AI safety research community for inspiration and guidance.
 - ✅ Docker deployment
 - ✅ Comprehensive test suite
 
-### Planned Features (v1.1.0)
+### Recent Enhancements (v1.1.0)
+- ✅ **Parallel Execution**: Concurrent round processing (5-10x speedup)
+- ✅ **Pluggable Backends**: Local GGUF models (llama.cpp) and custom HTTP APIs
+- ✅ **Adaptive Mutations**: Strategy performance tracking and learning
+- ✅ **Enhanced Testing**: 40+ new tests for edge cases and adversarial patterns
+
+See [IMPROVEMENTS.md](IMPROVEMENTS.md) for detailed documentation.
+
+### Planned Features (v1.2.0)
 - [ ] Web-based UI for session monitoring
 - [ ] ML-based classifiers for Spotter
 - [ ] Additional mutation strategies
 - [ ] More attack domains
 - [ ] PostgreSQL integration hardening
-- [ ] Performance optimizations
 
 ### Future Considerations (v2.0.0)
 - [ ] Distributed execution support

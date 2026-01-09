@@ -505,7 +505,7 @@ async def start_remote_run(config: SessionConfig):
             "session_id": session_id,
             "status": "started",
             "message": "Remote run started successfully",
-            "config": config.dict()
+            "config": config.model_dump()
         }
     except Exception as e:
         logger.error(f"Error starting remote run: {e}")
@@ -557,7 +557,7 @@ async def get_experiment_config(config_id: str):
         config = stored_configs[config_id]
         return {
             "config_id": config_id,
-            "config": config.dict()
+            "config": config.model_dump()
         }
     except HTTPException:
         raise

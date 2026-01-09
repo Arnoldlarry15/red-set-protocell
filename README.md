@@ -1596,12 +1596,39 @@ Special thanks to the AI safety research community for inspiration and guidance.
 
 See [IMPROVEMENTS.md](IMPROVEMENTS.md) and [TIME_TRACKING.md](TIME_TRACKING.md) for detailed documentation.
 
-### Planned Features (v1.2.0)
-- [ ] Web-based UI integration with uncertainty visualization
+### Latest Enhancements (v1.2.0) - Research Lab Features
+- ✅ **Automated Benchmarking Suites**: Compare model versions over time with statistical analysis
+  - Standard benchmark configurations (quick, standard, comprehensive, stress)
+  - Automated result storage and comparison
+  - Regression detection with statistical significance testing
+- ✅ **Stronger Telemetry Abstraction**: Export metrics programmatically
+  - CSV, JSON, and JSON Lines export formats
+  - Database extraction API for sessions and rounds
+  - Time series data export for analysis pipelines
+- ✅ **Quantitative Uncertainty Metrics**: Already integrated!
+  - Confidence intervals on all scores
+  - Multi-pass agreement measurement
+  - Cross-Spotter evaluation for disagreement detection
+- ✅ **Formal Mutation Strategy Tuning**: Automatic strategy optimization
+  - Performance tracking for each mutation strategy
+  - Automatic weight recommendations based on effectiveness
+  - Adaptive learning that improves over time
+  - Priority strategy selection
+- ✅ **Official Model Zoo**: Reference models for consistent benchmarking
+  - Preconfigured OpenAI models (GPT-3.5, GPT-4, GPT-4 Turbo)
+  - Preconfigured Anthropic models (Claude 3 Haiku, Sonnet, Opus)
+  - Version tracking and comparison utilities
+  - Easy configuration for benchmarking
+
+See [NEW_FEATURES.md](NEW_FEATURES.md) for complete documentation and usage examples.
+
+### Planned Features (v1.3.0)
+- [ ] Web-based UI integration with benchmark visualization
 - [ ] ML-based classifiers for Spotter
 - [ ] Additional mutation strategies
 - [ ] More attack domains
 - [ ] PostgreSQL integration hardening
+- [ ] CLI commands for benchmarking and exports
 
 ### Future Considerations (v2.0.0)
 - [ ] Distributed execution support

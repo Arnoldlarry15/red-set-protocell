@@ -47,6 +47,12 @@ htmlcov/
 rsp_session.db
 rsp.log
 
+# Demo and export directories
+demo_exports/
+demo_benchmarks/
+benchmark_results/
+telemetry_exports/
+
 # Docker
 .dockerignore
 

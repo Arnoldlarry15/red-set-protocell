@@ -723,58 +723,18 @@ class Target:
 def create_target(backend_type: str, **config) -> Target:
     """
     Factory function to create a Target agent with specified backend.
-
+    
+    DEPRECATED: Use TargetFactory.create() from app.factories for better
+    maintainability. This function is maintained for backward compatibility.
+    
     Args:
         backend_type: Type of backend ('openai', 'anthropic', 'llama_cpp', 'custom_http')
         **config: Backend-specific configuration, including optional perturbation_config
-
+        
     Returns:
         Configured Target instance
     """
-    backend_type_lower = backend_type.lower()
-
-    if backend_type_lower == "openai":
-        backend = OpenAIBackend(
-            api_key=config.get("api_key", ""),
-            model_name=config.get("model_name", "gpt-3.5-turbo"),
-            max_tokens=config.get("max_tokens", 1000),
-            temperature=config.get("temperature", 0.7),
-        )
-    elif backend_type_lower == "anthropic":
-        backend = AnthropicBackend(
-            api_key=config.get("api_key", ""),
-            model_name=config.get("model_name", "claude-3-5-sonnet-20241022"),
-            max_tokens=config.get("max_tokens", 1000),
-            temperature=config.get("temperature", 0.7),
-        )
-    elif backend_type_lower == "llama_cpp":
-        backend = LlamaCppBackend(
-            model_path=config.get("model_path", ""),
-            max_tokens=config.get("max_tokens", 1000),
-            temperature=config.get("temperature", 0.7),
-            n_ctx=config.get("n_ctx", 2048),
-            n_gpu_layers=config.get("n_gpu_layers", 0),
-        )
-    elif backend_type_lower == "custom_http":
-        backend = CustomHTTPBackend(
-            api_url=config.get("api_url", ""),
-            api_key=config.get("api_key"),
-            max_tokens=config.get("max_tokens", 1000),
-            temperature=config.get("temperature", 0.7),
-            request_format=config.get("request_format", "openai"),
-            headers=config.get("headers"),
-        )
-    else:
-        raise ValueError(
-            f"Unknown backend type: {backend_type}. "
-            f"Must be 'openai', 'anthropic', 'llama_cpp', or 'custom_http'"
-        )
-
-    # Extract perturbation config if provided
-    perturbation_config = config.get("perturbation_config")
-
-    return Target(
-        backend,
-        fresh_context=config.get("fresh_context", True),
-        perturbation_config=perturbation_config,
-    )
+    # Import here to avoid circular dependency
+    from app.factories import TargetFactory
+    
+    return TargetFactory.create(backend_type, **config)

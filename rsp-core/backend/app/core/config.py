@@ -6,7 +6,7 @@ Centralized configuration management for the RSP system.
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 
 class StorageMode(Enum):
@@ -79,6 +79,13 @@ class TargetConfig:
     api_url: Optional[str] = None  # Custom API endpoint URL
     request_format: str = "openai"  # Request format for custom HTTP
     headers: Optional[Dict[str, str]] = None  # Additional HTTP headers
+    # Perturbation settings
+    enable_perturbations: bool = False  # Enable perturbation modes
+    perturbation_modes: Optional[List[str]] = None  # Specific modes to enable (None = all)
+    temperature_jitter_range: float = 0.1  # Max temperature deviation
+    latency_range_ms: tuple = field(default_factory=lambda: (100, 500))  # Simulated latency range
+    truncation_probability: float = 0.1  # Probability of response truncation
+    truncation_ratio_range: tuple = field(default_factory=lambda: (0.7, 0.95))  # Truncation ratio range
 
 
 @dataclass

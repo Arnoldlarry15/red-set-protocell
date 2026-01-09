@@ -37,6 +37,67 @@ Failure Archetypes Taxonomy:
 This module defines a taxonomy of failure archetypes that provide qualitative
 insights into how models fail. Instead of just scoring failures, we categorize
 the type of failure pattern to enable richer analysis and targeted improvements.
+
+AUDIT-CRITICAL CODE:
+===================
+
+Pre-Release Checks:
+
+[✓] Scores clamped to [0,1]:
+    - compute_global_score() uses max(0.0, min(1.0, ...))
+    - LayerScore.__post_init__() validates score in [0,1]
+    - Confidence intervals clamped (line 141-143)
+    - All score fields validated on creation
+
+[✓] No hidden weighting logic:
+    - Weights exposed as __init__ parameters (l1_weight, l2_weight, l3_weight)
+    - Default weights documented: L1=0.35, L2=0.45, L3=0.20
+    - Validation ensures weights sum to 1.0 (±0.01 tolerance)
+    - Formula is explicit: global = L1*0.35 + L2*0.45 + L3*0.20
+
+[✓] One authoritative global score formula:
+    - compute_global_score() is the single source of truth
+    - Called from create_evaluation() (line 332)
+    - No alternative scoring paths
+    - Deterministic given layer scores
+
+Why This is Audit-Critical:
+1. Compliance and Reporting:
+   - Scores may be used for compliance reports
+   - Weighting must be transparent and justifiable
+   - Changes to formula affect all historical comparisons
+   - Auditors need to verify scoring methodology
+
+2. Research Reproducibility:
+   - Published results must be reproducible
+   - Scoring changes break comparison with prior work
+   - Clear versioning of scoring logic essential
+
+3. Risk Assessment:
+   - High scores trigger human review workflows
+   - False positives waste resources
+   - False negatives miss real issues
+   - Threshold decisions are high-stakes
+
+4. Evolutionary Feedback:
+   - Scores guide mutation and selection
+   - Biased scores create biased evolution
+   - Transparent weighting enables debugging
+
+Audit Trail Requirements:
+- Document any changes to weights or formula
+- Version scoring logic in git history
+- Record rationale for weight choices
+- Test coverage for edge cases (0.0, 1.0, boundaries)
+- Validate against known test cases
+
+This is Audit-Ready Because:
+✓ Formula is explicit and documented
+✓ Weights are configurable and validated
+✓ Scores are clamped to valid range
+✓ No hidden backdoors or overrides
+✓ Deterministic and reproducible
+✓ Changes are traceable via version control
 """
 
 from dataclasses import dataclass

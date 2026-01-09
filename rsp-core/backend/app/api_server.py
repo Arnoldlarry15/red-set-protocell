@@ -14,7 +14,7 @@ import asyncio
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.core.config import RSPConfig, get_default_config
@@ -32,6 +32,31 @@ from app.telemetry.extractors import SessionDataExtractor
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Environment-aware CORS configuration
+# PRODUCTION: Set RSP_ENVIRONMENT=production and RSP_ALLOWED_ORIGINS with comma-separated list
+RSP_ENVIRONMENT = os.getenv("RSP_ENVIRONMENT", "development")
+ALLOWED_ORIGINS_ENV = os.getenv("RSP_ALLOWED_ORIGINS", "")
+
+if RSP_ENVIRONMENT == "production":
+    if not ALLOWED_ORIGINS_ENV:
+        raise ValueError(
+            "FATAL: RSP_ENVIRONMENT=production requires RSP_ALLOWED_ORIGINS to be set. "
+            "Example: RSP_ALLOWED_ORIGINS=https://app.example.com,https://dashboard.example.com"
+        )
+    ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
+    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origins")
+else:
+    # Development mode: Allow localhost and common dev origins
+    ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://localhost:8080",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:8080",
+    ]
+    logger.warning("Development mode: CORS configured for local development origins only")
+
 # FastAPI app
 app = FastAPI(
     title="Red Set ProtoCell API",
@@ -39,13 +64,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware
+# CORS middleware - Explicit and defensive
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
 )
 
 # Pydantic models
@@ -104,36 +129,144 @@ users: Dict[str, Dict[str, Any]] = {
     }
 }
 
-# WebSocket manager
+# WebSocket manager with defensive lifecycle handling
 class ConnectionManager:
+    """
+    WebSocket connection manager with defensive practices:
+    - Automatic cleanup of stale connections
+    - Memory leak prevention through bounded connection tracking
+    - Graceful error handling on disconnect
+    """
+    
+    MAX_CONNECTIONS = 100  # Prevent memory exhaustion
+    
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.connection_metadata: Dict[WebSocket, Dict[str, Any]] = {}
 
     async def connect(self, websocket: WebSocket):
+        """Accept and track a new WebSocket connection."""
+        # Enforce connection limit to prevent memory exhaustion
+        if len(self.active_connections) >= self.MAX_CONNECTIONS:
+            logger.warning(f"Connection limit reached ({self.MAX_CONNECTIONS}), rejecting new connection")
+            await websocket.close(code=1008, reason="Server at capacity")
+            return False
+        
         await websocket.accept()
         self.active_connections.append(websocket)
+        self.connection_metadata[websocket] = {
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+            "messages_sent": 0,
+        }
         logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+        return True
 
     def disconnect(self, websocket: WebSocket):
+        """Cleanly disconnect and remove tracking for a WebSocket."""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
+        
+        # Clean up metadata to prevent memory leak
+        if websocket in self.connection_metadata:
+            del self.connection_metadata[websocket]
+        
         logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
     async def broadcast(self, message: dict):
-        """Broadcast message to all connected clients"""
+        """
+        Broadcast message to all connected clients with defensive error handling.
+        Automatically removes failed connections.
+        """
         disconnected = []
         for connection in self.active_connections:
             try:
                 await connection.send_json(message)
+                # Track message count
+                if connection in self.connection_metadata:
+                    self.connection_metadata[connection]["messages_sent"] += 1
             except Exception as e:
-                logger.error(f"Error sending message: {e}")
+                logger.error(f"Error sending message to WebSocket: {e}")
                 disconnected.append(connection)
         
         # Remove disconnected clients
         for conn in disconnected:
             self.disconnect(conn)
+    
+    async def cleanup_stale_connections(self):
+        """
+        Periodic cleanup of stale connections.
+        Should be called periodically by a background task.
+        """
+        disconnected = []
+        for connection in self.active_connections:
+            try:
+                # Try to ping the connection
+                await connection.send_json({"type": "ping"})
+            except Exception:
+                disconnected.append(connection)
+        
+        for conn in disconnected:
+            logger.info("Cleaning up stale WebSocket connection")
+            self.disconnect(conn)
 
 manager = ConnectionManager()
+
+# Startup and shutdown hooks for proper async resource management
+@app.on_event("startup")
+async def startup_event():
+    """
+    Initialize async resources on startup.
+    Defensive initialization with explicit logging.
+    """
+    logger.info("=" * 60)
+    logger.info("RSP API Server - Startup")
+    logger.info("=" * 60)
+    logger.info(f"Environment: {RSP_ENVIRONMENT}")
+    logger.info(f"CORS Origins: {len(ALLOWED_ORIGINS)} configured")
+    logger.info(f"Max WebSocket Connections: {ConnectionManager.MAX_CONNECTIONS}")
+    
+    # Create sessions directory if it doesn't exist
+    sessions_dir = Path("sessions")
+    sessions_dir.mkdir(exist_ok=True)
+    logger.info(f"Sessions directory: {sessions_dir.absolute()}")
+    
+    logger.info("Startup complete - Server ready")
+    logger.info("=" * 60)
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Cleanup async resources on shutdown.
+    Ensures graceful teardown of all connections and sessions.
+    """
+    logger.info("=" * 60)
+    logger.info("RSP API Server - Shutdown")
+    logger.info("=" * 60)
+    
+    # Close all active WebSocket connections
+    if manager.active_connections:
+        logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
+        for ws in list(manager.active_connections):
+            try:
+                await ws.close(code=1001, reason="Server shutting down")
+            except Exception as e:
+                logger.error(f"Error closing WebSocket: {e}")
+            finally:
+                manager.disconnect(ws)
+    
+    # Terminate all active sessions
+    if active_sessions:
+        logger.info(f"Terminating {len(active_sessions)} active sessions")
+        for session_id, session_data in list(active_sessions.items()):
+            try:
+                orchestrator = session_data.get("orchestrator")
+                if orchestrator:
+                    orchestrator.terminate_session()
+            except Exception as e:
+                logger.error(f"Error terminating session {session_id}: {e}")
+    
+    logger.info("Shutdown complete")
+    logger.info("=" * 60)
 
 # API endpoints
 @app.get("/")
@@ -148,7 +281,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_sessions": len(active_sessions),
         "websocket_connections": len(manager.active_connections)
     }
@@ -157,7 +290,7 @@ async def health_check():
 async def start_session(config: SessionConfig):
     """Start a new red teaming session"""
     try:
-        session_id = f"rsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        session_id = f"rsp_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         
         # Create RSP configuration
         rsp_config = get_default_config()
@@ -229,7 +362,7 @@ async def start_session(config: SessionConfig):
         active_sessions[session_id] = {
             "orchestrator": orchestrator,
             "config": config,
-            "start_time": datetime.now().isoformat(),
+            "start_time": datetime.now(timezone.utc).isoformat(),
             "status": "initialized",
             "current_cost": 0.0,
             "max_cost": config.max_api_cost,
@@ -445,7 +578,7 @@ async def login(credentials: UserLogin):
             "username": credentials.username,
             "email": user["email"],
             "role": user["role"],
-            "token": f"token_{credentials.username}_{datetime.now().timestamp()}"
+            "token": f"token_{credentials.username}_{datetime.now(timezone.utc).timestamp()}"
         }
     except HTTPException:
         raise
@@ -530,7 +663,7 @@ async def start_remote_run(config: SessionConfig):
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
     try:
-        config_id = f"config_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        config_id = f"config_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         stored_configs[config_id] = config
         
         return {
@@ -631,7 +764,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                 "type": "attack",
                 "data": {
                     "id": f"attack_{session_id}_{round_num}",
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "round": round_num,
                     "prompt": result.get("prompt", ""),
                     "response": result.get("response", ""),

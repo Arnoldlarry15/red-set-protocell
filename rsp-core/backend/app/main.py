@@ -7,6 +7,54 @@ This is a defense-only system with:
 - No real malware generation
 - No real-world exploit payloads
 - Zero-Retention Policy enabled by default
+
+PRODUCTION DEPLOYMENT:
+=====================
+
+This file is in the correct shape for production. Treat it as sacred ground.
+Do NOT add business logic here post-release.
+
+Architecture:
+- Main.py is WIRING ONLY (dependency injection and orchestration)
+- Business logic lives in agents, engines, and core modules
+- Configuration comes from config.py (single source of truth)
+- Security primitives come from security.py
+
+Sacred Ground Rules:
+1. NO business logic in this file (only system setup and wiring)
+2. NO direct API calls or I/O operations
+3. NO conditional logic based on runtime state
+4. ONLY initialization, coordination, and cleanup
+
+What Lives Here:
+✓ System component initialization
+✓ Dependency injection and wiring
+✓ Configuration loading and validation
+✓ Lifecycle management (startup/shutdown)
+✓ High-level coordination (orchestrator.run_session)
+✓ Logging and monitoring setup
+
+What Does NOT Live Here:
+✗ Scoring algorithms
+✗ Mutation strategies
+✗ Prompt generation logic
+✗ API client implementations
+✗ Database queries
+✗ Business rules or policies
+
+Pre-Release Verification:
+[✓] No business logic present
+[✓] Only wiring and initialization
+[✓] Startup/shutdown hooks properly manage resources
+[✓] Configuration loaded from config.py
+[✓] Logging configured but no debug data leaked
+[✓] Error handling delegates to appropriate modules
+
+Post-Release Maintenance:
+- Update dependencies and versions
+- Add new component initialization (if new agents/engines added)
+- Improve error messages and logging
+- DO NOT add conditional logic or business rules
 """
 
 import asyncio

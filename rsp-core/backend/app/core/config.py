@@ -38,6 +38,17 @@ class SniperConfig:
     mutation_rate: float = 0.7
     evolution_pool_size: int = 10
     creativity_temperature: float = 0.9
+    
+    # Selection engine parameters
+    use_selection_engine: bool = True
+    selection_strategy: str = "hybrid"  # elitism, tournament, diversity_preservation, novelty_search, hybrid
+    decay_rate: float = 0.95
+    decay_interval: float = 60.0  # seconds
+    novelty_weight: float = 0.3
+    diversity_weight: float = 0.2
+    overfitting_threshold: int = 3
+    tournament_size: int = 3
+    elite_fraction: float = 0.2
 
 
 @dataclass

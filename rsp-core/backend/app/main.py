@@ -74,11 +74,43 @@ def setup_system(config: RSPConfig) -> Orchestrator:
     )
     logger.info("✓ Mutation Engine initialized")
     
+    # Initialize Selection Engine if enabled
+    selection_engine = None
+    selection_strategy_enum = None
+    if config.sniper.use_selection_engine:
+        from app.engines.selection import SelectionEngine, SelectionStrategy
+        
+        selection_engine = SelectionEngine(
+            decay_rate=config.sniper.decay_rate,
+            decay_interval=config.sniper.decay_interval,
+            novelty_weight=config.sniper.novelty_weight,
+            diversity_weight=config.sniper.diversity_weight,
+            overfitting_threshold=config.sniper.overfitting_threshold,
+            tournament_size=config.sniper.tournament_size,
+            elite_fraction=config.sniper.elite_fraction
+        )
+        
+        # Map string to enum
+        strategy_map = {
+            "elitism": SelectionStrategy.ELITISM,
+            "tournament": SelectionStrategy.TOURNAMENT,
+            "diversity_preservation": SelectionStrategy.DIVERSITY_PRESERVATION,
+            "novelty_search": SelectionStrategy.NOVELTY_SEARCH,
+            "hybrid": SelectionStrategy.HYBRID
+        }
+        selection_strategy_enum = strategy_map.get(
+            config.sniper.selection_strategy.lower(),
+            SelectionStrategy.HYBRID
+        )
+        logger.info(f"✓ Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
+    
     # Initialize Sniper Agent
     sniper = Sniper(
         mutation_engine=mutation_engine,
         evolution_pool_size=config.sniper.evolution_pool_size,
-        creativity_temperature=config.sniper.creativity_temperature
+        creativity_temperature=config.sniper.creativity_temperature,
+        selection_engine=selection_engine,
+        selection_strategy=selection_strategy_enum or SelectionStrategy.HYBRID
     )
     logger.info("✓ Sniper Agent initialized")
     

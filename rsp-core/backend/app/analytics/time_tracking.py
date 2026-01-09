@@ -429,15 +429,13 @@ class ScoreDriftAnalyzer:
     
     def analyze_drift(
         self,
-        session_id: str,
-        window_size: int = 10
+        session_id: str
     ) -> TimeSeriesMetrics:
         """
         Analyze score drift for a session.
         
         Args:
             session_id: Session to analyze
-            window_size: Window size for moving average (if needed)
             
         Returns:
             TimeSeriesMetrics with drift analysis

@@ -109,7 +109,7 @@ import sqlite3
 import json
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.security import generate_session_id, sanitize_metadata
 from app.engines.scoring import ScoringEngine
@@ -159,7 +159,7 @@ class StateManager:
         self.zero_retention = zero_retention
         self.session_id = generate_session_id()
         self.model_version = model_version
-        self.session_start_time = datetime.now().isoformat()
+        self.session_start_time = datetime.now(timezone.utc).isoformat()
         
         # Initialize database
         self._init_database()
@@ -502,7 +502,7 @@ class Orchestrator:
         Returns:
             RoundResult with complete round data
         """
-        timestamp = datetime.now().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         
         # Step 1: Sniper generates adversarial prompt
         prior_metadata = self.state_manager.get_prior_rounds(limit=10)

@@ -1,8 +1,0 @@
-{
-  "session_id": "rsp_demo_20260109",
-  "total_rounds": 50,
-  "average_score": 0.34,
-  "critical_findings": 2,
-  "high_findings": 5,
-  "model_version": "gpt-3.5-turbo"
-}

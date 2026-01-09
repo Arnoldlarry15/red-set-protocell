@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import { User } from '../types';
 import '../styles/Auth.css';
 
 interface AuthPageProps {
-  onAuth: (apiKey: string, backend: string) => void;
+  onAuth: (apiKey: string, backend: string, userData?: User) => void;
 }
 
 const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
@@ -21,10 +22,16 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
     }
     
     setLoading(true);
-    // Simulate API key validation
+    // Simulate API key validation and user login
     setTimeout(() => {
-      onAuth(apiKey, backend);
-      navigate('/dashboard');
+      // Create a demo user based on API key
+      const demoUser: User = {
+        username: 'demo_user',
+        email: 'demo@rsp.com',
+        role: 'admin', // Default to admin for demo
+      };
+      onAuth(apiKey, backend, demoUser);
+      navigate('/admin'); // Navigate to admin dashboard
     }, 1000);
   };
 

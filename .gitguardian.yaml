@@ -1,0 +1,16 @@
+# GitGuardian configuration
+# This file configures how GitGuardian scans the repository
+
+# Paths to exclude from scanning
+paths-ignore:
+  - "**/*test*.py"  # Test files often contain fake/test credentials
+  - "**/tests/**"   # Test directories
+  - "**/*.md"       # Documentation may contain example credentials
+
+# Patterns to match for excluding specific secrets
+matches-ignore:
+  - name: Test passwords in test files
+    match: test.*password|password.*test|demo.*password|password.*demo
+    
+  - name: Example credentials in documentation
+    match: changeme|your_secure_password|your_password_here

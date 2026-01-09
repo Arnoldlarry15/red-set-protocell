@@ -270,3 +270,176 @@ class RoundMetricsExtractor:
             'timestamps': [r['timestamp'] for r in rounds],
             'domains': [r['attack_domain'] for r in rounds],
         }
+
+
+class SessionDataExtractor:
+    """
+    Extract complete session data for dashboard and analysis.
+    
+    Provides unified access to session and round data for
+    the unified infra dashboard.
+    """
+    
+    def __init__(self, database_path: str = "rsp_session.db"):
+        """
+        Initialize session data extractor.
+        
+        Args:
+            database_path: Path to RSP session database
+        """
+        self.database_path = database_path
+    
+    def get_all_sessions(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        Get all sessions with their summary metrics.
+        
+        Args:
+            limit: Maximum number of sessions to return
+            
+        Returns:
+            List of session data dictionaries
+        """
+        try:
+            conn = sqlite3.connect(self.database_path)
+            cursor = conn.cursor()
+            
+            # Get unique session IDs from rounds table
+            cursor.execute("""
+                SELECT DISTINCT 
+                    session_id,
+                    MIN(timestamp) as start_time,
+                    MAX(timestamp) as end_time,
+                    COUNT(*) as total_rounds,
+                    AVG(global_score) as average_score,
+                    SUM(CASE WHEN blocked_by_egg = 1 THEN 1 ELSE 0 END) as blocked_count,
+                    model_version
+                FROM rounds
+                GROUP BY session_id
+                ORDER BY start_time DESC
+                LIMIT ?
+            """, (limit,))
+            
+            sessions = []
+            for row in cursor.fetchall():
+                sessions.append({
+                    'session_id': row[0],
+                    'start_time': row[1],
+                    'end_time': row[2],
+                    'total_rounds': row[3],
+                    'average_score': float(row[4]) if row[4] else 0.0,
+                    'blocked_count': row[5] or 0,
+                    'model_version': row[6] or 'unknown',
+                })
+            
+            conn.close()
+            return sessions
+            
+        except sqlite3.Error as e:
+            logger.error(f"Database error getting all sessions: {e}")
+            return []
+    
+    def get_sessions_by_model_version(
+        self,
+        model_version: str,
+        limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Get sessions for a specific model version.
+        
+        Args:
+            model_version: Model version identifier
+            limit: Maximum number of sessions to return
+            
+        Returns:
+            List of session data dictionaries
+        """
+        try:
+            conn = sqlite3.connect(self.database_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT DISTINCT 
+                    session_id,
+                    MIN(timestamp) as start_time,
+                    MAX(timestamp) as end_time,
+                    COUNT(*) as total_rounds,
+                    AVG(global_score) as average_score,
+                    SUM(CASE WHEN blocked_by_egg = 1 THEN 1 ELSE 0 END) as blocked_count,
+                    model_version
+                FROM rounds
+                WHERE model_version = ?
+                GROUP BY session_id
+                ORDER BY start_time DESC
+                LIMIT ?
+            """, (model_version, limit))
+            
+            sessions = []
+            for row in cursor.fetchall():
+                sessions.append({
+                    'session_id': row[0],
+                    'start_time': row[1],
+                    'end_time': row[2],
+                    'total_rounds': row[3],
+                    'average_score': float(row[4]) if row[4] else 0.0,
+                    'blocked_count': row[5] or 0,
+                    'model_version': row[6],
+                })
+            
+            conn.close()
+            return sessions
+            
+        except sqlite3.Error as e:
+            logger.error(f"Database error getting sessions by model: {e}")
+            return []
+    
+    def get_session_rounds(self, session_id: str) -> List[Dict[str, Any]]:
+        """
+        Get all rounds for a specific session.
+        
+        Args:
+            session_id: Session identifier
+            
+        Returns:
+            List of round data dictionaries
+        """
+        try:
+            conn = sqlite3.connect(self.database_path)
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    round_number,
+                    prompt,
+                    attack_domain,
+                    target_response,
+                    evaluation,
+                    global_score,
+                    blocked_by_egg,
+                    timestamp,
+                    model_version
+                FROM rounds
+                WHERE session_id = ?
+                ORDER BY round_number
+            """, (session_id,))
+            
+            rounds = []
+            for row in cursor.fetchall():
+                rounds.append({
+                    'session_id': session_id,
+                    'round_number': row[0],
+                    'prompt': row[1],
+                    'attack_domain': row[2],
+                    'target_response': row[3],
+                    'evaluation': row[4],
+                    'global_score': float(row[5]),
+                    'blocked_by_egg': bool(row[6]),
+                    'timestamp': row[7],
+                    'model_version': row[8] or 'unknown',
+                })
+            
+            conn.close()
+            return rounds
+            
+        except sqlite3.Error as e:
+            logger.error(f"Database error getting session rounds: {e}")
+            return []

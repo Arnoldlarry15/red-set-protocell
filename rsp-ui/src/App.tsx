@@ -2,17 +2,23 @@ import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
+import { User } from './types';
 import './styles/globals.css';
 
 function App() {
   const [authenticated, setAuthenticated] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [backend, setBackend] = useState('openai');
+  const [user, setUser] = useState<User | null>(null);
 
-  const handleAuth = (key: string, backendType: string) => {
+  const handleAuth = (key: string, backendType: string, userData?: User) => {
     setApiKey(key);
     setBackend(backendType);
     setAuthenticated(true);
+    if (userData) {
+      setUser(userData);
+    }
   };
 
   return (
@@ -31,6 +37,14 @@ function App() {
           element={
             authenticated ? 
               <Dashboard apiKey={apiKey} backend={backend} /> : 
+              <Navigate to="/" replace />
+          } 
+        />
+        <Route 
+          path="/admin" 
+          element={
+            authenticated && user ? 
+              <AdminDashboard user={user} apiKey={apiKey} /> : 
               <Navigate to="/" replace />
           } 
         />

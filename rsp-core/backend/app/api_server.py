@@ -13,6 +13,7 @@ from typing import List, Optional, Dict, Any
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -24,6 +25,8 @@ from app.agents.sniper import Sniper
 from app.agents.target import create_target
 from app.agents.spotter import Spotter
 from app.agents.orchestrator import Orchestrator, StateManager
+from app.telemetry.exporter import TelemetryExporter, ExportFormat
+from app.telemetry.extractors import SessionDataExtractor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -61,9 +64,45 @@ class CustomPromptRequest(BaseModel):
     prompt: str
     session_id: str
 
+class ExperimentConfig(BaseModel):
+    name: str
+    description: Optional[str] = ""
+    backend: str
+    model: Optional[str] = None
+    max_rounds: int = 100
+    mutation_rate: float = 0.7
+    selected_domains: List[str] = []
+    selected_strategies: List[str] = []
+    mutation_weights: Optional[Dict[str, float]] = None
+    thresholds: Optional[Dict[str, float]] = None
+
+class UserCreate(BaseModel):
+    username: str
+    email: str
+    role: str  # 'admin', 'researcher', 'observer'
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
 # Global state
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
+stored_configs: Dict[str, ExperimentConfig] = {}
+
+# SECURITY WARNING: Demo authentication system
+# IN PRODUCTION: Use proper password hashing (bcrypt), database storage, and secure secrets
+# Set RSP_DEMO_PASSWORD environment variable to change the demo password
+DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD", "changeme")
+
+users: Dict[str, Dict[str, Any]] = {
+    "admin": {
+        "email": "admin@rsp.com",
+        "role": "admin",
+        "password": DEMO_PASSWORD  # Load from environment variable
+    }
+}
 
 # WebSocket manager
 class ConnectionManager:
@@ -288,6 +327,272 @@ async def get_session_stats(session_id: str):
         }
     except Exception as e:
         logger.error(f"Error getting session stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Unified Infra Dashboard endpoints
+@app.get("/api/dashboard/live-sessions")
+async def get_live_sessions():
+    """Get all currently active/live sessions"""
+    try:
+        live_sessions = []
+        for session_id, session in active_sessions.items():
+            live_sessions.append({
+                "session_id": session_id,
+                "status": session["status"],
+                "start_time": session["start_time"],
+                "current_cost": session.get("current_cost", 0),
+                "max_cost": session.get("max_cost", 0),
+                "config": {
+                    "backend": session["config"].backend,
+                    "model": session["config"].model,
+                    "max_rounds": session["config"].max_rounds,
+                }
+            })
+        return {"sessions": live_sessions}
+    except Exception as e:
+        logger.error(f"Error getting live sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/dashboard/historical-sessions")
+async def get_historical_sessions(db_path: str = "rsp_session.db"):
+    """Get historical session data for comparison"""
+    try:
+        extractor = SessionDataExtractor(db_path)
+        sessions = extractor.get_all_sessions()
+        return {"sessions": sessions}
+    except Exception as e:
+        logger.error(f"Error getting historical sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/dashboard/compare-models")
+async def compare_model_versions(
+    model_v1: str,
+    model_v2: str,
+    db_path: str = "rsp_session.db"
+):
+    """Compare two model versions"""
+    try:
+        extractor = SessionDataExtractor(db_path)
+        v1_sessions = extractor.get_sessions_by_model_version(model_v1)
+        v2_sessions = extractor.get_sessions_by_model_version(model_v2)
+        
+        # Calculate aggregate metrics
+        def calc_metrics(sessions):
+            if not sessions:
+                return {"avg_score": 0, "blocked_count": 0, "total_rounds": 0}
+            total_score = sum(s.get("average_score", 0) for s in sessions)
+            total_blocked = sum(s.get("blocked_count", 0) for s in sessions)
+            total_rounds = sum(s.get("total_rounds", 0) for s in sessions)
+            return {
+                "avg_score": total_score / len(sessions) if sessions else 0,
+                "blocked_count": total_blocked,
+                "total_rounds": total_rounds,
+                "session_count": len(sessions)
+            }
+        
+        return {
+            "model_v1": model_v1,
+            "model_v1_metrics": calc_metrics(v1_sessions),
+            "model_v2": model_v2,
+            "model_v2_metrics": calc_metrics(v2_sessions)
+        }
+    except Exception as e:
+        logger.error(f"Error comparing models: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/dashboard/export/{session_id}")
+async def export_session_results(
+    session_id: str,
+    format: str = "json",
+    db_path: str = "rsp_session.db"
+):
+    """Export session results in CSV or JSON format"""
+    try:
+        extractor = SessionDataExtractor(db_path)
+        rounds = extractor.get_session_rounds(session_id)
+        
+        exporter = TelemetryExporter()
+        
+        # Determine format
+        export_format = ExportFormat.JSON
+        if format.lower() == "csv":
+            export_format = ExportFormat.CSV
+        elif format.lower() == "jsonl":
+            export_format = ExportFormat.JSON_LINES
+        
+        # Export to string (in-memory)
+        result = exporter.export_to_string(rounds, export_format)
+        
+        return {
+            "session_id": session_id,
+            "format": format,
+            "data": result
+        }
+    except Exception as e:
+        logger.error(f"Error exporting session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# User Management endpoints
+@app.post("/api/auth/login")
+async def login(credentials: UserLogin):
+    """User login"""
+    try:
+        user = users.get(credentials.username)
+        if not user or user["password"] != credentials.password:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        return {
+            "username": credentials.username,
+            "email": user["email"],
+            "role": user["role"],
+            "token": f"token_{credentials.username}_{datetime.now().timestamp()}"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during login: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/auth/register")
+async def register(user_data: UserCreate):
+    """Register new user (admin only)"""
+    try:
+        if user_data.username in users:
+            raise HTTPException(status_code=400, detail="User already exists")
+        
+        # Validate role
+        if user_data.role not in ["admin", "researcher", "observer"]:
+            raise HTTPException(status_code=400, detail="Invalid role")
+        
+        # SECURITY WARNING: Storing plaintext password - DEMO ONLY
+        # IN PRODUCTION: Use bcrypt or argon2 to hash passwords:
+        # from passlib.hash import bcrypt
+        # hashed_password = bcrypt.hash(user_data.password)
+        users[user_data.username] = {
+            "email": user_data.email,
+            "role": user_data.role,
+            "password": user_data.password  # INSECURE - Hash in production!
+        }
+        
+        return {
+            "username": user_data.username,
+            "email": user_data.email,
+            "role": user_data.role,
+            "message": "User created successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error during registration: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/auth/users")
+async def list_users():
+    """List all users (admin only)"""
+    try:
+        return {
+            "users": [
+                {
+                    "username": username,
+                    "email": user["email"],
+                    "role": user["role"]
+                }
+                for username, user in users.items()
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error listing users: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Remote Triggering endpoints
+@app.post("/api/remote/start-run")
+async def start_remote_run(config: SessionConfig):
+    """Start a run remotely with parameters"""
+    try:
+        # Create session with the provided config
+        session_response = await start_session(config)
+        session_id = session_response["session_id"]
+        
+        # Auto-execute the session
+        await execute_session(session_id)
+        
+        return {
+            "session_id": session_id,
+            "status": "started",
+            "message": "Remote run started successfully",
+            "config": config.model_dump()
+        }
+    except Exception as e:
+        logger.error(f"Error starting remote run: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/remote/config/save")
+async def save_experiment_config(config: ExperimentConfig):
+    """Save an experiment configuration"""
+    try:
+        config_id = f"config_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        stored_configs[config_id] = config
+        
+        return {
+            "config_id": config_id,
+            "name": config.name,
+            "message": "Configuration saved successfully"
+        }
+    except Exception as e:
+        logger.error(f"Error saving config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/remote/config/list")
+async def list_experiment_configs():
+    """List all saved experiment configurations"""
+    try:
+        return {
+            "configs": [
+                {
+                    "config_id": config_id,
+                    "name": config.name,
+                    "description": config.description,
+                    "backend": config.backend,
+                    "model": config.model
+                }
+                for config_id, config in stored_configs.items()
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Error listing configs: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/remote/config/{config_id}")
+async def get_experiment_config(config_id: str):
+    """Get a specific experiment configuration"""
+    try:
+        if config_id not in stored_configs:
+            raise HTTPException(status_code=404, detail="Configuration not found")
+        
+        config = stored_configs[config_id]
+        return {
+            "config_id": config_id,
+            "config": config.model_dump()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/remote/config/{config_id}")
+async def delete_experiment_config(config_id: str):
+    """Delete an experiment configuration"""
+    try:
+        if config_id not in stored_configs:
+            raise HTTPException(status_code=404, detail="Configuration not found")
+        
+        del stored_configs[config_id]
+        return {"message": "Configuration deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint

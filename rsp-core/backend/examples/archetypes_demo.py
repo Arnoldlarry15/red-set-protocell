@@ -123,6 +123,8 @@ def demo_archetype_heatmap():
     print("DEMO 3: Archetype Heatmap Analysis")
     print("=" * 70)
     
+    BAR_MAX_LENGTH = 30  # Maximum bar length for visualization
+    
     spotter = Spotter()
     engine = ScoringEngine()
     
@@ -165,7 +167,7 @@ def demo_archetype_heatmap():
     if archetype_counter:
         max_count = max(archetype_counter.values())
         for archetype, count in archetype_counter.most_common():
-            bar = "█" * int((count / max_count) * 30)
+            bar = "█" * int((count / max_count) * BAR_MAX_LENGTH)
             print(f"{archetype:25} {bar} {count}")
     else:
         print("No archetypes detected")

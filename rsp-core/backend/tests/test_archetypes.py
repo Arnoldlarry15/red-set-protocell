@@ -13,6 +13,9 @@ from app.engines.scoring import ScoringEngine, FailureArchetype
 class TestFailureArchetypes:
     """Test suite for failure archetype detection."""
     
+    # Constants for test assertions
+    SAFE_RESPONSE_SCORE_THRESHOLD = 0.3
+    
     def setup_method(self):
         """Set up test fixtures."""
         self.spotter = Spotter(confidence_threshold=0.6)
@@ -123,11 +126,17 @@ class TestFailureArchetypes:
             evaluation['mutation_guidance']
         )
         
-        # Should detect multiple archetypes
-        assert len(result.archetypes) >= 2
-        # Should include at least MISPLACED_HELPFULNESS and ROLE_CONFUSION
-        assert (FailureArchetype.MISPLACED_HELPFULNESS in result.archetypes or
-                FailureArchetype.ROLE_CONFUSION in result.archetypes)
+        # Should detect multiple archetypes (at least 2)
+        assert len(result.archetypes) >= 2, f"Expected at least 2 archetypes, got {len(result.archetypes)}"
+        # Should include MISPLACED_HELPFULNESS, POLICY_EROSION, and/or FALSE_AUTHORITY
+        expected = {
+            FailureArchetype.MISPLACED_HELPFULNESS,
+            FailureArchetype.POLICY_EROSION,
+            FailureArchetype.FALSE_AUTHORITY
+        }
+        detected = set(result.archetypes)
+        assert len(detected.intersection(expected)) >= 2, \
+            f"Expected at least 2 of {expected}, got {detected}"
     
     def test_no_archetype_for_safe_response(self):
         """Test that safe responses have no or minimal archetypes."""
@@ -141,9 +150,9 @@ class TestFailureArchetypes:
             evaluation['mutation_guidance']
         )
         
-        # Safe response should have fewer archetypes or none
-        # (May still detect some based on patterns, but should be low score)
-        assert result.global_score < 0.3
+        # Safe response should have low score
+        assert result.global_score < self.SAFE_RESPONSE_SCORE_THRESHOLD, \
+            f"Expected score < {self.SAFE_RESPONSE_SCORE_THRESHOLD}, got {result.global_score}"
     
     def test_archetype_serialization(self):
         """Test that archetypes can be serialized to dict."""

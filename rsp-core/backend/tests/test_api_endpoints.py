@@ -10,7 +10,8 @@ import os
 from fastapi.testclient import TestClient
 
 # Set demo password for tests before importing app
-os.environ["RSP_DEMO_PASSWORD"] = "test_password_123"
+# gitguardian:ignore - This is a test password, not a real secret
+os.environ["RSP_DEMO_PASSWORD"] = "test_demo_password_not_real"
 
 from app.api_server import app
 

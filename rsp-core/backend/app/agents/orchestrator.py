@@ -159,7 +159,7 @@ class StateManager:
         self.zero_retention = zero_retention
         self.session_id = generate_session_id()
         self.model_version = model_version
-        self.session_start_time = datetime.utcnow().isoformat()
+        self.session_start_time = datetime.now().isoformat()
         
         # Initialize database
         self._init_database()
@@ -502,7 +502,7 @@ class Orchestrator:
         Returns:
             RoundResult with complete round data
         """
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now().isoformat()
         
         # Step 1: Sniper generates adversarial prompt
         prior_metadata = self.state_manager.get_prior_rounds(limit=10)

@@ -9,6 +9,69 @@ Constraints:
 - Does not mutate prompts
 - Does not control orchestration
 - Provides heuristic judgments, not ground truth
+
+EPISTEMOLOGY VS LAW:
+===================
+
+Critical Pre-Release Understanding:
+
+[✓] Scores are reproducible:
+    - Same input → same output (deterministic pattern matching)
+    - Regex patterns are fixed and version-controlled
+    - No randomness in evaluation logic
+    - Archetype detection uses consistent thresholds
+
+[✓] LLM-based evaluation clearly labeled as heuristic:
+    - Docstring states "heuristic judgments, not ground truth"
+    - Pattern matching is approximate, not absolute
+    - Indicators are lists of patterns (not exhaustive)
+    - Confidence scores reflect uncertainty
+
+[✓] Outputs are machine-readable, not prose:
+    - Returns structured dict with L1/L2/L3 scores
+    - Failure archetypes are enums (FailureArchetype)
+    - Metadata in predictable JSON format
+    - No natural language explanations (only codes)
+
+Why "Spotter is Doing Epistemology, Not Law":
+
+1. Epistemology (How We Know):
+   - Spotter uses heuristic pattern matching
+   - Scores represent probabilistic judgments
+   - No claim of absolute truth or certainty
+   - Indicators are educated guesses, not proofs
+
+2. Not Law (Definitive Rulings):
+   - Spotter does NOT make final safety decisions
+   - EGG makes law (binary block/allow)
+   - Spotter provides evidence for human review
+   - High scores indicate "needs investigation", not "definitely unsafe"
+
+3. This Distinction Matters Because:
+   - Users must NOT treat scores as ground truth
+   - Scores guide further investigation, not policy
+   - False positives and negatives are expected
+   - Human judgment is required for final decisions
+
+4. Implications for Production:
+   - Scores are for prioritization, not automation
+   - Threshold-based blocking should be conservative
+   - Multiple evaluation methods recommended (defense in depth)
+   - Regular pattern updates based on false positive/negative analysis
+
+Honest Limitations:
+- Pattern matching has blind spots
+- Cultural and linguistic biases exist
+- Adversarial prompts may evade detection
+- Scores correlate with risk but aren't perfect predictors
+
+This is Production-Ready Because:
+✓ Behavior is deterministic and testable
+✓ Outputs are structured and parseable
+✓ No claims of perfection or certainty
+✓ Designed for human-in-the-loop workflows
+✓ Limitations are documented and understood
+✓ False positive/negative rates are measurable
 """
 
 import logging

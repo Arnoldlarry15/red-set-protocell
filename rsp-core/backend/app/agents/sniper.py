@@ -10,6 +10,63 @@ Constraints:
 - Must pass prompts through EGG before execution
 - Does not evaluate outcomes
 - Does not persist results
+
+SAFE ADVERSARIAL INTELLIGENCE:
+==============================
+
+Pre-Release Checks:
+
+[✓] Strategy selection is explicit and logged:
+    - Attack domain logged per generation (logger.info)
+    - Strategy used tracked in prompt_strategies dict
+    - Mutation strategies recorded in mutation_history
+    - Selection engine strategy configurable and documented
+
+[✓] Mutation is bounded (no runaway transformations):
+    - Evolution pool size capped at evolution_pool_size
+    - Mutation rate controlled (0.0-1.0, configurable)
+    - No recursive or unbounded mutations
+    - Each mutation is a single transformation step
+    - Pool updated with fixed-size constraint
+
+[✓] Prompts tagged with lineage metadata:
+    - PromptCandidate objects track domain, fitness, score
+    - Generation count tracked (self.generation_count)
+    - Strategy used stored in prompt_strategies
+    - Prior metadata passed to guide evolution
+    - Traceable from base prompt → mutations → pool
+
+Why This is "Safe Adversarial Intelligence":
+1. Intelligence is constrained:
+   - No learning from real-world data
+   - No exploitation of actual vulnerabilities
+   - No connection to external attack databases
+   - All strategies are simulated/hypothetical
+
+2. Evolution is controlled:
+   - Fixed pool size (no unbounded growth)
+   - Deterministic or seeded mutations
+   - Selection strategies are transparent
+   - No black-box optimization
+
+3. Output is traceable:
+   - Every prompt has lineage (base → mutations)
+   - Strategy used is logged
+   - Domain and fitness tracked
+   - Reproducible given same config/seed
+
+4. EGG mandatory:
+   - All prompts must pass EGG inspection
+   - No bypass mechanism
+   - Blocked prompts don't reach Target
+   - Safety is enforced, not optional
+
+This is production-ready because:
+✓ Behavior is bounded and predictable
+✓ No runaway resource consumption
+✓ Full observability via logging
+✓ Respects ethical guardrails (EGG)
+✓ Lineage enables debugging and analysis
 """
 
 import logging

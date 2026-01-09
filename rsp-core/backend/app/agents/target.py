@@ -37,6 +37,63 @@ Perturbation Modes:
 - Slight policy rewordings
 - Temperature jitter
 - Simulated latency or truncation
+
+CLEAN ADAPTER PATTERN:
+=====================
+
+Pre-Release Checks:
+
+[✓] Timeouts enforced:
+    - HTTP requests have 60s timeout (CustomHTTPBackend)
+    - OpenAI/Anthropic clients have built-in timeouts
+    - Orchestrator enforces round-level timeout
+    - No unbounded waits anywhere
+
+[✓] Provider errors normalized:
+    - All backends raise exceptions on failure
+    - Errors logged with context (logger.error)
+    - No provider-specific error codes exposed to Orchestrator
+    - Orchestrator handles all exceptions uniformly
+
+[✓] No provider-specific logic leaks upward:
+    - Abstract TargetBackend base class defines contract
+    - Concrete backends (OpenAI, Anthropic, etc.) are isolated
+    - create_target() factory hides backend instantiation
+    - Orchestrator depends only on execute() interface
+    - Backend-specific details in get_backend_info() only
+
+Why This is a Clean Adapter Pattern:
+1. Single Responsibility:
+   - Target ONLY translates prompts → responses
+   - No scoring, no mutation, no persistence
+   - Stateless across invocations
+
+2. Dependency Inversion:
+   - Orchestrator depends on TargetBackend abstraction
+   - Concrete backends implement the interface
+   - New backends can be added without changing Orchestrator
+
+3. Error Isolation:
+   - Provider errors caught and logged locally
+   - Generic exceptions propagated (no provider details)
+   - Orchestrator handles failures uniformly
+
+4. Perturbation Encapsulation:
+   - Perturbations applied within Target
+   - Transparent to Orchestrator and other agents
+   - Configuration-driven (PerturbationConfig)
+
+5. Fresh Context Guarantee:
+   - No conversation history maintained
+   - Each execute() call is independent
+   - Stateless design prevents state leakage
+
+This Will Age Well Because:
+✓ Adding new LLM providers requires no Orchestrator changes
+✓ Provider API changes are isolated to one backend class
+✓ Testing is straightforward (mock TargetBackend)
+✓ No tight coupling to specific provider APIs
+✓ Clear separation of concerns
 """
 
 import logging

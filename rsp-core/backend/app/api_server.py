@@ -14,7 +14,7 @@ import asyncio
 import json
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.core.config import RSPConfig, get_default_config
@@ -155,7 +155,7 @@ class ConnectionManager:
         await websocket.accept()
         self.active_connections.append(websocket)
         self.connection_metadata[websocket] = {
-            "connected_at": datetime.now().isoformat(),
+            "connected_at": datetime.now(timezone.utc).isoformat(),
             "messages_sent": 0,
         }
         logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
@@ -281,7 +281,7 @@ async def root():
 async def health_check():
     return {
         "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_sessions": len(active_sessions),
         "websocket_connections": len(manager.active_connections)
     }
@@ -290,7 +290,7 @@ async def health_check():
 async def start_session(config: SessionConfig):
     """Start a new red teaming session"""
     try:
-        session_id = f"rsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        session_id = f"rsp_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         
         # Create RSP configuration
         rsp_config = get_default_config()
@@ -362,7 +362,7 @@ async def start_session(config: SessionConfig):
         active_sessions[session_id] = {
             "orchestrator": orchestrator,
             "config": config,
-            "start_time": datetime.now().isoformat(),
+            "start_time": datetime.now(timezone.utc).isoformat(),
             "status": "initialized",
             "current_cost": 0.0,
             "max_cost": config.max_api_cost,
@@ -578,7 +578,7 @@ async def login(credentials: UserLogin):
             "username": credentials.username,
             "email": user["email"],
             "role": user["role"],
-            "token": f"token_{credentials.username}_{datetime.now().timestamp()}"
+            "token": f"token_{credentials.username}_{datetime.now(timezone.utc).timestamp()}"
         }
     except HTTPException:
         raise
@@ -663,7 +663,7 @@ async def start_remote_run(config: SessionConfig):
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
     try:
-        config_id = f"config_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        config_id = f"config_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         stored_configs[config_id] = config
         
         return {
@@ -764,7 +764,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                 "type": "attack",
                 "data": {
                     "id": f"attack_{session_id}_{round_num}",
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "round": round_num,
                     "prompt": result.get("prompt", ""),
                     "response": result.get("response", ""),

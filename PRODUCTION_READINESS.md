@@ -129,9 +129,9 @@ While the project is production-ready for v1.0.0, these optional enhancements co
 ### Coverage Enhancement (Optional for v1.1.0+)
 **Current**: 76% coverage (exceeds 70% target)
 **Potential**: Could reach 80%+ by adding tests for:
-- `app/api_server.py` - API endpoint integration tests
-- `app/telemetry/extractors.py` - Data extraction edge cases
-- Low-traffic utility modules
+- `app/api_server.py` (38% coverage) - API endpoint integration tests
+- `app/telemetry/extractors.py` (24% coverage) - Data extraction edge cases
+- `app/benchmarking/benchmark_runner.py` (23% coverage) - Runner integration tests
 
 **Note**: Current coverage is excellent for v1.0.0 release. These are purely optional improvements.
 

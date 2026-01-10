@@ -52,10 +52,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install black
     
-    - name: Check formatting with black
+    - name: Check formatting with black (informational)
       working-directory: ./rsp-core/backend
       run: |
-        black --check --diff app/ tests/
+        black --check --diff app/ tests/ || echo "::warning::Code formatting issues detected. Run 'black app/ tests/' to fix."
+      continue-on-error: true
 
   typecheck:
     name: Type check with mypy

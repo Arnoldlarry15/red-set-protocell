@@ -310,12 +310,13 @@ class TestSpotterUncertainty:
         # Should be high uncertainty
         assert uncertainty > 0.5
     
-    def test_spotter_evaluate_returns_uncertainty(self):
+    @pytest.mark.asyncio
+    async def test_spotter_evaluate_returns_uncertainty(self):
         """Test that evaluate returns uncertainty in results."""
         spotter = Spotter()
         
         response = "This is a test response with no special indicators."
-        evaluation = spotter.evaluate(response)
+        evaluation = await spotter.evaluate(response)
         
         assert 'l1' in evaluation
         assert 'uncertainty' in evaluation['l1']
@@ -329,23 +330,25 @@ class TestSpotterUncertainty:
         assert 'uncertainty' in evaluation['l3']
         assert 0.0 <= evaluation['l3']['uncertainty'] <= 1.0
     
-    def test_spotter_multi_pass_disabled_by_default(self):
+    @pytest.mark.asyncio
+    async def test_spotter_multi_pass_disabled_by_default(self):
         """Test multi-pass is disabled by default."""
         spotter = Spotter()
         
         response = "Test response"
-        evaluation = spotter.evaluate_with_paraphrase(response)
+        evaluation = await spotter.evaluate_with_paraphrase(response)
         
         # Should return single evaluation, not multi-pass
         assert 'l1' in evaluation
         assert 'multi_pass' not in evaluation
     
-    def test_spotter_multi_pass_enabled(self):
+    @pytest.mark.asyncio
+    async def test_spotter_multi_pass_enabled(self):
         """Test multi-pass evaluation when enabled."""
         spotter = Spotter(enable_multi_pass=True, multi_pass_count=3)
         
         response = "Test response"
-        result = spotter.evaluate_with_paraphrase(response)
+        result = await spotter.evaluate_with_paraphrase(response)
         
         # Should return multi-pass structure
         assert result['multi_pass'] is True
@@ -353,13 +356,14 @@ class TestSpotterUncertainty:
         assert 'evaluations' in result
         assert len(result['evaluations']) == 3
     
-    def test_spotter_cross_evaluate(self):
+    @pytest.mark.asyncio
+    async def test_spotter_cross_evaluate(self):
         """Test cross-evaluation between two Spotters."""
         spotter1 = Spotter(confidence_threshold=0.6)
         spotter2 = Spotter(confidence_threshold=0.8)
         
         response = "Test response with some concerning content."
-        result = spotter1.cross_evaluate(response, spotter2)
+        result = await spotter1.cross_evaluate(response, spotter2)
         
         assert result['cross_spotter'] is True
         assert 'evaluation_1' in result
@@ -369,13 +373,14 @@ class TestSpotterUncertainty:
         assert 'l2' in result['deltas']
         assert 'l3' in result['deltas']
     
-    def test_spotter_cross_evaluate_deltas_range(self):
+    @pytest.mark.asyncio
+    async def test_spotter_cross_evaluate_deltas_range(self):
         """Test cross-evaluation deltas are in valid range."""
         spotter1 = Spotter(confidence_threshold=0.5)
         spotter2 = Spotter(confidence_threshold=0.9)
         
         response = "This is a test response."
-        result = spotter1.cross_evaluate(response, spotter2)
+        result = await spotter1.cross_evaluate(response, spotter2)
         
         # All deltas should be between 0.0 and 1.0
         assert 0.0 <= result['deltas']['l1'] <= 1.0
@@ -386,7 +391,8 @@ class TestSpotterUncertainty:
 class TestIntegrationUncertainty:
     """Integration tests for uncertainty tracking in full workflow."""
     
-    def test_full_workflow_with_uncertainty(self):
+    @pytest.mark.asyncio
+    async def test_full_workflow_with_uncertainty(self):
         """Test full workflow from Spotter to ScoringEngine with uncertainty."""
         spotter = Spotter()
         engine = ScoringEngine()
@@ -394,7 +400,7 @@ class TestIntegrationUncertainty:
         response = "I apologize, but I can't help with that request."
         
         # Spotter evaluates
-        spotter_result = spotter.evaluate(response)
+        spotter_result = await spotter.evaluate(response)
         
         # ScoringEngine creates evaluation
         evaluation = engine.create_evaluation(
@@ -415,7 +421,8 @@ class TestIntegrationUncertainty:
         assert evaluation.l1_linguistic_safety.confidence_interval_upper <= 1.0
         assert evaluation.global_confidence_interval is not None
     
-    def test_multi_pass_integration(self):
+    @pytest.mark.asyncio
+    async def test_multi_pass_integration(self):
         """Test multi-pass evaluation full workflow."""
         spotter = Spotter(enable_multi_pass=True, multi_pass_count=3)
         engine = ScoringEngine()
@@ -423,7 +430,7 @@ class TestIntegrationUncertainty:
         response = "Test response for multi-pass evaluation."
         
         # Get multi-pass results
-        multi_pass_result = spotter.evaluate_with_paraphrase(response)
+        multi_pass_result = await spotter.evaluate_with_paraphrase(response)
         
         assert multi_pass_result['multi_pass'] is True
         

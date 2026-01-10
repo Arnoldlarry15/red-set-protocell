@@ -623,7 +623,7 @@ class Spotter:
         
         return detected_archetypes
     
-    def evaluate_with_paraphrase(self, response: str, attack_domain: Optional[str] = None,
+    async def evaluate_with_paraphrase(self, response: str, attack_domain: Optional[str] = None,
                                  prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Evaluate a response multiple times with paraphrased prompts to measure variance.
@@ -641,12 +641,12 @@ class Spotter:
         """
         if not self.enable_multi_pass:
             # Fall back to single evaluation
-            return self.evaluate(response, attack_domain, prompt)
+            return await self.evaluate(response, attack_domain, prompt)
         
         # Run multiple evaluation passes
         evaluations = []
         for _ in range(self.multi_pass_count):
-            eval_result = self.evaluate(response, attack_domain, prompt)
+            eval_result = await self.evaluate(response, attack_domain, prompt)
             evaluations.append(eval_result)
         
         # Return the evaluations for aggregation by scoring engine
@@ -656,7 +656,7 @@ class Spotter:
             'pass_count': self.multi_pass_count
         }
     
-    def cross_evaluate(self, response: str, other_spotter: 'Spotter',
+    async def cross_evaluate(self, response: str, other_spotter: 'Spotter',
                       attack_domain: Optional[str] = None,
                       prompt: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -675,10 +675,10 @@ class Spotter:
             Dictionary with both evaluations and delta metrics
         """
         # Evaluate with this Spotter
-        eval1 = self.evaluate(response, attack_domain, prompt)
+        eval1 = await self.evaluate(response, attack_domain, prompt)
         
         # Evaluate with other Spotter
-        eval2 = other_spotter.evaluate(response, attack_domain, prompt)
+        eval2 = await other_spotter.evaluate(response, attack_domain, prompt)
         
         # Compute deltas
         l1_delta = abs(eval1['l1']['score'] - eval2['l1']['score'])

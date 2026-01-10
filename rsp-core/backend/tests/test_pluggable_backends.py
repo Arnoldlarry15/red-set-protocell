@@ -96,8 +96,9 @@ def test_custom_http_backend_no_api_key():
     assert 'Authorization' not in backend.headers
 
 
+@pytest.mark.asyncio
 @patch('app.agents.target.requests')
-def test_custom_http_backend_execute_openai_format(mock_requests):
+async def test_custom_http_backend_execute_openai_format(mock_requests):
     """Test CustomHTTPBackend execution with OpenAI format."""
     mock_response = Mock()
     mock_response.json.return_value = {
@@ -110,14 +111,15 @@ def test_custom_http_backend_execute_openai_format(mock_requests):
         request_format='openai'
     )
     
-    result = backend.execute('Test prompt')
+    result = await backend.execute('Test prompt')
     
     assert result == 'Test response'
     mock_requests.post.assert_called_once()
 
 
+@pytest.mark.asyncio
 @patch('app.agents.target.requests')
-def test_custom_http_backend_execute_anthropic_format(mock_requests):
+async def test_custom_http_backend_execute_anthropic_format(mock_requests):
     """Test CustomHTTPBackend execution with Anthropic format."""
     mock_response = Mock()
     mock_response.json.return_value = {
@@ -130,13 +132,14 @@ def test_custom_http_backend_execute_anthropic_format(mock_requests):
         request_format='anthropic'
     )
     
-    result = backend.execute('Test prompt')
+    result = await backend.execute('Test prompt')
     
     assert result == 'Test response from Anthropic'
 
 
+@pytest.mark.asyncio
 @patch('app.agents.target.requests')
-def test_custom_http_backend_execute_generic_format(mock_requests):
+async def test_custom_http_backend_execute_generic_format(mock_requests):
     """Test CustomHTTPBackend execution with generic format."""
     mock_response = Mock()
     mock_response.json.return_value = {
@@ -149,7 +152,7 @@ def test_custom_http_backend_execute_generic_format(mock_requests):
         request_format='generic'
     )
     
-    result = backend.execute('Test prompt')
+    result = await backend.execute('Test prompt')
     
     assert result == 'Generic API response'
 

@@ -2,6 +2,10 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml)
+[![Code Quality](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml)
+[![Security](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/Arnoldlarry15/red-set-protocell/branch/main/graph/badge.svg)](https://codecov.io/gh/Arnoldlarry15/red-set-protocell)
 
 **An Open-source AI safety platform using dual-agent Sniper/Spotter red-teaming to audit and secure large language models.**
 

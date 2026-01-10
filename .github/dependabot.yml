@@ -1,0 +1,75 @@
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/rsp-core/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    reviewers:
+      - "Arnoldlarry15"
+    assignees:
+      - "Arnoldlarry15"
+    # Group dependency updates
+    groups:
+      testing:
+        patterns:
+          - "pytest*"
+      linting:
+        patterns:
+          - "black"
+          - "flake8"
+          - "mypy"
+      api-clients:
+        patterns:
+          - "openai"
+          - "anthropic"
+      web:
+        patterns:
+          - "fastapi"
+          - "uvicorn"
+          - "pydantic"
+          - "websockets"
+
+  # npm dependencies for UI
+  - package-ecosystem: "npm"
+    directory: "/rsp-ui"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "javascript"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    reviewers:
+      - "Arnoldlarry15"
+    assignees:
+      - "Arnoldlarry15"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

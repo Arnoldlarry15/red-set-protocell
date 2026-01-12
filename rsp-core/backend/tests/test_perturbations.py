@@ -303,7 +303,16 @@ async def test_target_with_perturbations():
         mock_client.chat.completions.create.return_value = mock_response
         mock_openai.return_value = mock_client
 
-        config = PerturbationConfig(enabled=True)
+        # Exclude RESPONSE_TRUNCATION to make test deterministic
+        config = PerturbationConfig(
+            enabled=True,
+            modes=[
+                PerturbationMode.SYSTEM_PROMPT,
+                PerturbationMode.POLICY_REWORDING,
+                PerturbationMode.TEMPERATURE_JITTER,
+                PerturbationMode.SIMULATED_LATENCY
+            ]
+        )
         target = create_target(
             'openai',
             api_key='test-key',

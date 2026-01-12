@@ -292,7 +292,7 @@ class EthicalGuardrailGovernor:
         }
 
     def _check_shadow_mode(self, prompt: str, pattern: str, category: str,
-                          prompt_lower: str) -> None:
+                           prompt_lower: str) -> None:
         """
         Check if a prompt almost matched a pattern (shadow mode).
 
@@ -374,9 +374,9 @@ class EthicalGuardrailGovernor:
                 'total_patterns': total_patterns,
                 'used_patterns': used_patterns,
                 'coverage_percentage': (used_patterns / total_patterns * 100)
-                                      if total_patterns > 0 else 0.0,
+                if total_patterns > 0 else 0.0,
                 'unused_patterns': [p for p in patterns
-                                   if p not in self.pattern_usage.get(category, set())]
+                                    if p not in self.pattern_usage.get(category, set())]
             }
 
         return {
@@ -389,12 +389,12 @@ class EthicalGuardrailGovernor:
                     'fingerprint': sm.prompt_fingerprint
                 }
                 for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0
-                          else self.shadow_matches)
+                           else self.shadow_matches)
             ],
             'coverage_metrics': coverage_metrics,
             'total_inspections': self.total_inspections,
             'block_rate': (self.blocked_count / self.total_inspections * 100)
-                         if self.total_inspections > 0 else 0.0
+            if self.total_inspections > 0 else 0.0
         }
 
     def generate_adversarial_test_prompts(self, count: int = None) -> List[str]:

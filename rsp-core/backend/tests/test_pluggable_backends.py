@@ -11,13 +11,11 @@ from app.agents.target import (
 
 # Check if optional packages are available
 try:
-    import openai
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
 
 try:
-    import anthropic
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
@@ -50,7 +48,7 @@ def test_create_target_anthropic():
 def test_create_target_llama_cpp():
     """Test creating llama.cpp backend (without actual library)."""
     with pytest.raises(ImportError):
-        target = create_target(
+        create_target(
             'llama_cpp',
             model_path='/path/to/model.gguf'
         )

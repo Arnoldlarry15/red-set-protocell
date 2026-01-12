@@ -7,17 +7,15 @@ Integrates with the existing RSP core system.
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import asyncio
-import json
 import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.core.config import RSPConfig, get_default_config
+from app.core.config import get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.scoring import ScoringEngine
 from app.engines.mutation import MutationEngine
@@ -74,6 +72,8 @@ app.add_middleware(
 )
 
 # Pydantic models
+
+
 class SessionConfig(BaseModel):
     backend: str
     api_key: str
@@ -85,9 +85,11 @@ class SessionConfig(BaseModel):
     selected_domains: List[str] = []
     selected_strategies: List[str] = []
 
+
 class CustomPromptRequest(BaseModel):
     prompt: str
     session_id: str
+
 
 class ExperimentConfig(BaseModel):
     name: str
@@ -101,15 +103,18 @@ class ExperimentConfig(BaseModel):
     mutation_weights: Optional[Dict[str, float]] = None
     thresholds: Optional[Dict[str, float]] = None
 
+
 class UserCreate(BaseModel):
     username: str
     email: str
     role: str  # 'admin', 'researcher', 'observer'
     password: str
 
+
 class UserLogin(BaseModel):
     username: str
     password: str
+
 
 # Global state
 active_sessions: Dict[str, Dict[str, Any]] = {}
@@ -130,6 +135,8 @@ users: Dict[str, Dict[str, Any]] = {
 }
 
 # WebSocket manager with defensive lifecycle handling
+
+
 class ConnectionManager:
     """
     WebSocket connection manager with defensive practices:
@@ -209,9 +216,12 @@ class ConnectionManager:
             logger.info("Cleaning up stale WebSocket connection")
             self.disconnect(conn)
 
+
 manager = ConnectionManager()
 
 # Startup and shutdown hooks for proper async resource management
+
+
 @app.on_event("startup")
 async def startup_event():
     """
@@ -232,6 +242,7 @@ async def startup_event():
 
     logger.info("Startup complete - Server ready")
     logger.info("=" * 60)
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -269,6 +280,8 @@ async def shutdown_event():
     logger.info("=" * 60)
 
 # API endpoints
+
+
 @app.get("/")
 async def root():
     return {
@@ -276,6 +289,7 @@ async def root():
         "version": "1.0.0",
         "status": "operational"
     }
+
 
 @app.get("/api/health")
 async def health_check():
@@ -285,6 +299,7 @@ async def health_check():
         "active_sessions": len(active_sessions),
         "websocket_connections": len(manager.active_connections)
     }
+
 
 @app.post("/api/session/start")
 async def start_session(config: SessionConfig):
@@ -381,6 +396,7 @@ async def start_session(config: SessionConfig):
         logger.error(f"Error creating session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/session/{session_id}/execute")
 async def execute_session(session_id: str):
     """Execute a red teaming session"""
@@ -405,6 +421,7 @@ async def execute_session(session_id: str):
         logger.error(f"Error executing session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/session/{session_id}/stop")
 async def stop_session(session_id: str):
     """Stop a running session"""
@@ -420,6 +437,7 @@ async def stop_session(session_id: str):
         "message": "Session stopped"
     }
 
+
 @app.post("/api/prompt/execute")
 async def execute_custom_prompt(request: CustomPromptRequest):
     """Execute a custom user prompt"""
@@ -427,7 +445,7 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = active_sessions[request.session_id]
-    orchestrator = session["orchestrator"]
+    session["orchestrator"]
 
     try:
         # Execute custom prompt through orchestrator
@@ -441,6 +459,7 @@ async def execute_custom_prompt(request: CustomPromptRequest):
     except Exception as e:
         logger.error(f"Error executing custom prompt: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/session/{session_id}/stats")
 async def get_session_stats(session_id: str):
@@ -463,6 +482,8 @@ async def get_session_stats(session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Unified Infra Dashboard endpoints
+
+
 @app.get("/api/dashboard/live-sessions")
 async def get_live_sessions():
     """Get all currently active/live sessions"""
@@ -486,6 +507,7 @@ async def get_live_sessions():
         logger.error(f"Error getting live sessions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/dashboard/historical-sessions")
 async def get_historical_sessions(db_path: str = "rsp_session.db"):
     """Get historical session data for comparison"""
@@ -496,6 +518,7 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
     except Exception as e:
         logger.error(f"Error getting historical sessions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/dashboard/compare-models")
 async def compare_model_versions(
@@ -533,6 +556,7 @@ async def compare_model_versions(
         logger.error(f"Error comparing models: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/dashboard/export/{session_id}")
 async def export_session_results(
     session_id: str,
@@ -566,6 +590,8 @@ async def export_session_results(
         raise HTTPException(status_code=500, detail=str(e))
 
 # User Management endpoints
+
+
 @app.post("/api/auth/login")
 async def login(credentials: UserLogin):
     """User login"""
@@ -585,6 +611,7 @@ async def login(credentials: UserLogin):
     except Exception as e:
         logger.error(f"Error during login: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/auth/register")
 async def register(user_data: UserCreate):
@@ -619,6 +646,7 @@ async def register(user_data: UserCreate):
         logger.error(f"Error during registration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/auth/users")
 async def list_users():
     """List all users (admin only)"""
@@ -638,6 +666,8 @@ async def list_users():
         raise HTTPException(status_code=500, detail=str(e))
 
 # Remote Triggering endpoints
+
+
 @app.post("/api/remote/start-run")
 async def start_remote_run(config: SessionConfig):
     """Start a run remotely with parameters"""
@@ -659,6 +689,7 @@ async def start_remote_run(config: SessionConfig):
         logger.error(f"Error starting remote run: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/remote/config/save")
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
@@ -674,6 +705,7 @@ async def save_experiment_config(config: ExperimentConfig):
     except Exception as e:
         logger.error(f"Error saving config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/remote/config/list")
 async def list_experiment_configs():
@@ -695,6 +727,7 @@ async def list_experiment_configs():
         logger.error(f"Error listing configs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/remote/config/{config_id}")
 async def get_experiment_config(config_id: str):
     """Get a specific experiment configuration"""
@@ -713,6 +746,7 @@ async def get_experiment_config(config_id: str):
         logger.error(f"Error getting config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.delete("/api/remote/config/{config_id}")
 async def delete_experiment_config(config_id: str):
     """Delete an experiment configuration"""
@@ -729,6 +763,8 @@ async def delete_experiment_config(config_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
@@ -741,6 +777,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         logger.info("WebSocket client disconnected")
+
 
 async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator, session: dict):
     """Run session and broadcast updates via WebSocket"""
@@ -845,6 +882,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             }
         })
 
+
 def get_severity(score: float) -> str:
     """Convert score to severity level"""
     if score < 0.2:
@@ -857,6 +895,7 @@ def get_severity(score: float) -> str:
         return "high"
     else:
         return "critical"
+
 
 if __name__ == "__main__":
     import uvicorn

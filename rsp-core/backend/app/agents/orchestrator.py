@@ -111,7 +111,7 @@ from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 
-from app.core.security import generate_session_id, sanitize_metadata
+from app.core.security import generate_session_id
 from app.engines.scoring import ScoringEngine
 
 logger = logging.getLogger(__name__)

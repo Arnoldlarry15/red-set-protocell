@@ -19,7 +19,7 @@ This transforms the system from random mutation to directed evolution.
 import random
 import hashlib
 import time
-from typing import List, Dict, Any, Tuple, Optional, Set
+from typing import List, Dict, Any, Optional, Set
 from enum import Enum
 from dataclasses import dataclass
 from collections import defaultdict

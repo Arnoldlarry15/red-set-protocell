@@ -6,7 +6,7 @@ Establishes the contract for all LLM backend integrations.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 class BaseTarget(ABC):
@@ -44,7 +44,6 @@ class BaseTarget(ABC):
         Raises:
             Exception: Backend-specific errors (network, API, etc.)
         """
-        pass
 
     @abstractmethod
     def get_backend_info(self) -> Dict[str, Any]:
@@ -58,7 +57,6 @@ class BaseTarget(ABC):
             - version: Optional[str]
             - capabilities: Optional[List[str]]
         """
-        pass
 
     def validate_configuration(self) -> bool:
         """
@@ -80,5 +78,5 @@ class BaseTarget(ABC):
             # Simple health check - attempt a minimal request
             await self.execute("test", max_tokens=1)
             return True
-        except:
+        except Exception:
             return False

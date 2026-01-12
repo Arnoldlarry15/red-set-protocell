@@ -2,8 +2,7 @@
 Tests for EGG telemetry, shadow mode, and coverage features.
 """
 
-import pytest
-from app.core.egg import EthicalGuardrailGovernor, BlockedContent, ShadowModeMatch
+from app.core.egg import EthicalGuardrailGovernor, ShadowModeMatch
 
 
 def test_category_hits_telemetry():

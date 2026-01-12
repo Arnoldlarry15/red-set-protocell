@@ -101,7 +101,7 @@ import random
 import time
 import asyncio
 from typing import Optional, Dict, Any, List
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from enum import Enum
 
 from app.interfaces.target import BaseTarget
@@ -197,7 +197,6 @@ class TargetBackend(BaseTarget):
         Returns:
             Model response string
         """
-        pass
 
     def get_backend_info(self) -> Dict[str, Any]:
         """Get backend information."""
@@ -374,6 +373,7 @@ class OpenAIBackend(TargetBackend):
         except Exception as e:
             logger.error(f"OpenAI API call failed: {e}")
             raise
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get OpenAI backend information."""
         return {
@@ -465,6 +465,7 @@ class AnthropicBackend(TargetBackend):
         except Exception as e:
             logger.error(f"Anthropic API call failed: {e}")
             raise
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get Anthropic backend information."""
         info = super().get_backend_info()

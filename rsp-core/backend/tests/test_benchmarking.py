@@ -2,9 +2,7 @@
 Tests for benchmarking module.
 """
 
-import pytest
 from datetime import datetime
-from pathlib import Path
 
 from app.benchmarking.benchmark_suite import (
     BenchmarkConfig,

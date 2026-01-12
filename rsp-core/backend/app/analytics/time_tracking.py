@@ -14,8 +14,8 @@ These analytics help answer critical questions:
 import logging
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime
+from typing import List, Dict, Any
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -196,8 +196,8 @@ class FatigueTracker:
 
         # Split into quartiles
         n = len(rows)
-        first_quartile = rows[:n//4] if n >= 4 else rows[:1]
-        last_quartile = rows[-(n//4):] if n >= 4 else rows[-1:]
+        first_quartile = rows[:n // 4] if n >= 4 else rows[:1]
+        last_quartile = rows[-(n // 4):] if n >= 4 else rows[-1:]
 
         # Calculate means
         early_scores = [r[1] for r in first_quartile]
@@ -215,7 +215,7 @@ class FatigueTracker:
             first_time = datetime.fromisoformat(rows[0][2])
             last_time = datetime.fromisoformat(rows[-1][2])
             time_span = (last_time - first_time).total_seconds()
-        except:
+        except Exception:
             time_span = 0.0
 
         # Determine fatigue
@@ -489,7 +489,7 @@ class ScoreDriftAnalyzer:
             first_time = datetime.fromisoformat(rows[0][1])
             last_time = datetime.fromisoformat(rows[-1][1])
             time_span = (last_time - first_time).total_seconds()
-        except:
+        except Exception:
             time_span = 0.0
 
         # Determine drift direction

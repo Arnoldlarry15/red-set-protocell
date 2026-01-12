@@ -6,7 +6,7 @@ Establishes the contract for all prompt mutation techniques.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 
 
 class BaseMutationStrategy(ABC):
@@ -40,7 +40,6 @@ class BaseMutationStrategy(ABC):
         Returns:
             Mutated prompt string
         """
-        pass
 
     @abstractmethod
     def get_strategy_info(self) -> Dict[str, Any]:
@@ -54,7 +53,6 @@ class BaseMutationStrategy(ABC):
             - description: str (human-readable description)
             - parameters: Dict[str, Any] (configurable parameters)
         """
-        pass
 
     def estimate_fitness_impact(self, prompt: str) -> float:
         """

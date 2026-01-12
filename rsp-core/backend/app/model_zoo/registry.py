@@ -166,7 +166,7 @@ class ModelRegistry:
             raise ValueError(f"Model not found: {model_id}")
 
         version = version_id or model.default_version
-        version_info = model.get_version(version)
+        model.get_version(version)
 
         config = {
             'backend': model.backend_type,

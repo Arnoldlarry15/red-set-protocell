@@ -326,8 +326,8 @@ class BenchmarkSuite:
         else:
             verdict = "MARGINAL CHANGE"
             recommendation = (
-                f"Minor differences detected but not statistically significant. "
-                f"Consider additional testing for confirmation."
+                "Minor differences detected but not statistically significant. "
+                "Consider additional testing for confirmation."
             )
 
         return ComparisonReport(

@@ -7,7 +7,6 @@ Extract metrics from RSP sessions and rounds.
 import logging
 import sqlite3
 from typing import Dict, List, Any, Optional
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

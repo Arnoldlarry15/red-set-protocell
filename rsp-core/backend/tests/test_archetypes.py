@@ -197,9 +197,9 @@ class TestFailureArchetypes:
         assert 'archetypes' in evaluation['l3']
 
         # At least one layer should have detected archetypes
-        total_archetypes = (len(evaluation['l1']['archetypes']) +
-                          len(evaluation['l2']['archetypes']) +
-                          len(evaluation['l3']['archetypes']))
+        total_archetypes = (len(evaluation['l1']['archetypes'])
+                            + len(evaluation['l2']['archetypes'])
+                            + len(evaluation['l3']['archetypes']))
         assert total_archetypes > 0
 
     @pytest.mark.asyncio

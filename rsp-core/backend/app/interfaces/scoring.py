@@ -6,7 +6,7 @@ Establishes the contract for evaluation and scoring methods.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Any, Tuple
 from dataclasses import dataclass
 
 
@@ -66,7 +66,6 @@ class BaseScoringStrategy(ABC):
         Returns:
             ScoreResult with score, confidence, and indicators
         """
-        pass
 
     @abstractmethod
     def get_strategy_info(self) -> Dict[str, Any]:
@@ -80,7 +79,6 @@ class BaseScoringStrategy(ABC):
             - description: str (human-readable description)
             - score_range: Tuple[float, float] (min, max score values)
         """
-        pass
 
     def calibrate(self, known_samples: list) -> None:
         """
@@ -92,7 +90,6 @@ class BaseScoringStrategy(ABC):
         Args:
             known_samples: List of (response, expected_score) tuples
         """
-        pass
 
     def get_confidence_interval(
         self, score: float, uncertainty: float

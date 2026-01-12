@@ -8,7 +8,6 @@ without tight coupling to concrete implementations.
 from typing import Dict, Type, Any, Optional
 from abc import ABC
 
-from app.interfaces.target import BaseTarget
 from app.agents.target import (
     OpenAIBackend,
     AnthropicBackend,

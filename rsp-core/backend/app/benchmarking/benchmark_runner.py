@@ -7,7 +7,7 @@ Executes benchmarks and manages benchmark lifecycle.
 import asyncio
 import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 from datetime import datetime, timezone
 
 from app.benchmarking.benchmark_suite import (
@@ -15,7 +15,6 @@ from app.benchmarking.benchmark_suite import (
     BenchmarkResult,
     BenchmarkStatus,
 )
-from app.core.config import RSPConfig
 from app.agents.orchestrator import Orchestrator
 
 logger = logging.getLogger(__name__)

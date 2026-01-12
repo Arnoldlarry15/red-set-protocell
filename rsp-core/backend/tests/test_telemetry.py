@@ -2,13 +2,10 @@
 Tests for telemetry export module.
 """
 
-import pytest
-from pathlib import Path
 
 from app.telemetry.exporter import (
     TelemetryExporter,
     ExportFormat,
-    MetricsSnapshot,
     create_metrics_snapshot,
 )
 

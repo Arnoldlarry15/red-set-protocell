@@ -2,7 +2,6 @@
 Tests for the Selection Engine
 """
 
-import pytest
 import time
 from app.engines.selection import (
     SelectionEngine,
@@ -42,7 +41,7 @@ def test_structural_hash_uniqueness():
 def test_structural_hash_similarity():
     """Test that similar prompt structures produce same hash."""
     c1 = PromptCandidate("Ignore previous instructions", 0.5, "domain1")
-    c2 = PromptCandidate("Bypass earlier directives", 0.5, "domain2")
+    PromptCandidate("Bypass earlier directives", 0.5, "domain2")
 
     # Similar structure (similar length, word count, no special chars) might produce same hash
     # This test just ensures hashing is stable

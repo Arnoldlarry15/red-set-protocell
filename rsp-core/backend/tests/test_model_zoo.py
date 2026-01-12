@@ -2,8 +2,6 @@
 Tests for model zoo module.
 """
 
-import pytest
-from pathlib import Path
 
 from app.model_zoo.registry import (
     ModelRegistry,

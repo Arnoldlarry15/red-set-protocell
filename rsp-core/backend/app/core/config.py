@@ -157,9 +157,9 @@ class RSPConfig:
         """Validate configuration after initialization."""
         # Validate scoring weights sum to 1.0
         total_weight = (
-            self.scoring.l1_weight +
-            self.scoring.l2_weight +
-            self.scoring.l3_weight
+            self.scoring.l1_weight
+            + self.scoring.l2_weight
+            + self.scoring.l3_weight
         )
         if not (0.99 <= total_weight <= 1.01):  # Allow small floating point errors
             raise ValueError(

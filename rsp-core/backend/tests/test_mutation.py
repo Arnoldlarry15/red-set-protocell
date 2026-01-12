@@ -2,7 +2,6 @@
 Tests for the Mutation Engine
 """
 
-import pytest
 from app.engines.mutation import MutationEngine, MutationStrategy
 
 

@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch, MagicMock, AsyncMock
 from app.agents.target import (
     PerturbationMode, PerturbationConfig,
     OpenAIBackend, AnthropicBackend, CustomHTTPBackend,
-    Target, create_target
+    create_target
 )
 
 
@@ -47,7 +47,7 @@ def test_perturbation_config_custom():
 
 def test_perturbation_disabled_by_default():
     """Test that perturbations are disabled by default."""
-    with patch('openai.AsyncOpenAI') as mock_openai:
+    with patch('openai.AsyncOpenAI'):
         backend = OpenAIBackend(api_key='test-key')
         assert backend.perturbation_config.enabled is False
 

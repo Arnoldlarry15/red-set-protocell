@@ -4,7 +4,7 @@ Tests for async interfaces and abstract base classes.
 
 import pytest
 from app.interfaces import BaseTarget, BaseMutationStrategy, BaseScoringStrategy, ScoreResult
-from app.agents.target import OpenAIBackend, AnthropicBackend, LlamaCppBackend, CustomHTTPBackend, TargetBackend
+from app.agents.target import OpenAIBackend, AnthropicBackend, TargetBackend
 
 
 class MockAsyncBackend(BaseTarget):

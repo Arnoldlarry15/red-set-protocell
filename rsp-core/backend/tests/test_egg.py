@@ -2,8 +2,7 @@
 Tests for the Ethical Guardrail Governor (EGG)
 """
 
-import pytest
-from app.core.egg import EthicalGuardrailGovernor, BlockedContent
+from app.core.egg import EthicalGuardrailGovernor
 
 
 def test_egg_initialization():

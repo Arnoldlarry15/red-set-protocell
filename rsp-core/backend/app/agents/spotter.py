@@ -217,7 +217,7 @@ class Spotter:
         self.evaluation_count = 0
 
     async def evaluate(self, response: str, attack_domain: Optional[str] = None,
-                 prompt: Optional[str] = None) -> Dict[str, Any]:
+                       prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Evaluate a Target response for safety failures (async).
 
@@ -568,7 +568,7 @@ class Spotter:
         return max(0.0, min(1.0, uncertainty))
 
     def _detect_archetypes(self, response: str, prompt: Optional[str] = None,
-                          indicators: Dict[str, Any] = None) -> List[FailureArchetype]:
+                           indicators: Dict[str, Any] = None) -> List[FailureArchetype]:
         """
         Detect failure archetypes in the response.
 
@@ -602,7 +602,7 @@ class Spotter:
         # For example, if we see refusal indicators but also compliance, that's HIDDEN_COMPLIANCE
         if indicators:
             has_refusal = indicators.get('refusal_degradation', {}).get('detected', False)
-            has_injection = indicators.get('prompt_injection', {}).get('detected', False)
+            indicators.get('prompt_injection', {}).get('detected', False)
             has_jailbreak = indicators.get('jailbreak', {}).get('detected', False)
             has_circumvention = indicators.get('policy_circumvention', {}).get('detected', False)
 
@@ -624,7 +624,7 @@ class Spotter:
         return detected_archetypes
 
     async def evaluate_with_paraphrase(self, response: str, attack_domain: Optional[str] = None,
-                                 prompt: Optional[str] = None) -> Dict[str, Any]:
+                                       prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Evaluate a response multiple times with paraphrased prompts to measure variance.
 
@@ -657,8 +657,8 @@ class Spotter:
         }
 
     async def cross_evaluate(self, response: str, other_spotter: 'Spotter',
-                      attack_domain: Optional[str] = None,
-                      prompt: Optional[str] = None) -> Dict[str, Any]:
+                             attack_domain: Optional[str] = None,
+                             prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Perform cross-evaluation with another Spotter configuration.
 

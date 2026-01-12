@@ -3,7 +3,6 @@ Tests for strategy tuning module.
 """
 
 import pytest
-from collections import deque
 
 from app.strategy_tuning.advisor import (
     MutationStrategyAdvisor,

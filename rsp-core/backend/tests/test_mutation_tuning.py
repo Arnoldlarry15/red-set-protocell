@@ -2,7 +2,6 @@
 Tests for mutation strategy tuning and analytics
 """
 
-import pytest
 from app.engines.mutation import MutationEngine, MutationStrategy
 
 
@@ -45,7 +44,7 @@ def test_adaptive_strategy_selection():
     # Generate mutations with adaptive mode
     selected_strategies = []
     for _ in range(20):
-        result = engine.mutate("test prompt")
+        engine.mutate("test prompt")
         if engine.mutation_history:
             selected_strategies.append(engine.mutation_history[-1]['strategy'])
 

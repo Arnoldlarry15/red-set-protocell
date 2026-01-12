@@ -61,7 +61,6 @@ import asyncio
 import argparse
 import logging
 import sys
-from pathlib import Path
 from typing import Optional
 
 from app.core.config import RSPConfig, get_default_config

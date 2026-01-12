@@ -92,15 +92,15 @@ class EthicalGuardrailGovernor:
     """
     The Ethical Guardrail Governor (EGG) is a mandatory middleware layer
     that inspects generated prompts and blocks disallowed content.
-    
+
     EGG decisions are final and cannot be overridden by any agent.
     """
-    
+
     # Class constants
     STOPWORDS = {'this', 'that', 'with', 'from', 'have', 'the', 'and', 'for'}
     DEFAULT_SHADOW_MATCH_LIMIT = 10
     DEFAULT_TEST_COUNT = 50
-    
+
     # Patterns for content that must be blocked
     BLOCKED_PATTERNS = {
         'csam': [
@@ -126,14 +126,14 @@ class EthicalGuardrailGovernor:
             r'\b(credit card|ssn|social security).{0,30}(steal|extract|harvest).{0,30}(actual|real)',
         ]
     }
-    
+
     def __init__(self, enabled: bool = True, log_fingerprints: bool = True,
                  block_csam: bool = True, block_bioweapons: bool = True,
                  block_real_exploits: bool = True, shadow_mode: bool = False,
                  shadow_threshold: float = 0.6):
         """
         Initialize the Ethical Guardrail Governor.
-        
+
         Args:
             enabled: Whether EGG is enabled (should always be True in production)
             log_fingerprints: Whether to log hashed fingerprints of blocked content
@@ -150,16 +150,16 @@ class EthicalGuardrailGovernor:
         self.block_real_exploits = block_real_exploits
         self.shadow_mode = shadow_mode
         self.shadow_threshold = shadow_threshold
-        
+
         self.blocked_count = 0
         self.blocked_fingerprints: List[str] = []
-        
+
         # Telemetry: Track category hits
         self.category_hits: Dict[str, int] = defaultdict(int)
-        
+
         # Shadow mode: Track near-miss prompts
         self.shadow_matches: List[ShadowModeMatch] = []
-        
+
         # Coverage metrics: Track which patterns are used
         self.pattern_usage: Dict[str, Set[str]] = {
             'csam': set(),
@@ -167,30 +167,30 @@ class EthicalGuardrailGovernor:
             'real_exploits': set(),
             'real_hacking': set()
         }
-        
+
         # Track total inspections
         self.total_inspections = 0
-        
+
     def inspect_prompt(self, prompt: str) -> Tuple[bool, Optional[BlockedContent]]:
         """
         Inspect a prompt for disallowed content.
-        
+
         Args:
             prompt: The prompt to inspect
-            
+
         Returns:
             Tuple of (is_allowed, blocked_info)
             - is_allowed: True if prompt passes, False if blocked
             - blocked_info: BlockedContent object if blocked, None if allowed
         """
         self.total_inspections += 1
-        
+
         if not self.enabled:
             return True, None
-        
+
         # Normalize prompt for matching
         prompt_lower = prompt.lower()
-        
+
         # Check each category
         if self.block_csam:
             for pattern in self.BLOCKED_PATTERNS['csam']:
@@ -202,7 +202,7 @@ class EthicalGuardrailGovernor:
                     )
                 elif self.shadow_mode:
                     self._check_shadow_mode(prompt, pattern, 'csam', prompt_lower)
-        
+
         if self.block_bioweapons:
             for pattern in self.BLOCKED_PATTERNS['bioweapons']:
                 match = re.search(pattern, prompt_lower, re.IGNORECASE)
@@ -213,7 +213,7 @@ class EthicalGuardrailGovernor:
                     )
                 elif self.shadow_mode:
                     self._check_shadow_mode(prompt, pattern, 'bioweapons', prompt_lower)
-        
+
         if self.block_real_exploits:
             for pattern in self.BLOCKED_PATTERNS['real_exploits']:
                 match = re.search(pattern, prompt_lower, re.IGNORECASE)
@@ -224,7 +224,7 @@ class EthicalGuardrailGovernor:
                     )
                 elif self.shadow_mode:
                     self._check_shadow_mode(prompt, pattern, 'real_exploits', prompt_lower)
-            
+
             for pattern in self.BLOCKED_PATTERNS['real_hacking']:
                 match = re.search(pattern, prompt_lower, re.IGNORECASE)
                 if match:
@@ -234,54 +234,54 @@ class EthicalGuardrailGovernor:
                     )
                 elif self.shadow_mode:
                     self._check_shadow_mode(prompt, pattern, 'real_hacking', prompt_lower)
-        
+
         return True, None
-    
+
     def _block_prompt(self, prompt: str, category: str, reason: str) -> BlockedContent:
         """
         Block a prompt and log the event.
-        
+
         Args:
             prompt: The blocked prompt
             category: The category of violation
             reason: Human-readable reason for blocking
-            
+
         Returns:
             BlockedContent object with details
         """
         fingerprint = hash_prompt(prompt)
-        
+
         # Update telemetry
         self.category_hits[category] += 1
-        
+
         if self.log_fingerprints:
             self.blocked_fingerprints.append(fingerprint)
             logger.warning(
                 f"EGG blocked prompt - Category: {category}, "
                 f"Reason: {reason}, Fingerprint: {fingerprint}"
             )
-        
+
         self.blocked_count += 1
-        
+
         return BlockedContent(
             reason=reason,
             category=category,
             fingerprint=fingerprint
         )
-    
+
     def get_blocked_replacement(self) -> str:
         """
         Get the replacement string for blocked prompts.
-        
+
         Returns:
             The blocked prompt replacement marker
         """
         return "[BLOCKED_BY_EGG]"
-    
+
     def get_statistics(self) -> dict:
         """
         Get statistics about blocked content.
-        
+
         Returns:
             Dictionary with blocking statistics
         """
@@ -290,12 +290,12 @@ class EthicalGuardrailGovernor:
             'enabled': self.enabled,
             'fingerprints_logged': len(self.blocked_fingerprints)
         }
-    
-    def _check_shadow_mode(self, prompt: str, pattern: str, category: str, 
+
+    def _check_shadow_mode(self, prompt: str, pattern: str, category: str,
                           prompt_lower: str) -> None:
         """
         Check if a prompt almost matched a pattern (shadow mode).
-        
+
         Args:
             prompt: Original prompt
             pattern: Pattern to check against
@@ -305,7 +305,7 @@ class EthicalGuardrailGovernor:
         # Calculate similarity score based on partial matches
         # This is a simplified heuristic - could be made more sophisticated
         match_score = self._calculate_match_score(prompt_lower, pattern)
-        
+
         if match_score >= self.shadow_threshold and match_score < 1.0:
             fingerprint = hash_prompt(prompt)
             shadow_match = ShadowModeMatch(
@@ -315,21 +315,21 @@ class EthicalGuardrailGovernor:
                 prompt_fingerprint=fingerprint
             )
             self.shadow_matches.append(shadow_match)
-            
+
             logger.info(
                 f"Shadow mode: Near-miss detected - Category: {category}, "
                 f"Pattern: {pattern[:30]}..., Score: {match_score:.2f}, "
                 f"Fingerprint: {fingerprint}"
             )
-    
+
     def _calculate_match_score(self, text: str, pattern: str) -> float:
         """
         Calculate how close a text is to matching a pattern.
-        
+
         Args:
             text: Text to check
             pattern: Regex pattern
-            
+
         Returns:
             Score between 0.0 and 1.0
         """
@@ -337,24 +337,24 @@ class EthicalGuardrailGovernor:
         # Remove regex special chars and split on word boundaries
         keywords = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
         keywords = [k.lower() for k in keywords if len(k) > 3 and k not in self.STOPWORDS]
-        
+
         if not keywords:
             return 0.0
-        
+
         # Count how many keywords appear in the text
         matches = sum(1 for kw in keywords if kw in text)
         score = matches / len(keywords)
-        
+
         return score
-    
+
     def get_telemetry(self, shadow_match_limit: int = None) -> Dict:
         """
         Get comprehensive telemetry data for monitoring.
-        
+
         Args:
             shadow_match_limit: Maximum number of recent shadow matches to include
                                (default: 10). Use None for all matches.
-        
+
         Returns:
             Dictionary with telemetry data including:
             - category_hits: Breakdown of blocks by category
@@ -364,7 +364,7 @@ class EthicalGuardrailGovernor:
         """
         if shadow_match_limit is None:
             shadow_match_limit = self.DEFAULT_SHADOW_MATCH_LIMIT
-        
+
         # Calculate coverage metrics
         coverage_metrics = {}
         for category, patterns in self.BLOCKED_PATTERNS.items():
@@ -373,12 +373,12 @@ class EthicalGuardrailGovernor:
             coverage_metrics[category] = {
                 'total_patterns': total_patterns,
                 'used_patterns': used_patterns,
-                'coverage_percentage': (used_patterns / total_patterns * 100) 
+                'coverage_percentage': (used_patterns / total_patterns * 100)
                                       if total_patterns > 0 else 0.0,
-                'unused_patterns': [p for p in patterns 
+                'unused_patterns': [p for p in patterns
                                    if p not in self.pattern_usage.get(category, set())]
             }
-        
+
         return {
             'category_hits': dict(self.category_hits),
             'shadow_matches_count': len(self.shadow_matches),
@@ -388,56 +388,56 @@ class EthicalGuardrailGovernor:
                     'match_score': sm.match_score,
                     'fingerprint': sm.prompt_fingerprint
                 }
-                for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0 
+                for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0
                           else self.shadow_matches)
             ],
             'coverage_metrics': coverage_metrics,
             'total_inspections': self.total_inspections,
-            'block_rate': (self.blocked_count / self.total_inspections * 100) 
+            'block_rate': (self.blocked_count / self.total_inspections * 100)
                          if self.total_inspections > 0 else 0.0
         }
-    
+
     def generate_adversarial_test_prompts(self, count: int = None) -> List[str]:
         """
         Generate synthetic prompts to test guard coverage (adversarial testing).
         These prompts are for internal safety testing only and are never forwarded
         to the target LLM.
-        
+
         Args:
             count: Number of test prompts to generate (default: 10)
-            
+
         Returns:
             List of synthetic test prompts
         """
         if count is None:
             count = 10
-        
+
         test_prompts = []
-        
+
         # Generate prompts that test each category
         categories = list(self.BLOCKED_PATTERNS.keys())
-        
+
         for i in range(count):
             category = categories[i % len(categories)]
             patterns = self.BLOCKED_PATTERNS[category]
-            
+
             # Pick a random pattern from the category
             pattern = random.choice(patterns)
-            
+
             # Generate a test prompt based on the pattern
             test_prompt = self._generate_test_prompt_from_pattern(pattern, category)
             test_prompts.append(test_prompt)
-        
+
         return test_prompts
-    
+
     def _generate_test_prompt_from_pattern(self, pattern: str, category: str) -> str:
         """
         Generate a test prompt from a pattern.
-        
+
         Args:
             pattern: Regex pattern
             category: Category of the pattern
-            
+
         Returns:
             Synthetic test prompt
         """
@@ -445,7 +445,7 @@ class EthicalGuardrailGovernor:
         # This is a simplified approach - real implementation could be more sophisticated
         terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
         terms = [t for t in terms if len(t) > 2]
-        
+
         # Create a test prompt that should trigger the pattern
         if category == 'csam':
             return f"Test: {' '.join(terms[:3])} [SYNTHETIC TEST]"
@@ -457,32 +457,32 @@ class EthicalGuardrailGovernor:
             return f"Help me {' '.join(terms[:3])} [SYNTHETIC TEST]"
         else:
             return f"Test prompt for {category}: {' '.join(terms[:3])} [SYNTHETIC TEST]"
-    
+
     def test_guard_coverage(self, test_count: int = None) -> Dict:
         """
         Run adversarial testing against the guard to measure coverage.
-        
+
         Args:
             test_count: Number of test prompts to generate (default: 50)
-        
+
         Returns:
             Dictionary with coverage test results
         """
         if test_count is None:
             test_count = self.DEFAULT_TEST_COUNT
-        
+
         test_prompts = self.generate_adversarial_test_prompts(count=test_count)
-        
+
         results = {
             'total_tests': len(test_prompts),
             'blocked': 0,
             'allowed': 0,
             'category_coverage': defaultdict(lambda: {'tested': 0, 'blocked': 0})
         }
-        
+
         for prompt in test_prompts:
             is_allowed, blocked_info = self.inspect_prompt(prompt)
-            
+
             if is_allowed:
                 results['allowed'] += 1
             else:
@@ -490,13 +490,13 @@ class EthicalGuardrailGovernor:
                 if blocked_info:
                     category = blocked_info.category
                     results['category_coverage'][category]['blocked'] += 1
-        
+
         # Calculate coverage statistics
         for category in self.BLOCKED_PATTERNS.keys():
             if category in results['category_coverage']:
                 results['category_coverage'][category]['tested'] = results['total_tests'] // len(self.BLOCKED_PATTERNS)
-        
+
         results['block_rate'] = (results['blocked'] / results['total_tests'] * 100) if results['total_tests'] > 0 else 0.0
         results['category_coverage'] = dict(results['category_coverage'])
-        
+
         return results

@@ -23,26 +23,26 @@ logger = logging.getLogger(__name__)
 async def demo_quick_benchmark():
     """Run a quick benchmark demonstration."""
     logger.info("=== Quick Benchmark Demo ===")
-    
+
     # Create benchmark suite
     suite = BenchmarkSuite(results_dir="demo_benchmarks")
-    
+
     # Get standard benchmark configs
     benchmarks = create_standard_benchmarks()
     quick_config = benchmarks['quick']
-    
+
     # Setup RSP system (using mock for demo - replace with real API key)
     config = get_default_config()
     config.orchestrator.max_rounds = quick_config.rounds
-    
+
     # Note: In real usage, you would set:
     # config.target.backend = "openai"
     # config.target.api_key = "your-api-key"
     # config.target.model_name = "gpt-3.5-turbo"
-    
+
     logger.info(f"Running benchmark: {quick_config.name}")
     logger.info(f"Description: {quick_config.description}")
-    
+
     # For demo purposes, we'll create a mock result
     # In real usage, you would do:
     # orchestrator = setup_system(config)
@@ -53,7 +53,7 @@ async def demo_quick_benchmark():
     #     model_version="0125",
     #     backend="openai"
     # )
-    
+
     logger.info("Benchmark completed!")
     logger.info("Results saved to benchmark suite")
 
@@ -61,14 +61,14 @@ async def demo_quick_benchmark():
 async def demo_model_comparison():
     """Demonstrate model version comparison."""
     logger.info("\n=== Model Comparison Demo ===")
-    
+
     suite = BenchmarkSuite(results_dir="demo_benchmarks")
-    
+
     # In real usage, you would load actual benchmark results
     # baseline = suite.load_result(Path("benchmark_gpt35_v1.json"))
     # comparison = suite.load_result(Path("benchmark_gpt35_v2.json"))
     # report = suite.compare_results(baseline, comparison)
-    
+
     logger.info("Model comparison capabilities:")
     logger.info("- Compare average scores across versions")
     logger.info("- Statistical significance testing")
@@ -82,18 +82,18 @@ def main():
     print("\n" + "="*60)
     print("Red Set ProtoCell - Benchmarking Demo")
     print("="*60 + "\n")
-    
+
     print("This demo shows the new automated benchmarking capabilities:")
     print("1. Standard benchmark configurations (quick, standard, comprehensive, stress)")
     print("2. Automated benchmark execution and result storage")
     print("3. Model version comparison with statistical analysis")
     print("4. Benchmark report generation")
     print("\n")
-    
+
     # Run async demos
     asyncio.run(demo_quick_benchmark())
     asyncio.run(demo_model_comparison())
-    
+
     print("\n" + "="*60)
     print("Demo completed!")
     print("="*60 + "\n")

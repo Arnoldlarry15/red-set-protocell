@@ -65,7 +65,7 @@ class SniperConfig:
     mutation_rate: float = 0.7
     evolution_pool_size: int = 10
     creativity_temperature: float = 0.9
-    
+
     # Selection engine parameters
     use_selection_engine: bool = True
     selection_strategy: str = "hybrid"  # elitism, tournament, diversity_preservation, novelty_search, hybrid
@@ -152,24 +152,24 @@ class RSPConfig:
     egg: EGGConfig = field(default_factory=EGGConfig)
     storage: StorageConfig = field(default_factory=StorageConfig)
     scoring: ScoringConfig = field(default_factory=ScoringConfig)
-    
+
     def __post_init__(self):
         """Validate configuration after initialization."""
         # Validate scoring weights sum to 1.0
         total_weight = (
-            self.scoring.l1_weight + 
-            self.scoring.l2_weight + 
+            self.scoring.l1_weight +
+            self.scoring.l2_weight +
             self.scoring.l3_weight
         )
         if not (0.99 <= total_weight <= 1.01):  # Allow small floating point errors
             raise ValueError(
                 f"Scoring weights must sum to 1.0, got {total_weight}"
             )
-        
+
         # Validate ranges
         if not (0.0 <= self.sniper.mutation_rate <= 1.0):
             raise ValueError("Mutation rate must be between 0.0 and 1.0")
-        
+
         if not (0.0 <= self.spotter.confidence_threshold <= 1.0):
             raise ValueError("Confidence threshold must be between 0.0 and 1.0")
 

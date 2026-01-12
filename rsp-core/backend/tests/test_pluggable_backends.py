@@ -5,7 +5,7 @@ Tests for pluggable backend support
 import pytest
 from unittest.mock import Mock, patch
 from app.agents.target import (
-    OpenAIBackend, AnthropicBackend, LlamaCppBackend, 
+    OpenAIBackend, AnthropicBackend, LlamaCppBackend,
     CustomHTTPBackend, create_target, Target
 )
 
@@ -80,7 +80,7 @@ def test_custom_http_backend_initialization():
         api_key='test-key',
         request_format='openai'
     )
-    
+
     assert backend.api_url == 'http://localhost:8000/api'
     assert 'Authorization' in backend.headers
     assert backend.request_format == 'openai'
@@ -91,7 +91,7 @@ def test_custom_http_backend_no_api_key():
     backend = CustomHTTPBackend(
         api_url='http://localhost:8000/api'
     )
-    
+
     assert backend.api_url == 'http://localhost:8000/api'
     assert 'Authorization' not in backend.headers
 
@@ -105,14 +105,14 @@ async def test_custom_http_backend_execute_openai_format(mock_requests):
         'choices': [{'message': {'content': 'Test response'}}]
     }
     mock_requests.post.return_value = mock_response
-    
+
     backend = CustomHTTPBackend(
         api_url='http://localhost:8000/api',
         request_format='openai'
     )
-    
+
     result = await backend.execute('Test prompt')
-    
+
     assert result == 'Test response'
     mock_requests.post.assert_called_once()
 
@@ -126,14 +126,14 @@ async def test_custom_http_backend_execute_anthropic_format(mock_requests):
         'content': [{'text': 'Test response from Anthropic'}]
     }
     mock_requests.post.return_value = mock_response
-    
+
     backend = CustomHTTPBackend(
         api_url='http://localhost:8000/api',
         request_format='anthropic'
     )
-    
+
     result = await backend.execute('Test prompt')
-    
+
     assert result == 'Test response from Anthropic'
 
 
@@ -146,14 +146,14 @@ async def test_custom_http_backend_execute_generic_format(mock_requests):
         'response': 'Generic API response'
     }
     mock_requests.post.return_value = mock_response
-    
+
     backend = CustomHTTPBackend(
         api_url='http://localhost:8000/api',
         request_format='generic'
     )
-    
+
     result = await backend.execute('Test prompt')
-    
+
     assert result == 'Generic API response'
 
 

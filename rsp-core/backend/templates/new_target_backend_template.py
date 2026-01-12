@@ -287,12 +287,12 @@ async def test_new_backend_integration():
         api_key=os.getenv("NEW_BACKEND_API_KEY"),
         model_name="default-model"
     )
-    
+
     response = backend.execute("Hello, how are you?")
-    
+
     assert isinstance(response, str)
     assert len(response) > 0
-    
+
     stats = backend.get_statistics()
     assert stats['successful_executions'] == 1
 """

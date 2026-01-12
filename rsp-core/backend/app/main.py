@@ -90,16 +90,16 @@ logger = logging.getLogger(__name__)
 def setup_system(config: RSPConfig, model_version_override: Optional[str] = None) -> Orchestrator:
     """
     Setup and initialize the RSP system.
-    
+
     Args:
         config: RSP configuration
         model_version_override: Optional override for model version tracking
-        
+
     Returns:
         Configured Orchestrator instance
     """
     logger.info("Initializing Red Set ProtoCell system...")
-    
+
     # Initialize Ethical Guardrail Governor (EGG)
     egg = EthicalGuardrailGovernor(
         enabled=config.egg.enabled,
@@ -109,7 +109,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         block_real_exploits=config.egg.block_real_exploits
     )
     logger.info("✓ EGG initialized")
-    
+
     # Initialize Scoring Engine
     scoring_engine = ScoringEngine(
         l1_weight=config.scoring.l1_weight,
@@ -117,19 +117,19 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         l3_weight=config.scoring.l3_weight
     )
     logger.info("✓ Scoring Engine initialized")
-    
+
     # Initialize Mutation Engine
     mutation_engine = MutationEngine(
         mutation_rate=config.sniper.mutation_rate
     )
     logger.info("✓ Mutation Engine initialized")
-    
+
     # Initialize Selection Engine if enabled
     selection_engine = None
     selection_strategy_enum = None
     if config.sniper.use_selection_engine:
         from app.engines.selection import SelectionEngine, SelectionStrategy
-        
+
         selection_engine = SelectionEngine(
             decay_rate=config.sniper.decay_rate,
             decay_interval=config.sniper.decay_interval,
@@ -139,7 +139,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             tournament_size=config.sniper.tournament_size,
             elite_fraction=config.sniper.elite_fraction
         )
-        
+
         # Map string to enum
         strategy_map = {
             "elitism": SelectionStrategy.ELITISM,
@@ -155,7 +155,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         logger.info(f"✓ Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
     else:
         selection_strategy_enum = SelectionStrategy.HYBRID
-    
+
     # Initialize Sniper Agent
     sniper = Sniper(
         mutation_engine=mutation_engine,
@@ -165,7 +165,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         selection_strategy=selection_strategy_enum
     )
     logger.info("✓ Sniper Agent initialized")
-    
+
     # Initialize Target Agent
     backend_value = config.target.backend.value if hasattr(config.target.backend, 'value') else config.target.backend
     target = create_target(
@@ -177,14 +177,14 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         fresh_context=config.target.fresh_context
     )
     logger.info(f"✓ Target Agent initialized ({backend_value})")
-    
+
     # Initialize Spotter Agent
     spotter = Spotter(
         confidence_threshold=config.spotter.confidence_threshold,
         use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers
     )
     logger.info("✓ Spotter Agent initialized")
-    
+
     # Initialize State Manager
     model_version = model_version_override or config.target.model_name
     state_manager = StateManager(
@@ -193,7 +193,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         model_version=model_version
     )
     logger.info(f"✓ State Manager initialized (zero_retention={config.storage.zero_retention})")
-    
+
     # Initialize Orchestrator
     orchestrator = Orchestrator(
         sniper=sniper,
@@ -206,35 +206,35 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         round_timeout=config.orchestrator.round_timeout_seconds
     )
     logger.info("✓ Orchestrator initialized")
-    
+
     logger.info("=" * 60)
     logger.info("Red Set ProtoCell system ready")
     logger.info(f"Session ID: {state_manager.session_id}")
     logger.info(f"Max Rounds: {config.orchestrator.max_rounds}")
     logger.info(f"Zero Retention: {config.storage.zero_retention}")
     logger.info("=" * 60)
-    
+
     return orchestrator
 
 
 async def main(config: RSPConfig, model_version_override: Optional[str] = None):
     """
     Main execution function.
-    
+
     Args:
         config: RSP configuration
         model_version_override: Optional override for model version tracking
     """
     logger.info("Starting Red Set ProtoCell...")
-    
+
     # Setup system
     orchestrator = setup_system(config, model_version_override)
-    
+
     try:
         # Run session
         logger.info("Beginning red teaming session...")
         stats = await orchestrator.run_session()
-        
+
         # Display results
         logger.info("=" * 60)
         logger.info("SESSION COMPLETED")
@@ -243,7 +243,7 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
         logger.info(f"Model Version: {stats['session']['model_version']}")
         logger.info(f"Average Score: {stats['scores']['average_global_score']:.3f}")
         logger.info(f"Blocked by EGG: {stats['scores']['total_blocked']}")
-        
+
         # Display time analytics if available
         if 'time_analytics' in stats:
             logger.info("")
@@ -256,7 +256,7 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
                 logger.info(f"  Degradation Rate: {fatigue['degradation_rate']:.4f} per round")
             logger.info(f"  Score Drift: {drift['drift_direction']}")
             logger.info(f"  Trend Slope: {drift['trend_slope']:+.4f}")
-        
+
         logger.info("")
         logger.info("Agent Statistics:")
         logger.info(f"  Sniper: {stats['agents']['sniper']['total_generated']} prompts generated")
@@ -267,7 +267,7 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
         logger.info("Mutation Statistics:")
         logger.info(f"  Total: {stats['mutation']['total_mutations']}")
         logger.info("=" * 60)
-        
+
     except KeyboardInterrupt:
         logger.info("\nSession interrupted by user")
         orchestrator.terminate_session()
@@ -286,14 +286,14 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Red Set ProtoCell - AI Red Teaming System"
     )
-    
+
     parser.add_argument(
         '--rounds',
         type=int,
         default=100,
         help='Maximum number of rounds to execute (default: 100)'
     )
-    
+
     parser.add_argument(
         '--backend',
         type=str,
@@ -301,39 +301,39 @@ def parse_arguments():
         required=True,
         help='Target backend to use (required: openai or anthropic)'
     )
-    
+
     parser.add_argument(
         '--api-key',
         type=str,
         required=True,
         help='API key for target backend (required)'
     )
-    
+
     parser.add_argument(
         '--model',
         type=str,
         help='Model name for target backend'
     )
-    
+
     parser.add_argument(
         '--no-zero-retention',
         action='store_true',
         help='Disable zero-retention policy (keep session data)'
     )
-    
+
     parser.add_argument(
         '--db-path',
         type=str,
         default='rsp_session.db',
         help='Database path (default: rsp_session.db)'
     )
-    
+
     parser.add_argument(
         '--model-version',
         type=str,
         help='Model version identifier for tracking (optional, defaults to model name)'
     )
-    
+
     return parser.parse_args()
 
 
@@ -349,23 +349,23 @@ if __name__ == "__main__":
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
     """)
-    
+
     # Parse arguments
     args = parse_arguments()
-    
+
     # Create configuration
     config = get_default_config()
     config.orchestrator.max_rounds = args.rounds
     config.target.backend = args.backend
     config.storage.zero_retention = not args.no_zero_retention
     config.storage.database_path = args.db_path
-    
+
     if args.api_key:
         config.target.api_key = args.api_key
-    
+
     if args.model:
         config.target.model_name = args.model
-    
+
     # Run main with model_version override if provided
     try:
         asyncio.run(main(config, model_version_override=args.model_version))

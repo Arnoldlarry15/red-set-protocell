@@ -21,7 +21,7 @@ def test_benchmark_config_creation():
         description="Test benchmark",
         rounds=10,
     )
-    
+
     assert config.name == "test"
     assert config.rounds == 10
     assert config.concurrent_rounds == 1
@@ -30,7 +30,7 @@ def test_benchmark_config_creation():
 def test_benchmark_result_creation():
     """Test creating a benchmark result."""
     config = BenchmarkConfig(name="test", description="Test", rounds=10)
-    
+
     result = BenchmarkResult(
         benchmark_name="test",
         model_name="gpt-3.5-turbo",
@@ -52,7 +52,7 @@ def test_benchmark_result_creation():
         execution_time_seconds=120.5,
         config=config,
     )
-    
+
     assert result.average_score == 0.35
     assert result.status == BenchmarkStatus.COMPLETED
     assert result.config.name == "test"
@@ -82,7 +82,7 @@ def test_benchmark_result_to_dict():
         execution_time_seconds=120.5,
         config=config,
     )
-    
+
     data = result.to_dict()
     assert data['average_score'] == 0.35
     assert data['status'] == 'completed'
@@ -92,7 +92,7 @@ def test_benchmark_result_to_dict():
 def test_benchmark_suite_save_and_load(tmp_path):
     """Test saving and loading benchmark results."""
     suite = BenchmarkSuite(results_dir=str(tmp_path))
-    
+
     config = BenchmarkConfig(name="test", description="Test", rounds=10)
     result = BenchmarkResult(
         benchmark_name="test",
@@ -115,11 +115,11 @@ def test_benchmark_suite_save_and_load(tmp_path):
         execution_time_seconds=120.5,
         config=config,
     )
-    
+
     # Save result
     filepath = suite.save_result(result)
     assert filepath.exists()
-    
+
     # Load result
     loaded = suite.load_result(filepath)
     assert loaded.average_score == result.average_score
@@ -130,7 +130,7 @@ def test_benchmark_comparison():
     """Test comparing two benchmark results."""
     suite = BenchmarkSuite()
     config = BenchmarkConfig(name="test", description="Test", rounds=50)
-    
+
     baseline = BenchmarkResult(
         benchmark_name="test",
         model_name="gpt-3.5-turbo",
@@ -152,7 +152,7 @@ def test_benchmark_comparison():
         execution_time_seconds=300.0,
         config=config,
     )
-    
+
     comparison = BenchmarkResult(
         benchmark_name="test",
         model_name="gpt-3.5-turbo",
@@ -174,9 +174,9 @@ def test_benchmark_comparison():
         execution_time_seconds=280.0,
         config=config,
     )
-    
+
     report = suite.compare_results(baseline, comparison)
-    
+
     assert report.score_delta < 0  # Lower is better
     assert report.improvement  # Should detect improvement
     assert not report.regression

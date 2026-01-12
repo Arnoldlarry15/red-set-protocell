@@ -16,7 +16,7 @@ from app.model_zoo.registry import (
 def get_openai_models() -> List[ModelInfo]:
     """
     Get OpenAI reference models.
-    
+
     Returns:
         List of OpenAI model configurations
     """
@@ -94,7 +94,7 @@ def get_openai_models() -> List[ModelInfo]:
 def get_anthropic_models() -> List[ModelInfo]:
     """
     Get Anthropic reference models.
-    
+
     Returns:
         List of Anthropic model configurations
     """
@@ -162,7 +162,7 @@ def get_anthropic_models() -> List[ModelInfo]:
 def get_all_reference_models() -> Dict[str, List[ModelInfo]]:
     """
     Get all reference models organized by provider.
-    
+
     Returns:
         Dictionary mapping provider names to model lists
     """
@@ -175,17 +175,17 @@ def get_all_reference_models() -> Dict[str, List[ModelInfo]]:
 def create_default_registry():
     """
     Create a model registry with all reference models.
-    
+
     Returns:
         Populated model registry
     """
     from app.model_zoo.registry import ModelRegistry
-    
+
     registry = ModelRegistry()
-    
+
     # Register all models
     for models in get_all_reference_models().values():
         for model in models:
             registry.register_model(model)
-    
+
     return registry

@@ -31,9 +31,11 @@ This is the easiest method and doesn't require any command-line tools.
    - **Output Directory**: `dist` (should be auto-detected)
    - **Install Command**: `npm install` (should be auto-detected)
 
-6. **Add Environment Variables** (if needed in the future)
-   - You can add environment variables later in the project settings
-   - For now, the app works without backend variables for frontend-only deployment
+6. **Add Environment Variables** (Required for production)
+   - Click "Environment Variables" to add required variables
+   - **Required**: `VITE_API_BASE_URL` - Your production backend API URL
+   - Example: `https://your-backend-api.com` or `https://your-backend.railway.app`
+   - Note: For local development, the app defaults to `http://localhost:8000`
 
 7. **Click "Deploy"**
    - Vercel will build and deploy your application
@@ -95,25 +97,34 @@ If you prefer using the command line:
 3. Add your custom domain
 4. Follow Vercel's instructions to configure DNS
 
-### Environment Variables (For Backend Integration)
+### Environment Variables (Required for Production)
 
-If you need to add environment variables later:
+**Important**: The application now requires `VITE_API_BASE_URL` to be set in production deployments.
+
+To configure environment variables in Vercel:
 
 1. Go to your project in Vercel Dashboard
 2. Navigate to "Settings" → "Environment Variables"
-3. Add variables like:
-   - `VITE_API_BASE_URL` - Backend API URL (if deploying backend separately)
-   - Any other configuration variables
+3. Add the following required variable:
+   - **Key**: `VITE_API_BASE_URL`
+   - **Value**: Your production backend URL (e.g., `https://your-backend-api.com`)
+   - **Scope**: Select "Production", "Preview", and "Development" as needed
+
+For local development:
+- Copy `rsp-ui/.env.local.example` to `rsp-ui/.env.local`
+- Set `VITE_API_BASE_URL=http://localhost:8000` (or leave as default)
 
 Note: In Vite, environment variables must be prefixed with `VITE_` to be exposed to the client.
 
 ## Backend API Deployment (Separate)
 
-The UI currently uses mock data for demonstration. To connect to a real backend:
+To connect the UI to a real backend API:
 
 1. **Deploy the FastAPI backend** separately (e.g., on Railway, Render, or Fly.io)
-2. **Update the API base URL** in the frontend code or via environment variables
-3. **Redeploy the frontend** with the new backend URL
+2. **Set the `VITE_API_BASE_URL` environment variable** in Vercel to your backend URL
+3. **Redeploy the frontend** (or Vercel will auto-redeploy if configured)
+
+The frontend now automatically uses the `VITE_API_BASE_URL` environment variable instead of hardcoded URLs, making deployment much easier.
 
 ## Continuous Deployment
 

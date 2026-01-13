@@ -38,6 +38,30 @@ cd rsp-ui
 npm install
 ```
 
+### Environment Variables
+
+The application requires environment variables for proper configuration:
+
+1. **Copy the example environment file**:
+   ```bash
+   cp .env.local.example .env.local
+   ```
+
+2. **Configure your environment**:
+   - For local development, the default `http://localhost:8000` works fine
+   - For production deployment, set `VITE_API_BASE_URL` to your backend API URL
+
+Example `.env.local` file:
+```env
+# For local development
+VITE_API_BASE_URL=http://localhost:8000
+
+# For production (set in Vercel/deployment platform)
+# VITE_API_BASE_URL=https://your-backend-api.com
+```
+
+**Important**: Environment variables prefixed with `VITE_` are exposed to the client-side code.
+
 ### Development
 
 ```bash
@@ -111,11 +135,26 @@ Example code changes:
 
 ## Backend Integration
 
-The UI is designed to connect to a WebSocket backend for real-time updates. To integrate:
+The UI connects to the backend API using the `VITE_API_BASE_URL` environment variable.
 
-1. Set up WebSocket server in the Python backend
-2. Implement WebSocket client in `src/services/websocket.ts`
-3. Connect the Dashboard to receive real-time attack data
+**Configuration**:
+- All API calls use the `API_BASE_URL` constant which reads from `import.meta.env.VITE_API_BASE_URL`
+- Falls back to `http://localhost:8000` for local development
+- Components automatically use the configured URL for all backend requests
+
+**Backend Requirements**:
+1. FastAPI backend running on the configured URL
+2. CORS configured to allow requests from your frontend domain
+3. WebSocket support for real-time attack streaming (optional)
+
+**API Endpoints Used**:
+- `/api/dashboard/live-sessions` - Live session monitoring
+- `/api/dashboard/historical-sessions` - Historical data
+- `/api/dashboard/export/{session_id}` - Session data export
+- `/api/dashboard/compare-models` - Model comparison
+- `/api/auth/users` - User management
+- `/api/remote/config/*` - Configuration management
+- `/api/remote/start-run` - Start red teaming runs
 
 ## Technologies
 

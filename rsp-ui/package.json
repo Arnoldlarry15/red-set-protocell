@@ -16,7 +16,7 @@
     "recharts": "^2.10.3",
     "axios": "^1.6.2",
     "framer-motion": "^10.16.16",
-    "lucide-react": "^0.294.0"
+    "lucide-react": "^0.562.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",

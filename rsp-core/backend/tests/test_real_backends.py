@@ -48,14 +48,14 @@ def test_create_target_rejects_mock():
 def test_openai_real_execution():
     """
     Test real OpenAI execution.
-    
+
     WARNING: This makes a real API call and will incur costs.
     """
     api_key = os.environ.get('OPENAI_API_KEY')
     backend = OpenAIBackend(api_key=api_key, model_name="gpt-3.5-turbo")
-    
+
     response = backend.execute("Say 'test' in one word")
-    
+
     assert isinstance(response, str)
     assert len(response) > 0
 
@@ -67,14 +67,14 @@ def test_openai_real_execution():
 def test_anthropic_real_execution():
     """
     Test real Anthropic execution.
-    
+
     WARNING: This makes a real API call and will incur costs.
     """
     api_key = os.environ.get('ANTHROPIC_API_KEY')
     backend = AnthropicBackend(api_key=api_key)
-    
+
     response = backend.execute("Say 'test' in one word")
-    
+
     assert isinstance(response, str)
     assert len(response) > 0
 
@@ -86,14 +86,14 @@ def test_anthropic_real_execution():
 def test_target_with_openai():
     """
     Test Target agent with real OpenAI backend.
-    
+
     WARNING: This makes a real API call and will incur costs.
     """
     api_key = os.environ.get('OPENAI_API_KEY')
     target = create_target('openai', api_key=api_key, model_name="gpt-3.5-turbo")
-    
+
     response = target.execute("Say 'hello' in one word")
-    
+
     assert isinstance(response, str)
     assert len(response) > 0
     assert target.execution_count == 1
@@ -106,14 +106,14 @@ def test_target_with_openai():
 def test_target_with_anthropic():
     """
     Test Target agent with real Anthropic backend.
-    
+
     WARNING: This makes a real API call and will incur costs.
     """
     api_key = os.environ.get('ANTHROPIC_API_KEY')
     target = create_target('anthropic', api_key=api_key)
-    
+
     response = target.execute("Say 'hello' in one word")
-    
+
     assert isinstance(response, str)
     assert len(response) > 0
     assert target.execution_count == 1

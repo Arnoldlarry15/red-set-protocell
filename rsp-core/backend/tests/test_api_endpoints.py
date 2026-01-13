@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 # gitguardian:ignore - This is a test password, not a real secret
 os.environ["RSP_DEMO_PASSWORD"] = "test_demo_password_not_real"
 
-from app.api_server import app
+from app.api_server import app  # noqa: E402
 
 client = TestClient(app)
 

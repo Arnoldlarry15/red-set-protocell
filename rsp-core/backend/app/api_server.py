@@ -7,17 +7,15 @@ Integrates with the existing RSP core system.
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import asyncio
-import json
 import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.core.config import RSPConfig, get_default_config
+from app.core.config import get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.scoring import ScoringEngine
 from app.engines.mutation import MutationEngine
@@ -74,6 +72,8 @@ app.add_middleware(
 )
 
 # Pydantic models
+
+
 class SessionConfig(BaseModel):
     backend: str
     api_key: str
@@ -85,9 +85,11 @@ class SessionConfig(BaseModel):
     selected_domains: List[str] = []
     selected_strategies: List[str] = []
 
+
 class CustomPromptRequest(BaseModel):
     prompt: str
     session_id: str
+
 
 class ExperimentConfig(BaseModel):
     name: str
@@ -101,15 +103,18 @@ class ExperimentConfig(BaseModel):
     mutation_weights: Optional[Dict[str, float]] = None
     thresholds: Optional[Dict[str, float]] = None
 
+
 class UserCreate(BaseModel):
     username: str
     email: str
     role: str  # 'admin', 'researcher', 'observer'
     password: str
 
+
 class UserLogin(BaseModel):
     username: str
     password: str
+
 
 # Global state
 active_sessions: Dict[str, Dict[str, Any]] = {}
@@ -130,6 +135,8 @@ users: Dict[str, Dict[str, Any]] = {
 }
 
 # WebSocket manager with defensive lifecycle handling
+
+
 class ConnectionManager:
     """
     WebSocket connection manager with defensive practices:
@@ -137,9 +144,9 @@ class ConnectionManager:
     - Memory leak prevention through bounded connection tracking
     - Graceful error handling on disconnect
     """
-    
+
     MAX_CONNECTIONS = 100  # Prevent memory exhaustion
-    
+
     def __init__(self):
         self.active_connections: List[WebSocket] = []
         self.connection_metadata: Dict[WebSocket, Dict[str, Any]] = {}
@@ -151,7 +158,7 @@ class ConnectionManager:
             logger.warning(f"Connection limit reached ({self.MAX_CONNECTIONS}), rejecting new connection")
             await websocket.close(code=1008, reason="Server at capacity")
             return False
-        
+
         await websocket.accept()
         self.active_connections.append(websocket)
         self.connection_metadata[websocket] = {
@@ -165,11 +172,11 @@ class ConnectionManager:
         """Cleanly disconnect and remove tracking for a WebSocket."""
         if websocket in self.active_connections:
             self.active_connections.remove(websocket)
-        
+
         # Clean up metadata to prevent memory leak
         if websocket in self.connection_metadata:
             del self.connection_metadata[websocket]
-        
+
         logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
     async def broadcast(self, message: dict):
@@ -187,11 +194,11 @@ class ConnectionManager:
             except Exception as e:
                 logger.error(f"Error sending message to WebSocket: {e}")
                 disconnected.append(connection)
-        
+
         # Remove disconnected clients
         for conn in disconnected:
             self.disconnect(conn)
-    
+
     async def cleanup_stale_connections(self):
         """
         Periodic cleanup of stale connections.
@@ -204,14 +211,17 @@ class ConnectionManager:
                 await connection.send_json({"type": "ping"})
             except Exception:
                 disconnected.append(connection)
-        
+
         for conn in disconnected:
             logger.info("Cleaning up stale WebSocket connection")
             self.disconnect(conn)
 
+
 manager = ConnectionManager()
 
 # Startup and shutdown hooks for proper async resource management
+
+
 @app.on_event("startup")
 async def startup_event():
     """
@@ -224,14 +234,15 @@ async def startup_event():
     logger.info(f"Environment: {RSP_ENVIRONMENT}")
     logger.info(f"CORS Origins: {len(ALLOWED_ORIGINS)} configured")
     logger.info(f"Max WebSocket Connections: {ConnectionManager.MAX_CONNECTIONS}")
-    
+
     # Create sessions directory if it doesn't exist
     sessions_dir = Path("sessions")
     sessions_dir.mkdir(exist_ok=True)
     logger.info(f"Sessions directory: {sessions_dir.absolute()}")
-    
+
     logger.info("Startup complete - Server ready")
     logger.info("=" * 60)
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -242,7 +253,7 @@ async def shutdown_event():
     logger.info("=" * 60)
     logger.info("RSP API Server - Shutdown")
     logger.info("=" * 60)
-    
+
     # Close all active WebSocket connections
     if manager.active_connections:
         logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
@@ -253,7 +264,7 @@ async def shutdown_event():
                 logger.error(f"Error closing WebSocket: {e}")
             finally:
                 manager.disconnect(ws)
-    
+
     # Terminate all active sessions
     if active_sessions:
         logger.info(f"Terminating {len(active_sessions)} active sessions")
@@ -264,11 +275,13 @@ async def shutdown_event():
                     orchestrator.terminate_session()
             except Exception as e:
                 logger.error(f"Error terminating session {session_id}: {e}")
-    
+
     logger.info("Shutdown complete")
     logger.info("=" * 60)
 
 # API endpoints
+
+
 @app.get("/")
 async def root():
     return {
@@ -276,6 +289,7 @@ async def root():
         "version": "1.0.0",
         "status": "operational"
     }
+
 
 @app.get("/api/health")
 async def health_check():
@@ -286,12 +300,13 @@ async def health_check():
         "websocket_connections": len(manager.active_connections)
     }
 
+
 @app.post("/api/session/start")
 async def start_session(config: SessionConfig):
     """Start a new red teaming session"""
     try:
         session_id = f"rsp_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
-        
+
         # Create RSP configuration
         rsp_config = get_default_config()
         rsp_config.orchestrator.max_rounds = config.max_rounds
@@ -301,7 +316,7 @@ async def start_session(config: SessionConfig):
             rsp_config.target.model_name = config.model
         rsp_config.sniper.mutation_rate = config.mutation_rate
         rsp_config.storage.database_path = f"sessions/{session_id}.db"
-        
+
         # Initialize system components
         egg = EthicalGuardrailGovernor(
             enabled=rsp_config.egg.enabled,
@@ -310,23 +325,23 @@ async def start_session(config: SessionConfig):
             block_bioweapons=rsp_config.egg.block_bioweapons,
             block_real_exploits=rsp_config.egg.block_real_exploits
         )
-        
+
         scoring_engine = ScoringEngine(
             l1_weight=rsp_config.scoring.l1_weight,
             l2_weight=rsp_config.scoring.l2_weight,
             l3_weight=rsp_config.scoring.l3_weight
         )
-        
+
         mutation_engine = MutationEngine(
             mutation_rate=rsp_config.sniper.mutation_rate
         )
-        
+
         sniper = Sniper(
             mutation_engine=mutation_engine,
             evolution_pool_size=rsp_config.sniper.evolution_pool_size,
             creativity_temperature=rsp_config.sniper.creativity_temperature
         )
-        
+
         backend_value = rsp_config.target.backend.value if hasattr(rsp_config.target.backend, 'value') else rsp_config.target.backend
         target = create_target(
             backend_type=backend_value,
@@ -336,17 +351,17 @@ async def start_session(config: SessionConfig):
             temperature=rsp_config.target.temperature,
             fresh_context=rsp_config.target.fresh_context
         )
-        
+
         spotter = Spotter(
             confidence_threshold=rsp_config.spotter.confidence_threshold,
             use_auxiliary_classifiers=rsp_config.spotter.use_auxiliary_classifiers
         )
-        
+
         state_manager = StateManager(
             database_path=rsp_config.storage.database_path,
             zero_retention=rsp_config.storage.zero_retention
         )
-        
+
         orchestrator = Orchestrator(
             sniper=sniper,
             target=target,
@@ -357,7 +372,7 @@ async def start_session(config: SessionConfig):
             max_rounds=rsp_config.orchestrator.max_rounds,
             round_timeout=rsp_config.orchestrator.round_timeout_seconds
         )
-        
+
         # Store session
         active_sessions[session_id] = {
             "orchestrator": orchestrator,
@@ -368,34 +383,35 @@ async def start_session(config: SessionConfig):
             "max_cost": config.max_api_cost,
             "halt_on_critical": config.halt_on_critical
         }
-        
+
         logger.info(f"Session {session_id} created successfully")
-        
+
         return {
             "session_id": session_id,
             "status": "initialized",
             "message": "Session created successfully"
         }
-        
+
     except Exception as e:
         logger.error(f"Error creating session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/session/{session_id}/execute")
 async def execute_session(session_id: str):
     """Execute a red teaming session"""
     if session_id not in active_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     session = active_sessions[session_id]
     orchestrator = session["orchestrator"]
-    
+
     try:
         session["status"] = "running"
-        
+
         # Run session in background
         asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
-        
+
         return {
             "session_id": session_id,
             "status": "running",
@@ -405,30 +421,32 @@ async def execute_session(session_id: str):
         logger.error(f"Error executing session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/session/{session_id}/stop")
 async def stop_session(session_id: str):
     """Stop a running session"""
     if session_id not in active_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     session = active_sessions[session_id]
     session["status"] = "stopped"
-    
+
     return {
         "session_id": session_id,
         "status": "stopped",
         "message": "Session stopped"
     }
 
+
 @app.post("/api/prompt/execute")
 async def execute_custom_prompt(request: CustomPromptRequest):
     """Execute a custom user prompt"""
     if request.session_id not in active_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     session = active_sessions[request.session_id]
-    orchestrator = session["orchestrator"]
-    
+    session["orchestrator"]
+
     try:
         # Execute custom prompt through orchestrator
         # This would need to be implemented in the orchestrator
@@ -442,15 +460,16 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         logger.error(f"Error executing custom prompt: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/session/{session_id}/stats")
 async def get_session_stats(session_id: str):
     """Get session statistics"""
     if session_id not in active_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
-    
+
     session = active_sessions[session_id]
     orchestrator = session["orchestrator"]
-    
+
     try:
         stats = orchestrator.get_statistics()
         return {
@@ -463,6 +482,8 @@ async def get_session_stats(session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # Unified Infra Dashboard endpoints
+
+
 @app.get("/api/dashboard/live-sessions")
 async def get_live_sessions():
     """Get all currently active/live sessions"""
@@ -486,6 +507,7 @@ async def get_live_sessions():
         logger.error(f"Error getting live sessions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/dashboard/historical-sessions")
 async def get_historical_sessions(db_path: str = "rsp_session.db"):
     """Get historical session data for comparison"""
@@ -496,6 +518,7 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
     except Exception as e:
         logger.error(f"Error getting historical sessions: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/dashboard/compare-models")
 async def compare_model_versions(
@@ -508,7 +531,7 @@ async def compare_model_versions(
         extractor = SessionDataExtractor(db_path)
         v1_sessions = extractor.get_sessions_by_model_version(model_v1)
         v2_sessions = extractor.get_sessions_by_model_version(model_v2)
-        
+
         # Calculate aggregate metrics
         def calc_metrics(sessions):
             if not sessions:
@@ -522,7 +545,7 @@ async def compare_model_versions(
                 "total_rounds": total_rounds,
                 "session_count": len(sessions)
             }
-        
+
         return {
             "model_v1": model_v1,
             "model_v1_metrics": calc_metrics(v1_sessions),
@@ -532,6 +555,7 @@ async def compare_model_versions(
     except Exception as e:
         logger.error(f"Error comparing models: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/dashboard/export/{session_id}")
 async def export_session_results(
@@ -543,19 +567,19 @@ async def export_session_results(
     try:
         extractor = SessionDataExtractor(db_path)
         rounds = extractor.get_session_rounds(session_id)
-        
+
         exporter = TelemetryExporter()
-        
+
         # Determine format
         export_format = ExportFormat.JSON
         if format.lower() == "csv":
             export_format = ExportFormat.CSV
         elif format.lower() == "jsonl":
             export_format = ExportFormat.JSON_LINES
-        
+
         # Export to string (in-memory)
         result = exporter.export_to_string(rounds, export_format)
-        
+
         return {
             "session_id": session_id,
             "format": format,
@@ -566,6 +590,8 @@ async def export_session_results(
         raise HTTPException(status_code=500, detail=str(e))
 
 # User Management endpoints
+
+
 @app.post("/api/auth/login")
 async def login(credentials: UserLogin):
     """User login"""
@@ -573,7 +599,7 @@ async def login(credentials: UserLogin):
         user = users.get(credentials.username)
         if not user or user["password"] != credentials.password:
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        
+
         return {
             "username": credentials.username,
             "email": user["email"],
@@ -586,17 +612,18 @@ async def login(credentials: UserLogin):
         logger.error(f"Error during login: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/auth/register")
 async def register(user_data: UserCreate):
     """Register new user (admin only)"""
     try:
         if user_data.username in users:
             raise HTTPException(status_code=400, detail="User already exists")
-        
+
         # Validate role
         if user_data.role not in ["admin", "researcher", "observer"]:
             raise HTTPException(status_code=400, detail="Invalid role")
-        
+
         # SECURITY WARNING: Storing plaintext password - DEMO ONLY
         # IN PRODUCTION: Use bcrypt or argon2 to hash passwords:
         # from passlib.hash import bcrypt
@@ -606,7 +633,7 @@ async def register(user_data: UserCreate):
             "role": user_data.role,
             "password": user_data.password  # INSECURE - Hash in production!
         }
-        
+
         return {
             "username": user_data.username,
             "email": user_data.email,
@@ -618,6 +645,7 @@ async def register(user_data: UserCreate):
     except Exception as e:
         logger.error(f"Error during registration: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/auth/users")
 async def list_users():
@@ -638,6 +666,8 @@ async def list_users():
         raise HTTPException(status_code=500, detail=str(e))
 
 # Remote Triggering endpoints
+
+
 @app.post("/api/remote/start-run")
 async def start_remote_run(config: SessionConfig):
     """Start a run remotely with parameters"""
@@ -645,10 +675,10 @@ async def start_remote_run(config: SessionConfig):
         # Create session with the provided config
         session_response = await start_session(config)
         session_id = session_response["session_id"]
-        
+
         # Auto-execute the session
         await execute_session(session_id)
-        
+
         return {
             "session_id": session_id,
             "status": "started",
@@ -659,13 +689,14 @@ async def start_remote_run(config: SessionConfig):
         logger.error(f"Error starting remote run: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.post("/api/remote/config/save")
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
     try:
         config_id = f"config_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         stored_configs[config_id] = config
-        
+
         return {
             "config_id": config_id,
             "name": config.name,
@@ -674,6 +705,7 @@ async def save_experiment_config(config: ExperimentConfig):
     except Exception as e:
         logger.error(f"Error saving config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/api/remote/config/list")
 async def list_experiment_configs():
@@ -695,13 +727,14 @@ async def list_experiment_configs():
         logger.error(f"Error listing configs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/remote/config/{config_id}")
 async def get_experiment_config(config_id: str):
     """Get a specific experiment configuration"""
     try:
         if config_id not in stored_configs:
             raise HTTPException(status_code=404, detail="Configuration not found")
-        
+
         config = stored_configs[config_id]
         return {
             "config_id": config_id,
@@ -713,13 +746,14 @@ async def get_experiment_config(config_id: str):
         logger.error(f"Error getting config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.delete("/api/remote/config/{config_id}")
 async def delete_experiment_config(config_id: str):
     """Delete an experiment configuration"""
     try:
         if config_id not in stored_configs:
             raise HTTPException(status_code=404, detail="Configuration not found")
-        
+
         del stored_configs[config_id]
         return {"message": "Configuration deleted successfully"}
     except HTTPException:
@@ -729,6 +763,8 @@ async def delete_experiment_config(config_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint
+
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
@@ -742,23 +778,24 @@ async def websocket_endpoint(websocket: WebSocket):
         manager.disconnect(websocket)
         logger.info("WebSocket client disconnected")
 
+
 async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator, session: dict):
     """Run session and broadcast updates via WebSocket"""
     try:
         config = session["config"]
         max_cost = config.max_api_cost
         halt_on_critical = config.halt_on_critical
-        
+
         for round_num in range(1, config.max_rounds + 1):
             if session["status"] != "running":
                 break
-            
+
             # Run a single round
             result = await orchestrator.run_round(round_num)
-            
+
             # Calculate estimated cost (simplified)
             session["current_cost"] += 0.01  # Placeholder cost calculation
-            
+
             # Broadcast attack data
             attack_data = {
                 "type": "attack",
@@ -782,7 +819,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                 }
             }
             await manager.broadcast(attack_data)
-            
+
             # Broadcast stats update
             stats = orchestrator.get_statistics()
             stats_data = {
@@ -798,7 +835,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                 }
             }
             await manager.broadcast(stats_data)
-            
+
             # Check halt conditions
             if halt_on_critical and attack_data["data"]["severity"] == "critical":
                 session["status"] = "halted"
@@ -810,7 +847,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                     }
                 })
                 break
-            
+
             if session["current_cost"] >= max_cost:
                 session["status"] = "halted"
                 await manager.broadcast({
@@ -821,10 +858,10 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                     }
                 })
                 break
-            
+
             # Small delay between rounds
             await asyncio.sleep(0.5)
-        
+
         if session["status"] == "running":
             session["status"] = "completed"
             await manager.broadcast({
@@ -834,7 +871,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                     "reason": "All rounds completed"
                 }
             })
-    
+
     except Exception as e:
         logger.error(f"Error in session execution: {e}")
         session["status"] = "error"
@@ -844,6 +881,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                 "message": str(e)
             }
         })
+
 
 def get_severity(score: float) -> str:
     """Convert score to severity level"""
@@ -857,6 +895,7 @@ def get_severity(score: float) -> str:
         return "high"
     else:
         return "critical"
+
 
 if __name__ == "__main__":
     import uvicorn

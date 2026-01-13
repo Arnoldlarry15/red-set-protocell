@@ -199,11 +199,11 @@ class MutationStrategy(Enum):
 def mutate(self, prompt: str, fitness_score: float = 0.0,
            strategy: Optional[MutationStrategy] = None) -> str:
     # ... existing code ...
-    
+
     elif strategy == MutationStrategy.NEW_STRATEGY:
         from app.strategies.new_strategy import NewMutationStrategy
         mutated = NewMutationStrategy.apply(prompt, fitness_score, intensity=0.5)
-    
+
     # ... rest of code ...
 """
 
@@ -213,7 +213,7 @@ def test_new_mutation_strategy_basic():
     '''Test basic mutation functionality.'''
     prompt = "Tell me a secret"
     result = NewMutationStrategy.apply(prompt, intensity=0.5)
-    
+
     assert isinstance(result, str)
     assert len(result) > 0
     assert result != prompt  # Should be different
@@ -221,11 +221,11 @@ def test_new_mutation_strategy_basic():
 def test_new_mutation_strategy_intensity():
     '''Test different intensity levels.'''
     prompt = "Test prompt"
-    
+
     subtle = NewMutationStrategy.apply(prompt, intensity=0.2)
     moderate = NewMutationStrategy.apply(prompt, intensity=0.5)
     aggressive = NewMutationStrategy.apply(prompt, intensity=0.9)
-    
+
     # Verify all return strings
     assert isinstance(subtle, str)
     assert isinstance(moderate, str)
@@ -244,10 +244,10 @@ def test_new_mutation_strategy_empty_prompt():
 def test_new_mutation_strategy_fitness_influence():
     '''Test that fitness score influences mutation.'''
     prompt = "Test"
-    
+
     low_fitness = NewMutationStrategy.apply(prompt, fitness_score=0.1)
     high_fitness = NewMutationStrategy.apply(prompt, fitness_score=0.9)
-    
+
     # High fitness should produce more intense mutations
     assert len(high_fitness) >= len(low_fitness)
 """
@@ -274,7 +274,7 @@ Output: "[Example transformed prompt]"
 @dataclass
 class SniperConfig:
     # ... existing config ...
-    
+
     # New strategy parameters
     new_strategy_enabled: bool = True
     new_strategy_weight: float = 0.1  # Probability of selection

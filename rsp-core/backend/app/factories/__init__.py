@@ -8,7 +8,6 @@ without tight coupling to concrete implementations.
 from typing import Dict, Type, Any, Optional
 from abc import ABC
 
-from app.interfaces.target import BaseTarget
 from app.agents.target import (
     OpenAIBackend,
     AnthropicBackend,
@@ -23,62 +22,62 @@ from app.agents.target import (
 class BackendFactory(ABC):
     """
     Abstract factory for creating backend implementations.
-    
+
     This eliminates coupling by using registry pattern instead of
     if/else chains for backend selection.
     """
-    
+
     _registry: Dict[str, Type[TargetBackend]] = {}
-    
+
     @classmethod
     def register(cls, backend_type: str, backend_class: Type[TargetBackend]):
         """
         Register a backend implementation.
-        
+
         Args:
             backend_type: String identifier for the backend (e.g., "openai")
             backend_class: Backend class to register
         """
         cls._registry[backend_type.lower()] = backend_class
-    
+
     @classmethod
     def create(cls, backend_type: str, **config) -> TargetBackend:
         """
         Create a backend instance using registry pattern.
-        
+
         Args:
             backend_type: Type of backend to create
             **config: Backend-specific configuration
-            
+
         Returns:
             Configured backend instance
-            
+
         Raises:
             ValueError: If backend type is not registered
         """
         backend_type_lower = backend_type.lower()
-        
+
         if backend_type_lower not in cls._registry:
             available = ", ".join(cls._registry.keys())
             raise ValueError(
                 f"Unknown backend type: {backend_type}. "
                 f"Available backends: {available}"
             )
-        
+
         backend_class = cls._registry[backend_type_lower]
-        
+
         # Extract backend-specific config
         return cls._instantiate_backend(backend_class, config)
-    
+
     @classmethod
     def _instantiate_backend(cls, backend_class: Type[TargetBackend], config: Dict[str, Any]) -> TargetBackend:
         """
         Instantiate a backend with appropriate configuration.
-        
+
         Args:
             backend_class: The backend class to instantiate
             config: Configuration dictionary
-            
+
         Returns:
             Configured backend instance
         """
@@ -118,12 +117,12 @@ class BackendFactory(ABC):
             # Generic instantiation for custom backends
             # Try to pass all config as kwargs
             return backend_class(**config)
-    
+
     @classmethod
     def list_available(cls) -> list:
         """
         List all registered backend types.
-        
+
         Returns:
             List of backend type strings
         """
@@ -141,7 +140,7 @@ class TargetFactory:
     """
     Factory for creating Target agents with proper dependency injection.
     """
-    
+
     @staticmethod
     def create(
         backend_type: str,
@@ -150,20 +149,20 @@ class TargetFactory:
     ) -> Target:
         """
         Create a Target agent with specified backend.
-        
+
         This uses the BackendFactory to eliminate coupling.
-        
+
         Args:
             backend_type: Type of backend ('openai', 'anthropic', etc.)
             perturbation_config: Optional perturbation configuration
             **config: Backend-specific configuration
-            
+
         Returns:
             Configured Target instance
         """
         # Use factory to create backend (eliminates if/else chain)
         backend = BackendFactory.create(backend_type, **config)
-        
+
         # Create Target with dependency injection
         return Target(
             backend,
@@ -176,13 +175,13 @@ class TargetFactory:
 def create_target(backend_type: str, **config) -> Target:
     """
     Factory function to create a Target agent (backward compatible).
-    
+
     This now uses the factory pattern internally.
-    
+
     Args:
         backend_type: Type of backend ('openai', 'anthropic', 'llama_cpp', 'custom_http')
         **config: Backend-specific configuration, including optional perturbation_config
-        
+
     Returns:
         Configured Target instance
     """

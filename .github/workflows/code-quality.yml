@@ -1,0 +1,85 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop, copilot/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint with flake8
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      working-directory: ./rsp-core/backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8
+    
+    - name: Lint with flake8
+      working-directory: ./rsp-core/backend
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 app/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 app/ tests/ --count --max-complexity=10 --max-line-length=127 --statistics
+
+  format:
+    name: Check formatting with black
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black
+    
+    - name: Check formatting with black (informational)
+      working-directory: ./rsp-core/backend
+      run: |
+        black --check --diff app/ tests/ || echo "::warning::Code formatting issues detected. Run 'black app/ tests/' to fix."
+      continue-on-error: true
+
+  typecheck:
+    name: Type check with mypy
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      working-directory: ./rsp-core/backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install mypy
+        pip install -r requirements.txt
+    
+    - name: Type check with mypy
+      working-directory: ./rsp-core/backend
+      run: |
+        mypy app/ --ignore-missing-imports --no-strict-optional || echo "::warning::Type checking issues detected. Please review and address mypy errors."
+      continue-on-error: true

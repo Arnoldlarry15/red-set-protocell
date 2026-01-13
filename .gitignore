@@ -59,3 +59,4 @@ telemetry_exports/
 # Temporary files
 /tmp/
 *.tmp
+rsp-core/backend/coverage.xml

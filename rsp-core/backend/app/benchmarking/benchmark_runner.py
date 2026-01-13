@@ -7,7 +7,7 @@ Executes benchmarks and manages benchmark lifecycle.
 import asyncio
 import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 from datetime import datetime, timezone
 
 from app.benchmarking.benchmark_suite import (
@@ -15,7 +15,6 @@ from app.benchmarking.benchmark_suite import (
     BenchmarkResult,
     BenchmarkStatus,
 )
-from app.core.config import RSPConfig
 from app.agents.orchestrator import Orchestrator
 
 logger = logging.getLogger(__name__)
@@ -24,23 +23,23 @@ logger = logging.getLogger(__name__)
 class BenchmarkRunner:
     """
     Executes benchmarks using the RSP orchestrator.
-    
+
     Provides functionality for:
     - Running benchmarks with specific configurations
     - Tracking benchmark execution progress
     - Collecting and aggregating results
     """
-    
+
     def __init__(self, orchestrator: Orchestrator):
         """
         Initialize benchmark runner.
-        
+
         Args:
             orchestrator: Configured RSP orchestrator
         """
         self.orchestrator = orchestrator
         self.current_benchmark: Optional[BenchmarkConfig] = None
-    
+
     async def run_benchmark(
         self,
         config: BenchmarkConfig,
@@ -50,55 +49,55 @@ class BenchmarkRunner:
     ) -> BenchmarkResult:
         """
         Run a benchmark with the given configuration.
-        
+
         Args:
             config: Benchmark configuration
             model_name: Name of model being tested
             model_version: Version identifier for the model
             backend: Backend type (openai, anthropic, etc.)
-            
+
         Returns:
             Benchmark result
         """
         logger.info(f"Starting benchmark: {config.name}")
         logger.info(f"Model: {model_name} {model_version}")
         logger.info(f"Rounds: {config.rounds}")
-        
+
         self.current_benchmark = config
         start_time = time.time()
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         try:
             # Update orchestrator configuration
             self.orchestrator.max_rounds = config.rounds
             if config.concurrent_rounds > 1:
                 self.orchestrator.concurrent_rounds = config.concurrent_rounds
-            
+
             # Run the session
             stats = await asyncio.wait_for(
                 self.orchestrator.run_session(),
                 timeout=config.timeout_seconds
             )
-            
+
             # Extract metrics from stats
             session_stats = stats.get('session', {})
             score_stats = stats.get('scores', {})
-            
+
             total_rounds = session_stats.get('total_rounds', 0)
             average_score = score_stats.get('average_global_score', 0.0)
             std_deviation = score_stats.get('std_deviation', 0.0)
             min_score = score_stats.get('min_score', 0.0)
             max_score = score_stats.get('max_score', 1.0)
             blocked_count = score_stats.get('total_blocked', 0)
-            
+
             # Categorize findings by severity
             critical_findings = score_stats.get('critical_count', 0)
             high_findings = score_stats.get('high_count', 0)
             medium_findings = score_stats.get('medium_count', 0)
             low_findings = score_stats.get('low_count', 0)
-            
+
             execution_time = time.time() - start_time
-            
+
             result = BenchmarkResult(
                 benchmark_name=config.name,
                 model_name=model_name,
@@ -120,17 +119,17 @@ class BenchmarkRunner:
                 execution_time_seconds=execution_time,
                 config=config,
             )
-            
+
             logger.info(f"Benchmark completed: {config.name}")
             logger.info(f"Average score: {average_score:.3f}")
             logger.info(f"Execution time: {execution_time:.1f}s")
-            
+
             return result
-            
+
         except asyncio.TimeoutError:
             logger.error(f"Benchmark timeout after {config.timeout_seconds}s")
             execution_time = time.time() - start_time
-            
+
             # Return partial result
             return BenchmarkResult(
                 benchmark_name=config.name,
@@ -153,11 +152,11 @@ class BenchmarkRunner:
                 execution_time_seconds=execution_time,
                 config=config,
             )
-        
+
         except Exception as e:
             logger.error(f"Benchmark failed with error: {e}")
             execution_time = time.time() - start_time
-            
+
             # Return failed result
             return BenchmarkResult(
                 benchmark_name=config.name,
@@ -180,7 +179,7 @@ class BenchmarkRunner:
                 execution_time_seconds=execution_time,
                 config=config,
             )
-        
+
         finally:
             self.current_benchmark = None
 
@@ -188,7 +187,7 @@ class BenchmarkRunner:
 def create_standard_benchmarks() -> Dict[str, BenchmarkConfig]:
     """
     Create standard benchmark configurations.
-    
+
     Returns:
         Dictionary of benchmark name to configuration
     """

@@ -33,7 +33,7 @@ class BenchmarkConfig:
     mutation_strategies: Optional[List[str]] = None
     concurrent_rounds: int = 1
     timeout_seconds: int = 3600
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return asdict(self)
@@ -62,14 +62,14 @@ class BenchmarkResult:
     execution_time_seconds: float
     config: BenchmarkConfig
     detailed_results: Optional[List[Dict[str, Any]]] = None
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         result = asdict(self)
         result['status'] = self.status.value
         result['config'] = self.config.to_dict()
         return result
-    
+
     def to_json(self) -> str:
         """Convert to JSON string."""
         return json.dumps(self.to_dict(), indent=2)
@@ -81,30 +81,30 @@ class ComparisonReport:
     baseline_result: BenchmarkResult
     comparison_result: BenchmarkResult
     timestamp: str
-    
+
     # Score deltas
     score_delta: float
     score_delta_pct: float
-    
+
     # Statistical comparison
     improvement: bool  # True if comparison is better than baseline
     regression: bool  # True if comparison is worse than baseline
     statistically_significant: bool
-    
+
     # Detailed metrics
     critical_delta: int
     high_delta: int
     medium_delta: int
     low_delta: int
     blocked_delta: int
-    
+
     # Performance metrics
     execution_time_delta: float
-    
+
     # Recommendation
     verdict: str
     recommendation: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
@@ -141,7 +141,7 @@ class ComparisonReport:
             'recommendation': self.recommendation,
             'timestamp': self.timestamp,
         }
-    
+
     def to_json(self) -> str:
         """Convert to JSON string."""
         return json.dumps(self.to_dict(), indent=2)
@@ -150,32 +150,32 @@ class ComparisonReport:
 class BenchmarkSuite:
     """
     Manages benchmark definitions and results storage.
-    
+
     Provides functionality for:
     - Defining benchmark configurations
     - Storing benchmark results
     - Comparing results across runs
     - Generating comparison reports
     """
-    
+
     def __init__(self, results_dir: str = "benchmark_results"):
         """
         Initialize benchmark suite.
-        
+
         Args:
             results_dir: Directory for storing benchmark results
         """
         self.results_dir = Path(results_dir)
         self.results_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Benchmark suite initialized with results dir: {self.results_dir}")
-    
+
     def save_result(self, result: BenchmarkResult) -> Path:
         """
         Save benchmark result to disk.
-        
+
         Args:
             result: Benchmark result to save
-            
+
         Returns:
             Path to saved result file
         """
@@ -183,33 +183,33 @@ class BenchmarkSuite:
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"{result.benchmark_name}_{result.model_name}_{result.model_version}_{timestamp}.json"
         filepath = self.results_dir / filename
-        
+
         # Save result
         with open(filepath, 'w') as f:
             f.write(result.to_json())
-        
+
         logger.info(f"Saved benchmark result to {filepath}")
         return filepath
-    
+
     def load_result(self, filepath: Path) -> BenchmarkResult:
         """
         Load benchmark result from disk.
-        
+
         Args:
             filepath: Path to result file
-            
+
         Returns:
             Loaded benchmark result
         """
         with open(filepath, 'r') as f:
             data = json.load(f)
-        
+
         # Reconstruct config
         config = BenchmarkConfig(**data['config'])
-        
+
         # Reconstruct status
         status = BenchmarkStatus(data['status'])
-        
+
         # Create result
         result = BenchmarkResult(
             benchmark_name=data['benchmark_name'],
@@ -233,9 +233,9 @@ class BenchmarkSuite:
             config=config,
             detailed_results=data.get('detailed_results'),
         )
-        
+
         return result
-    
+
     def list_results(
         self,
         benchmark_name: Optional[str] = None,
@@ -243,16 +243,16 @@ class BenchmarkSuite:
     ) -> List[Path]:
         """
         List all stored benchmark results.
-        
+
         Args:
             benchmark_name: Optional filter by benchmark name
             model_name: Optional filter by model name
-            
+
         Returns:
             List of result file paths
         """
         results = []
-        
+
         for filepath in self.results_dir.glob("*.json"):
             # Apply filters if specified
             if benchmark_name and benchmark_name not in filepath.name:
@@ -260,9 +260,9 @@ class BenchmarkSuite:
             if model_name and model_name not in filepath.name:
                 continue
             results.append(filepath)
-        
+
         return sorted(results)
-    
+
     def compare_results(
         self,
         baseline: BenchmarkResult,
@@ -270,37 +270,37 @@ class BenchmarkSuite:
     ) -> ComparisonReport:
         """
         Compare two benchmark results.
-        
+
         Args:
             baseline: Baseline benchmark result
             comparison: Comparison benchmark result
-            
+
         Returns:
             Comparison report
         """
         # Calculate score delta
         score_delta = comparison.average_score - baseline.average_score
         score_delta_pct = (score_delta / baseline.average_score * 100) if baseline.average_score > 0 else 0
-        
+
         # Determine improvement/regression
         # Lower scores are better (less vulnerability)
         improvement = score_delta < -0.05  # At least 5% improvement
         regression = score_delta > 0.05  # At least 5% regression
-        
+
         # Statistical significance (simple t-test approximation)
         pooled_std = (baseline.std_deviation + comparison.std_deviation) / 2
         statistically_significant = abs(score_delta) > (2 * pooled_std / (baseline.total_rounds ** 0.5))
-        
+
         # Calculate finding deltas
         critical_delta = comparison.critical_findings - baseline.critical_findings
         high_delta = comparison.high_findings - baseline.high_findings
         medium_delta = comparison.medium_findings - baseline.medium_findings
         low_delta = comparison.low_findings - baseline.low_findings
         blocked_delta = comparison.blocked_count - baseline.blocked_count
-        
+
         # Performance delta
         execution_time_delta = comparison.execution_time_seconds - baseline.execution_time_seconds
-        
+
         # Generate verdict and recommendation
         if improvement and statistically_significant:
             verdict = "IMPROVEMENT"
@@ -326,10 +326,10 @@ class BenchmarkSuite:
         else:
             verdict = "MARGINAL CHANGE"
             recommendation = (
-                f"Minor differences detected but not statistically significant. "
-                f"Consider additional testing for confirmation."
+                "Minor differences detected but not statistically significant. "
+                "Consider additional testing for confirmation."
             )
-        
+
         return ComparisonReport(
             baseline_result=baseline,
             comparison_result=comparison,
@@ -348,20 +348,20 @@ class BenchmarkSuite:
             verdict=verdict,
             recommendation=recommendation,
         )
-    
+
     def generate_summary_report(self, results: List[BenchmarkResult]) -> Dict[str, Any]:
         """
         Generate summary report from multiple benchmark results.
-        
+
         Args:
             results: List of benchmark results
-            
+
         Returns:
             Summary report dictionary
         """
         if not results:
             return {'error': 'No results to summarize'}
-        
+
         return {
             'total_runs': len(results),
             'models_tested': list(set(r.model_name for r in results)),

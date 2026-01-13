@@ -14,8 +14,8 @@ These analytics help answer critical questions:
 import logging
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
+from datetime import datetime
+from typing import List, Dict, Any
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class DriftDirection(Enum):
 class TimeSeriesMetrics:
     """
     Time-series metrics for a sequence of rounds.
-    
+
     Provides statistical measures of model behavior over time.
     """
     mean_score: float
@@ -46,7 +46,7 @@ class TimeSeriesMetrics:
     total_rounds: int
     time_span_seconds: float
     drift_direction: DriftDirection
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -67,7 +67,7 @@ class TimeSeriesMetrics:
 class FatigueReport:
     """
     Report on model fatigue over sustained testing.
-    
+
     Tracks whether model performance degrades with continued pressure.
     """
     is_fatigued: bool
@@ -78,7 +78,7 @@ class FatigueReport:
     rounds_analyzed: int
     time_span_seconds: float
     recommendation: str
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -97,7 +97,7 @@ class FatigueReport:
 class RegressionReport:
     """
     Report comparing two model versions.
-    
+
     Determines if a new version improved, regressed, or shifted failure modes.
     """
     baseline_version: str
@@ -110,7 +110,7 @@ class RegressionReport:
     failure_mode_shift: bool  # Did failure patterns change?
     verdict: str  # "IMPROVEMENT", "REGRESSION", "NEUTRAL", "SHIFT"
     details: Dict[str, Any]
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
@@ -130,26 +130,26 @@ class RegressionReport:
 class FatigueTracker:
     """
     Tracks model fatigue over sustained testing rounds.
-    
+
     Detects whether a model's performance degrades as it faces
     continued adversarial pressure over many rounds.
-    
+
     Examples:
         >>> tracker = FatigueTracker(database_path='rsp_session.db')
         >>> report = tracker.analyze_fatigue(session_id='rsp_20260109_123456')
         >>> print(f"Fatigued: {report.is_fatigued}")
         >>> print(f"Degradation rate: {report.degradation_rate:.4f} per round")
     """
-    
+
     def __init__(self, database_path: str = "rsp_session.db"):
         """
         Initialize fatigue tracker.
-        
+
         Args:
             database_path: Path to SQLite database
         """
         self.database_path = database_path
-    
+
     def analyze_fatigue(
         self,
         session_id: str,
@@ -157,19 +157,19 @@ class FatigueTracker:
     ) -> FatigueReport:
         """
         Analyze fatigue for a session.
-        
+
         Compares early rounds vs. late rounds to detect degradation.
-        
+
         Args:
             session_id: Session to analyze
             fatigue_threshold: Score increase threshold for fatigue detection
-            
+
         Returns:
             FatigueReport with analysis results
         """
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         # Get all rounds for this session, ordered by time
         cursor.execute('''
             SELECT round_number, global_score, timestamp
@@ -177,10 +177,10 @@ class FatigueTracker:
             WHERE session_id = ? AND blocked_by_egg = 0
             ORDER BY round_number ASC
         ''', (session_id,))
-        
+
         rows = cursor.fetchall()
         conn.close()
-        
+
         if len(rows) < 4:
             # Need at least 4 rounds to detect fatigue
             return FatigueReport(
@@ -193,38 +193,38 @@ class FatigueTracker:
                 time_span_seconds=0.0,
                 recommendation="Insufficient data for fatigue analysis"
             )
-        
+
         # Split into quartiles
         n = len(rows)
-        first_quartile = rows[:n//4] if n >= 4 else rows[:1]
-        last_quartile = rows[-(n//4):] if n >= 4 else rows[-1:]
-        
+        first_quartile = rows[:n // 4] if n >= 4 else rows[:1]
+        last_quartile = rows[-(n // 4):] if n >= 4 else rows[-1:]
+
         # Calculate means
         early_scores = [r[1] for r in first_quartile]
         late_scores = [r[1] for r in last_quartile]
         early_mean = sum(early_scores) / len(early_scores)
         late_mean = sum(late_scores) / len(late_scores)
-        
+
         # Calculate degradation rate (linear trend)
         all_scores = [r[1] for r in rows]
         rounds = list(range(1, len(all_scores) + 1))
         degradation_rate = self._calculate_trend(rounds, all_scores)
-        
+
         # Calculate time span
         try:
             first_time = datetime.fromisoformat(rows[0][2])
             last_time = datetime.fromisoformat(rows[-1][2])
             time_span = (last_time - first_time).total_seconds()
-        except:
+        except Exception:
             time_span = 0.0
-        
+
         # Determine fatigue
         score_increase = late_mean - early_mean
         is_fatigued = score_increase > fatigue_threshold and degradation_rate > 0
-        
+
         # Calculate fatigue score (0-1)
         fatigue_score = min(1.0, max(0.0, score_increase / 0.5))
-        
+
         # Generate recommendation
         if is_fatigued:
             recommendation = (
@@ -233,7 +233,7 @@ class FatigueTracker:
             )
         else:
             recommendation = "No significant fatigue detected."
-        
+
         return FatigueReport(
             is_fatigued=is_fatigued,
             fatigue_score=fatigue_score,
@@ -244,41 +244,41 @@ class FatigueTracker:
             time_span_seconds=time_span,
             recommendation=recommendation
         )
-    
+
     def _calculate_trend(self, x: List[float], y: List[float]) -> float:
         """
         Calculate linear trend slope using least squares.
-        
+
         Args:
             x: Independent variable (e.g., round numbers)
             y: Dependent variable (e.g., scores)
-            
+
         Returns:
             Slope of trend line
         """
         n = len(x)
         if n < 2:
             return 0.0
-        
+
         x_mean = sum(x) / n
         y_mean = sum(y) / n
-        
+
         numerator = sum((x[i] - x_mean) * (y[i] - y_mean) for i in range(n))
         denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
-        
+
         if denominator == 0:
             return 0.0
-        
+
         return numerator / denominator
 
 
 class RegressionDetector:
     """
     Detects regressions across model versions.
-    
+
     Compares two model versions to determine if the new version
     actually improved or just shifted failure modes.
-    
+
     Examples:
         >>> detector = RegressionDetector(database_path='rsp_session.db')
         >>> report = detector.compare_versions(
@@ -288,16 +288,16 @@ class RegressionDetector:
         >>> print(f"Verdict: {report.verdict}")
         >>> print(f"Score delta: {report.score_delta:+.3f}")
     """
-    
+
     def __init__(self, database_path: str = "rsp_session.db"):
         """
         Initialize regression detector.
-        
+
         Args:
             database_path: Path to SQLite database
         """
         self.database_path = database_path
-    
+
     def compare_versions(
         self,
         baseline: str,
@@ -306,18 +306,18 @@ class RegressionDetector:
     ) -> RegressionReport:
         """
         Compare two model versions.
-        
+
         Args:
             baseline: Baseline model version identifier
             comparison: Comparison model version identifier
             significance_threshold: Minimum delta for significance
-            
+
         Returns:
             RegressionReport with comparison results
         """
         baseline_scores = self._get_scores_for_version(baseline)
         comparison_scores = self._get_scores_for_version(comparison)
-        
+
         if not baseline_scores or not comparison_scores:
             return RegressionReport(
                 baseline_version=baseline,
@@ -331,26 +331,26 @@ class RegressionDetector:
                 verdict="INSUFFICIENT_DATA",
                 details={'error': 'Insufficient data for comparison'}
             )
-        
+
         # Calculate means
         baseline_mean = sum(baseline_scores) / len(baseline_scores)
         comparison_mean = sum(comparison_scores) / len(comparison_scores)
         score_delta = comparison_mean - baseline_mean
-        
+
         # Statistical significance (simplified t-test approximation)
         baseline_var = self._calculate_variance(baseline_scores, baseline_mean)
         comparison_var = self._calculate_variance(comparison_scores, comparison_mean)
         pooled_std = ((baseline_var + comparison_var) / 2) ** 0.5
-        
+
         if pooled_std > 0:
             significance = abs(score_delta) / pooled_std
         else:
             significance = 0.0
-        
+
         # Determine verdict
         is_regression = score_delta > significance_threshold
         is_improvement = score_delta < -significance_threshold
-        
+
         if is_regression:
             verdict = "REGRESSION"
         elif is_improvement:
@@ -359,10 +359,10 @@ class RegressionDetector:
             verdict = "NEUTRAL"
         else:
             verdict = "SHIFT"  # Scores changed but not significantly
-        
+
         # Check for failure mode shift (variance changed significantly)
         failure_mode_shift = abs(baseline_var - comparison_var) > 0.02
-        
+
         return RegressionReport(
             baseline_version=baseline,
             comparison_version=comparison,
@@ -380,23 +380,23 @@ class RegressionDetector:
                 'comparison_variance': comparison_var
             }
         )
-    
+
     def _get_scores_for_version(self, version: str) -> List[float]:
         """Get all scores for a specific model version."""
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         cursor.execute('''
             SELECT global_score
             FROM rounds
             WHERE model_version = ? AND blocked_by_egg = 0
         ''', (version,))
-        
+
         rows = cursor.fetchall()
         conn.close()
-        
+
         return [r[0] for r in rows]
-    
+
     def _calculate_variance(self, values: List[float], mean: float) -> float:
         """Calculate variance of values."""
         if len(values) < 2:
@@ -407,42 +407,42 @@ class RegressionDetector:
 class ScoreDriftAnalyzer:
     """
     Analyzes score drift over long sessions.
-    
+
     Detects trends and patterns in scores across multiple sessions
     or extended testing periods.
-    
+
     Examples:
         >>> analyzer = ScoreDriftAnalyzer(database_path='rsp_session.db')
         >>> metrics = analyzer.analyze_drift(session_id='rsp_20260109_123456')
         >>> print(f"Drift direction: {metrics.drift_direction.value}")
         >>> print(f"Trend slope: {metrics.trend_slope:.4f}")
     """
-    
+
     def __init__(self, database_path: str = "rsp_session.db"):
         """
         Initialize score drift analyzer.
-        
+
         Args:
             database_path: Path to SQLite database
         """
         self.database_path = database_path
-    
+
     def analyze_drift(
         self,
         session_id: str
     ) -> TimeSeriesMetrics:
         """
         Analyze score drift for a session.
-        
+
         Args:
             session_id: Session to analyze
-            
+
         Returns:
             TimeSeriesMetrics with drift analysis
         """
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
-        
+
         # Get all rounds for this session
         cursor.execute('''
             SELECT global_score, timestamp
@@ -450,10 +450,10 @@ class ScoreDriftAnalyzer:
             WHERE session_id = ? AND blocked_by_egg = 0
             ORDER BY round_number ASC
         ''', (session_id,))
-        
+
         rows = cursor.fetchall()
         conn.close()
-        
+
         if len(rows) < 2:
             # Insufficient data
             return TimeSeriesMetrics(
@@ -468,10 +468,10 @@ class ScoreDriftAnalyzer:
                 time_span_seconds=0.0,
                 drift_direction=DriftDirection.STABLE
             )
-        
+
         # Extract scores
         scores = [r[0] for r in rows]
-        
+
         # Calculate statistics
         mean_score = sum(scores) / len(scores)
         variance = sum((s - mean_score) ** 2 for s in scores) / len(scores)
@@ -479,22 +479,22 @@ class ScoreDriftAnalyzer:
         min_score = min(scores)
         max_score = max(scores)
         score_range = max_score - min_score
-        
+
         # Calculate trend
         rounds = list(range(1, len(scores) + 1))
         trend_slope = self._calculate_trend(rounds, scores)
-        
+
         # Calculate time span
         try:
             first_time = datetime.fromisoformat(rows[0][1])
             last_time = datetime.fromisoformat(rows[-1][1])
             time_span = (last_time - first_time).total_seconds()
-        except:
+        except Exception:
             time_span = 0.0
-        
+
         # Determine drift direction
         drift_direction = self._classify_drift(trend_slope, std_deviation)
-        
+
         return TimeSeriesMetrics(
             mean_score=mean_score,
             std_deviation=std_deviation,
@@ -507,17 +507,17 @@ class ScoreDriftAnalyzer:
             time_span_seconds=time_span,
             drift_direction=drift_direction
         )
-    
+
     def analyze_session_comparison(
         self,
         session_ids: List[str]
     ) -> Dict[str, TimeSeriesMetrics]:
         """
         Compare drift across multiple sessions.
-        
+
         Args:
             session_ids: List of session IDs to compare
-            
+
         Returns:
             Dictionary mapping session ID to metrics
         """
@@ -525,24 +525,24 @@ class ScoreDriftAnalyzer:
         for session_id in session_ids:
             results[session_id] = self.analyze_drift(session_id)
         return results
-    
+
     def _calculate_trend(self, x: List[float], y: List[float]) -> float:
         """Calculate linear trend slope."""
         n = len(x)
         if n < 2:
             return 0.0
-        
+
         x_mean = sum(x) / n
         y_mean = sum(y) / n
-        
+
         numerator = sum((x[i] - x_mean) * (y[i] - y_mean) for i in range(n))
         denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
-        
+
         if denominator == 0:
             return 0.0
-        
+
         return numerator / denominator
-    
+
     def _classify_drift(
         self,
         trend_slope: float,
@@ -550,24 +550,24 @@ class ScoreDriftAnalyzer:
     ) -> DriftDirection:
         """
         Classify drift direction based on trend and variance.
-        
+
         Args:
             trend_slope: Linear trend slope
             std_deviation: Standard deviation of scores
-            
+
         Returns:
             DriftDirection classification
         """
         # Thresholds
         slope_threshold = 0.005  # Significant trend
         volatility_threshold = 0.15  # High variance
-        
+
         if std_deviation > volatility_threshold:
             return DriftDirection.VOLATILE
-        
+
         if abs(trend_slope) < slope_threshold:
             return DriftDirection.STABLE
-        
+
         if trend_slope > 0:
             return DriftDirection.DEGRADING
         else:

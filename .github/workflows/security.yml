@@ -1,0 +1,64 @@
+name: Security
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Weekly security scan on Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+jobs:
+  codeql:
+    name: CodeQL Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: python
+        queries: security-extended,security-and-quality
+    
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      working-directory: ./rsp-core/backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install safety
+    
+    - name: Run safety check
+      working-directory: ./rsp-core/backend
+      run: |
+        safety check --file requirements.txt --json || true
+    
+    - name: Check for known vulnerabilities
+      working-directory: ./rsp-core/backend
+      run: |
+        pip install pip-audit
+        pip-audit -r requirements.txt || true

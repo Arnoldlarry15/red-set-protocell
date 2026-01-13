@@ -10,7 +10,6 @@ import tempfile
 import os
 from app.agents.orchestrator import Orchestrator, StateManager, RoundResult
 from app.engines.scoring import ScoringEngine
-from app.core.config import get_default_config
 
 
 @pytest.fixture
@@ -22,7 +21,7 @@ def temp_db():
     # Cleanup
     try:
         os.unlink(path)
-    except:
+    except Exception:
         pass
 
 

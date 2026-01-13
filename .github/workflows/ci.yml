@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, copilot/** ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Daily build at 00:00 UTC
+    - cron: '0 0 * * *'
+
+jobs:
+  test:
+    name: Test on Python ${{ matrix.python-version }} - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Install dependencies
+      working-directory: ./rsp-core/backend
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests with coverage
+      working-directory: ./rsp-core/backend
+      run: |
+        pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --cov-report=html
+      env:
+        # Skip real API tests in CI
+        SKIP_REAL_API_TESTS: "true"
+    
+    - name: Upload coverage reports to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./rsp-core/backend/coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Check coverage threshold
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      working-directory: ./rsp-core/backend
+      run: |
+        coverage report --fail-under=70
+    
+    - name: Archive coverage HTML report
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report-html
+        path: rsp-core/backend/htmlcov/
+        retention-days: 7

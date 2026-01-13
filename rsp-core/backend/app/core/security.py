@@ -52,21 +52,21 @@ Security Invariants:
 
 Examples:
     Hash a prompt for privacy-preserving logging:
-    
+
     >>> from app.core.security import hash_prompt
     >>> fingerprint = hash_prompt("sensitive prompt content")
     >>> print(fingerprint)
     '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae'
-    
+
     Generate a secure session identifier:
-    
+
     >>> from app.core.security import generate_session_id
     >>> session_id = generate_session_id()
     >>> print(len(session_id))
     32
-    
+
     Sanitize metadata before logging:
-    
+
     >>> from app.core.security import sanitize_metadata
     >>> metadata = {
     ...     "model": "gpt-4",
@@ -78,9 +78,9 @@ Examples:
     False
     >>> print(safe_metadata["model"])
     'gpt-4'
-    
+
     Validate prompt length:
-    
+
     >>> from app.core.security import validate_prompt_length
     >>> prompt = "short prompt"
     >>> print(validate_prompt_length(prompt, max_length=1000))
@@ -108,12 +108,12 @@ from typing import Any, Dict
 def hash_prompt(prompt: str) -> str:
     """
     Create a SHA-256 hash fingerprint of a prompt.
-    
+
     Used for logging blocked prompts without storing the actual content.
-    
+
     Args:
         prompt: The prompt string to hash
-        
+
     Returns:
         Hexadecimal hash string
     """
@@ -123,7 +123,7 @@ def hash_prompt(prompt: str) -> str:
 def generate_session_id() -> str:
     """
     Generate a cryptographically secure session identifier.
-    
+
     Returns:
         A random session ID string
     """
@@ -133,16 +133,16 @@ def generate_session_id() -> str:
 def sanitize_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     """
     Remove sensitive fields from metadata before logging or persistence.
-    
+
     Args:
         metadata: Dictionary containing metadata
-        
+
     Returns:
         Sanitized metadata dictionary
     """
     sensitive_fields = {'api_key', 'api_secret', 'password', 'token'}
     return {
-        k: v for k, v in metadata.items() 
+        k: v for k, v in metadata.items()
         if k.lower() not in sensitive_fields
     }
 
@@ -150,11 +150,11 @@ def sanitize_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
 def validate_prompt_length(prompt: str, max_length: int = 10000) -> bool:
     """
     Validate that a prompt doesn't exceed maximum length.
-    
+
     Args:
         prompt: The prompt to validate
         max_length: Maximum allowed length
-        
+
     Returns:
         True if valid, False otherwise
     """
@@ -164,18 +164,18 @@ def validate_prompt_length(prompt: str, max_length: int = 10000) -> bool:
 class TrustBoundary:
     """
     Represents trust boundaries between system components.
-    
+
     Ensures that agents do not trust each other or their own outputs.
     """
-    
+
     @staticmethod
     def mark_untrusted(data: Any) -> Dict[str, Any]:
         """
         Mark data as coming from an untrusted source.
-        
+
         Args:
             data: The data to mark
-            
+
         Returns:
             Dictionary with untrusted marker
         """
@@ -184,23 +184,23 @@ class TrustBoundary:
             'trusted': False,
             'requires_validation': True
         }
-    
+
     @staticmethod
     def verify_agent_output(output: Any) -> bool:
         """
         Placeholder for agent output verification.
-        
+
         In production, this would implement signature verification
         or other validation mechanisms.
-        
+
         Args:
             output: The output to verify
-            
+
         Returns:
             True if output passes basic validation
         """
         # Basic validation: ensure output is not None and has content
         return output is not None and (
-            isinstance(output, str) and len(output) > 0 or
-            isinstance(output, dict) and len(output) > 0
+            isinstance(output, str) and len(output) > 0
+            or isinstance(output, dict) and len(output) > 0
         )

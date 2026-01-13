@@ -101,7 +101,7 @@ import random
 import time
 import asyncio
 from typing import Optional, Dict, Any, List
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from enum import Enum
 
 from app.interfaces.target import BaseTarget
@@ -177,7 +177,7 @@ class PerturbationConfig:
 class TargetBackend(BaseTarget):
     """
     Abstract base class for Target backend implementations.
-    
+
     Now inherits from BaseTarget interface for industry-grade abstraction.
     Maintains backward compatibility while supporting async execution.
     """
@@ -197,8 +197,7 @@ class TargetBackend(BaseTarget):
         Returns:
             Model response string
         """
-        pass
-    
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get backend information."""
         return {
@@ -374,6 +373,7 @@ class OpenAIBackend(TargetBackend):
         except Exception as e:
             logger.error(f"OpenAI API call failed: {e}")
             raise
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get OpenAI backend information."""
         return {
@@ -465,6 +465,7 @@ class AnthropicBackend(TargetBackend):
         except Exception as e:
             logger.error(f"Anthropic API call failed: {e}")
             raise
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get Anthropic backend information."""
         info = super().get_backend_info()
@@ -554,7 +555,7 @@ class LlamaCppBackend(TargetBackend):
         except Exception as e:
             logger.error(f"LlamaCpp execution failed: {e}")
             raise
-    
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get LlamaCpp backend information."""
         info = super().get_backend_info()
@@ -671,7 +672,7 @@ class CustomHTTPBackend(TargetBackend):
         except Exception as e:
             logger.error(f"Custom HTTP API call failed: {e}")
             raise
-    
+
     def get_backend_info(self) -> Dict[str, Any]:
         """Get CustomHTTP backend information."""
         info = super().get_backend_info()
@@ -770,27 +771,27 @@ class Target:
 def create_target(backend_type: str, **config) -> Target:
     """
     Factory function to create a Target agent with specified backend.
-    
+
     DEPRECATED: This function will be removed in version 2.0.0.
     Please migrate to using TargetFactory.create() from app.factories instead.
-    
+
     Migration example:
         # Old way (deprecated):
         from app.agents.target import create_target
         target = create_target("openai", api_key="sk-...", model_name="gpt-4")
-        
+
         # New way (recommended):
         from app.factories import TargetFactory
         target = TargetFactory.create("openai", api_key="sk-...", model_name="gpt-4")
-    
+
     Args:
         backend_type: Type of backend ('openai', 'anthropic', 'llama_cpp', 'custom_http')
         **config: Backend-specific configuration, including optional perturbation_config
-        
+
     Returns:
         Configured Target instance
     """
     # Import here to avoid circular dependency
     from app.factories import TargetFactory
-    
+
     return TargetFactory.create(backend_type, **config)

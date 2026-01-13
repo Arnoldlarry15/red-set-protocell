@@ -74,8 +74,17 @@ export interface SessionConfig {
 
 export interface WebSocketMessage {
   type: 'attack' | 'stats' | 'status' | 'error' | 'ping' | 'pong';
-  data: any;
+  data: unknown;
 }
+
+export type OutgoingWebSocketMessage = 
+  | { type: 'subscribe'; sessionId: string }
+  | { type: 'pong' }
+  | { type: 'start' }
+  | { type: 'stop' }
+  | { type: 'pause' }
+  | { type: 'resume' };
+
 
 export interface User {
   username: string;

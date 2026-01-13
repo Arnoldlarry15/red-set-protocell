@@ -19,7 +19,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { WebSocketMessage } from '../types';
+import { WebSocketMessage, OutgoingWebSocketMessage } from '../types';
 
 interface UseSessionStreamOptions {
   url: string;
@@ -220,7 +220,7 @@ export function useSessionStream({
   /**
    * Send message through WebSocket
    */
-  const sendMessage = useCallback((message: any) => {
+  const sendMessage = useCallback((message: OutgoingWebSocketMessage) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
       return true;

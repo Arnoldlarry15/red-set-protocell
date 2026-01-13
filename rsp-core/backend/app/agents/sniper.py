@@ -233,7 +233,7 @@ class Sniper:
     def _generate_prompt_sync(
         self,
         prior_metadata: Optional[List[Dict[str, Any]]] = None
-    ) -> tuple[str, AttackDomain]:
+    ) -> Tuple[str, AttackDomain]:
         """
         Synchronous implementation of prompt generation.
 
@@ -284,7 +284,7 @@ class Sniper:
         self,
         target_domain: AttackDomain,
         prior_scores: Optional[List[float]]
-    ) -> tuple[str, Optional[str]]:
+    ) -> Tuple[str, Optional[str]]:
         """
         Evolve a prompt from the evolution pool using selection strategies.
 

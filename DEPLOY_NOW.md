@@ -23,6 +23,11 @@ In the configuration screen:
 ✅ Output Directory: dist (auto-detected)
 ```
 
+**Important**: Add environment variable:
+- Click **"Environment Variables"**
+- Add: `VITE_API_BASE_URL` = Your backend API URL
+- Example: `https://your-backend-api.com`
+
 Then click the big **"Deploy"** button!
 
 ⏱️ **Wait 90-120 seconds** for the build to complete.

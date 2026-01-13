@@ -77,6 +77,15 @@ export interface WebSocketMessage {
   data: unknown;
 }
 
+export type OutgoingWebSocketMessage = 
+  | { type: 'subscribe'; sessionId: string }
+  | { type: 'pong' }
+  | { type: 'start' }
+  | { type: 'stop' }
+  | { type: 'pause' }
+  | { type: 'resume' };
+
+
 export interface User {
   username: string;
   email: string;

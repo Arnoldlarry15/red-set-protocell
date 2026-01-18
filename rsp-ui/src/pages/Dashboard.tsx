@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Play, Pause, Square } from 'lucide-react';
 import LiveFeed from '../components/LiveFeed';
 import MetricsPanel from '../components/MetricsPanel';
@@ -37,27 +37,27 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
     selectedStrategies: ['lexical', 'encoding', 'structural'],
   });
 
-  const handleStart = () => {
+  const handleStart = useCallback(() => {
     setSessionStats(prev => ({ ...prev, status: 'running' }));
     // In real implementation, this would connect to the backend WebSocket
     simulateAttacks();
-  };
+  }, [simulateAttacks]);
 
-  const handlePause = () => {
+  const handlePause = useCallback(() => {
     setSessionStats(prev => ({ ...prev, status: 'paused' }));
-  };
+  }, []);
 
-  const handleStop = () => {
+  const handleStop = useCallback(() => {
     setSessionStats(prev => ({ ...prev, status: 'completed' }));
-  };
+  }, []);
 
-  const handleUserInput = (prompt: string) => {
+  const handleUserInput = useCallback((prompt: string) => {
     // Handle custom user prompt
     console.log('User prompt:', prompt);
     // In real implementation, send to backend
-  };
+  }, []);
 
-  const simulateAttacks = () => {
+  const simulateAttacks = useCallback(() => {
     // This simulates receiving attack data
     // In real implementation, this would be WebSocket data
     const interval = setInterval(() => {
@@ -110,7 +110,7 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
         clearInterval(interval);
       }
     }, 2000);
-  };
+  }, [sessionStats, config]);
 
   const generateSamplePrompt = () => {
     const prompts = [

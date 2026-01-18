@@ -61,7 +61,7 @@ class MockMutationEngine:
 class MockTarget(MockAgent):
     """Mock Target agent."""
 
-    def execute(self, prompt, metadata=None):
+    async def execute(self, prompt, metadata=None):
         return "test response"
 
 
@@ -387,7 +387,7 @@ async def test_execute_round_validates_target_output(temp_db):
     class BadTarget(MockAgent):
         """Target that returns invalid data."""
 
-        def execute(self, prompt, metadata=None):
+        async def execute(self, prompt, metadata=None):
             # Return non-string (invalid)
             return 123
 

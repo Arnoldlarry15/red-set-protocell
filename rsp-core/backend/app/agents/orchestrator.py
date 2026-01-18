@@ -642,8 +642,8 @@ class Orchestrator:
                 session_start_time=self.state_manager.session_start_time,
             )
 
-        # Step 3: Target executes prompt
-        target_response = self.target.execute(
+        # Step 3: Target executes prompt (async operation)
+        target_response = await self.target.execute(
             prompt, metadata={"round": round_number, "domain": attack_domain.value}
         )
 
@@ -744,6 +744,153 @@ class Orchestrator:
             stats["time_analytics"] = time_analytics
 
         return stats
+
+    async def run_round(self, round_number: int) -> Dict[str, Any]:
+        """
+        Execute a single round and return results as a dictionary.
+
+        This is a convenience method for API server integration.
+
+        Args:
+            round_number: Round number to execute
+
+        Returns:
+            Dictionary with round results
+        """
+        result = await self._execute_round(round_number)
+
+        # Convert RoundResult to dictionary format expected by API server
+        return {
+            "prompt": result.prompt,
+            "response": result.target_response,
+            "domain": result.attack_domain,
+            "strategy": "unknown",  # Can be extracted from evaluation if needed
+            "mutation": "unknown",  # Can be extracted from evaluation if needed
+            "global_score": result.global_score,
+            "l1_score": result.evaluation.get("l1", {}).get("score", 0) if result.evaluation else 0,
+            "l2_score": result.evaluation.get("l2", {}).get("score", 0) if result.evaluation else 0,
+            "l3_score": result.evaluation.get("l3", {}).get("score", 0) if result.evaluation else 0,
+            "blocked": result.blocked_by_egg,
+            "timestamp": result.timestamp,
+        }
+
+    def get_statistics(self) -> Dict[str, Any]:
+        """
+        Get session statistics.
+
+        This is a convenience method that wraps _compile_statistics
+        for API server integration.
+
+        Returns:
+            Dictionary with session statistics
+        """
+        return self._compile_statistics()
+
+    async def execute_custom_prompt(self, prompt: str, attack_domain: str = "custom") -> Dict[str, Any]:
+        """
+        Execute a custom user-provided prompt through the RSP pipeline.
+
+        This bypasses the Sniper agent but still goes through EGG inspection,
+        Target execution, and Spotter evaluation.
+
+        Args:
+            prompt: Custom prompt text from user
+            attack_domain: Optional domain classification (default: "custom")
+
+        Returns:
+            Dictionary with execution results including response and scores
+        """
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        # Step 1: EGG inspects prompt (mandatory safety check - synchronous)
+        is_allowed, blocked_info = self.egg.inspect_prompt(prompt)
+
+        if not is_allowed:
+            # Prompt blocked by EGG
+            logger.warning(
+                f"Custom prompt blocked by EGG - Category: {blocked_info.category}"
+            )
+
+            return {
+                "prompt": prompt,
+                "response": self.egg.get_blocked_replacement(),
+                "domain": attack_domain,
+                "global_score": 0.0,
+                "l1_score": 0.0,
+                "l2_score": 0.0,
+                "l3_score": 0.0,
+                "blocked": True,
+                "blocked_category": blocked_info.category,
+                "timestamp": timestamp,
+                "status": "blocked",
+            }
+
+        # Step 2: Target executes prompt (async operation)
+        try:
+            target_response = await self.target.execute(
+                prompt,
+                metadata={"type": "custom_prompt", "domain": attack_domain}
+            )
+        except Exception as e:
+            logger.error(f"Target execution failed for custom prompt: {e}")
+            return {
+                "prompt": prompt,
+                "response": f"Error: {str(e)}",
+                "domain": attack_domain,
+                "global_score": 0.0,
+                "l1_score": 0.0,
+                "l2_score": 0.0,
+                "l3_score": 0.0,
+                "blocked": False,
+                "timestamp": timestamp,
+                "status": "error",
+                "error": str(e),
+            }
+
+        # Step 3: Spotter evaluates response (synchronous)
+        try:
+            evaluation = self.spotter.evaluate(
+                target_response,
+                attack_domain=attack_domain,
+                prompt=prompt
+            )
+
+            # Compute global score
+            global_score = self.scoring_engine.compute_global_score(
+                evaluation["l1"]["score"],
+                evaluation["l2"]["score"],
+                evaluation["l3"]["score"],
+            )
+
+            return {
+                "prompt": prompt,
+                "response": target_response,
+                "domain": attack_domain,
+                "global_score": global_score,
+                "l1_score": evaluation["l1"]["score"],
+                "l2_score": evaluation["l2"]["score"],
+                "l3_score": evaluation["l3"]["score"],
+                "blocked": False,
+                "timestamp": timestamp,
+                "status": "success",
+                "evaluation": evaluation,
+            }
+
+        except Exception as e:
+            logger.error(f"Spotter evaluation failed for custom prompt: {e}")
+            return {
+                "prompt": prompt,
+                "response": target_response,
+                "domain": attack_domain,
+                "global_score": 0.0,
+                "l1_score": 0.0,
+                "l2_score": 0.0,
+                "l3_score": 0.0,
+                "blocked": False,
+                "timestamp": timestamp,
+                "status": "partial",
+                "error": str(e),
+            }
 
     def terminate_session(self):
         """Terminate the current session."""

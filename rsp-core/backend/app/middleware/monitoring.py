@@ -206,7 +206,14 @@ class MetricsCollector:
     
     def reset(self):
         """Reset all metrics."""
-        self.__init__()
+        self.metrics = {
+            "requests_total": 0,
+            "requests_by_status": {},
+            "requests_by_endpoint": {},
+            "total_duration_ms": 0,
+            "errors_total": 0,
+            "rate_limit_hits": 0,
+        }
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -259,6 +266,9 @@ class HealthCheck:
     
     async def run_checks(self) -> Dict[str, Any]:
         """Run all health checks and return results."""
+        import asyncio
+        import inspect
+        
         results = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
@@ -267,7 +277,15 @@ class HealthCheck:
         
         for name, check_fn in self.checks.items():
             try:
-                check_result = await check_fn() if callable(check_fn) else check_fn()
+                # Check if it's an async function
+                if inspect.iscoroutinefunction(check_fn):
+                    check_result = await check_fn()
+                elif callable(check_fn):
+                    check_result = check_fn()
+                else:
+                    # Not a function, use as-is (e.g., boolean value)
+                    check_result = check_fn
+                    
                 results["checks"][name] = {
                     "status": "pass" if check_result else "fail",
                     "details": check_result

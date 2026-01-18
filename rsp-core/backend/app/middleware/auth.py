@@ -21,16 +21,22 @@ import logging
 logger = logging.getLogger(__name__)
 
 # JWT configuration
-JWT_SECRET_KEY = os.getenv("RSP_JWT_SECRET", secrets.token_urlsafe(32))
+JWT_SECRET_KEY = os.getenv("RSP_JWT_SECRET", "")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = int(os.getenv("RSP_JWT_EXPIRATION_HOURS", "24"))
 
 # Security warning for production
-if JWT_SECRET_KEY == secrets.token_urlsafe(32) and os.getenv("RSP_ENVIRONMENT") == "production":
-    logger.warning(
-        "SECURITY WARNING: Using auto-generated JWT secret. "
-        "Set RSP_JWT_SECRET environment variable in production!"
+if not JWT_SECRET_KEY and os.getenv("RSP_ENVIRONMENT") == "production":
+    logger.error(
+        "CRITICAL: RSP_JWT_SECRET not set in production environment! "
+        "Authentication will not work. Set RSP_JWT_SECRET environment variable."
     )
+    JWT_SECRET_KEY = secrets.token_urlsafe(32)  # Temporary fallback
+    logger.warning("Using temporary auto-generated JWT secret - NOT RECOMMENDED FOR PRODUCTION")
+elif not JWT_SECRET_KEY:
+    # Development mode: auto-generate
+    JWT_SECRET_KEY = secrets.token_urlsafe(32)
+    logger.info("Generated temporary JWT secret for development")
 
 # Export for use in other modules
 __all__ = [
@@ -277,17 +283,19 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     
     def _unauthorized(self, message: str):
         """Return 401 Unauthorized response."""
-        return HTTPException(
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=message,
+            content={"error": "Unauthorized", "message": message},
             headers={"WWW-Authenticate": "Bearer"},
         )
     
     def _forbidden(self, message: str):
         """Return 403 Forbidden response."""
-        return HTTPException(
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=message,
+            content={"error": "Forbidden", "message": message},
         )
 
 

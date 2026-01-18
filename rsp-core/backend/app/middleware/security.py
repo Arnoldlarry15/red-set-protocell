@@ -168,9 +168,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-RateLimit-Limit-Minute"] = str(self.requests_per_minute)
         response.headers["X-RateLimit-Limit-Hour"] = str(self.requests_per_hour)
-        response.headers["X-RateLimit-Remaining-Minute"] = str(
-            max(0, self.requests_per_minute - len(self.minute_buckets[client_ip]))
-        )
+        
+        # Safely get remaining count
+        remaining = self.requests_per_minute - len(self.minute_buckets.get(client_ip, []))
+        response.headers["X-RateLimit-Remaining-Minute"] = str(max(0, remaining))
         
         return response
 

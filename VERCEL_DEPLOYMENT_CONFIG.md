@@ -27,50 +27,25 @@ VITE_API_BASE_URL=https://your-backend-url.com
 
 ## Vercel Configuration (vercel.json)
 
-The `vercel.json` file in the repository root is already configured with:
+The `vercel.json` file at the repository root has been simplified for optimal React SPA routing:
 
-### 1. SPA Routing
+### 1. SPA Routing (Simplified)
 
 ```json
 "rewrites": [
   {
     "source": "/(.*)",
-    "destination": "/index.html"
+    "destination": "/"
   }
 ]
 ```
 
-This ensures all routes serve the React SPA, allowing React Router to handle navigation.
+**Key Changes:**
+- Uses `"destination": "/"` instead of `"/index.html"` for better React Router compatibility
+- This simpler approach routes everything to root, allowing React Router to handle client-side navigation
+- Prevents blank page issues and 404 errors on route refreshes
 
-### 2. Cache Control Headers
-
-```json
-"headers": [
-  {
-    "source": "/(.*)",
-    "headers": [
-      {
-        "key": "Cache-Control",
-        "value": "no-cache, no-store, must-revalidate"
-      }
-    ]
-  },
-  {
-    "source": "/assets/(.*)",
-    "headers": [
-      {
-        "key": "Cache-Control",
-        "value": "public, max-age=31536000, immutable"
-      }
-    ]
-  }
-]
-```
-
-- HTML files: No caching (always fresh)
-- Static assets (JS, CSS): Long-term caching (1 year)
-
-### 3. Build Configuration
+### 2. Build Configuration
 
 ```json
 "buildCommand": "cd rsp-ui && npm run build",
@@ -78,6 +53,11 @@ This ensures all routes serve the React SPA, allowing React Router to handle nav
 "installCommand": "cd rsp-ui && npm install",
 "framework": "vite"
 ```
+
+**Important Notes:**
+- Only ONE `vercel.json` should exist (at repository root, NOT in `rsp-ui` directory)
+- Previous cache control headers have been removed to prevent browser caching from hiding deployment updates
+- Configuration is intentionally minimal to avoid conflicts and complexity
 
 ## Backend CORS Configuration
 
@@ -134,14 +114,23 @@ This will serve the production build on `http://localhost:4173` (or similar).
 ### Blank Page on Deployment
 
 **Symptom**: UI shows blank page or nothing loads  
-**Cause**: Missing SPA rewrite rules in vercel.json  
-**Solution**: Verify vercel.json has the rewrite rule shown above
+**Cause**: Client-side routing not properly configured for Vercel  
+**Solution**: 
+1. Verify `vercel.json` exists at repository root (not in `rsp-ui/`)
+2. Ensure rewrite rule uses `"destination": "/"` (not `"/index.html"`)
+3. Confirm only ONE `vercel.json` exists to avoid conflicts
+4. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
+5. Clear Vercel build cache and redeploy
 
 ### 404 Errors on Page Refresh
 
-**Symptom**: Refreshing `/dashboard` gives 404  
-**Cause**: Missing SPA rewrite rules  
-**Solution**: Add rewrite rules to vercel.json
+**Symptom**: Refreshing `/dashboard` or other routes gives 404 or blank page  
+**Cause**: SPA rewrite rules not working or incorrectly configured  
+**Solution**: 
+1. Verify `vercel.json` has simplified rewrite: `"destination": "/"`
+2. Ensure BrowserRouter (not HashRouter) is used in App.tsx
+3. Check that there's only one `vercel.json` at repository root
+4. Redeploy with build cache cleared
 
 ### API Calls Fail
 

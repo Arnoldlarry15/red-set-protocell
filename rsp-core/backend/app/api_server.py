@@ -651,6 +651,11 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = active_sessions[request.session_id]
+    
+    # Validate session has orchestrator
+    if "orchestrator" not in session:
+        raise HTTPException(status_code=500, detail="Session not properly initialized")
+    
     orchestrator = session["orchestrator"]
 
     try:

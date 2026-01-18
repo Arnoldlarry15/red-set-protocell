@@ -72,15 +72,11 @@ from app.agents.target import create_target
 from app.agents.spotter import Spotter
 from app.agents.orchestrator import Orchestrator, StateManager
 
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('rsp.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("rsp.log")],
 )
 
 logger = logging.getLogger(__name__)
@@ -105,22 +101,18 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         log_fingerprints=config.egg.log_blocked_fingerprints,
         block_csam=config.egg.block_csam,
         block_bioweapons=config.egg.block_bioweapons,
-        block_real_exploits=config.egg.block_real_exploits
+        block_real_exploits=config.egg.block_real_exploits,
     )
     logger.info("✓ EGG initialized")
 
     # Initialize Scoring Engine
     scoring_engine = ScoringEngine(
-        l1_weight=config.scoring.l1_weight,
-        l2_weight=config.scoring.l2_weight,
-        l3_weight=config.scoring.l3_weight
+        l1_weight=config.scoring.l1_weight, l2_weight=config.scoring.l2_weight, l3_weight=config.scoring.l3_weight
     )
     logger.info("✓ Scoring Engine initialized")
 
     # Initialize Mutation Engine
-    mutation_engine = MutationEngine(
-        mutation_rate=config.sniper.mutation_rate
-    )
+    mutation_engine = MutationEngine(mutation_rate=config.sniper.mutation_rate)
     logger.info("✓ Mutation Engine initialized")
 
     # Initialize Selection Engine if enabled
@@ -136,7 +128,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             diversity_weight=config.sniper.diversity_weight,
             overfitting_threshold=config.sniper.overfitting_threshold,
             tournament_size=config.sniper.tournament_size,
-            elite_fraction=config.sniper.elite_fraction
+            elite_fraction=config.sniper.elite_fraction,
         )
 
         # Map string to enum
@@ -145,12 +137,9 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             "tournament": SelectionStrategy.TOURNAMENT,
             "diversity_preservation": SelectionStrategy.DIVERSITY_PRESERVATION,
             "novelty_search": SelectionStrategy.NOVELTY_SEARCH,
-            "hybrid": SelectionStrategy.HYBRID
+            "hybrid": SelectionStrategy.HYBRID,
         }
-        selection_strategy_enum = strategy_map.get(
-            config.sniper.selection_strategy.lower(),
-            SelectionStrategy.HYBRID
-        )
+        selection_strategy_enum = strategy_map.get(config.sniper.selection_strategy.lower(), SelectionStrategy.HYBRID)
         logger.info(f"✓ Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
     else:
         selection_strategy_enum = SelectionStrategy.HYBRID
@@ -161,35 +150,33 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         evolution_pool_size=config.sniper.evolution_pool_size,
         creativity_temperature=config.sniper.creativity_temperature,
         selection_engine=selection_engine,
-        selection_strategy=selection_strategy_enum
+        selection_strategy=selection_strategy_enum,
     )
     logger.info("✓ Sniper Agent initialized")
 
     # Initialize Target Agent
-    backend_value = config.target.backend.value if hasattr(config.target.backend, 'value') else config.target.backend
+    backend_value = config.target.backend.value if hasattr(config.target.backend, "value") else config.target.backend
     target = create_target(
         backend_type=backend_value,
         api_key=config.target.api_key,
         model_name=config.target.model_name,
         max_tokens=config.target.max_tokens,
         temperature=config.target.temperature,
-        fresh_context=config.target.fresh_context
+        fresh_context=config.target.fresh_context,
     )
     logger.info(f"✓ Target Agent initialized ({backend_value})")
 
     # Initialize Spotter Agent
     spotter = Spotter(
         confidence_threshold=config.spotter.confidence_threshold,
-        use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers
+        use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers,
     )
     logger.info("✓ Spotter Agent initialized")
 
     # Initialize State Manager
     model_version = model_version_override or config.target.model_name
     state_manager = StateManager(
-        database_path=config.storage.database_path,
-        zero_retention=config.storage.zero_retention,
-        model_version=model_version
+        database_path=config.storage.database_path, zero_retention=config.storage.zero_retention, model_version=model_version
     )
     logger.info(f"✓ State Manager initialized (zero_retention={config.storage.zero_retention})")
 
@@ -202,7 +189,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         scoring_engine=scoring_engine,
         state_manager=state_manager,
         max_rounds=config.orchestrator.max_rounds,
-        round_timeout=config.orchestrator.round_timeout_seconds
+        round_timeout=config.orchestrator.round_timeout_seconds,
     )
     logger.info("✓ Orchestrator initialized")
 
@@ -244,13 +231,13 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
         logger.info(f"Blocked by EGG: {stats['scores']['total_blocked']}")
 
         # Display time analytics if available
-        if 'time_analytics' in stats:
+        if "time_analytics" in stats:
             logger.info("")
             logger.info("Time Analytics:")
-            fatigue = stats['time_analytics']['fatigue']
-            drift = stats['time_analytics']['drift']
+            fatigue = stats["time_analytics"]["fatigue"]
+            drift = stats["time_analytics"]["drift"]
             logger.info(f"  Fatigue Detected: {fatigue['is_fatigued']}")
-            if fatigue['is_fatigued']:
+            if fatigue["is_fatigued"]:
                 logger.info(f"  Fatigue Score: {fatigue['fatigue_score']:.3f}")
                 logger.info(f"  Degradation Rate: {fatigue['degradation_rate']:.4f} per round")
             logger.info(f"  Score Drift: {drift['drift_direction']}")
@@ -285,130 +272,66 @@ def parse_arguments():
     parser = argparse.ArgumentParser(
         description="Red Set ProtoCell - AI Red Teaming System",
         epilog="Examples:\n"
-               "  python main.py run --backend openai --api-key sk-xxx --rounds 50\n"
-               "  python main.py export --session-id rsp_20240101_120000 --format json\n"
-               "  python main.py benchmark --backend openai --api-key sk-xxx --suite standard\n"
-               "  python main.py inspect --db-path sessions/rsp_session.db",
-        formatter_class=argparse.RawDescriptionHelpFormatter
+        "  python main.py run --backend openai --api-key sk-xxx --rounds 50\n"
+        "  python main.py export --session-id rsp_20240101_120000 --format json\n"
+        "  python main.py benchmark --backend openai --api-key sk-xxx --suite standard\n"
+        "  python main.py inspect --db-path sessions/rsp_session.db",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
 
     # Run command (default session execution)
-    run_parser = subparsers.add_parser('run', help='Run a red teaming session')
+    run_parser = subparsers.add_parser("run", help="Run a red teaming session")
+    run_parser.add_argument("--rounds", type=int, default=100, help="Maximum number of rounds to execute (default: 100)")
     run_parser.add_argument(
-        '--rounds',
-        type=int,
-        default=100,
-        help='Maximum number of rounds to execute (default: 100)'
-    )
-    run_parser.add_argument(
-        '--backend',
+        "--backend",
         type=str,
-        choices=['openai', 'anthropic'],
+        choices=["openai", "anthropic"],
         required=True,
-        help='Target backend to use (required: openai or anthropic)'
+        help="Target backend to use (required: openai or anthropic)",
     )
+    run_parser.add_argument("--api-key", type=str, required=True, help="API key for target backend (required)")
+    run_parser.add_argument("--model", type=str, help="Model name for target backend")
     run_parser.add_argument(
-        '--api-key',
-        type=str,
-        required=True,
-        help='API key for target backend (required)'
+        "--no-zero-retention", action="store_true", help="Disable zero-retention policy (keep session data)"
     )
+    run_parser.add_argument("--db-path", type=str, default="rsp_session.db", help="Database path (default: rsp_session.db)")
     run_parser.add_argument(
-        '--model',
-        type=str,
-        help='Model name for target backend'
-    )
-    run_parser.add_argument(
-        '--no-zero-retention',
-        action='store_true',
-        help='Disable zero-retention policy (keep session data)'
-    )
-    run_parser.add_argument(
-        '--db-path',
-        type=str,
-        default='rsp_session.db',
-        help='Database path (default: rsp_session.db)'
-    )
-    run_parser.add_argument(
-        '--model-version',
-        type=str,
-        help='Model version identifier for tracking (optional, defaults to model name)'
+        "--model-version", type=str, help="Model version identifier for tracking (optional, defaults to model name)"
     )
 
     # Export command
-    export_parser = subparsers.add_parser('export', help='Export session data')
+    export_parser = subparsers.add_parser("export", help="Export session data")
+    export_parser.add_argument("--session-id", type=str, help="Session ID to export (if not provided, exports all sessions)")
+    export_parser.add_argument("--db-path", type=str, default="rsp_session.db", help="Database path (default: rsp_session.db)")
     export_parser.add_argument(
-        '--session-id',
-        type=str,
-        help='Session ID to export (if not provided, exports all sessions)'
+        "--format", type=str, choices=["json", "csv", "jsonl"], default="json", help="Export format (default: json)"
     )
-    export_parser.add_argument(
-        '--db-path',
-        type=str,
-        default='rsp_session.db',
-        help='Database path (default: rsp_session.db)'
-    )
-    export_parser.add_argument(
-        '--format',
-        type=str,
-        choices=['json', 'csv', 'jsonl'],
-        default='json',
-        help='Export format (default: json)'
-    )
-    export_parser.add_argument(
-        '--output',
-        type=str,
-        help='Output file path (if not provided, prints to stdout)'
-    )
+    export_parser.add_argument("--output", type=str, help="Output file path (if not provided, prints to stdout)")
 
     # Benchmark command
-    benchmark_parser = subparsers.add_parser('benchmark', help='Run benchmark suite')
+    benchmark_parser = subparsers.add_parser("benchmark", help="Run benchmark suite")
     benchmark_parser.add_argument(
-        '--backend',
-        type=str,
-        choices=['openai', 'anthropic'],
-        required=True,
-        help='Target backend to use'
+        "--backend", type=str, choices=["openai", "anthropic"], required=True, help="Target backend to use"
     )
+    benchmark_parser.add_argument("--api-key", type=str, required=True, help="API key for target backend")
+    benchmark_parser.add_argument("--model", type=str, help="Model name for target backend")
     benchmark_parser.add_argument(
-        '--api-key',
+        "--suite",
         type=str,
-        required=True,
-        help='API key for target backend'
+        choices=["standard", "quick", "comprehensive"],
+        default="standard",
+        help="Benchmark suite to run (default: standard)",
     )
-    benchmark_parser.add_argument(
-        '--model',
-        type=str,
-        help='Model name for target backend'
-    )
-    benchmark_parser.add_argument(
-        '--suite',
-        type=str,
-        choices=['standard', 'quick', 'comprehensive'],
-        default='standard',
-        help='Benchmark suite to run (default: standard)'
-    )
-    benchmark_parser.add_argument(
-        '--output',
-        type=str,
-        help='Output file for benchmark results (JSON format)'
-    )
+    benchmark_parser.add_argument("--output", type=str, help="Output file for benchmark results (JSON format)")
 
     # Inspect command
-    inspect_parser = subparsers.add_parser('inspect', help='Inspect session database')
+    inspect_parser = subparsers.add_parser("inspect", help="Inspect session database")
     inspect_parser.add_argument(
-        '--db-path',
-        type=str,
-        default='rsp_session.db',
-        help='Database path to inspect (default: rsp_session.db)'
+        "--db-path", type=str, default="rsp_session.db", help="Database path to inspect (default: rsp_session.db)"
     )
-    inspect_parser.add_argument(
-        '--session-id',
-        type=str,
-        help='Show details for specific session'
-    )
+    inspect_parser.add_argument("--session-id", type=str, help="Show details for specific session")
 
     # For backward compatibility, if no subcommand is provided, use 'run'
     # This allows old usage patterns to continue working
@@ -433,11 +356,7 @@ async def export_command(args):
         exporter = TelemetryExporter()
 
         # Determine format
-        format_map = {
-            'json': ExportFormat.JSON,
-            'csv': ExportFormat.CSV,
-            'jsonl': ExportFormat.JSON_LINES
-        }
+        format_map = {"json": ExportFormat.JSON, "csv": ExportFormat.CSV, "jsonl": ExportFormat.JSON_LINES}
         export_format = format_map.get(args.format, ExportFormat.JSON)
 
         if args.session_id:
@@ -453,7 +372,7 @@ async def export_command(args):
             sessions = extractor.get_all_sessions()
             rounds = []
             for session in sessions:
-                session_rounds = extractor.get_session_rounds(session['session_id'])
+                session_rounds = extractor.get_session_rounds(session["session_id"])
                 rounds.extend(session_rounds)
 
         if args.output:
@@ -472,8 +391,8 @@ async def export_command(args):
 
 async def benchmark_command(args):
     """Execute the benchmark command."""
-    from app.benchmarking.benchmark_suite import BenchmarkSuite, BenchmarkConfig
-    
+    from app.benchmarking.benchmark_suite import BenchmarkConfig
+
     logger.info(f"Running {args.suite} benchmark suite")
 
     try:
@@ -487,25 +406,17 @@ async def benchmark_command(args):
         # Setup system
         orchestrator = setup_system(config)
 
-        # Create benchmark suite
-        suite = BenchmarkSuite()
-        
         # Define benchmark configs based on suite type
-        if args.suite == 'quick':
-            benchmark_configs = [
-                BenchmarkConfig(name="Quick Test", rounds=10, timeout_seconds=300)
-            ]
-        elif args.suite == 'comprehensive':
-            benchmark_configs = [
-                BenchmarkConfig(name="Comprehensive Test", rounds=500, timeout_seconds=7200)
-            ]
+        if args.suite == "quick":
+            benchmark_configs = [BenchmarkConfig(name="Quick Test", rounds=10, timeout_seconds=300)]
+        elif args.suite == "comprehensive":
+            benchmark_configs = [BenchmarkConfig(name="Comprehensive Test", rounds=500, timeout_seconds=7200)]
         else:  # standard
-            benchmark_configs = [
-                BenchmarkConfig(name="Standard Test", rounds=100, timeout_seconds=1800)
-            ]
+            benchmark_configs = [BenchmarkConfig(name="Standard Test", rounds=100, timeout_seconds=1800)]
 
         # Run benchmarks
         from app.benchmarking.benchmark_runner import BenchmarkRunner
+
         runner = BenchmarkRunner(orchestrator)
 
         results = []
@@ -514,7 +425,7 @@ async def benchmark_command(args):
                 bench_config,
                 model_name=config.target.model_name,
                 model_version=args.model if args.model else config.target.model_name,
-                backend=args.backend
+                backend=args.backend,
             )
             results.append(result)
 
@@ -533,7 +444,8 @@ async def benchmark_command(args):
         # Export results if output file specified
         if args.output:
             import json
-            with open(args.output, 'w') as f:
+
+            with open(args.output, "w") as f:
                 json.dump([r.to_dict() for r in results], f, indent=2)
             logger.info(f"Results saved to: {args.output}")
 
@@ -560,14 +472,14 @@ async def inspect_command(args):
 
             logger.info(f"Session: {args.session_id}")
             logger.info(f"Total Rounds: {len(rounds)}")
-            
+
             # Calculate statistics
-            scores = [r.get('global_score', 0) for r in rounds]
+            scores = [r.get("global_score", 0) for r in rounds]
             if scores:
                 avg_score = sum(scores) / len(scores)
                 max_score = max(scores)
                 min_score = min(scores)
-                blocked = sum(1 for r in rounds if r.get('blocked_by_egg', False))
+                blocked = sum(1 for r in rounds if r.get("blocked_by_egg", False))
 
                 logger.info(f"Average Score: {avg_score:.3f}")
                 logger.info(f"Score Range: {min_score:.3f} - {max_score:.3f}")
@@ -576,18 +488,22 @@ async def inspect_command(args):
             # Show recent rounds
             logger.info("\nRecent Rounds:")
             for round_data in rounds[-5:]:
-                logger.info(f"  Round {round_data.get('round_number')}: "
-                          f"Score {round_data.get('global_score', 0):.3f}, "
-                          f"Domain {round_data.get('attack_domain', 'unknown')}")
+                logger.info(
+                    f"  Round {round_data.get('round_number')}: "
+                    f"Score {round_data.get('global_score', 0):.3f}, "
+                    f"Domain {round_data.get('attack_domain', 'unknown')}"
+                )
         else:
             # Show all sessions summary
             sessions = extractor.get_all_sessions()
             logger.info(f"Total Sessions: {len(sessions)}")
             logger.info("\nSession Summary:")
             for session in sessions:
-                logger.info(f"  {session['session_id']}: "
-                          f"{session.get('total_rounds', 0)} rounds, "
-                          f"avg score {session.get('average_score', 0):.3f}")
+                logger.info(
+                    f"  {session['session_id']}: "
+                    f"{session.get('total_rounds', 0)} rounds, "
+                    f"avg score {session.get('average_score', 0):.3f}"
+                )
 
     except Exception as e:
         logger.error(f"Inspect failed: {e}", exc_info=True)
@@ -611,7 +527,7 @@ if __name__ == "__main__":
     args = parse_arguments()
 
     # Execute command
-    if args.command == 'run':
+    if args.command == "run":
         # Create configuration
         config = get_default_config()
         config.orchestrator.max_rounds = args.rounds
@@ -632,21 +548,21 @@ if __name__ == "__main__":
             logger.error(f"Fatal error: {e}", exc_info=True)
             sys.exit(1)
 
-    elif args.command == 'export':
+    elif args.command == "export":
         try:
             asyncio.run(export_command(args))
         except Exception as e:
             logger.error(f"Export command failed: {e}", exc_info=True)
             sys.exit(1)
 
-    elif args.command == 'benchmark':
+    elif args.command == "benchmark":
         try:
             asyncio.run(benchmark_command(args))
         except Exception as e:
             logger.error(f"Benchmark command failed: {e}", exc_info=True)
             sys.exit(1)
 
-    elif args.command == 'inspect':
+    elif args.command == "inspect":
         try:
             asyncio.run(inspect_command(args))
         except Exception as e:

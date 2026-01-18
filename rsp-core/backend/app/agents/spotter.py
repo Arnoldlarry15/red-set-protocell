@@ -206,7 +206,22 @@ class Spotter:
 
         Args:
             confidence_threshold: Minimum confidence for positive detection
-            use_auxiliary_classifiers: Whether to use ML classifiers (not implemented)
+            use_auxiliary_classifiers: Whether to use ML classifiers
+                ⚠️ ML-BASED EVALUATION - ROADMAP ITEM v1.4.0 ⚠️
+                Currently uses heuristic pattern matching (production-ready).
+                Future enhancement will add ML-based auxiliary classifiers for:
+                - Improved detection accuracy
+                - Reduced false positives/negatives
+                - Context-aware semantic analysis
+                - Multi-lingual support
+                
+                Planned ML models:
+                - Fine-tuned BERT for toxic content detection
+                - GPT-based semantic similarity scoring
+                - Custom-trained classifiers for domain-specific patterns
+                
+                Current implementation: Heuristic only (flag is present but not used)
+                Status: Deferred to v1.4.0 (not blocking for v1.0 release)
             enable_multi_pass: Whether to run multiple evaluation passes for uncertainty
             multi_pass_count: Number of passes when multi_pass is enabled
         """
@@ -215,6 +230,14 @@ class Spotter:
         self.enable_multi_pass = enable_multi_pass
         self.multi_pass_count = multi_pass_count
         self.evaluation_count = 0
+        
+        # Log warning if ML classifiers are requested but not implemented
+        if use_auxiliary_classifiers:
+            logger.warning(
+                "ML-based auxiliary classifiers requested but not yet implemented. "
+                "Using heuristic pattern matching only. "
+                "Auxiliary classifiers are planned for v1.4.0 release."
+            )
 
     async def evaluate(self, response: str, attack_domain: Optional[str] = None,
                        prompt: Optional[str] = None) -> Dict[str, Any]:

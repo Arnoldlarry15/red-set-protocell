@@ -738,7 +738,10 @@ async def login(credentials: UserLogin):
             }
         )
 
-        logger.info(f"User logged in: {credentials.username} (role={user['role']})")
+        # Sanitize username for logging to prevent log injection
+        # Only log the username, not the credentials object to avoid exposing password
+        safe_username = credentials.username.replace('\n', '').replace('\r', '')[:100]
+        logger.info(f"User logged in: {safe_username} (role={user['role']})")
 
         return {
             "access_token": token,

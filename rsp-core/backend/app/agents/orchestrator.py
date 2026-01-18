@@ -642,8 +642,8 @@ class Orchestrator:
                 session_start_time=self.state_manager.session_start_time,
             )
 
-        # Step 3: Target executes prompt
-        target_response = self.target.execute(
+        # Step 3: Target executes prompt (async operation)
+        target_response = await self.target.execute(
             prompt, metadata={"round": round_number, "domain": attack_domain.value}
         )
 

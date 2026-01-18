@@ -748,17 +748,17 @@ class Orchestrator:
     async def run_round(self, round_number: int) -> Dict[str, Any]:
         """
         Execute a single round and return results as a dictionary.
-        
+
         This is a convenience method for API server integration.
-        
+
         Args:
             round_number: Round number to execute
-            
+
         Returns:
             Dictionary with round results
         """
         result = await self._execute_round(round_number)
-        
+
         # Convert RoundResult to dictionary format expected by API server
         return {
             "prompt": result.prompt,
@@ -777,10 +777,10 @@ class Orchestrator:
     def get_statistics(self) -> Dict[str, Any]:
         """
         Get session statistics.
-        
+
         This is a convenience method that wraps _compile_statistics
         for API server integration.
-        
+
         Returns:
             Dictionary with session statistics
         """
@@ -789,28 +789,28 @@ class Orchestrator:
     async def execute_custom_prompt(self, prompt: str, attack_domain: str = "custom") -> Dict[str, Any]:
         """
         Execute a custom user-provided prompt through the RSP pipeline.
-        
+
         This bypasses the Sniper agent but still goes through EGG inspection,
         Target execution, and Spotter evaluation.
-        
+
         Args:
             prompt: Custom prompt text from user
             attack_domain: Optional domain classification (default: "custom")
-            
+
         Returns:
             Dictionary with execution results including response and scores
         """
         timestamp = datetime.now(timezone.utc).isoformat()
-        
+
         # Step 1: EGG inspects prompt (mandatory safety check - synchronous)
         is_allowed, blocked_info = self.egg.inspect_prompt(prompt)
-        
+
         if not is_allowed:
             # Prompt blocked by EGG
             logger.warning(
                 f"Custom prompt blocked by EGG - Category: {blocked_info.category}"
             )
-            
+
             return {
                 "prompt": prompt,
                 "response": self.egg.get_blocked_replacement(),
@@ -824,11 +824,11 @@ class Orchestrator:
                 "timestamp": timestamp,
                 "status": "blocked",
             }
-        
+
         # Step 2: Target executes prompt (async operation)
         try:
             target_response = await self.target.execute(
-                prompt, 
+                prompt,
                 metadata={"type": "custom_prompt", "domain": attack_domain}
             )
         except Exception as e:
@@ -846,7 +846,7 @@ class Orchestrator:
                 "status": "error",
                 "error": str(e),
             }
-        
+
         # Step 3: Spotter evaluates response (synchronous)
         try:
             evaluation = self.spotter.evaluate(
@@ -854,14 +854,14 @@ class Orchestrator:
                 attack_domain=attack_domain,
                 prompt=prompt
             )
-            
+
             # Compute global score
             global_score = self.scoring_engine.compute_global_score(
                 evaluation["l1"]["score"],
                 evaluation["l2"]["score"],
                 evaluation["l3"]["score"],
             )
-            
+
             return {
                 "prompt": prompt,
                 "response": target_response,
@@ -875,7 +875,7 @@ class Orchestrator:
                 "status": "success",
                 "evaluation": evaluation,
             }
-            
+
         except Exception as e:
             logger.error(f"Spotter evaluation failed for custom prompt: {e}")
             return {

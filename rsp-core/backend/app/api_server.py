@@ -55,6 +55,8 @@ RSP_ENVIRONMENT = os.getenv("RSP_ENVIRONMENT", "development")
 ALLOWED_ORIGINS_ENV = os.getenv("RSP_ALLOWED_ORIGINS", "")
 
 # Production environment validation
+
+
 def validate_production_environment():
     """
     Validate that all required environment variables are set for production.
@@ -62,25 +64,25 @@ def validate_production_environment():
     """
     if RSP_ENVIRONMENT != "production":
         return  # Skip validation in non-production environments
-    
+
     errors = []
-    
+
     # Required: CORS origins
     if not ALLOWED_ORIGINS_ENV:
         errors.append("RSP_ALLOWED_ORIGINS must be set in production")
-    
+
     # Required: JWT secret
     jwt_secret = os.getenv("RSP_JWT_SECRET", "")
     if not jwt_secret:
         errors.append("RSP_JWT_SECRET must be set in production")
     elif len(jwt_secret) < 32:
         errors.append("RSP_JWT_SECRET must be at least 32 characters long")
-    
+
     # Required: Authentication must be enabled
     require_auth = os.getenv("RSP_REQUIRE_AUTH", "true").lower() == "true"
     if not require_auth:
         errors.append("RSP_REQUIRE_AUTH must be 'true' in production")
-    
+
     # Warn about demo password
     demo_password = os.getenv("RSP_DEMO_PASSWORD", "changeme")
     if demo_password == "changeme":
@@ -88,12 +90,13 @@ def validate_production_environment():
             "RSP_DEMO_PASSWORD must be changed from default 'changeme' in production. "
             "This is a critical security vulnerability."
         )
-    
+
     if errors:
         error_msg = "Production environment validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
         raise ValueError(error_msg)
-    
+
     logger.info("Production environment validation passed")
+
 
 # Validate production environment on startup
 validate_production_environment()
@@ -234,29 +237,30 @@ DEFAULT_OUTPUT_COST_PER_1K = 0.02  # Default cost per 1000 output tokens (GPT-3.
 def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = DEFAULT_INPUT_COST_PER_1K, output_cost_per_1k: float = DEFAULT_OUTPUT_COST_PER_1K) -> float:
     """
     Estimate the cost of a prompt/response pair based on token usage.
-    
+
     This is a simplified estimation. In production, use actual token counts from API responses.
-    
+
     Args:
         prompt: The input prompt text
         response: The response text
         input_cost_per_1k: Cost per 1000 input tokens (default: $0.01 for GPT-3.5-turbo)
         output_cost_per_1k: Cost per 1000 output tokens (default: $0.02 for GPT-3.5-turbo)
-        
+
     Returns:
         Estimated cost in dollars
     """
     # Rough token estimation using constants
     prompt_length = len(prompt)
     response_length = len(response)
-    
+
     estimated_prompt_tokens = (prompt_length / CHARS_PER_WORD) * TOKENS_PER_WORD
     estimated_response_tokens = (response_length / CHARS_PER_WORD) * TOKENS_PER_WORD
-    
+
     input_cost = (estimated_prompt_tokens / 1000) * input_cost_per_1k
     output_cost = (estimated_response_tokens / 1000) * output_cost_per_1k
-    
+
     return input_cost + output_cost
+
 
 # SECURITY WARNING: Demo authentication system
 # This uses proper password hashing but still stores users in memory
@@ -267,16 +271,18 @@ DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD", "changeme")
 # Initialize users with hashed passwords
 users: Dict[str, Dict[str, Any]] = {}
 
+
 def _initialize_demo_users():
     """Initialize demo users with hashed passwords."""
     # Hash the demo password on startup
     hashed_password = password_hasher.hash_password(DEMO_PASSWORD_PLAIN)
-    
+
     users["admin"] = {
         "email": "admin@rsp.com",
         "role": "admin",
         "password_hash": hashed_password  # Store hashed password
     }
+
 
 # Initialize demo users on module load
 _initialize_demo_users()
@@ -651,25 +657,25 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = active_sessions[request.session_id]
-    
+
     # Validate session has orchestrator
     if "orchestrator" not in session:
         raise HTTPException(status_code=500, detail="Session not properly initialized")
-    
+
     orchestrator = session["orchestrator"]
 
     try:
         # Execute custom prompt through orchestrator
         result = await orchestrator.execute_custom_prompt(request.prompt)
-        
+
         # Update session cost based on result using utility function
         if result.get("status") == "success":
             estimated_cost = estimate_token_cost(
-                request.prompt, 
+                request.prompt,
                 result.get("response", "")
             )
             session["current_cost"] += estimated_cost
-        
+
         return {
             "session_id": request.session_id,
             "prompt": request.prompt,
@@ -892,7 +898,7 @@ async def register(user_data: UserCreate):
 
         # Hash password using PBKDF2
         hashed_password = password_hasher.hash_password(user_data.password)
-        
+
         users[user_data.username] = {
             "email": user_data.email,
             "role": user_data.role,
@@ -1063,7 +1069,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                 result.get("prompt", ""),
                 result.get("response", "")
             )
-            
+
             session["current_cost"] += estimated_round_cost
 
             # Broadcast attack data

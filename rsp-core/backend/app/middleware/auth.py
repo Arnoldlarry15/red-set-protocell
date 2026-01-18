@@ -32,6 +32,16 @@ if JWT_SECRET_KEY == secrets.token_urlsafe(32) and os.getenv("RSP_ENVIRONMENT") 
         "Set RSP_JWT_SECRET environment variable in production!"
     )
 
+# Export for use in other modules
+__all__ = [
+    "TokenManager",
+    "PasswordHasher",
+    "RBACManager",
+    "AuthenticationMiddleware",
+    "APIKeyMiddleware",
+    "JWT_EXPIRATION_HOURS",
+]
+
 
 class TokenManager:
     """Manage JWT tokens for session authentication."""

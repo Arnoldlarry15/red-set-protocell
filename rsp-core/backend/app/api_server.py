@@ -37,7 +37,8 @@ from app.middleware.auth import (
     AuthenticationMiddleware,
     TokenManager,
     PasswordHasher,
-    RBACManager
+    RBACManager,
+    JWT_EXPIRATION_HOURS
 )
 from app.middleware.monitoring import (
     RequestLoggingMiddleware,

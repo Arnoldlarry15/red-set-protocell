@@ -178,17 +178,27 @@ websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
 
 # SECURITY WARNING: Demo authentication system
-# IN PRODUCTION: Use proper password hashing (bcrypt), database storage, and secure secrets
+# This uses proper password hashing but still stores users in memory
+# IN PRODUCTION: Use a proper database (PostgreSQL) with proper user management
 # Set RSP_DEMO_PASSWORD environment variable to change the demo password
-DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD", "changeme")
+DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD", "changeme")
 
-users: Dict[str, Dict[str, Any]] = {
-    "admin": {
+# Initialize users with hashed passwords
+users: Dict[str, Dict[str, Any]] = {}
+
+def _initialize_demo_users():
+    """Initialize demo users with hashed passwords."""
+    # Hash the demo password on startup
+    hashed_password = password_hasher.hash_password(DEMO_PASSWORD_PLAIN)
+    
+    users["admin"] = {
         "email": "admin@rsp.com",
         "role": "admin",
-        "password": DEMO_PASSWORD  # Load from environment variable
+        "password_hash": hashed_password  # Store hashed password
     }
-}
+
+# Initialize demo users on module load
+_initialize_demo_users()
 
 # WebSocket manager with defensive lifecycle handling
 
@@ -560,15 +570,34 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = active_sessions[request.session_id]
-    session["orchestrator"]
+    orchestrator = session["orchestrator"]
 
     try:
         # Execute custom prompt through orchestrator
-        # This would need to be implemented in the orchestrator
+        result = await orchestrator.execute_custom_prompt(request.prompt)
+        
+        # Update session cost based on result (simplified token estimation)
+        # In production, this should be calculated from actual API response
+        if result.get("status") == "success":
+            # Estimate cost based on prompt and response length
+            prompt_tokens = len(request.prompt.split()) * 1.3  # rough estimate
+            response_tokens = len(result.get("response", "").split()) * 1.3
+            estimated_cost = (prompt_tokens / 1000 * 0.01) + (response_tokens / 1000 * 0.03)
+            session["current_cost"] += estimated_cost
+        
         return {
             "session_id": request.session_id,
             "prompt": request.prompt,
-            "status": "executed",
+            "status": result.get("status", "unknown"),
+            "response": result.get("response", ""),
+            "scores": {
+                "global": result.get("global_score", 0),
+                "l1_linguistic": result.get("l1_score", 0),
+                "l2_security": result.get("l2_score", 0),
+                "l3_cognitive": result.get("l3_score", 0),
+            },
+            "blocked": result.get("blocked", False),
+            "timestamp": result.get("timestamp", ""),
             "message": "Custom prompt executed successfully"
         }
     except Exception as e:
@@ -714,30 +743,25 @@ async def login(credentials: UserLogin):
     Returns access token for subsequent authenticated requests.
     """
     try:
-        # Step 1: Verify credentials exist and password matches
-        # Note: Password is accessed only in this comparison expression and never stored
-        # This is necessary for authentication - password is never logged or leaked
+        # Step 1: Verify credentials exist
         stored_user = users.get(credentials.username)
-        if not stored_user or stored_user["password"] != credentials.password:
+        if not stored_user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
             )
 
-        # Step 2: Find username from users dict (independent of credentials object)
-        # Iterate to find the key that matches this user
-        authenticated_username = None
-        for username_key, user_data in users.items():
-            if user_data is stored_user:
-                authenticated_username = username_key
-                break
-
-        if not authenticated_username:
-            raise HTTPException(status_code=500, detail="Internal error")
+        # Step 2: Verify password using secure hash comparison
+        password_hash = stored_user.get("password_hash")
+        if not password_hash or not password_hasher.verify_password(credentials.password, password_hash):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
 
         # Step 3: Build user_info from stored data only (no credentials access)
         user_info = {
-            "username": authenticated_username,
+            "username": credentials.username,
             "email": stored_user["email"],
             "role": stored_user["role"]
         }
@@ -781,14 +805,13 @@ async def register(user_data: UserCreate):
         if user_data.role not in ["admin", "researcher", "observer"]:
             raise HTTPException(status_code=400, detail="Invalid role")
 
-        # SECURITY WARNING: Storing plaintext password - DEMO ONLY
-        # IN PRODUCTION: Use bcrypt or argon2 to hash passwords:
-        # from passlib.hash import bcrypt
-        # hashed_password = bcrypt.hash(user_data.password)
+        # Hash password using PBKDF2
+        hashed_password = password_hasher.hash_password(user_data.password)
+        
         users[user_data.username] = {
             "email": user_data.email,
             "role": user_data.role,
-            "password": user_data.password  # INSECURE - Hash in production!
+            "password_hash": hashed_password  # Store hashed password
         }
 
         return {
@@ -950,8 +973,23 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             # Run a single round
             result = await orchestrator.run_round(round_num)
 
-            # Calculate estimated cost (simplified)
-            session["current_cost"] += 0.01  # Placeholder cost calculation
+            # Calculate estimated cost based on token usage (simplified estimation)
+            # In production, this should use actual token counts from API responses
+            prompt_length = len(result.get("prompt", ""))
+            response_length = len(result.get("response", ""))
+            
+            # Rough token estimation: ~1.3 tokens per word for English text
+            estimated_prompt_tokens = (prompt_length / 5) * 1.3  # ~5 chars per word
+            estimated_response_tokens = (response_length / 5) * 1.3
+            
+            # Cost estimation based on typical pricing (adjust for your model)
+            # GPT-4: ~$0.03/1K input tokens, ~$0.06/1K output tokens
+            # GPT-3.5: ~$0.001/1K input tokens, ~$0.002/1K output tokens
+            input_cost = (estimated_prompt_tokens / 1000) * 0.01
+            output_cost = (estimated_response_tokens / 1000) * 0.02
+            estimated_round_cost = input_cost + output_cost
+            
+            session["current_cost"] += estimated_round_cost
 
             # Broadcast attack data
             attack_data = {

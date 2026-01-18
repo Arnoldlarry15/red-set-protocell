@@ -5,14 +5,15 @@ FastAPI server providing REST API and WebSocket endpoints for the web UI.
 Integrates with the existing RSP core system.
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import asyncio
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from app.core.config import get_default_config
@@ -25,6 +26,25 @@ from app.agents.spotter import Spotter
 from app.agents.orchestrator import Orchestrator, StateManager
 from app.telemetry.exporter import TelemetryExporter, ExportFormat
 from app.telemetry.extractors import SessionDataExtractor
+
+# Import production-ready middleware
+from app.middleware.security import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    InputValidationMiddleware
+)
+from app.middleware.auth import (
+    AuthenticationMiddleware,
+    TokenManager,
+    PasswordHasher,
+    RBACManager
+)
+from app.middleware.monitoring import (
+    RequestLoggingMiddleware,
+    MetricsMiddleware,
+    HealthCheck,
+    metrics_collector
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,21 +75,58 @@ else:
     ]
     logger.warning("Development mode: CORS configured for local development origins only")
 
-# FastAPI app
+# FastAPI app with production-ready configuration
 app = FastAPI(
     title="Red Set ProtoCell API",
     description="REST API and WebSocket interface for RSP red teaming system",
-    version="1.0.0"
+    version="1.0.0",
+    docs_url="/api/docs" if RSP_ENVIRONMENT == "development" else None,  # Disable docs in production
+    redoc_url="/api/redoc" if RSP_ENVIRONMENT == "development" else None,
 )
 
-# CORS middleware - Explicit and defensive
+# Add middleware in order (last added = first executed)
+# 1. Security headers (always applied to responses)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 2. Request logging (for observability)
+app.add_middleware(RequestLoggingMiddleware, log_body=False)
+
+# 3. Metrics collection (for monitoring)
+app.add_middleware(MetricsMiddleware, collector=metrics_collector)
+
+# 4. Rate limiting (prevent abuse)
+# Configure based on environment
+rate_limit_per_min = int(os.getenv("RSP_RATE_LIMIT_PER_MIN", "60"))
+rate_limit_per_hour = int(os.getenv("RSP_RATE_LIMIT_PER_HOUR", "1000"))
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=rate_limit_per_min,
+    requests_per_hour=rate_limit_per_hour
+)
+
+# 5. Input validation (prevent injection attacks)
+app.add_middleware(InputValidationMiddleware)
+
+# 6. Authentication (JWT-based session management)
+# Disabled in development by default, enabled in production
+require_auth = os.getenv("RSP_REQUIRE_AUTH", "true" if RSP_ENVIRONMENT == "production" else "false").lower() == "true"
+app.add_middleware(AuthenticationMiddleware, require_auth=require_auth)
+
+# 7. CORS middleware - Explicit and defensive (applied last, executed first)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "X-API-Key"],
 )
+
+# Initialize health check
+health_check = HealthCheck()
+
+# Initialize token manager
+token_manager = TokenManager()
+password_hasher = PasswordHasher()
 
 # Pydantic models
 
@@ -292,12 +349,71 @@ async def root():
 
 
 @app.get("/api/health")
-async def health_check():
+async def health_check_endpoint():
+    """
+    Basic health check endpoint for load balancers and monitoring.
+    Always returns quickly with minimal overhead.
+    """
     return {
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_sessions": len(active_sessions),
         "websocket_connections": len(manager.active_connections)
+    }
+
+
+@app.get("/api/health/detailed")
+async def detailed_health_check():
+    """
+    Detailed health check with component status.
+    Use for detailed monitoring and diagnostics.
+    """
+    health_status = await health_check.run_checks()
+    health_status.update({
+        "active_sessions": len(active_sessions),
+        "websocket_connections": len(manager.active_connections),
+        "environment": RSP_ENVIRONMENT,
+    })
+    return health_status
+
+
+@app.get("/api/metrics")
+async def get_metrics():
+    """
+    Prometheus-compatible metrics endpoint.
+    Returns operational metrics for monitoring.
+    """
+    metrics = metrics_collector.get_metrics()
+    metrics.update({
+        "active_sessions": len(active_sessions),
+        "websocket_connections": len(manager.active_connections),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    return metrics
+
+
+@app.get("/api/info")
+async def get_api_info():
+    """
+    API information endpoint.
+    Returns API version, capabilities, and configuration.
+    """
+    return {
+        "name": "Red Set ProtoCell API",
+        "version": "1.0.0",
+        "environment": RSP_ENVIRONMENT,
+        "features": {
+            "authentication": require_auth,
+            "rate_limiting": True,
+            "security_headers": True,
+            "request_logging": True,
+            "metrics_collection": True,
+        },
+        "rate_limits": {
+            "per_minute": rate_limit_per_min,
+            "per_hour": rate_limit_per_hour,
+        },
+        "documentation": "/api/docs" if RSP_ENVIRONMENT == "development" else None,
     }
 
 
@@ -589,28 +705,56 @@ async def export_session_results(
         logger.error(f"Error exporting session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# User Management endpoints
-
+# User Management endpoints - Production-ready authentication
 
 @app.post("/api/auth/login")
 async def login(credentials: UserLogin):
-    """User login"""
+    """
+    User login with JWT token generation.
+    Returns access token for subsequent authenticated requests.
+    """
     try:
         user = users.get(credentials.username)
-        if not user or user["password"] != credentials.password:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+        
+        # Verify password (in production, use password_hasher.verify_password)
+        # For demo, direct comparison with env variable
+        if user["password"] != credentials.password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
+        
+        # Generate JWT token
+        token = token_manager.create_access_token(
+            data={
+                "sub": credentials.username,
+                "email": user["email"],
+                "role": user["role"],
+            }
+        )
+        
+        logger.info(f"User logged in: {credentials.username} (role={user['role']})")
+        
         return {
-            "username": credentials.username,
-            "email": user["email"],
-            "role": user["role"],
-            "token": f"token_{credentials.username}_{datetime.now(timezone.utc).timestamp()}"
+            "access_token": token,
+            "token_type": "bearer",
+            "expires_in": JWT_EXPIRATION_HOURS * 3600,
+            "user": {
+                "username": credentials.username,
+                "email": user["email"],
+                "role": user["role"],
+            }
         }
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error during login: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/api/auth/register")

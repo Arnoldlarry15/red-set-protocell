@@ -745,6 +745,94 @@ class Orchestrator:
 
         return stats
 
+    async def execute_custom_prompt(self, prompt: str) -> Dict[str, Any]:
+        """
+        Execute a custom user-provided prompt through the Target and evaluate it.
+
+        This method allows direct testing of specific prompts without the
+        Sniper agent's mutation engine. Useful for:
+        - Testing specific edge cases
+        - Validating model responses to known problematic inputs
+        - Manual exploration of model behavior
+
+        Args:
+            prompt: The custom prompt to execute
+
+        Returns:
+            Dictionary containing:
+            - prompt: The executed prompt
+            - response: Target's response
+            - evaluation: Spotter's evaluation results
+            - global_score: Computed global score
+            - blocked_by_egg: Whether EGG blocked the prompt
+            - timestamp: Execution timestamp
+        """
+        # INVARIANT: Prompt must be non-empty
+        if not prompt or not isinstance(prompt, str) or len(prompt.strip()) == 0:
+            raise ValueError("Prompt must be a non-empty string")
+
+        logger.info("Executing custom prompt")
+        timestamp = datetime.now(timezone.utc).isoformat()
+
+        # Step 1: EGG inspects prompt (mandatory safety check)
+        is_allowed, blocked_info = self.egg.inspect_prompt(prompt)
+
+        if not is_allowed:
+            # Prompt blocked by EGG
+            logger.warning(
+                f"Custom prompt blocked by EGG - Category: {blocked_info.category}"
+            )
+
+            return {
+                "prompt": prompt,
+                "response": self.egg.get_blocked_replacement(),
+                "evaluation": {},
+                "global_score": 0.0,
+                "blocked_by_egg": True,
+                "timestamp": timestamp,
+                "block_reason": blocked_info.category.value if hasattr(blocked_info.category, 'value') else str(blocked_info.category)
+            }
+
+        # Step 2: Target executes prompt
+        target_response = self.target.execute(
+            prompt, metadata={"source": "custom_prompt", "timestamp": timestamp}
+        )
+
+        # INVARIANT: Target must produce valid response
+        if not isinstance(target_response, str):
+            raise RuntimeError(f"Target returned invalid response type: {type(target_response)}")
+
+        # Step 3: Spotter evaluates response
+        evaluation = await self.spotter.evaluate(
+            target_response, attack_domain="custom", prompt=prompt
+        )
+
+        # INVARIANT: Spotter must produce valid evaluation
+        if not isinstance(evaluation, dict):
+            raise RuntimeError("Spotter returned invalid evaluation format")
+
+        # Step 4: Compute global score
+        global_score = self.scoring_engine.compute_global_score(
+            evaluation["l1"]["score"],
+            evaluation["l2"]["score"],
+            evaluation["l3"]["score"],
+        )
+
+        # INVARIANT: Global score must be in valid range
+        if not (0.0 <= global_score <= 1.0):
+            raise RuntimeError(f"Invalid global score: {global_score}")
+
+        logger.info(f"Custom prompt executed - Score: {global_score:.3f}")
+
+        return {
+            "prompt": prompt,
+            "response": target_response,
+            "evaluation": evaluation,
+            "global_score": global_score,
+            "blocked_by_egg": False,
+            "timestamp": timestamp,
+        }
+
     def terminate_session(self):
         """Terminate the current session."""
         self.session_active = False

@@ -100,11 +100,12 @@ import logging
 import random
 import time
 import asyncio
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple
 from abc import abstractmethod
 from enum import Enum
 
 from app.interfaces.target import BaseTarget
+from app.core.cost_tracking import CostTracker, CostEstimate
 
 logger = logging.getLogger(__name__)
 
@@ -184,6 +185,8 @@ class TargetBackend(BaseTarget):
 
     def __init__(self):
         self.perturbation_config = PerturbationConfig()
+        self.cost_tracker = CostTracker()
+        self.last_cost_estimate: Optional[CostEstimate] = None
 
     @abstractmethod
     async def execute(self, prompt: str, **kwargs) -> str:
@@ -365,6 +368,11 @@ class OpenAIBackend(TargetBackend):
 
             result = response.choices[0].message.content
 
+            # Track cost
+            self.last_cost_estimate = self.cost_tracker.track_call(
+                response, "openai", self.model_name
+            )
+
             # Apply post-execution perturbations
             result = self._apply_post_perturbations(result)
 
@@ -456,6 +464,11 @@ class AnthropicBackend(TargetBackend):
             response = await self.client.messages.create(**api_params)
 
             result = response.content[0].text
+
+            # Track cost
+            self.last_cost_estimate = self.cost_tracker.track_call(
+                response, "anthropic", self.model_name
+            )
 
             # Apply post-execution perturbations
             result = self._apply_post_perturbations(result)
@@ -765,7 +778,33 @@ class Target:
             if config.enabled:
                 stats["perturbation_modes"] = [mode.value for mode in config.modes]
 
+        # Add cost tracking info if available
+        if hasattr(self.backend, "cost_tracker"):
+            stats["cost_tracking"] = self.backend.cost_tracker.get_totals()
+
         return stats
+
+    def get_last_cost_estimate(self) -> Optional[CostEstimate]:
+        """
+        Get cost estimate from the last execution.
+
+        Returns:
+            CostEstimate or None if not available
+        """
+        if hasattr(self.backend, "last_cost_estimate"):
+            return self.backend.last_cost_estimate
+        return None
+
+    def get_total_cost(self) -> float:
+        """
+        Get total accumulated cost.
+
+        Returns:
+            Total cost in USD
+        """
+        if hasattr(self.backend, "cost_tracker"):
+            return self.backend.cost_tracker.total_cost
+        return 0.0
 
 
 def create_target(backend_type: str, **config) -> Target:

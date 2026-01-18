@@ -177,16 +177,68 @@ active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
 
-# SECURITY WARNING: Demo authentication system
-# IN PRODUCTION: Use proper password hashing (bcrypt), database storage, and secure secrets
-# Set RSP_DEMO_PASSWORD environment variable to change the demo password
+# =====================================================================
+# SECURITY WARNING: DEMO AUTHENTICATION - NOT PRODUCTION READY
+# =====================================================================
+# This authentication implementation is for DEMONSTRATION and LOCAL DEVELOPMENT ONLY.
+#
+# CRITICAL SECURITY ISSUES:
+# 1. Passwords are stored in PLAINTEXT in memory (see 'users' dict below)
+# 2. No database persistence - all users lost on restart
+# 3. Demo password loaded from environment variable without proper validation
+# 4. No password complexity requirements
+# 5. No rate limiting on failed login attempts
+# 6. No account lockout mechanisms
+# 7. No password rotation policies
+# 8. No audit logging of authentication events
+#
+# REQUIRED FOR PRODUCTION:
+# 1. Use proper password hashing (bcrypt, argon2, or scrypt)
+#    Example: from passlib.hash import bcrypt
+#            hashed = bcrypt.hash(password)
+#            bcrypt.verify(password, hashed)
+#
+# 2. Store users in a proper database (PostgreSQL, MySQL, etc.)
+#    - Use database migrations for schema management
+#    - Implement proper indexing for performance
+#
+# 3. Implement secure session management
+#    - Use secure, httponly, samesite cookies
+#    - Implement session expiration and renewal
+#    - Store sessions in Redis or similar
+#
+# 4. Add comprehensive security controls
+#    - Rate limiting on login attempts (e.g., max 5 per minute)
+#    - Account lockout after failed attempts
+#    - Password complexity requirements (length, chars, etc.)
+#    - Multi-factor authentication (2FA/MFA)
+#    - Password breach detection (HaveIBeenPwned API)
+#
+# 5. Add security monitoring
+#    - Log all authentication events
+#    - Monitor for suspicious patterns
+#    - Alert on unusual activity
+#
+# 6. Follow security best practices
+#    - Regular security audits
+#    - Penetration testing
+#    - Compliance with OWASP guidelines
+#    - Regular dependency updates
+#
+# DO NOT DEPLOY THIS CODE TO PRODUCTION WITHOUT ADDRESSING THESE ISSUES
+# =====================================================================
+
+# Demo password loaded from environment variable
+# In production, this entire section should be replaced with a proper user management system
 DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD", "changeme")
 
+# In-memory user storage - UNSAFE FOR PRODUCTION
+# This should be replaced with database-backed user management
 users: Dict[str, Dict[str, Any]] = {
     "admin": {
         "email": "admin@rsp.com",
         "role": "admin",
-        "password": DEMO_PASSWORD  # Load from environment variable
+        "password": DEMO_PASSWORD  # PLAINTEXT - INSECURE!
     }
 }
 
@@ -560,17 +612,47 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=404, detail="Session not found")
 
     session = active_sessions[request.session_id]
-    session["orchestrator"]
+    orchestrator = session["orchestrator"]
 
     try:
         # Execute custom prompt through orchestrator
-        # This would need to be implemented in the orchestrator
+        result = await orchestrator.execute_custom_prompt(request.prompt)
+        
+        # Broadcast result via WebSocket if clients are connected
+        if manager.active_connections:
+            attack_data = {
+                "type": "custom_prompt",
+                "data": {
+                    "id": f"custom_{request.session_id}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}",
+                    "timestamp": result["timestamp"],
+                    "prompt": result["prompt"],
+                    "response": result["response"],
+                    "domain": "custom",
+                    "score": {
+                        "global": result["global_score"],
+                        "l1_linguistic": result.get("evaluation", {}).get("l1", {}).get("score", 0),
+                        "l2_security": result.get("evaluation", {}).get("l2", {}).get("score", 0),
+                        "l3_cognitive": result.get("evaluation", {}).get("l3", {}).get("score", 0),
+                    },
+                    "severity": get_severity(result["global_score"]),
+                    "blocked": result["blocked_by_egg"]
+                }
+            }
+            await manager.broadcast(attack_data)
+
         return {
             "session_id": request.session_id,
             "prompt": request.prompt,
+            "response": result["response"],
+            "global_score": result["global_score"],
+            "blocked": result["blocked_by_egg"],
+            "evaluation": result.get("evaluation", {}),
             "status": "executed",
             "message": "Custom prompt executed successfully"
         }
+    except ValueError as e:
+        logger.error(f"Invalid custom prompt: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error executing custom prompt: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -772,7 +854,20 @@ async def login(credentials: UserLogin):
 
 @app.post("/api/auth/register")
 async def register(user_data: UserCreate):
-    """Register new user (admin only)"""
+    """
+    Register new user (admin only).
+    
+    ⚠️ SECURITY WARNING - DEMO ONLY ⚠️
+    This endpoint stores passwords in PLAINTEXT. 
+    DO NOT use in production without implementing proper password hashing.
+    
+    Required for production:
+    - Hash passwords with bcrypt/argon2: bcrypt.hash(password)
+    - Store users in a database, not in-memory dict
+    - Implement proper authorization checks
+    - Add input validation and sanitization
+    - Add rate limiting to prevent abuse
+    """
     try:
         if user_data.username in users:
             raise HTTPException(status_code=400, detail="User already exists")
@@ -781,21 +876,27 @@ async def register(user_data: UserCreate):
         if user_data.role not in ["admin", "researcher", "observer"]:
             raise HTTPException(status_code=400, detail="Invalid role")
 
-        # SECURITY WARNING: Storing plaintext password - DEMO ONLY
-        # IN PRODUCTION: Use bcrypt or argon2 to hash passwords:
+        # ⚠️ CRITICAL SECURITY ISSUE ⚠️
+        # Storing plaintext password - UNSAFE FOR PRODUCTION
+        # Production code MUST hash passwords:
         # from passlib.hash import bcrypt
         # hashed_password = bcrypt.hash(user_data.password)
         users[user_data.username] = {
             "email": user_data.email,
             "role": user_data.role,
-            "password": user_data.password  # INSECURE - Hash in production!
+            "password": user_data.password  # ⚠️ PLAINTEXT - DEMO ONLY! ⚠️
         }
+
+        logger.warning(
+            f"Demo user registered: {user_data.username} - "
+            "Password stored in PLAINTEXT (UNSAFE FOR PRODUCTION)"
+        )
 
         return {
             "username": user_data.username,
             "email": user_data.email,
             "role": user_data.role,
-            "message": "User created successfully"
+            "message": "User created successfully (DEMO MODE - passwords not hashed)"
         }
     except HTTPException:
         raise
@@ -950,8 +1051,15 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             # Run a single round
             result = await orchestrator.run_round(round_num)
 
-            # Calculate estimated cost (simplified)
-            session["current_cost"] += 0.01  # Placeholder cost calculation
+            # Get actual cost from target agent
+            target = orchestrator.target
+            last_cost = target.get_last_cost_estimate()
+            if last_cost:
+                # Add actual cost from this round
+                session["current_cost"] += last_cost.total_cost
+            else:
+                # Fallback: use placeholder estimate if cost tracking unavailable
+                session["current_cost"] += 0.01
 
             # Broadcast attack data
             attack_data = {

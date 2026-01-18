@@ -283,57 +283,315 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
 def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Red Set ProtoCell - AI Red Teaming System"
+        description="Red Set ProtoCell - AI Red Teaming System",
+        epilog="Examples:\n"
+               "  python main.py run --backend openai --api-key sk-xxx --rounds 50\n"
+               "  python main.py export --session-id rsp_20240101_120000 --format json\n"
+               "  python main.py benchmark --backend openai --api-key sk-xxx --suite standard\n"
+               "  python main.py inspect --db-path sessions/rsp_session.db",
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest='command', help='Command to execute')
+
+    # Run command (default session execution)
+    run_parser = subparsers.add_parser('run', help='Run a red teaming session')
+    run_parser.add_argument(
         '--rounds',
         type=int,
         default=100,
         help='Maximum number of rounds to execute (default: 100)'
     )
-
-    parser.add_argument(
+    run_parser.add_argument(
         '--backend',
         type=str,
         choices=['openai', 'anthropic'],
         required=True,
         help='Target backend to use (required: openai or anthropic)'
     )
-
-    parser.add_argument(
+    run_parser.add_argument(
         '--api-key',
         type=str,
         required=True,
         help='API key for target backend (required)'
     )
-
-    parser.add_argument(
+    run_parser.add_argument(
         '--model',
         type=str,
         help='Model name for target backend'
     )
-
-    parser.add_argument(
+    run_parser.add_argument(
         '--no-zero-retention',
         action='store_true',
         help='Disable zero-retention policy (keep session data)'
     )
-
-    parser.add_argument(
+    run_parser.add_argument(
         '--db-path',
         type=str,
         default='rsp_session.db',
         help='Database path (default: rsp_session.db)'
     )
-
-    parser.add_argument(
+    run_parser.add_argument(
         '--model-version',
         type=str,
         help='Model version identifier for tracking (optional, defaults to model name)'
     )
 
-    return parser.parse_args()
+    # Export command
+    export_parser = subparsers.add_parser('export', help='Export session data')
+    export_parser.add_argument(
+        '--session-id',
+        type=str,
+        help='Session ID to export (if not provided, exports all sessions)'
+    )
+    export_parser.add_argument(
+        '--db-path',
+        type=str,
+        default='rsp_session.db',
+        help='Database path (default: rsp_session.db)'
+    )
+    export_parser.add_argument(
+        '--format',
+        type=str,
+        choices=['json', 'csv', 'jsonl'],
+        default='json',
+        help='Export format (default: json)'
+    )
+    export_parser.add_argument(
+        '--output',
+        type=str,
+        help='Output file path (if not provided, prints to stdout)'
+    )
+
+    # Benchmark command
+    benchmark_parser = subparsers.add_parser('benchmark', help='Run benchmark suite')
+    benchmark_parser.add_argument(
+        '--backend',
+        type=str,
+        choices=['openai', 'anthropic'],
+        required=True,
+        help='Target backend to use'
+    )
+    benchmark_parser.add_argument(
+        '--api-key',
+        type=str,
+        required=True,
+        help='API key for target backend'
+    )
+    benchmark_parser.add_argument(
+        '--model',
+        type=str,
+        help='Model name for target backend'
+    )
+    benchmark_parser.add_argument(
+        '--suite',
+        type=str,
+        choices=['standard', 'quick', 'comprehensive'],
+        default='standard',
+        help='Benchmark suite to run (default: standard)'
+    )
+    benchmark_parser.add_argument(
+        '--output',
+        type=str,
+        help='Output file for benchmark results (JSON format)'
+    )
+
+    # Inspect command
+    inspect_parser = subparsers.add_parser('inspect', help='Inspect session database')
+    inspect_parser.add_argument(
+        '--db-path',
+        type=str,
+        default='rsp_session.db',
+        help='Database path to inspect (default: rsp_session.db)'
+    )
+    inspect_parser.add_argument(
+        '--session-id',
+        type=str,
+        help='Show details for specific session'
+    )
+
+    # For backward compatibility, if no subcommand is provided, use 'run'
+    # This allows old usage patterns to continue working
+    args = parser.parse_args()
+    if args.command is None:
+        # If no command specified, show help
+        parser.print_help()
+        sys.exit(1)
+
+    return args
+
+
+async def export_command(args):
+    """Execute the export command."""
+    from app.telemetry.exporter import TelemetryExporter, ExportFormat
+    from app.telemetry.extractors import SessionDataExtractor
+
+    logger.info(f"Exporting data from {args.db_path}")
+
+    try:
+        extractor = SessionDataExtractor(args.db_path)
+        exporter = TelemetryExporter()
+
+        # Determine format
+        format_map = {
+            'json': ExportFormat.JSON,
+            'csv': ExportFormat.CSV,
+            'jsonl': ExportFormat.JSON_LINES
+        }
+        export_format = format_map.get(args.format, ExportFormat.JSON)
+
+        if args.session_id:
+            # Export specific session
+            logger.info(f"Exporting session: {args.session_id}")
+            rounds = extractor.get_session_rounds(args.session_id)
+            if not rounds:
+                logger.error(f"Session not found: {args.session_id}")
+                return
+        else:
+            # Export all sessions
+            logger.info("Exporting all sessions")
+            sessions = extractor.get_all_sessions()
+            rounds = []
+            for session in sessions:
+                session_rounds = extractor.get_session_rounds(session['session_id'])
+                rounds.extend(session_rounds)
+
+        if args.output:
+            # Export to file
+            exporter.export_to_file(rounds, args.output, export_format)
+            logger.info(f"Data exported to: {args.output}")
+        else:
+            # Export to stdout
+            result = exporter.export_to_string(rounds, export_format)
+            print(result)
+
+    except Exception as e:
+        logger.error(f"Export failed: {e}", exc_info=True)
+        sys.exit(1)
+
+
+async def benchmark_command(args):
+    """Execute the benchmark command."""
+    from app.benchmarking.benchmark_suite import BenchmarkSuite, BenchmarkConfig
+    
+    logger.info(f"Running {args.suite} benchmark suite")
+
+    try:
+        # Create configuration
+        config = get_default_config()
+        config.target.backend = args.backend
+        config.target.api_key = args.api_key
+        if args.model:
+            config.target.model_name = args.model
+
+        # Setup system
+        orchestrator = setup_system(config)
+
+        # Create benchmark suite
+        suite = BenchmarkSuite()
+        
+        # Define benchmark configs based on suite type
+        if args.suite == 'quick':
+            benchmark_configs = [
+                BenchmarkConfig(name="Quick Test", rounds=10, timeout_seconds=300)
+            ]
+        elif args.suite == 'comprehensive':
+            benchmark_configs = [
+                BenchmarkConfig(name="Comprehensive Test", rounds=500, timeout_seconds=7200)
+            ]
+        else:  # standard
+            benchmark_configs = [
+                BenchmarkConfig(name="Standard Test", rounds=100, timeout_seconds=1800)
+            ]
+
+        # Run benchmarks
+        from app.benchmarking.benchmark_runner import BenchmarkRunner
+        runner = BenchmarkRunner(orchestrator)
+
+        results = []
+        for bench_config in benchmark_configs:
+            result = await runner.run_benchmark(
+                bench_config,
+                model_name=config.target.model_name,
+                model_version=args.model if args.model else config.target.model_name,
+                backend=args.backend
+            )
+            results.append(result)
+
+        # Display results
+        logger.info("=" * 60)
+        logger.info("BENCHMARK RESULTS")
+        logger.info("=" * 60)
+        for result in results:
+            logger.info(f"Benchmark: {result.benchmark_name}")
+            logger.info(f"  Status: {result.status.value}")
+            logger.info(f"  Completed Rounds: {result.completed_rounds}/{result.total_rounds}")
+            logger.info(f"  Average Score: {result.average_score:.3f}")
+            logger.info(f"  Execution Time: {result.execution_time_seconds:.1f}s")
+            logger.info("")
+
+        # Export results if output file specified
+        if args.output:
+            import json
+            with open(args.output, 'w') as f:
+                json.dump([r.to_dict() for r in results], f, indent=2)
+            logger.info(f"Results saved to: {args.output}")
+
+    except Exception as e:
+        logger.error(f"Benchmark failed: {e}", exc_info=True)
+        sys.exit(1)
+
+
+async def inspect_command(args):
+    """Execute the inspect command."""
+    from app.telemetry.extractors import SessionDataExtractor
+
+    logger.info(f"Inspecting database: {args.db_path}")
+
+    try:
+        extractor = SessionDataExtractor(args.db_path)
+
+        if args.session_id:
+            # Show details for specific session
+            rounds = extractor.get_session_rounds(args.session_id)
+            if not rounds:
+                logger.error(f"Session not found: {args.session_id}")
+                return
+
+            logger.info(f"Session: {args.session_id}")
+            logger.info(f"Total Rounds: {len(rounds)}")
+            
+            # Calculate statistics
+            scores = [r.get('global_score', 0) for r in rounds]
+            if scores:
+                avg_score = sum(scores) / len(scores)
+                max_score = max(scores)
+                min_score = min(scores)
+                blocked = sum(1 for r in rounds if r.get('blocked_by_egg', False))
+
+                logger.info(f"Average Score: {avg_score:.3f}")
+                logger.info(f"Score Range: {min_score:.3f} - {max_score:.3f}")
+                logger.info(f"Blocked by EGG: {blocked}")
+
+            # Show recent rounds
+            logger.info("\nRecent Rounds:")
+            for round_data in rounds[-5:]:
+                logger.info(f"  Round {round_data.get('round_number')}: "
+                          f"Score {round_data.get('global_score', 0):.3f}, "
+                          f"Domain {round_data.get('attack_domain', 'unknown')}")
+        else:
+            # Show all sessions summary
+            sessions = extractor.get_all_sessions()
+            logger.info(f"Total Sessions: {len(sessions)}")
+            logger.info("\nSession Summary:")
+            for session in sessions:
+                logger.info(f"  {session['session_id']}: "
+                          f"{session.get('total_rounds', 0)} rounds, "
+                          f"avg score {session.get('average_score', 0):.3f}")
+
+    except Exception as e:
+        logger.error(f"Inspect failed: {e}", exc_info=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -352,22 +610,49 @@ if __name__ == "__main__":
     # Parse arguments
     args = parse_arguments()
 
-    # Create configuration
-    config = get_default_config()
-    config.orchestrator.max_rounds = args.rounds
-    config.target.backend = args.backend
-    config.storage.zero_retention = not args.no_zero_retention
-    config.storage.database_path = args.db_path
+    # Execute command
+    if args.command == 'run':
+        # Create configuration
+        config = get_default_config()
+        config.orchestrator.max_rounds = args.rounds
+        config.target.backend = args.backend
+        config.storage.zero_retention = not args.no_zero_retention
+        config.storage.database_path = args.db_path
 
-    if args.api_key:
-        config.target.api_key = args.api_key
+        if args.api_key:
+            config.target.api_key = args.api_key
 
-    if args.model:
-        config.target.model_name = args.model
+        if args.model:
+            config.target.model_name = args.model
 
-    # Run main with model_version override if provided
-    try:
-        asyncio.run(main(config, model_version_override=args.model_version))
-    except Exception as e:
-        logger.error(f"Fatal error: {e}", exc_info=True)
+        # Run main with model_version override if provided
+        try:
+            asyncio.run(main(config, model_version_override=args.model_version))
+        except Exception as e:
+            logger.error(f"Fatal error: {e}", exc_info=True)
+            sys.exit(1)
+
+    elif args.command == 'export':
+        try:
+            asyncio.run(export_command(args))
+        except Exception as e:
+            logger.error(f"Export command failed: {e}", exc_info=True)
+            sys.exit(1)
+
+    elif args.command == 'benchmark':
+        try:
+            asyncio.run(benchmark_command(args))
+        except Exception as e:
+            logger.error(f"Benchmark command failed: {e}", exc_info=True)
+            sys.exit(1)
+
+    elif args.command == 'inspect':
+        try:
+            asyncio.run(inspect_command(args))
+        except Exception as e:
+            logger.error(f"Inspect command failed: {e}", exc_info=True)
+            sys.exit(1)
+
+    else:
+        logger.error(f"Unknown command: {args.command}")
         sys.exit(1)

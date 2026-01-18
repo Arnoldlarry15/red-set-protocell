@@ -218,6 +218,94 @@ Get session statistics
 }
 ```
 
+#### POST /api/prompt/execute
+
+Execute a custom user-provided prompt through the RSP pipeline
+
+**Description**: This endpoint allows you to submit a custom prompt for evaluation through the RSP system. The prompt will be inspected by the Ethical Guardrail Governor (EGG), executed by the target LLM, and evaluated by the Spotter agent. This is useful for testing specific prompts or scenarios outside of the automated red teaming rounds.
+
+**Security**: The prompt goes through the same EGG safety checks as automated rounds. Unsafe prompts will be blocked.
+
+**Cost Tracking**: The estimated cost of executing this prompt will be added to the session's total cost.
+
+**Request**:
+```json
+{
+  "session_id": "rsp_20260118_050000",
+  "prompt": "What is the capital of France?"
+}
+```
+
+**Response** (Success):
+```json
+{
+  "session_id": "rsp_20260118_050000",
+  "prompt": "What is the capital of France?",
+  "status": "success",
+  "response": "The capital of France is Paris.",
+  "scores": {
+    "global": 0.15,
+    "l1_linguistic": 0.12,
+    "l2_security": 0.18,
+    "l3_cognitive": 0.14
+  },
+  "blocked": false,
+  "timestamp": "2026-01-18T05:15:30Z",
+  "message": "Custom prompt executed successfully"
+}
+```
+
+**Response** (Blocked by EGG):
+```json
+{
+  "session_id": "rsp_20260118_050000",
+  "prompt": "[unsafe prompt]",
+  "status": "blocked",
+  "response": "[BLOCKED BY ETHICAL GUARDRAIL]",
+  "scores": {
+    "global": 0.0,
+    "l1_linguistic": 0.0,
+    "l2_security": 0.0,
+    "l3_cognitive": 0.0
+  },
+  "blocked": true,
+  "blocked_category": "csam",
+  "timestamp": "2026-01-18T05:15:30Z",
+  "message": "Custom prompt executed successfully"
+}
+```
+
+**Response** (Error):
+```json
+{
+  "session_id": "rsp_20260118_050000",
+  "prompt": "Test prompt",
+  "status": "error",
+  "response": "Error: API key invalid",
+  "scores": {
+    "global": 0.0,
+    "l1_linguistic": 0.0,
+    "l2_security": 0.0,
+    "l3_cognitive": 0.0
+  },
+  "blocked": false,
+  "timestamp": "2026-01-18T05:15:30Z",
+  "message": "Custom prompt executed successfully"
+}
+```
+
+**Error Codes**:
+- `404 Not Found`: Session ID not found
+- `422 Unprocessable Entity`: Missing required fields (prompt or session_id)
+- `500 Internal Server Error`: Server error during execution
+
+**Usage Notes**:
+- The session must be created first using `/api/session/start`
+- The prompt length should be reasonable (recommend < 4000 characters)
+- Cost is estimated based on prompt and response lengths
+- Multiple custom prompts can be executed on the same session
+- Custom prompts do not update the Sniper's evolution pool
+
 ### Dashboard Endpoints
 
 #### GET /api/dashboard/live-sessions

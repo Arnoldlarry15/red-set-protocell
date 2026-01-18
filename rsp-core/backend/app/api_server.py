@@ -54,6 +54,50 @@ logger = logging.getLogger(__name__)
 RSP_ENVIRONMENT = os.getenv("RSP_ENVIRONMENT", "development")
 ALLOWED_ORIGINS_ENV = os.getenv("RSP_ALLOWED_ORIGINS", "")
 
+# Production environment validation
+def validate_production_environment():
+    """
+    Validate that all required environment variables are set for production.
+    Raises ValueError if validation fails.
+    """
+    if RSP_ENVIRONMENT != "production":
+        return  # Skip validation in non-production environments
+    
+    errors = []
+    
+    # Required: CORS origins
+    if not ALLOWED_ORIGINS_ENV:
+        errors.append("RSP_ALLOWED_ORIGINS must be set in production")
+    
+    # Required: JWT secret
+    jwt_secret = os.getenv("RSP_JWT_SECRET", "")
+    if not jwt_secret:
+        errors.append("RSP_JWT_SECRET must be set in production")
+    elif len(jwt_secret) < 32:
+        errors.append("RSP_JWT_SECRET must be at least 32 characters long")
+    
+    # Required: Authentication must be enabled
+    require_auth = os.getenv("RSP_REQUIRE_AUTH", "true").lower() == "true"
+    if not require_auth:
+        errors.append("RSP_REQUIRE_AUTH must be 'true' in production")
+    
+    # Warn about demo password
+    demo_password = os.getenv("RSP_DEMO_PASSWORD", "changeme")
+    if demo_password == "changeme":
+        logger.warning(
+            "WARNING: Using default demo password 'changeme' in production! "
+            "Set RSP_DEMO_PASSWORD to a secure value."
+        )
+    
+    if errors:
+        error_msg = "Production environment validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
+        raise ValueError(error_msg)
+    
+    logger.info("Production environment validation passed")
+
+# Validate production environment on startup
+validate_production_environment()
+
 if RSP_ENVIRONMENT == "production":
     if not ALLOWED_ORIGINS_ENV:
         raise ValueError(

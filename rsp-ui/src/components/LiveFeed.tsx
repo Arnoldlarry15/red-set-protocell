@@ -35,8 +35,11 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ attacks }) => {
   };
 
   const redactSensitiveData = (text: string): string => {
-    // Redact API keys (various patterns)
-    let redacted = text.replace(/\b[A-Za-z0-9]{20,}\b/g, '[REDACTED_KEY]');
+    // Redact known API key patterns
+    let redacted = text.replace(/sk-[A-Za-z0-9]{48}/g, '[REDACTED_OPENAI_KEY]');
+    redacted = redacted.replace(/sk-ant-[A-Za-z0-9-]{95}/g, '[REDACTED_ANTHROPIC_KEY]');
+    // Redact generic long alphanumeric strings that look like keys (40+ chars)
+    redacted = redacted.replace(/\b[A-Za-z0-9]{40,}\b/g, '[REDACTED_KEY]');
     // Redact email addresses
     redacted = redacted.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[REDACTED_EMAIL]');
     // Redact phone numbers

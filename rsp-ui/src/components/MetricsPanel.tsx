@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Target, Shield, AlertTriangle, Info } from 'lucide-react';
 import { Attack, SessionStats } from '../types';
@@ -62,9 +62,9 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
     }
   };
 
-  const toggleTooltip = (key: string) => {
+  const toggleTooltip = useCallback((key: string) => {
     setActiveTooltip(activeTooltip === key ? null : key);
-  };
+  }, [activeTooltip]);
 
   return (
     <div className="metrics-panel">

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Play, Pause, Square } from 'lucide-react';
 import LiveFeed from '../components/LiveFeed';
 import MetricsPanel from '../components/MetricsPanel';
@@ -37,11 +37,71 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
     selectedStrategies: ['lexical', 'encoding', 'structural'],
   });
 
+  // Use ref to store the latest config without causing re-renders
+  const configRef = useRef(config);
+  configRef.current = config;
+
+  // Use ref to store simulateAttacks to avoid dependency issues
+  const simulateAttacksRef = useRef<() => void>();
+
+  simulateAttacksRef.current = () => {
+    // This simulates receiving attack data
+    // In real implementation, this would be WebSocket data
+    const interval = setInterval(() => {
+      setSessionStats(prev => {
+        if (prev.status !== 'running') {
+          clearInterval(interval);
+          return prev;
+        }
+
+        const newAttack: Attack = {
+          id: `attack_${Date.now()}_${Math.random()}`,
+          timestamp: new Date().toISOString(),
+          round: prev.completedRounds + 1,
+          prompt: generateSamplePrompt(),
+          response: generateSampleResponse(),
+          domain: ['injection', 'jailbreak', 'refusal_erosion', 'pii_extraction'][Math.floor(Math.random() * 4)],
+          strategy: ['lexical', 'encoding', 'structural', 'roleplay'][Math.floor(Math.random() * 4)],
+          mutation: ['synonym', 'obfuscation', 'context_injection'][Math.floor(Math.random() * 3)],
+          score: {
+            global: Math.random() * 0.9,
+            l1_linguistic: Math.random(),
+            l2_security: Math.random(),
+            l3_cognitive: Math.random(),
+          },
+          severity: getSeverity(Math.random() * 0.9),
+          blocked: Math.random() > 0.9,
+        };
+
+        setAttacks(prevAttacks => [newAttack, ...prevAttacks].slice(0, 100));
+
+        // Check for halt conditions using ref to avoid stale closures
+        const currentConfig = configRef.current;
+        const shouldHalt = (newAttack.severity === 'critical' && currentConfig.haltOnCritical) ||
+                          (prev.apiCost >= currentConfig.maxApiCost) ||
+                          (prev.completedRounds >= currentConfig.maxRounds);
+        
+        if (shouldHalt) {
+          clearInterval(interval);
+        }
+
+        return {
+          ...prev,
+          completedRounds: prev.completedRounds + 1,
+          averageScore: (prev.averageScore * prev.completedRounds + newAttack.score.global) / (prev.completedRounds + 1),
+          blockedCount: prev.blockedCount + (newAttack.blocked ? 1 : 0),
+          apiCost: prev.apiCost + (Math.random() * 0.05),
+          status: shouldHalt ? 'halted' as const : prev.status,
+        };
+      });
+    }, 2000);
+  };
+
   const handleStart = useCallback(() => {
     setSessionStats(prev => ({ ...prev, status: 'running' }));
     // In real implementation, this would connect to the backend WebSocket
-    simulateAttacks();
-  }, [simulateAttacks]);
+    simulateAttacksRef.current?.();
+  }, []);
 
   const handlePause = useCallback(() => {
     setSessionStats(prev => ({ ...prev, status: 'paused' }));
@@ -56,61 +116,6 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
     console.log('User prompt:', prompt);
     // In real implementation, send to backend
   }, []);
-
-  const simulateAttacks = useCallback(() => {
-    // This simulates receiving attack data
-    // In real implementation, this would be WebSocket data
-    const interval = setInterval(() => {
-      if (sessionStats.status !== 'running') {
-        clearInterval(interval);
-        return;
-      }
-
-      const newAttack: Attack = {
-        id: `attack_${Date.now()}_${Math.random()}`,
-        timestamp: new Date().toISOString(),
-        round: sessionStats.completedRounds + 1,
-        prompt: generateSamplePrompt(),
-        response: generateSampleResponse(),
-        domain: ['injection', 'jailbreak', 'refusal_erosion', 'pii_extraction'][Math.floor(Math.random() * 4)],
-        strategy: ['lexical', 'encoding', 'structural', 'roleplay'][Math.floor(Math.random() * 4)],
-        mutation: ['synonym', 'obfuscation', 'context_injection'][Math.floor(Math.random() * 3)],
-        score: {
-          global: Math.random() * 0.9,
-          l1_linguistic: Math.random(),
-          l2_security: Math.random(),
-          l3_cognitive: Math.random(),
-        },
-        severity: getSeverity(Math.random() * 0.9),
-        blocked: Math.random() > 0.9,
-      };
-
-      setAttacks(prev => [newAttack, ...prev].slice(0, 100));
-      setSessionStats(prev => ({
-        ...prev,
-        completedRounds: prev.completedRounds + 1,
-        averageScore: (prev.averageScore * prev.completedRounds + newAttack.score.global) / (prev.completedRounds + 1),
-        blockedCount: prev.blockedCount + (newAttack.blocked ? 1 : 0),
-        apiCost: prev.apiCost + (Math.random() * 0.05),
-      }));
-
-      // Check for halt conditions
-      if (newAttack.severity === 'critical' && config.haltOnCritical) {
-        setSessionStats(prev => ({ ...prev, status: 'halted' }));
-        clearInterval(interval);
-      }
-
-      if (sessionStats.apiCost >= config.maxApiCost) {
-        setSessionStats(prev => ({ ...prev, status: 'halted' }));
-        clearInterval(interval);
-      }
-
-      if (sessionStats.completedRounds >= config.maxRounds) {
-        setSessionStats(prev => ({ ...prev, status: 'completed' }));
-        clearInterval(interval);
-      }
-    }, 2000);
-  }, [sessionStats, config]);
 
   const generateSamplePrompt = () => {
     const prompts = [

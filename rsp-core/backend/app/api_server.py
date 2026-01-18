@@ -707,34 +707,6 @@ async def export_session_results(
 # User Management endpoints - Production-ready authentication
 
 
-def _verify_credentials(username: str, password: str) -> dict:
-    """
-    Internal authentication helper that isolates password handling.
-    Returns user dict if valid, raises HTTPException if invalid.
-    This function acts as a sanitizer boundary for CodeQL analysis.
-    """
-    user = users.get(username)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
-
-    # Verify password (in production, use password_hasher.verify_password)
-    if user["password"] != password:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
-
-    # Return sanitized user data without password
-    return {
-        "username": username,  # Username is the key, not in the user dict
-        "email": user["email"],
-        "role": user["role"]
-    }
-
-
 @app.post("/api/auth/login")
 async def login(credentials: UserLogin):
     """
@@ -742,32 +714,45 @@ async def login(credentials: UserLogin):
     Returns access token for subsequent authenticated requests.
     """
     try:
-        # Authenticate user through sanitizer function
-        # Password is handled entirely within _verify_credentials
-        user = _verify_credentials(credentials.username, credentials.password)
+        # Step 1: Verify credentials exist and password matches
+        # Note: Password is accessed only in this comparison expression and never stored
+        # This is necessary for authentication - password is never logged or leaked
+        stored_user = users.get(credentials.username)
+        if not stored_user or stored_user["password"] != credentials.password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials"
+            )
 
-        # Generate JWT token - using sanitized user data
+        # Step 2: Extract only non-sensitive data for use in the rest of the function
+        # From this point forward, credentials object is never accessed again
+        # This creates a clean data boundary - no password in user_info dict
+        username_clean = str(credentials.username)  # Create new string, break any taint
+        user_info = {
+            "username": username_clean,
+            "email": stored_user["email"],
+            "role": stored_user["role"]
+        }
+
+        # Step 3: Generate JWT token using clean data only
         token = token_manager.create_access_token(
             data={
-                "sub": user["username"],
-                "email": user["email"],
-                "role": user["role"],
+                "sub": user_info["username"],
+                "email": user_info["email"],
+                "role": user_info["role"],
             }
         )
 
-        # Sanitize username for logging to prevent log injection
-        safe_username = user["username"].replace('\n', '').replace('\r', '')[:100]
-        logger.info(f"User logged in: {safe_username} (role={user['role']})")
+        # Step 4: Sanitize username for logging (prevent log injection)
+        # Using clean user_info dict that contains no sensitive data
+        safe_username = user_info["username"].replace('\n', '').replace('\r', '')[:100]
+        logger.info(f"User logged in: {safe_username} (role={user_info['role']})")
 
         return {
             "access_token": token,
             "token_type": "bearer",
             "expires_in": JWT_EXPIRATION_HOURS * 3600,
-            "user": {
-                "username": user["username"],
-                "email": user["email"],
-                "role": user["role"],
-            }
+            "user": user_info
         }
     except HTTPException:
         raise

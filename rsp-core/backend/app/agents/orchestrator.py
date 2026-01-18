@@ -802,7 +802,7 @@ class Orchestrator:
         """
         timestamp = datetime.now(timezone.utc).isoformat()
         
-        # Step 1: EGG inspects prompt (mandatory safety check)
+        # Step 1: EGG inspects prompt (mandatory safety check - synchronous)
         is_allowed, blocked_info = self.egg.inspect_prompt(prompt)
         
         if not is_allowed:
@@ -825,9 +825,9 @@ class Orchestrator:
                 "status": "blocked",
             }
         
-        # Step 2: Target executes prompt
+        # Step 2: Target executes prompt (async operation)
         try:
-            target_response = self.target.execute(
+            target_response = await self.target.execute(
                 prompt, 
                 metadata={"type": "custom_prompt", "domain": attack_domain}
             )
@@ -847,7 +847,7 @@ class Orchestrator:
                 "error": str(e),
             }
         
-        # Step 3: Spotter evaluates response
+        # Step 3: Spotter evaluates response (synchronous)
         try:
             evaluation = self.spotter.evaluate(
                 target_response,

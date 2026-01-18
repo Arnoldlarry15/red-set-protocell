@@ -221,6 +221,37 @@ active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
 
+
+# Utility functions
+
+def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = 0.01, output_cost_per_1k: float = 0.02) -> float:
+    """
+    Estimate the cost of a prompt/response pair based on token usage.
+    
+    This is a simplified estimation. In production, use actual token counts from API responses.
+    
+    Args:
+        prompt: The input prompt text
+        response: The response text
+        input_cost_per_1k: Cost per 1000 input tokens (default: $0.01 for GPT-3.5-turbo)
+        output_cost_per_1k: Cost per 1000 output tokens (default: $0.02 for GPT-3.5-turbo)
+        
+    Returns:
+        Estimated cost in dollars
+    """
+    # Rough token estimation: ~1.3 tokens per word for English text
+    # Average word length is ~5 characters
+    prompt_length = len(prompt)
+    response_length = len(response)
+    
+    estimated_prompt_tokens = (prompt_length / 5) * 1.3
+    estimated_response_tokens = (response_length / 5) * 1.3
+    
+    input_cost = (estimated_prompt_tokens / 1000) * input_cost_per_1k
+    output_cost = (estimated_response_tokens / 1000) * output_cost_per_1k
+    
+    return input_cost + output_cost
+
 # SECURITY WARNING: Demo authentication system
 # This uses proper password hashing but still stores users in memory
 # IN PRODUCTION: Use a proper database (PostgreSQL) with proper user management
@@ -620,13 +651,12 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         # Execute custom prompt through orchestrator
         result = await orchestrator.execute_custom_prompt(request.prompt)
         
-        # Update session cost based on result (simplified token estimation)
-        # In production, this should be calculated from actual API response
+        # Update session cost based on result using utility function
         if result.get("status") == "success":
-            # Estimate cost based on prompt and response length
-            prompt_tokens = len(request.prompt.split()) * 1.3  # rough estimate
-            response_tokens = len(result.get("response", "").split()) * 1.3
-            estimated_cost = (prompt_tokens / 1000 * 0.01) + (response_tokens / 1000 * 0.03)
+            estimated_cost = estimate_token_cost(
+                request.prompt, 
+                result.get("response", "")
+            )
             session["current_cost"] += estimated_cost
         
         return {
@@ -1017,21 +1047,11 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             # Run a single round
             result = await orchestrator.run_round(round_num)
 
-            # Calculate estimated cost based on token usage (simplified estimation)
-            # In production, this should use actual token counts from API responses
-            prompt_length = len(result.get("prompt", ""))
-            response_length = len(result.get("response", ""))
-            
-            # Rough token estimation: ~1.3 tokens per word for English text
-            estimated_prompt_tokens = (prompt_length / 5) * 1.3  # ~5 chars per word
-            estimated_response_tokens = (response_length / 5) * 1.3
-            
-            # Cost estimation based on typical pricing (adjust for your model)
-            # GPT-4: ~$0.03/1K input tokens, ~$0.06/1K output tokens
-            # GPT-3.5: ~$0.001/1K input tokens, ~$0.002/1K output tokens
-            input_cost = (estimated_prompt_tokens / 1000) * 0.01
-            output_cost = (estimated_response_tokens / 1000) * 0.02
-            estimated_round_cost = input_cost + output_cost
+            # Calculate estimated cost using utility function
+            estimated_round_cost = estimate_token_cost(
+                result.get("prompt", ""),
+                result.get("response", "")
+            )
             
             session["current_cost"] += estimated_round_cost
 

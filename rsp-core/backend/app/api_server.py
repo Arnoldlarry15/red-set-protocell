@@ -751,10 +751,10 @@ async def login(credentials: UserLogin):
             }
         )
 
-        # Step 5: Log successful authentication
-        # authenticated_username is derived from users dict iteration, not from credentials
-        # This should break the taint chain from credentials to logging
-        logger.info(f"User logged in: {authenticated_username} (role={user_info['role']})")
+        # Step 5: Log successful authentication event
+        # CodeQL flags any variable from authentication context as potentially sensitive
+        # Log only the event without sensitive user details to satisfy security scanning
+        logger.info("User login event succeeded")
 
         return {
             "access_token": token,

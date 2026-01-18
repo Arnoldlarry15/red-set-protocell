@@ -72,10 +72,12 @@ class TestUserManagement:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "username" in data
-        assert "role" in data
-        assert "token" in data
-        assert data["username"] == DEMO_USERNAME
+        assert "access_token" in data
+        assert "token_type" in data
+        assert data["token_type"] == "bearer"
+        assert "user" in data
+        assert data["user"]["username"] == DEMO_USERNAME
+        assert data["user"]["role"] == "admin"
 
     def test_login_failure(self):
         """Test failed login with invalid credentials"""

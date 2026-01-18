@@ -47,6 +47,15 @@ htmlcov/
 rsp_session.db
 rsp.log
 
+# Environment variables and secrets (NEVER COMMIT)
+.env
+.env.*
+!.env.example
+!.env.local.example
+*.key
+*.pem
+secrets/
+
 # Demo and export directories
 demo_exports/
 demo_benchmarks/

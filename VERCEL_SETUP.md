@@ -28,7 +28,9 @@ In the Vercel Dashboard, go to **Project Settings → Environment Variables** an
 
 | Variable | Value | Description |
 |----------|-------|-------------|
-| `VITE_API_BASE_URL` | `https://your-domain.vercel.app/api` | API endpoint URL (use your actual Vercel domain) |
+| `VITE_API_BASE_URL` | `/api` or `https://your-domain.vercel.app/api` | API endpoint URL. Use `/api` for relative path (recommended) or full URL with your Vercel domain |
+
+**Recommended**: Use `/api` to take advantage of Vercel's routing and avoid CORS issues.
 
 #### Backend Environment Variables (Optional - for production security)
 
@@ -45,8 +47,8 @@ In the Vercel Dashboard, go to **Project Settings → Environment Variables** an
 ### 3. Deploy
 
 Click "Deploy" - Vercel will:
-1. Build the frontend using `npm run vercel-build` in the `frontend/` directory
-2. Package the backend Python code with `@vercel/python`
+1. Build the frontend using `npm run build` in the `frontend/` directory
+2. Package the backend Python code as serverless functions
 3. Set up routing:
    - `/api/*` → backend/main.py (FastAPI)
    - `/*` → frontend SPA (React)
@@ -57,34 +59,40 @@ Click "Deploy" - Vercel will:
 
 ```json
 {
-  "builds": [
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "frontend/dist" }
-    },
-    {
-      "src": "backend/main.py",
-      "use": "@vercel/python"
+      "source": "/api/(.*)",
+      "destination": "/backend/main.py"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/main.py"
+      "dest": "/backend/main.py"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/dist/index.html"
+      "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "backend/main.py": {
+      "runtime": "python3.9"
+    }
+  }
 }
 ```
 
-- **builds**: Tells Vercel to build both frontend (static) and backend (Python serverless functions)
+- **buildCommand**: Builds the frontend React/Vite application
+- **outputDirectory**: Where Vercel finds the built frontend files
+- **rewrites**: Maps `/api/*` requests to the backend (for development preview)
 - **routes**: 
   - API requests (`/api/*`) go to the FastAPI backend
   - Static files are served first (filesystem)

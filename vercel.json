@@ -1,26 +1,31 @@
 {
-  "builds": [
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "devCommand": "cd frontend && npm run dev",
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "frontend/dist" }
-    },
-    {
-      "src": "backend/main.py",
-      "use": "@vercel/python"
+      "source": "/api/(.*)",
+      "destination": "/backend/main.py"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "backend/main.py"
+      "dest": "/backend/main.py"
     },
     {
       "handle": "filesystem"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/dist/index.html"
+      "dest": "/index.html"
     }
-  ]
+  ],
+  "functions": {
+    "backend/main.py": {
+      "runtime": "python3.9"
+    }
+  }
 }

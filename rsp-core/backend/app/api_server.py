@@ -5,15 +5,14 @@ FastAPI server providing REST API and WebSocket endpoints for the web UI.
 Integrates with the existing RSP core system.
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Depends, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import asyncio
 import logging
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.core.config import get_default_config
@@ -37,7 +36,6 @@ from app.middleware.auth import (
     AuthenticationMiddleware,
     TokenManager,
     PasswordHasher,
-    RBACManager,
     JWT_EXPIRATION_HOURS
 )
 from app.middleware.monitoring import (
@@ -708,6 +706,7 @@ async def export_session_results(
 
 # User Management endpoints - Production-ready authentication
 
+
 @app.post("/api/auth/login")
 async def login(credentials: UserLogin):
     """
@@ -721,7 +720,7 @@ async def login(credentials: UserLogin):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
             )
-        
+
         # Verify password (in production, use password_hasher.verify_password)
         # For demo, direct comparison with env variable
         if user["password"] != credentials.password:
@@ -729,7 +728,7 @@ async def login(credentials: UserLogin):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"
             )
-        
+
         # Generate JWT token
         token = token_manager.create_access_token(
             data={
@@ -738,9 +737,9 @@ async def login(credentials: UserLogin):
                 "role": user["role"],
             }
         )
-        
+
         logger.info(f"User logged in: {credentials.username} (role={user['role']})")
-        
+
         return {
             "access_token": token,
             "token_type": "bearer",

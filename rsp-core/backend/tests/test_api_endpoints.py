@@ -268,5 +268,37 @@ class TestAPIIntegration:
         # (We won't actually call this in test without mocking)
 
 
+class TestCustomPromptExecution:
+    """Test custom prompt execution endpoint"""
+
+    def test_custom_prompt_no_session(self):
+        """Test custom prompt execution with non-existent session"""
+        response = client.post(
+            "/api/prompt/execute",
+            json={
+                "prompt": "What is 2+2?",
+                "session_id": "nonexistent_session"
+            }
+        )
+        assert response.status_code == 404
+        assert "not found" in response.json()["detail"].lower()
+
+    def test_custom_prompt_missing_fields(self):
+        """Test custom prompt execution with missing required fields"""
+        # Missing session_id
+        response = client.post(
+            "/api/prompt/execute",
+            json={"prompt": "Test prompt"}
+        )
+        assert response.status_code == 422  # Validation error
+
+        # Missing prompt
+        response = client.post(
+            "/api/prompt/execute",
+            json={"session_id": "test_session"}
+        )
+        assert response.status_code == 422  # Validation error
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -84,9 +84,9 @@ def validate_production_environment():
     # Warn about demo password
     demo_password = os.getenv("RSP_DEMO_PASSWORD", "changeme")
     if demo_password == "changeme":
-        logger.warning(
-            "WARNING: Using default demo password 'changeme' in production! "
-            "Set RSP_DEMO_PASSWORD to a secure value."
+        errors.append(
+            "RSP_DEMO_PASSWORD must be changed from default 'changeme' in production. "
+            "This is a critical security vulnerability."
         )
     
     if errors:
@@ -224,7 +224,14 @@ stored_configs: Dict[str, ExperimentConfig] = {}
 
 # Utility functions
 
-def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = 0.01, output_cost_per_1k: float = 0.02) -> float:
+# Token estimation constants
+CHARS_PER_WORD = 5  # Average word length in characters
+TOKENS_PER_WORD = 1.3  # Rough token-to-word ratio for English text
+DEFAULT_INPUT_COST_PER_1K = 0.01  # Default cost per 1000 input tokens (GPT-3.5-turbo)
+DEFAULT_OUTPUT_COST_PER_1K = 0.02  # Default cost per 1000 output tokens (GPT-3.5-turbo)
+
+
+def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = DEFAULT_INPUT_COST_PER_1K, output_cost_per_1k: float = DEFAULT_OUTPUT_COST_PER_1K) -> float:
     """
     Estimate the cost of a prompt/response pair based on token usage.
     
@@ -239,13 +246,12 @@ def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = 0
     Returns:
         Estimated cost in dollars
     """
-    # Rough token estimation: ~1.3 tokens per word for English text
-    # Average word length is ~5 characters
+    # Rough token estimation using constants
     prompt_length = len(prompt)
     response_length = len(response)
     
-    estimated_prompt_tokens = (prompt_length / 5) * 1.3
-    estimated_response_tokens = (response_length / 5) * 1.3
+    estimated_prompt_tokens = (prompt_length / CHARS_PER_WORD) * TOKENS_PER_WORD
+    estimated_response_tokens = (response_length / CHARS_PER_WORD) * TOKENS_PER_WORD
     
     input_cost = (estimated_prompt_tokens / 1000) * input_cost_per_1k
     output_cost = (estimated_response_tokens / 1000) * output_cost_per_1k

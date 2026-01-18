@@ -2,7 +2,7 @@ version: 2
 updates:
   # Python dependencies
   - package-ecosystem: "pip"
-    directory: "/rsp-core/backend"
+    directory: "/backend"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -42,7 +42,7 @@ updates:
 
   # npm dependencies for UI
   - package-ecosystem: "npm"
-    directory: "/rsp-ui"
+    directory: "/frontend"
     schedule:
       interval: "weekly"
       day: "monday"

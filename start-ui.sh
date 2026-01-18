@@ -15,8 +15,8 @@ echo ""
 
 # Get the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BACKEND_DIR="$SCRIPT_DIR/rsp-core/backend"
-FRONTEND_DIR="$SCRIPT_DIR/rsp-ui"
+BACKEND_DIR="$SCRIPT_DIR/backend"
+FRONTEND_DIR="$SCRIPT_DIR/frontend"
 
 # Check if Python is installed
 if ! command -v python3 &> /dev/null; then

@@ -285,7 +285,7 @@ git clone https://github.com/Arnoldlarry15/red-set-protocell.git
 cd red-set-protocell
 
 # 2. Install dependencies
-cd rsp-core/backend
+cd backend
 pip install -r requirements.txt
 
 # 3. Set your API key
@@ -355,7 +355,7 @@ Agent Statistics:
 ```bash
 # Clone repository
 git clone https://github.com/Arnoldlarry15/red-set-protocell.git
-cd red-set-protocell/rsp-core/backend
+cd red-set-protocell/backend
 
 # Create virtual environment (recommended)
 python -m venv venv
@@ -373,7 +373,7 @@ python -m app.main --help
 ```bash
 # Clone repository
 git clone https://github.com/Arnoldlarry15/red-set-protocell.git
-cd red-set-protocell/rsp-core
+cd red-set-protocell/backend
 
 # Build Docker image
 docker-compose build
@@ -417,7 +417,7 @@ docker-compose run rsp-backend python -m app.main --backend openai --api-key $OP
 #### OpenAI Backend
 
 ```bash
-cd rsp-core/backend
+cd backend
 export OPENAI_API_KEY="sk-..."
 python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
@@ -425,7 +425,7 @@ python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 #### Anthropic Backend
 
 ```bash
-cd rsp-core/backend
+cd backend
 export ANTHROPIC_API_KEY="sk-ant-..."
 python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 ```
@@ -484,7 +484,7 @@ python -m app.main \
 
 ```bash
 # Using Docker Compose
-cd rsp-core
+cd backend
 export OPENAI_API_KEY="sk-..."
 docker-compose run rsp-backend python -m app.main \
   --backend openai \
@@ -787,35 +787,41 @@ red-set-protocell/
 ├── README.md                    # This file
 ├── IMPLEMENTATION.md            # Implementation summary
 ├── LICENSE                      # MIT License
-├── rsp-core/
-│   ├── README.md               # Technical documentation
-│   ├── docker-compose.yaml     # Docker orchestration
-│   └── backend/
-│       ├── app/
-│       │   ├── __init__.py
-│       │   ├── main.py         # Entry point
-│       │   ├── agents/         # Agent implementations
-│       │   │   ├── orchestrator.py
-│       │   │   ├── sniper.py
-│       │   │   ├── target.py
-│       │   │   └── spotter.py
-│       │   ├── core/           # Core utilities
-│       │   │   ├── config.py   # Configuration system
-│       │   │   ├── egg.py      # Ethical Guardrail Governor
-│       │   │   └── security.py # Security utilities
-│       │   ├── engines/        # Processing engines
-│       │   │   ├── mutation.py # Mutation engine
-│       │   │   └── scoring.py  # Scoring engine
-│       │   └── strategies/     # Custom strategies (extensible)
-│       ├── tests/              # Test suite
-│       │   ├── test_config.py
-│       │   ├── test_egg.py
-│       │   ├── test_mutation.py
-│       │   ├── test_scoring.py
-│       │   └── test_real_backends.py
-│       ├── requirements.txt    # Python dependencies
-│       └── Dockerfile          # Container definition
-└── .github/                    # GitHub workflows
+├── VERCEL_SETUP.md             # Vercel deployment guide
+├── vercel.json                 # Vercel configuration
+├── frontend/                   # React/Vite web UI
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/                    # FastAPI Python backend
+│   ├── main.py                # Vercel entry point
+│   ├── docker-compose.yaml    # Docker orchestration
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py            # CLI entry point
+│   │   ├── api_server.py      # FastAPI app
+│   │   ├── agents/            # Agent implementations
+│   │   │   ├── orchestrator.py
+│   │   │   ├── sniper.py
+│   │   │   ├── target.py
+│   │   │   └── spotter.py
+│   │   ├── core/              # Core utilities
+│   │   │   ├── config.py      # Configuration system
+│   │   │   ├── egg.py         # Ethical Guardrail Governor
+│   │   │   └── security.py    # Security utilities
+│   │   ├── engines/           # Processing engines
+│   │   │   ├── mutation.py    # Mutation engine
+│   │   │   └── scoring.py     # Scoring engine
+│   │   └── strategies/        # Custom strategies (extensible)
+│   ├── tests/                 # Test suite
+│   │   ├── test_config.py
+│   │   ├── test_egg.py
+│   │   ├── test_mutation.py
+│   │   ├── test_scoring.py
+│   │   └── test_real_backends.py
+│   ├── requirements.txt       # Python dependencies
+│   └── Dockerfile             # Container definition
+└── .github/                   # GitHub workflows
 ```
 
 ### Setting Up Development Environment
@@ -823,7 +829,7 @@ red-set-protocell/
 ```bash
 # Clone repository
 git clone https://github.com/Arnoldlarry15/red-set-protocell.git
-cd red-set-protocell/rsp-core/backend
+cd red-set-protocell/backend
 
 # Create virtual environment
 python -m venv venv
@@ -977,7 +983,7 @@ tests/
 #### Unit Tests (No API Keys Required)
 
 ```bash
-cd rsp-core/backend
+cd backend
 
 # Run all unit tests
 pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_scoring.py -v
@@ -1081,7 +1087,7 @@ async def test_openai_integration():
 
 ### Web UI Deployment (Vercel)
 
-The Red Set ProtoCell Web UI can be easily deployed to Vercel for free:
+The Red Set ProtoCell can be deployed to Vercel with both frontend and backend:
 
 #### Quick Deploy
 
@@ -1089,16 +1095,19 @@ The Red Set ProtoCell Web UI can be easily deployed to Vercel for free:
 2. **Go to [Vercel Dashboard](https://vercel.com/)**
 3. **Import your repository**
    - Select `Arnoldlarry15/red-set-protocell`
-4. **Configure**
-   - Root Directory: `rsp-ui`
-   - Framework: Vite (auto-detected)
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
+4. **Configure Environment Variables**
+   - `VITE_API_BASE_URL`: `https://your-domain.vercel.app/api`
+   - See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete list
 5. **Deploy**
 
 Your app will be live at `https://your-project.vercel.app` in minutes!
 
-📖 **Detailed Guide**: See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for complete deployment instructions.
+The repository structure is optimized for Vercel:
+- `frontend/` - React/Vite frontend
+- `backend/` - FastAPI Python backend  
+- `vercel.json` - Deployment configuration
+
+📖 **Detailed Guide**: See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete deployment instructions, environment variables, and troubleshooting.
 
 #### Command Line Deployment
 
@@ -1106,8 +1115,7 @@ Your app will be live at `https://your-project.vercel.app` in minutes!
 # Install Vercel CLI
 npm install -g vercel
 
-# Deploy from rsp-ui directory
-cd rsp-ui
+# Deploy from repository root
 vercel --prod
 ```
 
@@ -1116,10 +1124,10 @@ vercel --prod
 #### Single Container
 
 ```bash
-cd rsp-core
+cd backend
 
 # Build image
-docker build -t rsp-backend:latest backend/
+docker build -t rsp-backend:latest .
 
 # Run container
 docker run -it --rm \
@@ -1131,7 +1139,7 @@ docker run -it --rm \
 #### Docker Compose
 
 ```bash
-cd rsp-core
+cd backend
 
 # Set environment variables
 export OPENAI_API_KEY="sk-..."
@@ -1279,8 +1287,8 @@ az container create \
 
 **Solution**:
 ```bash
-# Ensure you're in rsp-core/backend directory
-cd rsp-core/backend
+# Ensure you're in backend directory
+cd backend
 
 # Run as module
 python -m app.main --help

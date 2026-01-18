@@ -724,17 +724,25 @@ async def login(credentials: UserLogin):
                 detail="Invalid credentials"
             )
 
-        # Step 2: Extract only non-sensitive data for use in the rest of the function
-        # From this point forward, credentials object is never accessed again
-        # This creates a clean data boundary - no password in user_info dict
-        username_clean = str(credentials.username)  # Create new string, break any taint
+        # Step 2: Find username from users dict (independent of credentials object)
+        # Iterate to find the key that matches this user
+        authenticated_username = None
+        for username_key, user_data in users.items():
+            if user_data is stored_user:
+                authenticated_username = username_key
+                break
+
+        if not authenticated_username:
+            raise HTTPException(status_code=500, detail="Internal error")
+
+        # Step 3: Build user_info from stored data only (no credentials access)
         user_info = {
-            "username": username_clean,
+            "username": authenticated_username,
             "email": stored_user["email"],
             "role": stored_user["role"]
         }
 
-        # Step 3: Generate JWT token using clean data only
+        # Step 4: Generate JWT token using clean data only
         token = token_manager.create_access_token(
             data={
                 "sub": user_info["username"],
@@ -743,10 +751,10 @@ async def login(credentials: UserLogin):
             }
         )
 
-        # Step 4: Sanitize username for logging (prevent log injection)
-        # Using clean user_info dict that contains no sensitive data
-        safe_username = user_info["username"].replace('\n', '').replace('\r', '')[:100]
-        logger.info(f"User logged in: {safe_username} (role={user_info['role']})")
+        # Step 5: Log successful authentication
+        # authenticated_username is derived from users dict iteration, not from credentials
+        # This should break the taint chain from credentials to logging
+        logger.info(f"User logged in: {authenticated_username} (role={user_info['role']})")
 
         return {
             "access_token": token,

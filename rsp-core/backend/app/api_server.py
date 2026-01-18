@@ -12,6 +12,7 @@ from typing import List, Optional, Dict, Any
 import asyncio
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -34,6 +35,40 @@ from app.middleware.monitoring import RequestLoggingMiddleware, MetricsMiddlewar
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# Security utility for sanitizing user input in logs (CWE-117 prevention)
+def sanitize_for_logging(value: str, max_length: int = 100) -> str:
+    """
+    Sanitize user-provided values before including them in log messages.
+
+    This prevents log injection attacks (CWE-117) by removing control characters
+    that could be used to forge log entries or corrupt log files.
+
+    Args:
+        value: The user-provided string to sanitize
+        max_length: Maximum length to truncate to (default: 100)
+
+    Returns:
+        Sanitized string safe for logging
+    """
+    if not value:
+        return "[empty]"
+
+    # Remove newlines, carriage returns, and other control characters
+    # that could break log format or allow log injection
+    sanitized = re.sub(r"[\n\r\x0b\x0c\x00-\x08\x0e-\x1f\x7f]", "", value)
+
+    # Truncate to prevent log flooding
+    if len(sanitized) > max_length:
+        sanitized = sanitized[:max_length] + "..."
+
+    # If completely empty after sanitization, return placeholder
+    if not sanitized.strip():
+        return "[invalid]"
+
+    return sanitized
+
 
 # Environment-aware CORS configuration
 # PRODUCTION: Set RSP_ENVIRONMENT=production and RSP_ALLOWED_ORIGINS with comma-separated list
@@ -829,7 +864,12 @@ async def register(user_data: UserCreate):
             "password": user_data.password,  # ⚠️ PLAINTEXT - DEMO ONLY! ⚠️
         }
 
-        logger.warning(f"Demo user registered: {user_data.username} - " "Password stored in PLAINTEXT (UNSAFE FOR PRODUCTION)")
+        # Log with sanitized username to prevent log injection (CWE-117)
+        sanitized_username = sanitize_for_logging(user_data.username)
+        logger.warning(
+            f"Demo user registered: {sanitized_username} - "
+            "Password stored in PLAINTEXT (UNSAFE FOR PRODUCTION)"
+        )
 
         return {
             "username": user_data.username,

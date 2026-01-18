@@ -150,6 +150,24 @@ class TestUserManagement:
         )
         assert response.status_code == 400
 
+    def test_register_with_log_injection_attempt(self):
+        """Test that log injection attempts in username are handled safely"""
+        # Attempt to inject fake log entries via newlines in username
+        response = client.post(
+            "/api/auth/register",
+            json={
+                "username": "attacker\n2024-01-01 00:00:00 - CRITICAL - System breached",
+                "email": "attacker@example.com",
+                "role": "observer",
+                "password": "test123"
+            }
+        )
+        # Registration should succeed (validation happens elsewhere)
+        # but the logging should be safe (tested in test_log_sanitization.py)
+        assert response.status_code == 200
+        # Username is stored as-is (that's input validation's job)
+        # but logs should be sanitized
+
 
 class TestRemoteControl:
     """Test Remote Control endpoints"""

@@ -642,6 +642,87 @@
   color: var(--color-gray);
 }
 
+/* Attack Actions Styles */
+.attack-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Tooltip Styles */
+.chart-legend-info {
+  display: flex;
+  gap: 16px;
+  padding: 0 20px 12px;
+  flex-wrap: wrap;
+}
+
+.legend-item-with-tooltip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-white);
+}
+
+.tooltip-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-gray);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.tooltip-btn:hover {
+  color: var(--color-white);
+}
+
+.metric-tooltip {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: rgba(26, 26, 26, 0.98);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 12px;
+  width: 250px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.metric-tooltip strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-white);
+  font-size: 13px;
+}
+
+.metric-tooltip p {
+  font-size: 12px;
+  color: var(--color-gray);
+  line-height: 1.4;
+  margin: 0;
+}
+
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
@@ -653,5 +734,14 @@
 
   .selection-grid {
     grid-template-columns: 1fr;
+  }
+
+  .attack-actions {
+    flex-direction: column;
+  }
+
+  .metric-tooltip {
+    left: auto;
+    right: 0;
   }
 }

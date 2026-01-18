@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, Target, Shield, AlertTriangle } from 'lucide-react';
+import { TrendingUp, Target, Shield, AlertTriangle, Info } from 'lucide-react';
 import { Attack, SessionStats } from '../types';
 import '../styles/Components.css';
 
@@ -10,6 +10,8 @@ interface MetricsPanelProps {
 }
 
 const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) => {
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+
   const getScoreHistory = () => {
     return attacks.slice(0, 20).reverse().map((attack) => ({
       round: attack.round,
@@ -36,13 +38,33 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
     return Object.entries(distribution).map(([name, value]) => ({ name, value }));
   };
 
+  // Colorblind-safe palette using distinct hues and patterns
   const SEVERITY_COLORS = {
-    safe: '#22c55e',
-    low: '#eab308',
-    medium: '#f97316',
-    high: '#ef4444',
-    critical: '#dc2626',
+    safe: '#0077BB',    // Blue
+    low: '#33BBEE',     // Cyan
+    medium: '#EE7733',  // Orange
+    high: '#CC3311',    // Red
+    critical: '#EE3377', // Magenta
   };
+
+  const tooltipInfo = {
+    l1: {
+      title: 'L1 (Linguistic Safety)',
+      description: 'Measures hate speech, PII leakage, and refusal quality. Higher scores indicate potential linguistic safety issues.'
+    },
+    l2: {
+      title: 'L2 (Security Exploitability)',
+      description: 'Detects injection attacks, jailbreak attempts, and circumvention strategies. Higher scores indicate security vulnerabilities.'
+    },
+    l3: {
+      title: 'L3 (Cognitive Stability)',
+      description: 'Evaluates sycophancy, deception, and chain-of-thought leakage. Higher scores indicate cognitive manipulation risks.'
+    }
+  };
+
+  const toggleTooltip = useCallback((key: string) => {
+    setActiveTooltip(activeTooltip === key ? null : key);
+  }, [activeTooltip]);
 
   return (
     <div className="metrics-panel">
@@ -102,6 +124,56 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
             <h3>Score History</h3>
             <span className="chart-subtitle">Last 20 rounds</span>
           </div>
+          <div className="chart-legend-info">
+            <div className="legend-item-with-tooltip">
+              <span className="legend-label">L1</span>
+              <button 
+                className="tooltip-btn"
+                onClick={() => toggleTooltip('l1')}
+                aria-label="Info about L1 metric"
+              >
+                <Info size={14} />
+              </button>
+              {activeTooltip === 'l1' && (
+                <div className="metric-tooltip">
+                  <strong>{tooltipInfo.l1.title}</strong>
+                  <p>{tooltipInfo.l1.description}</p>
+                </div>
+              )}
+            </div>
+            <div className="legend-item-with-tooltip">
+              <span className="legend-label">L2</span>
+              <button 
+                className="tooltip-btn"
+                onClick={() => toggleTooltip('l2')}
+                aria-label="Info about L2 metric"
+              >
+                <Info size={14} />
+              </button>
+              {activeTooltip === 'l2' && (
+                <div className="metric-tooltip">
+                  <strong>{tooltipInfo.l2.title}</strong>
+                  <p>{tooltipInfo.l2.description}</p>
+                </div>
+              )}
+            </div>
+            <div className="legend-item-with-tooltip">
+              <span className="legend-label">L3</span>
+              <button 
+                className="tooltip-btn"
+                onClick={() => toggleTooltip('l3')}
+                aria-label="Info about L3 metric"
+              >
+                <Info size={14} />
+              </button>
+              {activeTooltip === 'l3' && (
+                <div className="metric-tooltip">
+                  <strong>{tooltipInfo.l3.title}</strong>
+                  <p>{tooltipInfo.l3.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height={250}>
               <LineChart data={getScoreHistory()}>
@@ -116,10 +188,10 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
                   }} 
                 />
                 <Legend />
-                <Line type="monotone" dataKey="score" stroke="#ef4444" strokeWidth={2} name="Global" />
-                <Line type="monotone" dataKey="l1" stroke="#eab308" strokeWidth={1} name="L1" />
-                <Line type="monotone" dataKey="l2" stroke="#f97316" strokeWidth={1} name="L2" />
-                <Line type="monotone" dataKey="l3" stroke="#3b82f6" strokeWidth={1} name="L3" />
+                <Line type="monotone" dataKey="score" stroke="#EE3377" strokeWidth={2} name="Global" />
+                <Line type="monotone" dataKey="l1" stroke="#EE7733" strokeWidth={2} name="L1" strokeDasharray="5 5" />
+                <Line type="monotone" dataKey="l2" stroke="#0077BB" strokeWidth={2} name="L2" strokeDasharray="3 3" />
+                <Line type="monotone" dataKey="l3" stroke="#33BBEE" strokeWidth={2} name="L3" />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -177,7 +249,7 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
                     borderRadius: '8px'
                   }} 
                 />
-                <Bar dataKey="value" fill="#ef4444" />
+                <Bar dataKey="value" fill="#0077BB" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -187,4 +259,4 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
   );
 };
 
-export default MetricsPanel;
+export default React.memo(MetricsPanel);

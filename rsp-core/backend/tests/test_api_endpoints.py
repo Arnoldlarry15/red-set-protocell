@@ -159,7 +159,7 @@ class TestUserManagement:
                 "username": "attacker\n2024-01-01 00:00:00 - CRITICAL - System breached",
                 "email": "attacker@example.com",
                 "role": "observer",
-                "password": "test123"
+                "password": "test123"  # gitguardian:ignore - Test password, not a real secret
             }
         )
         # Registration should succeed (validation happens elsewhere)

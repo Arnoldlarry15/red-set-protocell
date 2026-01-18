@@ -136,37 +136,33 @@ Vercel automatically sets up continuous deployment:
 
 ## Vercel Configuration
 
-The `vercel.json` file in the `rsp-ui` directory contains:
+The `vercel.json` file at the repository root contains a simplified configuration optimized for React SPA routing:
 
 ```json
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "cd rsp-ui && npm run build",
+  "outputDirectory": "rsp-ui/dist",
+  "installCommand": "cd rsp-ui && npm install",
   "framework": "vite",
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/assets/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "destination": "/"
     }
   ]
 }
 ```
 
 Key features:
-- **SPA Routing**: All routes redirect to `index.html` for client-side routing
-- **Asset Caching**: Static assets are cached for 1 year
+- **SPA Routing**: All routes redirect to root (`/`) for React Router to handle client-side routing
+- **Simplified Configuration**: Minimal configuration prevents conflicts and browser caching issues
+- **Single Configuration File**: Only one `vercel.json` at repository root (not in `rsp-ui` directory)
 - **Framework Detection**: Vercel automatically detects Vite configuration
+
+**Important Notes:**
+- The rewrite rule uses `"destination": "/"` instead of `"/index.html"` for better compatibility with React Router
+- Cache control headers have been removed to prevent browser caching from hiding deployment updates
+- Only one `vercel.json` file should exist (at repository root) to avoid configuration conflicts
 
 ## Troubleshooting
 
@@ -187,17 +183,21 @@ npm run build
 
 **Solution**: 
 1. Check the browser console for errors
-2. Verify the `vercel.json` rewrites are correct
+2. Verify the `vercel.json` rewrites are correct (should use `"destination": "/"`)
 3. Ensure `dist` folder was generated correctly
+4. Clear browser cache or try incognito mode
+5. The configuration has been simplified to prevent this common issue
 
 ### Routing Not Working
 
-**Issue**: Direct navigation to routes (e.g., `/dashboard`) returns 404
+**Issue**: Direct navigation to routes (e.g., `/dashboard`) returns 404 or blank page
 
-**Solution**: The `vercel.json` rewrites should handle this. If not:
-1. Verify `vercel.json` exists in the `rsp-ui` directory
-2. Check that rewrites are properly configured
-3. Redeploy after making changes
+**Solution**: The simplified `vercel.json` rewrites should handle this. If not:
+1. Verify `vercel.json` exists at the **repository root** (not in `rsp-ui` directory)
+2. Check that rewrites use `"destination": "/"` (not `"/index.html"`)
+3. Ensure there's only ONE `vercel.json` file to avoid conflicts
+4. Clear Vercel build cache and redeploy (use `--force` flag or dashboard)
+5. Check that BrowserRouter (not HashRouter) is used in App.tsx
 
 ### Assets Not Loading
 

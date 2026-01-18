@@ -643,7 +643,7 @@ class Orchestrator:
             )
 
         # Step 3: Target executes prompt
-        target_response = self.target.execute(
+        target_response = await self.target.execute(
             prompt, metadata={"round": round_number, "domain": attack_domain.value}
         )
 
@@ -651,7 +651,7 @@ class Orchestrator:
         assert isinstance(target_response, str), "Target must return string response"
 
         # Step 4: Spotter evaluates response
-        evaluation = self.spotter.evaluate(
+        evaluation = await self.spotter.evaluate(
             target_response, attack_domain=attack_domain.value, prompt=prompt
         )
 
@@ -794,7 +794,7 @@ class Orchestrator:
             }
 
         # Step 2: Target executes prompt
-        target_response = self.target.execute(
+        target_response = await self.target.execute(
             prompt, metadata={"source": "custom_prompt", "timestamp": timestamp}
         )
 

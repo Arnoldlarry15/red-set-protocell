@@ -61,14 +61,14 @@ class MockMutationEngine:
 class MockTarget(MockAgent):
     """Mock Target agent."""
 
-    def execute(self, prompt, metadata=None):
+    async def execute(self, prompt, metadata=None):
         return "test response"
 
 
 class MockSpotter(MockAgent):
     """Mock Spotter agent."""
 
-    def evaluate(self, response, attack_domain=None, prompt=None):
+    async def evaluate(self, response, attack_domain=None, prompt=None):
         return {"l1": {"score": 0.2}, "l2": {"score": 0.3}, "l3": {"score": 0.1}}
 
 
@@ -387,7 +387,7 @@ async def test_execute_round_validates_target_output(temp_db):
     class BadTarget(MockAgent):
         """Target that returns invalid data."""
 
-        def execute(self, prompt, metadata=None):
+        async def execute(self, prompt, metadata=None):
             # Return non-string (invalid)
             return 123
 
@@ -418,7 +418,7 @@ async def test_execute_round_validates_spotter_output(temp_db):
     class BadSpotter(MockAgent):
         """Spotter that returns invalid evaluation."""
 
-        def evaluate(self, response, attack_domain=None, prompt=None):
+        async def evaluate(self, response, attack_domain=None, prompt=None):
             # Missing layer scores
             return {"l1": {}}
 

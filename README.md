@@ -1200,7 +1200,46 @@ Both deployment options coexist in the same project files. No conflicts.
 
 ### Docker Deployment
 
-#### Single Container
+Red Set ProtoCell provides full Docker support with backend and frontend services orchestrated via Docker Compose.
+
+#### Quick Start with Docker
+
+```bash
+# 1. Copy environment file
+cp .env.example .env
+
+# 2. Edit .env and add your API keys
+nano .env
+
+# 3. Start all services
+docker compose up --build
+
+# Access:
+# - Frontend: http://localhost:3000
+# - Backend API: http://localhost:8000
+# - API Docs: http://localhost:8000/api/docs
+```
+
+#### Docker Architecture
+
+```
+red-set-protocell/
+├── backend/
+│   ├── Dockerfile          # FastAPI backend image
+│   └── app/
+├── frontend/
+│   ├── Dockerfile          # React + nginx image
+│   └── src/
+├── docker-compose.yml      # Service orchestration
+└── .env                    # Configuration (create from .env.example)
+```
+
+**Services:**
+- **Backend**: FastAPI on port 8000
+- **Frontend**: React (built) + nginx on port 3000
+- **Networking**: Internal Docker network with service name resolution
+
+#### Single Container (Backend Only)
 
 ```bash
 cd backend
@@ -1208,27 +1247,71 @@ cd backend
 # Build image
 docker build -t rsp-backend:latest .
 
-# Run container
+# Run backend API server
+docker run -d \
+  -p 8000:8000 \
+  -e OPENAI_API_KEY="sk-..." \
+  -e RSP_DEMO_PASSWORD="changeme" \
+  rsp-backend:latest
+
+# Run CLI session
 docker run -it --rm \
   -e OPENAI_API_KEY="sk-..." \
   rsp-backend:latest \
   python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
-#### Docker Compose
+#### Full System with Docker Compose
+
+The root `docker-compose.yml` orchestrates both backend and frontend:
 
 ```bash
-cd backend
+# Start all services in foreground
+docker compose up --build
 
-# Set environment variables
-export OPENAI_API_KEY="sk-..."
+# Start in background (detached)
+docker compose up -d --build
 
-# Run with Docker Compose
-docker-compose run rsp-backend python -m app.main \
-  --backend openai \
-  --api-key $OPENAI_API_KEY \
-  --rounds 10
+# View logs
+docker compose logs -f
+
+# Stop services
+docker compose down
+
+# Stop and remove volumes
+docker compose down -v
 ```
+
+#### Configuration
+
+All configuration is done via the `.env` file. Required variables:
+
+```bash
+# API Keys (at least one required)
+OPENAI_API_KEY=sk-your-key-here
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+
+# Security
+RSP_DEMO_PASSWORD=your-secure-password
+
+# Optional
+RSP_ENVIRONMENT=development
+RSP_ALLOWED_ORIGINS=http://localhost:3000
+RSP_REQUIRE_AUTH=false
+```
+
+#### Platform Support
+
+This Docker setup runs on:
+- **Local**: Docker Desktop (Mac/Windows/Linux)
+- **Cloud VMs**: AWS EC2, GCP Compute Engine, Azure VMs
+- **Container Platforms**: Fly.io, Railway, Render
+- **Kubernetes**: Use as base for K8s deployments
+- **AWS ECS/Fargate**: Compatible with ECS task definitions
+
+#### Detailed Documentation
+
+For comprehensive Docker documentation including troubleshooting, production deployment, and advanced configuration, see [DOCKER.md](DOCKER.md).
 
 ### Production Deployment Considerations
 

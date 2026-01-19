@@ -83,12 +83,12 @@ def validate_production_environment():
     if not require_auth:
         errors.append("RSP_REQUIRE_AUTH must be 'true' in production")
 
-    # Warn about demo password
-    demo_password = os.getenv("RSP_DEMO_PASSWORD", "changeme")
-    if demo_password == "changeme":
+    # Require demo password to be set
+    demo_password = os.getenv("RSP_DEMO_PASSWORD")
+    if not demo_password:
         errors.append(
-            "RSP_DEMO_PASSWORD must be changed from default 'changeme' in production. "
-            "This is a critical security vulnerability."
+            "RSP_DEMO_PASSWORD environment variable must be set. "
+            "This is a critical security requirement."
         )
 
     if errors:
@@ -265,8 +265,14 @@ def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = D
 # SECURITY WARNING: Demo authentication system
 # This uses proper password hashing but still stores users in memory
 # IN PRODUCTION: Use a proper database (PostgreSQL) with proper user management
-# Set RSP_DEMO_PASSWORD environment variable to change the demo password
-DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD", "changeme")
+# Set RSP_DEMO_PASSWORD environment variable to set the demo password
+DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD")
+
+if not DEMO_PASSWORD_PLAIN:
+    raise ValueError(
+        "RSP_DEMO_PASSWORD environment variable must be set. "
+        "This is a critical security requirement."
+    )
 
 # Initialize users with hashed passwords
 users: Dict[str, Dict[str, Any]] = {}

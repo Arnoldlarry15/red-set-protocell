@@ -19,7 +19,7 @@ client = TestClient(app)
 
 # Demo credentials for tests
 DEMO_USERNAME = "admin"
-DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD", "changeme")
+DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD")
 
 
 class TestInfraDashboard:

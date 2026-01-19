@@ -246,6 +246,56 @@ az container create \
     RSP_JWT_SECRET=$RSP_JWT_SECRET
 ```
 
+### Option 4: Serverless Deployment (Vercel)
+
+Red Set ProtoCell supports deployment on Vercel using serverless Python functions.
+
+See [Vercel Serverless Guide](./VERCEL_SERVERLESS_GUIDE.md) for detailed instructions.
+
+**Quick Deploy:**
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy from repository root
+vercel --prod
+```
+
+**Key Features:**
+- ✅ Serverless API functions
+- ✅ React + Vite frontend with zero CORS issues
+- ✅ Auto-scaling and pay-per-request pricing
+- ✅ Production-ready security
+
+### Option 5: Serverless Deployment (Netlify)
+
+Red Set ProtoCell also supports deployment on Netlify using serverless Python functions.
+
+See [Netlify Deployment Guide](./netlify.md) for detailed instructions.
+
+**Quick Deploy:**
+
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Login to Netlify
+netlify login
+
+# Initialize and deploy
+netlify init
+netlify deploy --prod
+```
+
+**Key Features:**
+- ✅ Clearer function boundaries
+- ✅ Easy debugging
+- ✅ Auto-scaling serverless functions
+- ✅ Compatible with same codebase as Vercel
+
+**No Vendor Lock-In:** Red Set ProtoCell supports both Vercel and Netlify using the same project files. Choose what works best for you, or use both!
+
 ## Security Checklist
 
 Before deploying to production:

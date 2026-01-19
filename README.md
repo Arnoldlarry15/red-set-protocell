@@ -1086,9 +1086,27 @@ async def test_openai_integration():
 
 ## 🚢 Deployment
 
-### Vercel Serverless Deployment (Recommended) 🚀
+Red Set ProtoCell supports deployment on both **Vercel** and **Netlify** using serverless Python functions. **No vendor lock-in required.**
 
-Red Set ProtoCell is now optimized for Vercel's serverless architecture with:
+### Serverless Deployment Options
+
+Choose your preferred platform:
+
+| Feature | Vercel | Netlify |
+|---------|--------|---------|
+| Cold Starts | ~0.5-1s | ~1-2s |
+| Debugging | More abstracted | Clearer boundaries |
+| Configuration | `vercel.json` | `netlify.toml` |
+| API Path | `/api/*` | `/.netlify/functions/*` |
+| Redirect Support | ✅ | ✅ (maps `/api/*` to functions) |
+
+**Both work great!** Choose based on your preference or use both.
+
+---
+
+### Option 1: Vercel Deployment 🚀
+
+Red Set ProtoCell is optimized for Vercel's serverless architecture with:
 - **Serverless API functions** in `/api` directory
 - **React + Vite frontend** with zero CORS issues
 - **Auto-scaling** and **pay-per-request** pricing
@@ -1104,25 +1122,11 @@ Red Set ProtoCell is now optimized for Vercel's serverless architecture with:
    - `JWT_SECRET`: Random 32+ character string
    - `RSP_DEMO_PASSWORD`: Secure password (change from default!)
    - `RSP_ENVIRONMENT`: `production`
-   - See [docs/deployment/VERCEL_SERVERLESS_GUIDE.md](docs/deployment/VERCEL_SERVERLESS_GUIDE.md) for complete list
 5. **Deploy**
 
 Your app will be live at `https://your-project.vercel.app` in minutes!
 
-**New Serverless Structure:**
-- `frontend/` - React/Vite frontend (builds to static files)
-- `api/` - Python serverless functions (one file = one endpoint)
-- `backend/` - Legacy FastAPI server (kept for reference/local dev)
-- `vercel.json` - Serverless deployment configuration
-
-📖 **Complete Guide**: See [docs/deployment/VERCEL_SERVERLESS_GUIDE.md](docs/deployment/VERCEL_SERVERLESS_GUIDE.md) for:
-- Serverless architecture explanation
-- API endpoint documentation
-- Environment variable configuration
-- Security best practices
-- Migration from Flask/FastAPI
-
-#### Command Line Deployment
+#### Command Line Deployment (Vercel)
 
 ```bash
 # Install Vercel CLI
@@ -1132,11 +1136,67 @@ npm install -g vercel
 vercel --prod
 ```
 
-### Web UI Deployment (Legacy - Vercel Static)
+📖 **Complete Guide**: See [docs/deployment/vercel.md](docs/deployment/vercel.md)
 
-For the previous static deployment setup, see [VERCEL_SETUP.md](VERCEL_SETUP.md).
+---
 
-Note: The serverless deployment above is the recommended approach as it includes both frontend and backend in a single deployment.
+### Option 2: Netlify Deployment 🌐
+
+Red Set ProtoCell also supports Netlify's serverless architecture with:
+- **Serverless Python functions** in `netlify/functions/` directory
+- **Clearer function boundaries** - one file = one endpoint
+- **Easier debugging** with explicit function files
+- **Same API compatibility** via redirect rules
+
+#### Quick Deploy to Netlify
+
+1. **Push to GitHub** (if not already done)
+2. **Go to [Netlify Dashboard](https://app.netlify.com/)**
+3. **Click "Add new site" → "Import an existing project"**
+4. **Connect to GitHub and select your repository**
+   - Repository: `Arnoldlarry15/red-set-protocell`
+5. **Configure Environment Variables**
+   - Go to Site Settings → Environment Variables
+   - `JWT_SECRET`: Random 32+ character string
+   - `RSP_DEMO_PASSWORD`: Secure password
+   - `RSP_ENVIRONMENT`: `production`
+6. **Deploy**
+
+Your app will be live at `https://your-site.netlify.app` in minutes!
+
+#### Command Line Deployment (Netlify)
+
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Login to Netlify
+netlify login
+
+# Initialize and deploy
+netlify init
+netlify deploy --prod
+```
+
+📖 **Complete Guide**: See [docs/deployment/netlify.md](docs/deployment/netlify.md)
+
+---
+
+**Repository Structure for Both Platforms:**
+
+```
+/
+├── frontend/              # React/Vite frontend (shared)
+├── api/                  # Vercel serverless functions
+├── netlify/functions/    # Netlify serverless functions
+├── backend/              # Legacy FastAPI (local dev reference)
+├── vercel.json          # Vercel configuration
+└── netlify.toml         # Netlify configuration
+```
+
+Both deployment options coexist in the same project files. No conflicts.
+
+---
 
 ### Docker Deployment
 

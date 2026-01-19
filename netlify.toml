@@ -1,0 +1,27 @@
+# Netlify Configuration for Red Set ProtoCell
+# This configuration enables deployment of both frontend and serverless functions
+
+[build]
+  base = "/"
+  publish = "frontend/dist"
+  command = "cd frontend && npm install && npm run build"
+
+[functions]
+  directory = "netlify/functions"
+
+# Redirect /api/* to Netlify functions for API compatibility
+# This allows the same API paths to work on both Vercel and Netlify
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Environment variables (set these in Netlify Dashboard)
+# Required:
+#   JWT_SECRET - Secret key for JWT token generation (32+ characters)
+#   RSP_DEMO_PASSWORD - Password for demo authentication
+#   RSP_ENVIRONMENT - Set to "production" or "development"
+# Optional (for actual red teaming):
+#   OPENAI_API_KEY - OpenAI API key for target model
+#   ANTHROPIC_API_KEY - Anthropic API key for target model
+#   ADMIN_TOKEN - Admin token for administrative operations

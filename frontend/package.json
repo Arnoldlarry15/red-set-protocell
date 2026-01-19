@@ -11,7 +11,7 @@
     "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
-    "@types/react-window": "^1.8.8",
+    "@types/react-window": "^2.0.0",
     "axios": "^1.6.2",
     "framer-motion": "^10.16.16",
     "lucide-react": "^0.294.0",

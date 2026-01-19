@@ -296,14 +296,13 @@ docker compose up -d
 
 ## Next Steps
 
-- **Production Deployment**: See [deployment guides](../docs/deployment/)
-- **Configuration Reference**: See [backend/.env.example](backend/.env.example)
+- **Configuration Reference**: See `.env.example` for all environment variables
 - **API Documentation**: http://localhost:8000/api/docs (dev mode)
-- **Architecture**: See [backend/README.md](backend/README.md)
+- **Security**: See `SECURITY.md` for security best practices
 
 ## Support
 
 For issues or questions:
-- GitHub Issues: [Report a bug](../../issues)
-- Documentation: [Full docs](../docs/)
-- Security: See [SECURITY.md](../SECURITY.md)
+- GitHub Issues: Report a bug or request features
+- Documentation: See `README.md` for general documentation
+- Security: See `SECURITY.md` for responsible disclosure

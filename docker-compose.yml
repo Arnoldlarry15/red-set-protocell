@@ -19,6 +19,8 @@ services:
     build:
       context: ./frontend
       args:
+        # Frontend is static, so API URL must be accessible from user's browser
+        # Use localhost when running locally, or set to your domain in production
         - VITE_API_BASE_URL=http://localhost:8000
     ports:
       - "3000:80"

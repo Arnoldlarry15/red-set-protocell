@@ -33,9 +33,11 @@ Each file in `netlify/functions/` becomes one endpoint. No Flask server, no back
 │
 ├── netlify/
 │   └── functions/
-│       ├── health.py
-│       ├── auth.py
-│       └── scan.py
+│       ├── health.py      # Health check endpoint
+│       ├── info.py        # API information endpoint
+│       ├── metrics.py     # Metrics endpoint
+│       ├── auth.py        # Authentication endpoint
+│       └── scan.py        # Red teaming scan endpoint
 │
 ├── netlify.toml
 └── requirements.txt
@@ -145,6 +147,8 @@ def handler(event, context):
 Each file becomes an endpoint:
 
 - **File**: `netlify/functions/health.py` → **URL**: `/.netlify/functions/health`
+- **File**: `netlify/functions/info.py` → **URL**: `/.netlify/functions/info`
+- **File**: `netlify/functions/metrics.py` → **URL**: `/.netlify/functions/metrics`
 - **File**: `netlify/functions/auth.py` → **URL**: `/.netlify/functions/auth`
 - **File**: `netlify/functions/scan.py` → **URL**: `/.netlify/functions/scan`
 

@@ -11,7 +11,8 @@ from fastapi.testclient import TestClient
 
 # Set demo password for tests before importing app
 # gitguardian:ignore - This is a test password, not a real secret
-os.environ["RSP_DEMO_PASSWORD"] = "test_demo_password_not_real"
+TEST_DEMO_PASSWORD = "test_demo_password_not_real"
+os.environ["RSP_DEMO_PASSWORD"] = TEST_DEMO_PASSWORD
 
 from app.api_server import app  # noqa: E402
 
@@ -19,7 +20,7 @@ client = TestClient(app)
 
 # Demo credentials for tests
 DEMO_USERNAME = "admin"
-DEMO_PASSWORD = os.getenv("RSP_DEMO_PASSWORD")
+DEMO_PASSWORD = TEST_DEMO_PASSWORD
 
 
 class TestInfraDashboard:

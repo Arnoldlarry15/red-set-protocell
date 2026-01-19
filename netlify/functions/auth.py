@@ -50,7 +50,8 @@ def handler(event, context):
             }
         
         # Check password (use environment variable)
-        expected_password = os.environ.get("RSP_DEMO_PASSWORD", "demo123")
+        # Demo password - in production, use database with bcrypt hashes
+        expected_password = os.environ.get("RSP_DEMO_PASSWORD", "changeme")
         
         if password != expected_password:
             return {
@@ -63,7 +64,18 @@ def handler(event, context):
             }
         
         # Generate simple token
-        jwt_secret = os.environ.get("JWT_SECRET", "default-secret-change-me")
+        jwt_secret = os.environ.get("JWT_SECRET")
+        
+        # Fail fast if no JWT secret in production
+        if not jwt_secret:
+            return {
+                "statusCode": 500,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({"error": "JWT_SECRET environment variable must be set"})
+            }
         expiry = datetime.now(timezone.utc) + timedelta(hours=24)
         
         # Simple HMAC-based token

@@ -16,71 +16,61 @@ The `vercel.json` configuration was using an incomplete/legacy build configurati
 4. **Legacy Pattern**: Used the older `builds` array pattern instead of the modern root-level configuration
 
 ## Solution
-Updated `vercel.json` to use the modern Vercel configuration pattern with explicit build instructions:
+Updated `vercel.json` to use the modern Vercel framework mode configuration:
 
 ### Changes Made:
 ```json
 {
-  "buildCommand": "cd frontend && npm run build",          // Added: Explicit build command
-  "outputDirectory": "frontend/dist",                       // Added: Where Vercel serves files from
-  "installCommand": "cd frontend && npm install",          // Added: Explicit install command
-  "framework": "vite",                                      // Added: Framework detection hint
-  "builds": [
-    {
-      "src": "api/*.py",                                    // Kept: Python API functions
-      "use": "@vercel/python"
-    }
-  ],
+  "framework": "vite",                                      // Framework detection for auto-optimization
+  "buildCommand": "cd frontend && npm run build",          // Explicit build command
+  "outputDirectory": "frontend/dist",                      // Where Vercel serves files from
+  "installCommand": "cd frontend && npm install",          // Explicit install command
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/((?!api).*)",                                // Excludes /api/* paths
-      "destination": "/index.html"
+      "destination": "/api/$1"                             // Route API calls to serverless functions
     }
   ]
 }
 ```
 
-### What Was Removed:
-- Removed the redundant `@vercel/static-build` build entry
-- Removed nested `config.distDir` which was causing confusion
-- Removed `"src": "frontend/package.json"` which is now handled by root-level fields
+**Key Changes:**
+- **Removed `builds` section**: This was conflicting with framework mode. Vercel now auto-detects Python functions in `/api`
+- **Removed manual `/index.html` rewrite**: Vercel automatically handles this in framework mode
+- **Simplified configuration**: Uses Vercel's native framework support instead of manual routing
 
-### Important Pattern: Negative Lookahead for API Routes
-The catch-all rewrite uses a negative lookahead pattern `/((?!api).*)` to exclude API routes:
-- This prevents the catch-all from intercepting `/api/*` requests
-- Ensures API endpoints are always routed correctly to serverless functions
-- Provides explicit protection even though Vercel processes rewrites in order
+### What Was Removed:
+- Removed the `builds` array (conflicted with framework mode)
+- Removed manual SPA routing rewrite (now handled automatically)
+- Removed redundant routing patterns
 
 ## Why This Works
 
-1. **Explicit Output Directory**: `outputDirectory: "frontend/dist"` tells Vercel exactly where to find the built static files
-2. **Proper Build Commands**: Explicit `buildCommand` and `installCommand` ensure consistent builds
-3. **Framework Optimization**: `framework: "vite"` allows Vercel to apply Vite-specific optimizations
-4. **Modern Rewrites API**: Uses `rewrites` (modern Vercel API) instead of deprecated `routes`
-5. **Correct SPA Routing**: Routes all non-API paths to `/index.html` for proper React SPA behavior
-6. **Based on Documentation**: Inspired by the configuration pattern in `docs/deployment/VERCEL_SERVERLESS_GUIDE.md` with corrections for proper SPA routing
+1. **Framework Mode**: Using `framework: "vite"` enables Vercel's native framework support
+2. **Auto-Detection**: Vercel automatically detects and deploys Python serverless functions in `/api` directory
+3. **Automatic SPA Routing**: Vercel automatically serves `/index.html` for all non-API routes in framework mode
+4. **Explicit Output Directory**: `outputDirectory: "frontend/dist"` tells Vercel exactly where to find the built static files
+5. **Proper Build Commands**: Explicit `buildCommand` and `installCommand` ensure consistent builds
+6. **Simplified Configuration**: No conflicting deployment modes - uses only framework mode
 
-**Note**: The documentation shows `"dest": "/frontend/$1"` which would be incorrect for Vite builds. When `outputDirectory` is set to `frontend/dist`, Vercel serves files from the deployment root, so the correct catch-all is to `/index.html` for SPA routing.
+**Key Insight**: When `builds` exists, Vercel ignores the framework settings. By removing `builds`, we let Vercel use its optimized framework mode which handles everything automatically.
 
 ## Testing & Verification
 
 - ✅ JSON syntax validated
-- ✅ Configuration matches documented best practices
+- ✅ Configuration matches Vercel best practices for framework mode
 - ✅ API endpoints remain properly configured
-- ✅ SPA routing preserved with catch-all rewrite to `/index.html`
+- ✅ SPA routing handled automatically by framework mode
 
 ## Expected Result
 
 After redeploying with this configuration:
-1. Vercel will correctly build the frontend from the `frontend/` directory
+1. Vercel will correctly build the frontend from the `frontend/` directory using Vite
 2. Built files will be served from `frontend/dist/`
-3. All routes will properly serve the React SPA
-4. API endpoints at `/api/*` will continue to work
-5. No more 404 errors for the main application
+3. The root path `/` will automatically serve `/index.html`
+4. React Router will handle all client-side routing
+5. API endpoints at `/api/*` will be routed to Python serverless functions
+6. No more 404 errors or "unused build settings" warnings
 
 ## References
 

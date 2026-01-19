@@ -86,30 +86,26 @@ The `vercel.json` file wires frontend and backend together:
 
 ```json
 {
+  "framework": "vite",
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "cd frontend && npm install",
-  "framework": "vite",
-  "builds": [
+  "rewrites": [
     {
-      "src": "api/*.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/frontend/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }
 ```
 
-This routing eliminates CORS hell—frontend and backend share the same origin.
+**Key Points:**
+- **Framework mode**: Uses `framework: "vite"` to enable Vercel's native Vite support
+- **No `builds` section**: Vercel auto-detects Python functions in `/api` directory
+- **Automatic static serving**: Vercel automatically serves `/index.html` for the root and handles SPA routing
+- **API routing**: Only `/api/*` paths need explicit routing to serverless functions
+
+This configuration eliminates CORS hell—frontend and backend share the same origin.
 
 ## Frontend API Calls
 

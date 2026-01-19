@@ -7,83 +7,172 @@ Users were experiencing "404: NOT_FOUND" errors when accessing the deployed Red 
 **Error ID:** `cle1:cle1::wrjqx-1768831477921-405bace209af`
 
 ## Root Cause
-The `vercel.json` configuration was using an incomplete/legacy build configuration that prevented Vercel from properly locating and serving the built frontend files.
+**When a `builds` array exists in `vercel.json`, Vercel ignores all root-level build settings** (`buildCommand`, `outputDirectory`, `installCommand`, `framework`).
 
-### Issues with Previous Configuration:
-1. **Missing `outputDirectory`**: No root-level `outputDirectory` field to tell Vercel where to find built files
-2. **Incomplete Build Config**: Used `@vercel/static-build` with nested `distDir` but lacked explicit build commands
-3. **Missing Framework Hint**: No `framework` field to help Vercel optimize the build process
-4. **Legacy Pattern**: Used the older `builds` array pattern instead of the modern root-level configuration
+The previous configuration had:
+- Root-level build settings for the frontend (which were **completely ignored**)
+- Only `api/*.py` in the `builds` array
+- Result: API functions were built, but **frontend was never built** → 404 at `/`
+
+### Critical Vercel Behavior:
+> ⚠️ **"Due to builds existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply."**
+
+This means:
+1. **With `builds` array present**: Root-level settings are ignored, only items in `builds` are processed
+2. **Without `builds` array**: Root-level settings (or Vercel UI settings) are used
+3. **Mixed approach doesn't work**: You can't have both `builds` array AND root-level build commands
 
 ## Solution
-Updated `vercel.json` to use the modern Vercel configuration pattern with explicit build instructions:
+**Add the frontend to the `builds` array** so Vercel actually builds it. When using `builds`, you must explicitly include everything that needs to be built.
 
-### Changes Made:
+### Final Working Configuration:
 ```json
 {
-  "buildCommand": "cd frontend && npm run build",          // Added: Explicit build command
-  "outputDirectory": "frontend/dist",                       // Added: Where Vercel serves files from
-  "installCommand": "cd frontend && npm install",          // Added: Explicit install command
-  "framework": "vite",                                      // Added: Framework detection hint
   "builds": [
     {
-      "src": "api/*.py",                                    // Kept: Python API functions
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    },
+    {
+      "src": "api/*.py",
       "use": "@vercel/python"
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
     },
     {
-      "source": "/((?!api).*)",                                // Excludes /api/* paths
-      "destination": "/index.html"
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
 ```
 
-### What Was Removed:
-- Removed the redundant `@vercel/static-build` build entry
-- Removed nested `config.distDir` which was causing confusion
-- Removed `"src": "frontend/package.json"` which is now handled by root-level fields
+### What Changed:
+1. **Removed root-level build settings** - They were being ignored anyway due to `builds` array
+2. **Added frontend to `builds`** - Now Vercel actually builds the React/Vite app
+   - Uses `@vercel/static-build` which looks for `vercel-build` script in package.json
+   - Sets `distDir: "dist"` to point to Vite's output directory
+3. **Switched from `rewrites` to `routes`** - When using `builds` array, `routes` is the correct API
+4. **Added filesystem handler** - `{ "handle": "filesystem" }` ensures static assets are served correctly
+5. **Simplified catch-all** - SPA fallback to `/index.html` for React Router
 
-### Important Pattern: Negative Lookahead for API Routes
-The catch-all rewrite uses a negative lookahead pattern `/((?!api).*)` to exclude API routes:
-- This prevents the catch-all from intercepting `/api/*` requests
-- Ensures API endpoints are always routed correctly to serverless functions
-- Provides explicit protection even though Vercel processes rewrites in order
+### Key Patterns:
+- **`@vercel/static-build`**: Automatically runs `npm install` then `npm run vercel-build` (or `build`)
+- **`distDir: "dist"`**: Tells Vercel where Vite outputs built files (relative to `frontend/`)
+- **`handle: "filesystem"`**: Critical for serving static assets (JS, CSS, images) before SPA fallback
+- **Routes order matters**: API routes first, then filesystem, then SPA catch-all
 
 ## Why This Works
 
-1. **Explicit Output Directory**: `outputDirectory: "frontend/dist"` tells Vercel exactly where to find the built static files
-2. **Proper Build Commands**: Explicit `buildCommand` and `installCommand` ensure consistent builds
-3. **Framework Optimization**: `framework: "vite"` allows Vercel to apply Vite-specific optimizations
-4. **Modern Rewrites API**: Uses `rewrites` (modern Vercel API) instead of deprecated `routes`
-5. **Correct SPA Routing**: Routes all non-API paths to `/index.html` for proper React SPA behavior
-6. **Based on Documentation**: Inspired by the configuration pattern in `docs/deployment/VERCEL_SERVERLESS_GUIDE.md` with corrections for proper SPA routing
+1. **Frontend is Actually Built**: Including `frontend/package.json` in `builds` array ensures Vercel runs the build process
+2. **Explicit Build Targets**: Both frontend and API are explicitly listed, no ambiguity
+3. **Proper Builder Usage**: `@vercel/static-build` is designed for Node.js frontends, automatically handles npm install/build
+4. **Correct Routing with `routes`**: When `builds` array exists, must use `routes` (not `rewrites`)
+5. **Filesystem Handling**: `{ "handle": "filesystem" }` serves static assets before falling back to SPA
+6. **SPA Support**: Catch-all to `/index.html` enables React Router to handle client-side routing
 
-**Note**: The documentation shows `"dest": "/frontend/$1"` which would be incorrect for Vite builds. When `outputDirectory` is set to `frontend/dist`, Vercel serves files from the deployment root, so the correct catch-all is to `/index.html` for SPA routing.
+### How Vercel Processes This:
+1. **Build Phase**:
+   - Builds `frontend/package.json` → runs `npm run vercel-build` → outputs to `frontend/dist/`
+   - Builds each `api/*.py` → creates serverless functions at `/api/*`
+2. **Request Phase** (routes processed in order):
+   - `/api/health` → Matches route 1 → Serverless function
+   - `/main.js` → Matches filesystem handler → Serves static file
+   - `/dashboard` → No match → Falls through to catch-all → Serves `/index.html` (React Router takes over)
+
+### Common Pitfalls Avoided:
+- ❌ **Mixing `builds` with root-level settings** - Root settings are ignored when `builds` exists
+- ❌ **Using `rewrites` with `builds`** - Must use `routes` when `builds` array is present
+- ❌ **Forgetting `handle: "filesystem"`** - Static assets would 404 without this
+- ✅ **Explicit `builds` array** - Clear, predictable, works every time
 
 ## Testing & Verification
 
+### Configuration Validation:
 - ✅ JSON syntax validated
-- ✅ Configuration matches documented best practices
-- ✅ API endpoints remain properly configured
-- ✅ SPA routing preserved with catch-all rewrite to `/index.html`
+- ✅ `frontend/package.json` has `vercel-build` script
+- ✅ `builds` array includes both frontend and API
+- ✅ `routes` array has proper order (API → filesystem → SPA)
+- ✅ No conflicting root-level build settings
+
+### Pre-Deployment Checklist:
+1. ✅ Frontend has `vercel-build` script in package.json
+2. ✅ Vite outputs to `dist/` directory (configured in vite.config.ts)
+3. ✅ API functions in `/api` directory use handler pattern
+4. ✅ Routes prioritize API endpoints before SPA fallback
+
+### Expected Build Output:
+```
+Building frontend/package.json (Static Build)
+  Installing dependencies...
+  Running "npm run vercel-build"
+  Build completed: frontend/dist/
+  
+Building api/*.py (Python Serverless)
+  Created functions:
+    /api/health
+    /api/info
+    /api/auth
+    /api/scan
+    /api/metrics
+```
 
 ## Expected Result
 
 After redeploying with this configuration:
-1. Vercel will correctly build the frontend from the `frontend/` directory
-2. Built files will be served from `frontend/dist/`
-3. All routes will properly serve the React SPA
-4. API endpoints at `/api/*` will continue to work
-5. No more 404 errors for the main application
+
+### ✅ What Should Work:
+1. **Root route (`/`)**: Serves `index.html` from `frontend/dist/` → React app loads
+2. **Static assets**: `/assets/*.js`, `/assets/*.css` → Served via filesystem handler
+3. **SPA routes**: `/dashboard`, `/settings` → Served `index.html`, React Router handles navigation
+4. **API endpoints**: `/api/health`, `/api/scan`, etc. → Serverless functions respond
+5. **CORS**: No CORS issues (frontend and API share same origin)
+
+### ❌ Previous Behavior (404):
+- `/` → 404 NOT_FOUND (frontend never built)
+- `/dashboard` → 404 NOT_FOUND
+- `/api/health` → ✅ Worked (API was built, just frontend missing)
+
+### 🎯 Key Success Metrics:
+- Homepage loads without 404
+- React app renders
+- Browser console shows no 404 errors for static assets
+- API calls from frontend work without CORS errors
 
 ## References
 
-- **Vercel Static Build Documentation**: https://vercel.com/docs/concepts/projects/build-step
+- **Vercel Builds Documentation**: https://vercel.com/docs/build-step
+- **Vercel Static Build (@vercel/static-build)**: https://vercel.com/docs/frameworks/vite
 - **Repository Guide**: `docs/deployment/VERCEL_SERVERLESS_GUIDE.md`
 - **Configuration Analysis**: `VERCEL_CONFIG_ANALYSIS.md`
+- **Problem Statement**: Based on real-world Vercel 404 troubleshooting patterns
+
+## Additional Notes
+
+### Why Not Use Root-Level Settings?
+You could alternatively remove the `builds` array entirely and use only root-level settings:
+```json
+{
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install"
+}
+```
+
+**However**, this doesn't work when you need **both** a frontend AND serverless API functions. The `builds` array is the only way to explicitly build multiple things.
+
+### Alternative: Root Directory in Vercel UI
+Setting "Root Directory" to `frontend` in Vercel project settings would work for a frontend-only deployment, but we need to deploy the API too, so we keep everything at the root and use `builds` to specify both.
+
+### Vercel's Auto-Detection
+Vercel can auto-detect frameworks, but auto-detection doesn't work reliably in monorepos with multiple buildable targets. Being explicit with the `builds` array eliminates ambiguity.

@@ -69,3 +69,6 @@ telemetry_exports/
 /tmp/
 *.tmp
 rsp-core/backend/coverage.xml
+
+# Vercel local metadata (do not commit)
+.vercel/

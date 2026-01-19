@@ -1,5 +1,18 @@
 # Vercel Deployment Guide
 
+> **⚠️ ARCHIVED DOCUMENTATION - OUTDATED**
+> 
+> This guide references the **old FastAPI monolith architecture** and is kept for historical reference only.
+> 
+> **For current deployment:** See [`/docs/deployment/VERCEL_SERVERLESS_GUIDE.md`](/docs/deployment/VERCEL_SERVERLESS_GUIDE.md)
+> 
+> **Issues with this guide:**
+> - Routes to `/backend/main.py` (FastAPI monolith) instead of `/api/*.py` (serverless functions)
+> - Uses deprecated Vercel function pattern for FastAPI
+> - Configuration shown here conflicts with current `/vercel.json` at repository root
+
+---
+
 ## Repository Structure
 
 The repository has been reorganized for Vercel deployment:

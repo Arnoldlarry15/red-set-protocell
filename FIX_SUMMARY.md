@@ -37,7 +37,7 @@ Updated `vercel.json` to use the modern Vercel configuration pattern with explic
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api).*)",                                // Excludes /api/* paths
       "destination": "/index.html"
     }
   ]
@@ -48,6 +48,12 @@ Updated `vercel.json` to use the modern Vercel configuration pattern with explic
 - Removed the redundant `@vercel/static-build` build entry
 - Removed nested `config.distDir` which was causing confusion
 - Removed `"src": "frontend/package.json"` which is now handled by root-level fields
+
+### Important Pattern: Negative Lookahead for API Routes
+The catch-all rewrite uses a negative lookahead pattern `/((?!api).*)` to exclude API routes:
+- This prevents the catch-all from intercepting `/api/*` requests
+- Ensures API endpoints are always routed correctly to serverless functions
+- Provides explicit protection even though Vercel processes rewrites in order
 
 ## Why This Works
 

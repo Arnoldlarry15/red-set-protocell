@@ -1085,29 +1085,41 @@ async def test_openai_integration():
 
 ## 🚢 Deployment
 
-### Web UI Deployment (Vercel)
+### Vercel Serverless Deployment (Recommended) 🚀
 
-The Red Set ProtoCell can be deployed to Vercel with both frontend and backend:
+Red Set ProtoCell is now optimized for Vercel's serverless architecture with:
+- **Serverless API functions** in `/api` directory
+- **React + Vite frontend** with zero CORS issues
+- **Auto-scaling** and **pay-per-request** pricing
+- **Production-ready** security and monitoring
 
-#### Quick Deploy
+#### Quick Deploy to Vercel
 
 1. **Push to GitHub** (if not already done)
 2. **Go to [Vercel Dashboard](https://vercel.com/)**
 3. **Import your repository**
    - Select `Arnoldlarry15/red-set-protocell`
-4. **Configure Environment Variables**
-   - `VITE_API_BASE_URL`: `https://your-domain.vercel.app/api`
-   - See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete list
+4. **Configure Environment Variables** (Required)
+   - `JWT_SECRET`: Random 32+ character string
+   - `RSP_DEMO_PASSWORD`: Secure password (change from default!)
+   - `RSP_ENVIRONMENT`: `production`
+   - See [VERCEL_SERVERLESS_GUIDE.md](VERCEL_SERVERLESS_GUIDE.md) for complete list
 5. **Deploy**
 
 Your app will be live at `https://your-project.vercel.app` in minutes!
 
-The repository structure is optimized for Vercel:
-- `frontend/` - React/Vite frontend
-- `backend/` - FastAPI Python backend  
-- `vercel.json` - Deployment configuration
+**New Serverless Structure:**
+- `frontend/` - React/Vite frontend (builds to static files)
+- `api/` - Python serverless functions (one file = one endpoint)
+- `backend/` - Legacy FastAPI server (kept for reference/local dev)
+- `vercel.json` - Serverless deployment configuration
 
-📖 **Detailed Guide**: See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete deployment instructions, environment variables, and troubleshooting.
+📖 **Complete Guide**: See [VERCEL_SERVERLESS_GUIDE.md](VERCEL_SERVERLESS_GUIDE.md) for:
+- Serverless architecture explanation
+- API endpoint documentation
+- Environment variable configuration
+- Security best practices
+- Migration from Flask/FastAPI
 
 #### Command Line Deployment
 
@@ -1118,6 +1130,12 @@ npm install -g vercel
 # Deploy from repository root
 vercel --prod
 ```
+
+### Web UI Deployment (Legacy - Vercel Static)
+
+For the previous static deployment setup, see [VERCEL_SETUP.md](VERCEL_SETUP.md).
+
+Note: The serverless deployment above is the recommended approach as it includes both frontend and backend in a single deployment.
 
 ### Docker Deployment
 

@@ -21,7 +21,7 @@ Red Set ProtoCell now includes a modern, glassmorphism-styled web interface feat
 - **User Input**: Test custom adversarial prompts
 - **Auto-Halt**: Stops on critical vulnerabilities or cost limits
 
-See [WEB_UI_SETUP.md](WEB_UI_SETUP.md) for setup instructions.
+See [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md) for setup instructions.
 
 ---
 
@@ -42,6 +42,7 @@ See [WEB_UI_SETUP.md](WEB_UI_SETUP.md) for setup instructions.
 - [FAQ](#faq)
 - [Contributing](#contributing)
 - [Security](#security)
+- [Documentation](#-documentation)
 - [License](#license)
 - [Citation](#citation)
 
@@ -648,7 +649,7 @@ python -m app.main \
   --no-zero-retention
 ```
 
-See `examples/time_analytics_demo.py` and [TIME_TRACKING.md](TIME_TRACKING.md) for complete documentation.
+See `examples/time_analytics_demo.py` and [docs/archive/TIME_TRACKING.md](docs/archive/TIME_TRACKING.md) for complete documentation.
 
 ---
 
@@ -1085,29 +1086,41 @@ async def test_openai_integration():
 
 ## 🚢 Deployment
 
-### Web UI Deployment (Vercel)
+### Vercel Serverless Deployment (Recommended) 🚀
 
-The Red Set ProtoCell can be deployed to Vercel with both frontend and backend:
+Red Set ProtoCell is now optimized for Vercel's serverless architecture with:
+- **Serverless API functions** in `/api` directory
+- **React + Vite frontend** with zero CORS issues
+- **Auto-scaling** and **pay-per-request** pricing
+- **Production-ready** security and monitoring
 
-#### Quick Deploy
+#### Quick Deploy to Vercel
 
 1. **Push to GitHub** (if not already done)
 2. **Go to [Vercel Dashboard](https://vercel.com/)**
 3. **Import your repository**
    - Select `Arnoldlarry15/red-set-protocell`
-4. **Configure Environment Variables**
-   - `VITE_API_BASE_URL`: `https://your-domain.vercel.app/api`
-   - See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete list
+4. **Configure Environment Variables** (Required)
+   - `JWT_SECRET`: Random 32+ character string
+   - `RSP_DEMO_PASSWORD`: Secure password (change from default!)
+   - `RSP_ENVIRONMENT`: `production`
+   - See [docs/deployment/VERCEL_SERVERLESS_GUIDE.md](docs/deployment/VERCEL_SERVERLESS_GUIDE.md) for complete list
 5. **Deploy**
 
 Your app will be live at `https://your-project.vercel.app` in minutes!
 
-The repository structure is optimized for Vercel:
-- `frontend/` - React/Vite frontend
-- `backend/` - FastAPI Python backend  
-- `vercel.json` - Deployment configuration
+**New Serverless Structure:**
+- `frontend/` - React/Vite frontend (builds to static files)
+- `api/` - Python serverless functions (one file = one endpoint)
+- `backend/` - Legacy FastAPI server (kept for reference/local dev)
+- `vercel.json` - Serverless deployment configuration
 
-📖 **Detailed Guide**: See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete deployment instructions, environment variables, and troubleshooting.
+📖 **Complete Guide**: See [docs/deployment/VERCEL_SERVERLESS_GUIDE.md](docs/deployment/VERCEL_SERVERLESS_GUIDE.md) for:
+- Serverless architecture explanation
+- API endpoint documentation
+- Environment variable configuration
+- Security best practices
+- Migration from Flask/FastAPI
 
 #### Command Line Deployment
 
@@ -1118,6 +1131,12 @@ npm install -g vercel
 # Deploy from repository root
 vercel --prod
 ```
+
+### Web UI Deployment (Legacy - Vercel Static)
+
+For the previous static deployment setup, see [VERCEL_SETUP.md](VERCEL_SETUP.md).
+
+Note: The serverless deployment above is the recommended approach as it includes both frontend and backend in a single deployment.
 
 ### Docker Deployment
 
@@ -1541,6 +1560,37 @@ If you discover a security vulnerability in RSP, please report it responsibly:
 
 ---
 
+## 📚 Documentation
+
+All documentation has been organized in the [`docs/`](docs/) directory:
+
+### Core Documentation
+- [README.md](README.md) - This file
+- [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+- [SECURITY.md](SECURITY.md) - Security policies
+- [CHANGELOG.md](CHANGELOG.md) - Version history
+
+### Deployment & Operations
+- [Vercel Serverless Guide](docs/deployment/VERCEL_SERVERLESS_GUIDE.md) - **Recommended** deployment method
+- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - General deployment options
+- [Production Checklist](docs/deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification
+- [Monitoring Guide](docs/guides/MONITORING_GUIDE.md) - System monitoring
+- [Incident Response](docs/guides/INCIDENT_RESPONSE.md) - Incident handling
+
+### User Guides
+- [Quick Start Dashboard](docs/guides/QUICKSTART_DASHBOARD.md) - Get started quickly
+- [Web UI Setup](docs/guides/WEB_UI_SETUP.md) - Web interface configuration
+- [API Documentation](docs/guides/API_DOCUMENTATION.md) - API reference
+- [Compliance Guide](docs/guides/COMPLIANCE_GUIDE.md) - Regulatory compliance
+
+### Additional Resources
+- [Archive](docs/archive/) - Historical documentation and implementation details
+- [API README](api/README.md) - Serverless API endpoint documentation
+
+For a complete overview, see [docs/README.md](docs/README.md).
+
+---
+
 ## 📄 License
 
 Red Set ProtoCell is licensed under the **MIT License**.
@@ -1638,52 +1688,23 @@ Special thanks to the AI safety research community for inspiration and guidance.
   - Score drift analysis: Identify performance trends over time
   - Answer questions like "Does this model get worse after sustained pressure?"
 
-See [IMPROVEMENTS.md](IMPROVEMENTS.md) and [TIME_TRACKING.md](TIME_TRACKING.md) for detailed documentation.
+See [docs/archive/IMPROVEMENTS.md](docs/archive/IMPROVEMENTS.md) and [docs/archive/TIME_TRACKING.md](docs/archive/TIME_TRACKING.md) for detailed documentation.
 
 ### Latest Enhancements (v1.2.0) - Research Lab Features
 - ✅ **Automated Benchmarking Suites**: Compare model versions over time with statistical analysis
-  - Standard benchmark configurations (quick, standard, comprehensive, stress)
-  - Automated result storage and comparison
-  - Regression detection with statistical significance testing
 - ✅ **Stronger Telemetry Abstraction**: Export metrics programmatically
-  - CSV, JSON, and JSON Lines export formats
-  - Database extraction API for sessions and rounds
-  - Time series data export for analysis pipelines
-- ✅ **Quantitative Uncertainty Metrics**: Already integrated!
-  - Confidence intervals on all scores
-  - Multi-pass agreement measurement
-  - Cross-Spotter evaluation for disagreement detection
+- ✅ **Quantitative Uncertainty Metrics**: Confidence intervals and multi-pass agreement
 - ✅ **Formal Mutation Strategy Tuning**: Automatic strategy optimization
-  - Performance tracking for each mutation strategy
-  - Automatic weight recommendations based on effectiveness
-  - Adaptive learning that improves over time
-  - Priority strategy selection
 - ✅ **Official Model Zoo**: Reference models for consistent benchmarking
-  - Preconfigured OpenAI models (GPT-3.5, GPT-4, GPT-4 Turbo)
-  - Preconfigured Anthropic models (Claude 3 Haiku, Sonnet, Opus)
-  - Version tracking and comparison utilities
-  - Easy configuration for benchmarking
 
-See [NEW_FEATURES.md](NEW_FEATURES.md) for complete documentation and usage examples.
+See [docs/archive/NEW_FEATURES.md](docs/archive/NEW_FEATURES.md) for complete documentation and usage examples.
 
 ### Latest Enhancements (v1.3.0) - Dashboard & Management Features
 - ✅ **Unified Infrastructure Dashboard**: Complete monitoring and analysis platform
-  - Live session monitoring with auto-refresh
-  - Historical session comparison and analysis
-  - Model version comparison with statistical metrics
-  - Export capabilities (CSV/JSON/JSONL)
 - ✅ **User Roles & Permissions**: Fine-grained access control
-  - Role-based authorization (Admin/Researcher/Observer)
-  - User management interface
-  - Authentication system with secure token management
-  - Permission-based UI access control
 - ✅ **Remote Triggering**: UI-based run control
-  - Start runs from web interface with custom parameters
-  - Save and load experiment configurations
-  - Configure mutation weights and severity thresholds
-  - Real-time feedback and monitoring
 
-See [DASHBOARD_FEATURES.md](DASHBOARD_FEATURES.md) for complete documentation and [QUICKSTART_DASHBOARD.md](QUICKSTART_DASHBOARD.md) for a quick start guide.
+See [docs/archive/DASHBOARD_FEATURES.md](docs/archive/DASHBOARD_FEATURES.md) for complete documentation and [docs/guides/QUICKSTART_DASHBOARD.md](docs/guides/QUICKSTART_DASHBOARD.md) for a quick start guide.
 
 ### Planned Features (v1.4.0)
 - [ ] ML-based classifiers for Spotter

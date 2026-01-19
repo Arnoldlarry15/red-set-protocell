@@ -1,0 +1,19 @@
+# Red Set ProtoCell - Minimal Vercel Serverless Dependencies
+# Only include what the API actually imports
+
+# Core dependencies for data validation and models
+pydantic>=2.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# HTTP client for external API calls (OpenAI, Anthropic, etc.)
+requests>=2.31.0
+
+# Secure password hashing (required for authentication)
+bcrypt>=4.0.0
+
+# JWT token management (recommended for production)
+# The current auth.py uses a simple HMAC-based token for demo purposes
+# For production, uncomment PyJWT and update auth.py to use proper JWT:
+# PyJWT>=2.8.0

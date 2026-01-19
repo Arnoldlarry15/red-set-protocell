@@ -4,10 +4,10 @@ updates:
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "python"
@@ -21,20 +21,14 @@ updates:
       - "Arnoldlarry15"
     # Group dependency updates
     groups:
-      testing:
+      essential-dependencies:
         patterns:
           - "pytest*"
-      linting:
-        patterns:
           - "black"
           - "flake8"
           - "mypy"
-      api-clients:
-        patterns:
           - "openai"
           - "anthropic"
-      web:
-        patterns:
           - "fastapi"
           - "uvicorn"
           - "pydantic"
@@ -44,10 +38,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "javascript"
@@ -64,9 +58,10 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "09:00"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "github-actions"

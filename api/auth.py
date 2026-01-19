@@ -18,9 +18,14 @@ This ensures:
 from http.server import BaseHTTPRequestHandler
 import json
 import os
-import hashlib
 import hmac
 from datetime import datetime, timedelta, timezone
+
+try:
+    import bcrypt
+    BCRYPT_AVAILABLE = True
+except ImportError:
+    BCRYPT_AVAILABLE = False
 
 
 class handler(BaseHTTPRequestHandler):
@@ -33,11 +38,26 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(json.dumps(data).encode())
 
+    def _hash_password(self, password):
+        """Hash password using bcrypt if available, otherwise fail"""
+        if not BCRYPT_AVAILABLE:
+            raise RuntimeError(
+                "bcrypt library is required for secure password hashing. "
+                "Install with: pip install bcrypt"
+            )
+        return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
     def _verify_password(self, password, stored_hash):
-        """Simple password verification (use proper hashing in production)"""
-        # For demo purposes - in production use bcrypt or similar
-        password_hash = hashlib.sha256(password.encode()).hexdigest()
-        return hmac.compare_digest(password_hash, stored_hash)
+        """Verify password using bcrypt"""
+        if not BCRYPT_AVAILABLE:
+            raise RuntimeError(
+                "bcrypt library is required for secure password hashing. "
+                "Install with: pip install bcrypt"
+            )
+        try:
+            return bcrypt.checkpw(password.encode(), stored_hash.encode())
+        except Exception:
+            return False
 
     def _generate_token(self, username, role):
         """Generate simple JWT-like token (use PyJWT in production)"""
@@ -55,6 +75,7 @@ class handler(BaseHTTPRequestHandler):
         }
         
         # Simple token for demo - use PyJWT for production
+        import hashlib
         token_data = json.dumps(payload)
         signature = hmac.new(
             jwt_secret.encode(),
@@ -81,10 +102,12 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             # Demo user (admin/changeme) - in production, use database
+            # For demo purposes, we accept the password directly
+            # In production, store bcrypt-hashed passwords in database
             demo_password = os.environ.get("RSP_DEMO_PASSWORD", "changeme")
-            demo_hash = hashlib.sha256(demo_password.encode()).hexdigest()
-
-            if username == "admin" and self._verify_password(password, demo_hash):
+            
+            # Simple comparison for demo - in production use database with bcrypt hashes
+            if username == "admin" and password == demo_password:
                 token = self._generate_token(username, "admin")
                 
                 self._send_json_response(200, {

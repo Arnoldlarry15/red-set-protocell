@@ -74,6 +74,9 @@ Returns operational metrics (integrates with external monitoring).
 ### POST /api/auth
 Handles user authentication and JWT token generation.
 
+**Security Note**: For demo purposes, the endpoint accepts plain-text password comparison. 
+In production, use bcrypt-hashed passwords stored in a database.
+
 **Request:**
 ```json
 {
@@ -93,6 +96,12 @@ Handles user authentication and JWT token generation.
   }
 }
 ```
+
+**Production Security Requirements:**
+- Store password hashes using bcrypt in database
+- Use the provided `_hash_password()` and `_verify_password()` methods
+- Rotate JWT_SECRET regularly
+- Implement rate limiting on authentication endpoint
 
 ### POST /api/scan
 Creates a new scan session (queued for processing in serverless mode).

@@ -5,7 +5,6 @@ Note: For long-running scans, use a queue system (SQS, Pub/Sub) in production.
 """
 from http.server import BaseHTTPRequestHandler
 import json
-import os
 from datetime import datetime, timezone
 
 

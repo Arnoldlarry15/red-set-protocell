@@ -1,0 +1,14 @@
+# Red Set ProtoCell - Minimal Vercel Serverless Dependencies
+# Only include what the API actually imports
+
+# Core dependencies for data validation and models
+pydantic>=2.0.0
+
+# Environment variable management
+python-dotenv>=1.0.0
+
+# HTTP client for external API calls (OpenAI, Anthropic, etc.)
+requests>=2.31.0
+
+# Optional: If JWT is needed for proper auth (currently using simple token)
+# PyJWT>=2.8.0

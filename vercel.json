@@ -2,30 +2,15 @@
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "cd frontend && npm install",
-  "devCommand": "cd frontend && npm run dev",
   "framework": "vite",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/backend/main.py"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/backend/main.py"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "backend/main.py": {
-      "runtime": "python3.9"
-    }
-  }
+  ]
 }

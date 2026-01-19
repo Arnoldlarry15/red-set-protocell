@@ -54,8 +54,11 @@ Updated `vercel.json` to use the modern Vercel configuration pattern with explic
 1. **Explicit Output Directory**: `outputDirectory: "frontend/dist"` tells Vercel exactly where to find the built static files
 2. **Proper Build Commands**: Explicit `buildCommand` and `installCommand` ensure consistent builds
 3. **Framework Optimization**: `framework: "vite"` allows Vercel to apply Vite-specific optimizations
-4. **Modern Pattern**: Follows Vercel's current best practices for monorepo deployments
-5. **Matches Documentation**: Aligns with the working configuration in `docs/deployment/VERCEL_SERVERLESS_GUIDE.md`
+4. **Modern Rewrites API**: Uses `rewrites` (modern Vercel API) instead of deprecated `routes`
+5. **Correct SPA Routing**: Routes all non-API paths to `/index.html` for proper React SPA behavior
+6. **Based on Documentation**: Inspired by the configuration pattern in `docs/deployment/VERCEL_SERVERLESS_GUIDE.md` with corrections for proper SPA routing
+
+**Note**: The documentation shows `"dest": "/frontend/$1"` which would be incorrect for Vite builds. When `outputDirectory` is set to `frontend/dist`, Vercel serves files from the deployment root, so the correct catch-all is to `/index.html` for SPA routing.
 
 ## Testing & Verification
 

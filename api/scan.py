@@ -48,9 +48,15 @@ class handler(BaseHTTPRequestHandler):
 
             self._send_json_response(200, session_info)
 
+        except json.JSONDecodeError:
+            self._send_json_response(400, {
+                "error": "Invalid JSON in request body"
+            })
         except Exception as e:
+            # Log error server-side (in production, use proper logging)
+            # Don't expose internal error details to client
             self._send_json_response(500, {
-                "error": f"Failed to create session: {str(e)}"
+                "error": "Failed to create session"
             })
 
     def do_GET(self):
@@ -64,8 +70,10 @@ class handler(BaseHTTPRequestHandler):
             })
 
         except Exception as e:
+            # Log error server-side (in production, use proper logging)
+            # Don't expose internal error details to client
             self._send_json_response(500, {
-                "error": f"Failed to query session: {str(e)}"
+                "error": "Failed to query session"
             })
 
     def do_OPTIONS(self):

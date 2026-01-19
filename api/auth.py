@@ -1,6 +1,19 @@
 """
 Authentication Endpoint
 Handles user login and JWT token generation.
+
+SECURITY NOTE: This implementation uses a simplified HMAC-based token for demonstration.
+For production use, replace with proper JWT using PyJWT library:
+- Install: pip install PyJWT
+- Use: jwt.encode(payload, secret, algorithm='HS256')
+- Verify: jwt.decode(token, secret, algorithms=['HS256'])
+
+This ensures:
+- Standard JWT format
+- Proper base64 encoding
+- Token expiration validation
+- Algorithm verification
+- Protection against timing attacks
 """
 from http.server import BaseHTTPRequestHandler
 import json
@@ -29,7 +42,11 @@ class handler(BaseHTTPRequestHandler):
     def _generate_token(self, username, role):
         """Generate simple JWT-like token (use PyJWT in production)"""
         # This is a simplified version - use proper JWT in production
-        jwt_secret = os.environ.get("JWT_SECRET", "default-dev-secret-change-in-production")
+        jwt_secret = os.environ.get("JWT_SECRET")
+        
+        # Fail fast if no JWT secret in production
+        if not jwt_secret:
+            raise ValueError("JWT_SECRET environment variable must be set")
         
         payload = {
             "username": username,
@@ -84,9 +101,16 @@ class handler(BaseHTTPRequestHandler):
                     "error": "Invalid credentials"
                 })
 
-        except Exception as e:
+        except ValueError as ve:
+            # Configuration errors - these should be logged and monitored
             self._send_json_response(500, {
-                "error": f"Internal server error: {str(e)}"
+                "error": "Server configuration error. Please contact administrator."
+            })
+        except Exception as e:
+            # Log error server-side (in production, use proper logging)
+            # Don't expose internal error details to client
+            self._send_json_response(500, {
+                "error": "Internal server error"
             })
 
     def do_OPTIONS(self):

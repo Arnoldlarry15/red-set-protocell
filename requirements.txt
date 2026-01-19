@@ -10,5 +10,7 @@ python-dotenv>=1.0.0
 # HTTP client for external API calls (OpenAI, Anthropic, etc.)
 requests>=2.31.0
 
-# Optional: If JWT is needed for proper auth (currently using simple token)
+# JWT token management (recommended for production)
+# The current auth.py uses a simple HMAC-based token for demo purposes
+# For production, uncomment PyJWT and update auth.py to use proper JWT:
 # PyJWT>=2.8.0

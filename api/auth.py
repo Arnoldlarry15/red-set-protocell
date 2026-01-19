@@ -101,10 +101,16 @@ class handler(BaseHTTPRequestHandler):
                 })
                 return
 
-            # Demo user (admin/changeme) - in production, use database
+            # Demo user - in production, use database
             # For demo purposes, we accept the password directly
             # In production, store bcrypt-hashed passwords in database
-            demo_password = os.environ.get("RSP_DEMO_PASSWORD", "changeme")
+            demo_password = os.environ.get("RSP_DEMO_PASSWORD")
+            
+            if not demo_password:
+                self._send_json_response(500, {
+                    "error": "Server configuration error. RSP_DEMO_PASSWORD must be set."
+                })
+                return
             
             # Simple comparison for demo - in production use database with bcrypt hashes
             if username == "admin" and password == demo_password:

@@ -51,7 +51,17 @@ def handler(event, context):
         
         # Check password (use environment variable)
         # Demo password - in production, use database with bcrypt hashes
-        expected_password = os.environ.get("RSP_DEMO_PASSWORD", "changeme")
+        expected_password = os.environ.get("RSP_DEMO_PASSWORD")
+        
+        if not expected_password:
+            return {
+                "statusCode": 500,
+                "headers": {
+                    "Content-Type": "application/json",
+                    "Access-Control-Allow-Origin": "*"
+                },
+                "body": json.dumps({"error": "RSP_DEMO_PASSWORD environment variable must be set"})
+            }
         
         if password != expected_password:
             return {

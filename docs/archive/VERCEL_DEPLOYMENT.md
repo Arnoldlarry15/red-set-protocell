@@ -1,5 +1,18 @@
 # Deploying RSP UI to Vercel
 
+> **⚠️ ARCHIVED DOCUMENTATION - OUTDATED**
+> 
+> This guide references **outdated directory names** (`rsp-ui` instead of `frontend`) and is kept for historical reference only.
+> 
+> **For current deployment:** See [`/docs/deployment/VERCEL_SERVERLESS_GUIDE.md`](/docs/deployment/VERCEL_SERVERLESS_GUIDE.md)
+> 
+> **Issues with this guide:**
+> - References `rsp-ui` directory (renamed to `frontend`)
+> - Frontend-only configuration (missing `/api` serverless functions)
+> - Configuration shown here will fail if followed (directory doesn't exist)
+
+---
+
 This guide walks you through deploying the Red Set ProtoCell Web UI to Vercel.
 
 ## Prerequisites

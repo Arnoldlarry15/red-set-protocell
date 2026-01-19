@@ -1,5 +1,18 @@
 # Vercel Deployment Configuration
 
+> **⚠️ ARCHIVED DOCUMENTATION - OUTDATED**
+> 
+> This guide references **outdated directory names** (`rsp-ui` instead of `frontend`) and is kept for historical reference only.
+> 
+> **For current deployment:** See [`/docs/deployment/VERCEL_SERVERLESS_GUIDE.md`](/docs/deployment/VERCEL_SERVERLESS_GUIDE.md)
+> 
+> **Issues with this guide:**
+> - References `rsp-ui` directory (renamed to `frontend`)
+> - Frontend-only configuration (missing `/api` serverless functions)
+> - Configuration shown here will fail if followed (directory doesn't exist)
+
+---
+
 ## Overview
 
 This document provides the complete configuration needed to deploy the RSP UI to Vercel successfully.

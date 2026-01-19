@@ -1,5 +1,15 @@
 # Vercel Serverless Migration - Implementation Summary
 
+> **📋 ARCHIVED DOCUMENTATION - HISTORICAL RECORD**
+> 
+> This document summarizes the **completed migration** to serverless architecture and is kept for historical reference.
+> 
+> **For current deployment:** See [`/docs/deployment/VERCEL_SERVERLESS_GUIDE.md`](/docs/deployment/VERCEL_SERVERLESS_GUIDE.md)
+> 
+> **Note:** The configuration examples in this document use `"routes"` instead of `"rewrites"`. The current `/vercel.json` uses `"rewrites"` (both are valid, but rewrites is the modern approach).
+
+---
+
 ## Overview
 
 Successfully converted Red Set ProtoCell from a traditional Flask/FastAPI server architecture to Vercel's serverless function architecture.

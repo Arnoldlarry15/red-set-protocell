@@ -7,13 +7,24 @@ Users were experiencing "404: NOT_FOUND" errors when accessing the deployed Red 
 **Error ID:** `cle1:cle1::wrjqx-1768831477921-405bace209af`
 
 ## Root Cause
-The `vercel.json` configuration was using an incomplete/legacy build configuration that prevented Vercel from properly locating and serving the built frontend files.
+The `vercel.json` configuration was mixing two incompatible deployment models that cannot coexist:
 
 ### Issues with Previous Configuration:
-1. **Missing `outputDirectory`**: No root-level `outputDirectory` field to tell Vercel where to find built files
-2. **Incomplete Build Config**: Used `@vercel/static-build` with nested `distDir` but lacked explicit build commands
-3. **Missing Framework Hint**: No `framework` field to help Vercel optimize the build process
-4. **Legacy Pattern**: Used the older `builds` array pattern instead of the modern root-level configuration
+1. **Framework mode declarations**: `buildCommand`, `outputDirectory`, `installCommand`, `framework: "vite"`
+2. **Explicit serverless mode**: `builds: [...]` array
+3. **Critical conflict**: When `builds` exists, Vercel **ignores** all framework settings
+
+### The Problem:
+When a `builds` array is present in `vercel.json`:
+- ❌ Vercel ignores `framework`
+- ❌ Vercel ignores `outputDirectory`  
+- ❌ Vercel does NOT automatically serve `/index.html`
+- ❌ Vercel expects everything defined explicitly via `builds` and `routes`
+
+This resulted in:
+- 404 errors on `/` (root path)
+- "Unused build settings" warnings
+- Rewrites appearing to do nothing
 
 ## Solution
 Updated `vercel.json` to use the modern Vercel framework mode configuration:
@@ -57,6 +68,7 @@ Updated `vercel.json` to use the modern Vercel framework mode configuration:
 
 ## Testing & Verification
 
+### Configuration Validation:
 - ✅ JSON syntax validated
 - ✅ Configuration matches Vercel best practices for framework mode
 - ✅ API endpoints remain properly configured
@@ -74,6 +86,29 @@ After redeploying with this configuration:
 
 ## References
 
-- **Vercel Static Build Documentation**: https://vercel.com/docs/concepts/projects/build-step
+- **Vercel Framework Documentation**: https://vercel.com/docs/frameworks/vite
 - **Repository Guide**: `docs/deployment/VERCEL_SERVERLESS_GUIDE.md`
 - **Configuration Analysis**: `VERCEL_CONFIG_ANALYSIS.md`
+
+## Additional Notes
+
+### Why Framework Mode (Not Builds Array)?
+
+**Option A (Recommended - What We Use)**: Vercel-native split app
+- Frontend = Vite static site (framework mode)
+- Backend = `/api/*.py` serverless functions (auto-detected)
+- No `builds` section
+- Let Vercel's framework system work
+
+**Option B (Not Recommended)**: Fully manual routing
+- No framework
+- No auto static serving
+- Everything defined via `builds` and `routes`
+- Much harder, zero benefit here
+
+We chose Option A because:
+- ✅ Simpler configuration
+- ✅ Automatic framework optimizations
+- ✅ Automatic SPA routing
+- ✅ Auto-detection of serverless functions
+- ✅ Better developer experience

@@ -126,28 +126,24 @@ The `vercel.json` file configures the deployment:
 
 ```json
 {
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build"
-    },
-    {
-      "src": "api/*.py",
-      "use": "@vercel/python"
-    }
-  ],
+  "framework": "vite",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/"
     }
   ]
 }
 ```
+
+**How it works:**
+- **Framework mode**: Uses Vercel's native Vite support for optimal builds
+- **Auto-detection**: Vercel automatically detects and deploys Python functions in `/api`
+- **SPA routing**: Vercel automatically serves `/index.html` for all non-API routes
+- **API routing**: Only `/api/*` paths need explicit routing to serverless functions
 
 ## Verifying Deployment
 

@@ -86,51 +86,26 @@ The `vercel.json` file wires frontend and backend together:
 
 ```json
 {
-  "builds": [
+  "framework": "vite",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "rewrites": [
     {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "api/*.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     }
   ]
 }
 ```
 
-### Configuration Explanation:
+**Key Points:**
+- **Framework mode**: Uses `framework: "vite"` to enable Vercel's native Vite support
+- **No `builds` section**: Vercel auto-detects Python functions in `/api` directory
+- **Automatic static serving**: Vercel automatically serves `/index.html` for the root and handles SPA routing
+- **API routing**: Only `/api/*` paths need explicit routing to serverless functions
 
-**`builds` array** - When present, Vercel ignores root-level build settings and only builds what's explicitly listed:
-- `frontend/package.json` with `@vercel/static-build` - Builds the React/Vite frontend
-  - Automatically runs `npm install` then `npm run vercel-build`
-  - `distDir: "dist"` specifies Vite's output directory (relative to `frontend/`)
-- `api/*.py` with `@vercel/python` - Creates serverless functions for each Python file
-
-**`routes` array** - Required when using `builds` (use `rewrites` only when no `builds`):
-1. `/api/(.*)` → Routes all API requests to serverless functions
-2. `handle: "filesystem"` → Serves static assets (JS, CSS, images)
-3. `/(.*)` → Catch-all for SPA routing, serves `index.html` for React Router
-
-This routing eliminates CORS hell—frontend and backend share the same origin.
-
-> ⚠️ **Critical**: When a `builds` array exists, root-level settings (`buildCommand`, `outputDirectory`, etc.) are **completely ignored** by Vercel. Everything must be in the `builds` array.
+This configuration eliminates CORS hell—frontend and backend share the same origin.
 
 ## Frontend API Calls
 

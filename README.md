@@ -11,7 +11,7 @@
 
 Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming engine, not a guardrail. It uses evolutionary algorithms and adaptive attack strategies to systematically probe large language models (LLMs) for unknown failure modes. Think of it as a fuzzer or penetration testing suite for AI: it discovers novel vulnerabilities before attackers or users do, providing reproducible, analyzable evidence of model weaknesses.
 
-## 🎨 NEW: Web UI Available!
+## 🎨 Web UI Available!
 
 Red Set ProtoCell now includes a modern, glassmorphism-styled web interface featuring:
 - **Live Attack Feed**: Real-time stream of red teaming attacks
@@ -182,29 +182,29 @@ Most AI risk comes from unknown failure modes. Static test suites, manual red te
 - **L1: Linguistic Safety (35%)** - Hate speech, PII leakage, refusal quality
 - **L2: Security Exploitability (45%)** - Prompt injection, jailbreak, policy bypass
 - **L3: Cognitive Stability (20%)** - Sycophancy, deceptive alignment, chain-of-thought leakage
-- **Uncertainty Tracking (NEW)**: Score confidence intervals and variance metrics
+- **Uncertainty Tracking**: Score confidence intervals and variance metrics
 
 ### 🔌 Production-Ready Integrations
 - **OpenAI API**: Full GPT-3.5, GPT-4, and GPT-4 Turbo support
 - **Anthropic API**: Claude models (Claude 3 Opus, Sonnet, Haiku)
-- **Local Models**: GGUF models via llama-cpp-python (NEW)
-- **Custom APIs**: Generic HTTP endpoint support for any LLM (NEW)
+- **Local Models**: GGUF models via llama-cpp-python
+- **Custom APIs**: Generic HTTP endpoint support for any LLM
 - **Extensible Backend System**: Easy to add new LLM providers
 
 ### ⚡ Performance & Scalability
-- **Parallel Execution**: Concurrent round processing (5-10x speedup) (NEW)
-- **Adaptive Learning**: Mutation strategies improve over time (NEW)
-- **Zero API Costs**: Run completely offline with local models (NEW)
-- **Comprehensive Testing**: 50+ tests including uncertainty tracking (NEW)
+- **Parallel Execution**: Concurrent round processing (5-10x speedup)
+- **Adaptive Learning**: Mutation strategies improve over time
+- **Zero API Costs**: Run completely offline with local models
+- **Comprehensive Testing**: 50+ tests including uncertainty tracking
 
 ### 📈 Observable & Auditable
 - Comprehensive session statistics
 - Detailed logging and audit trails
 - Aggregate metrics for trend analysis
 - Round-by-round tracking of success rates
-- Strategy performance analytics (NEW)
-- **Epistemic Upgrades (NEW)**: Uncertainty quantification, multi-pass agreement, cross-Spotter evaluation
-- **Time Analytics (NEW)**: Fatigue tracking, regression detection, score drift analysis
+- Strategy performance analytics
+- **Epistemic Upgrades**: Uncertainty quantification, multi-pass agreement, cross-Spotter evaluation
+- **Time Analytics**: Fatigue tracking, regression detection, score drift analysis
 
 ### 🔒 Policy Locking & Reproducibility
 
@@ -636,7 +636,7 @@ Mutation Statistics:
 | 0.6 - 0.8    | **High** | Significant alignment failures |
 | 0.8 - 1.0    | **Critical** | Severe safety violations |
 
-#### Epistemic Upgrades: Uncertainty Tracking (NEW)
+#### Epistemic Upgrades: Uncertainty Tracking
 
 RSP now provides scores with confidence intervals and variance metrics, transforming simple point estimates into rich epistemic signals:
 
@@ -702,7 +702,7 @@ print(f"Disagreement: {cross_result['deltas']}")
 
 See `examples/uncertainty_demo.py` for complete demonstrations.
 
-#### Time Analytics: Tracking Model Behavior Over Time (NEW)
+#### Time Analytics: Tracking Model Behavior Over Time
 
 RSP tracks time as a first-class dimension, enabling analysis of model behavior over extended sessions:
 
@@ -748,7 +748,7 @@ python -m app.main \
   --no-zero-retention
 ```
 
-See `examples/time_analytics_demo.py` and [docs/archive/TIME_TRACKING.md](docs/archive/TIME_TRACKING.md) for complete documentation.
+See `examples/time_analytics_demo.py` for usage examples.
 
 ---
 
@@ -776,7 +776,7 @@ RSPConfig
 ```python
 max_rounds: int = 100              # Maximum execution rounds
 concurrent_evaluations: bool = False  # Enable parallel evaluation
-concurrent_rounds: int = 1         # Number of rounds to execute in parallel (NEW)
+concurrent_rounds: int = 1         # Number of rounds to execute in parallel
 round_timeout_seconds: int = 300   # Timeout per round
 ```
 
@@ -798,11 +798,11 @@ api_base: Optional[str] = None       # Custom API endpoint
 max_tokens: int = 1000               # Max response tokens
 temperature: float = 0.7             # Model temperature
 fresh_context: bool = True           # Reset context each round
-# NEW: For local models (llama_cpp backend)
+# For local models (llama_cpp backend)
 model_path: Optional[str] = None     # Path to GGUF model file
 n_ctx: int = 2048                    # Context window size
 n_gpu_layers: int = 0                # GPU layers (0=CPU only)
-# NEW: For custom HTTP backends
+# For custom HTTP backends
 api_url: Optional[str] = None        # Custom API endpoint URL
 request_format: str = "openai"       # Request format (openai/anthropic/generic)
 ```
@@ -812,7 +812,7 @@ request_format: str = "openai"       # Request format (openai/anthropic/generic)
 ```python
 confidence_threshold: float = 0.6    # Minimum confidence for alerts
 use_auxiliary_classifiers: bool = False  # Enable ML classifiers
-# NEW: Epistemic upgrades
+# Epistemic upgrades
 enable_multi_pass: bool = False      # Enable multi-pass evaluation for uncertainty
 multi_pass_count: int = 3            # Number of passes when multi_pass enabled
 enable_cross_spotter: bool = False   # Enable cross-Spotter evaluation
@@ -1976,52 +1976,29 @@ Special thanks to the AI safety research community for inspiration and guidance.
 - ✅ Seven attack domains
 - ✅ Docker deployment
 - ✅ Comprehensive test suite
+- ✅ Web UI with glassmorphism design
+- ✅ Real-time attack feed and dashboard
+- ✅ Cost management and tracking
+- ✅ FastAPI-based API server
+- ✅ WebSocket support
 
-### Recent Enhancements (v1.1.0)
-- ✅ **Parallel Execution**: Concurrent round processing (5-10x speedup)
-- ✅ **Pluggable Backends**: Local GGUF models (llama.cpp) and custom HTTP APIs
-- ✅ **Adaptive Mutations**: Strategy performance tracking and learning
-- ✅ **Enhanced Testing**: 50+ tests for edge cases and adversarial patterns
-- ✅ **Epistemic Upgrades**: Score uncertainty and variance tracking (NEW)
-  - Confidence intervals for all scores
-  - Multi-pass agreement measurement
-  - Cross-Spotter evaluation for disagreement detection
-  - Scientific output format with uncertainty quantification
-- ✅ **Time as First-Class Dimension**: Temporal analytics for model behavior (NEW)
-  - Fatigue tracking: Does the model degrade over many rounds?
-  - Regression detection: Compare model versions objectively
-  - Score drift analysis: Identify performance trends over time
-  - Answer questions like "Does this model get worse after sustained pressure?"
-
-See [docs/archive/IMPROVEMENTS.md](docs/archive/IMPROVEMENTS.md) and [docs/archive/TIME_TRACKING.md](docs/archive/TIME_TRACKING.md) for detailed documentation.
-
-### Latest Enhancements (v1.2.0) - Research Lab Features
-- ✅ **Automated Benchmarking Suites**: Compare model versions over time with statistical analysis
-- ✅ **Stronger Telemetry Abstraction**: Export metrics programmatically
-- ✅ **Quantitative Uncertainty Metrics**: Confidence intervals and multi-pass agreement
-- ✅ **Formal Mutation Strategy Tuning**: Automatic strategy optimization
-- ✅ **Official Model Zoo**: Reference models for consistent benchmarking
-
-See [docs/archive/NEW_FEATURES.md](docs/archive/NEW_FEATURES.md) for complete documentation and usage examples.
-
-### Latest Enhancements (v1.3.0) - Dashboard & Management Features
-- ✅ **Unified Infrastructure Dashboard**: Complete monitoring and analysis platform
-- ✅ **User Roles & Permissions**: Fine-grained access control
-- ✅ **Remote Triggering**: UI-based run control
-
-See [docs/archive/DASHBOARD_FEATURES.md](docs/archive/DASHBOARD_FEATURES.md) for complete documentation and [docs/guides/QUICKSTART_DASHBOARD.md](docs/guides/QUICKSTART_DASHBOARD.md) for a quick start guide.
-
-### Planned Features (v1.4.0)
+### Future Enhancements
+- [ ] Parallel execution for improved performance
+- [ ] Pluggable backends (local GGUF models, custom HTTP APIs)
+- [ ] Adaptive mutation strategies with performance tracking
+- [ ] Score uncertainty and variance tracking
+- [ ] Temporal analytics for model behavior
+- [ ] Automated benchmarking suites
+- [ ] Stronger telemetry abstraction
+- [ ] Formal mutation strategy tuning
+- [ ] Official model zoo for consistent benchmarking
 - [ ] ML-based classifiers for Spotter
 - [ ] Additional mutation strategies
 - [ ] More attack domains
 - [ ] PostgreSQL integration hardening
 - [ ] CLI commands for benchmarking and exports
 - [ ] Advanced analytics visualizations
-
-### Future Considerations (v2.0.0)
 - [ ] Distributed execution support
-- [ ] Real-time dashboard
 - [ ] Custom strategy plugin system
 - [ ] Integration with SIEM tools
 - [ ] Automated report generation

@@ -2,257 +2,50 @@
 
 This guide covers deploying Red Set ProtoCell in production environments.
 
+## Architecture
+
+Red Set ProtoCell uses a **clean separation** between frontend and backend:
+
+- **Frontend**: Static React/Vite app → Deploy on **Vercel**
+- **Backend**: FastAPI server in container → Deploy on **Railway/Render/Fly.io**
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
-- [Environment Configuration](#environment-configuration)
-- [Deployment Options](#deployment-options)
+- [Frontend Deployment (Vercel)](#frontend-deployment-vercel)
+- [Backend Deployment (Container Platforms)](#backend-deployment-container-platforms)
 - [Security Checklist](#security-checklist)
-- [Monitoring Setup](#monitoring-setup)
-- [Rollback Procedures](#rollback-procedures)
-- [Disaster Recovery](#disaster-recovery)
 
 ## Prerequisites
 
-- Python 3.8+ runtime environment
-- HTTPS-enabled web server or reverse proxy (nginx, Apache, or cloud load balancer)
-- API keys from OpenAI or Anthropic
-- PostgreSQL database (recommended for production) or SQLite for single-instance deployments
-- SSL/TLS certificates for HTTPS
+### Frontend
+- GitHub account
+- Vercel account (free tier available)
 
-## Environment Configuration
+### Backend
+- Docker or container platform account (Railway/Render/Fly.io)
+- API keys from OpenAI and/or Anthropic
 
-### Required Environment Variables
+## Frontend Deployment (Vercel)
 
-```bash
-# Application Environment
-RSP_ENVIRONMENT=production  # REQUIRED: Enables production security features
+### One-Click Deploy
 
-# CORS Configuration
-RSP_ALLOWED_ORIGINS=https://app.example.com,https://dashboard.example.com
-# REQUIRED in production: Comma-separated list of allowed origins
+1. **Push to GitHub** (if not already done)
+2. **Go to [Vercel Dashboard](https://vercel.com/)**
+3. **Import Repository**
+   - Click "Add New" → "Project"
+   - Select `Arnoldlarry15/red-set-protocell`
+4. **Configure** (should auto-detect from `vercel.json`)
+   - Build Command: `cd frontend && npm install && npm run build`
+   - Output Directory: `frontend/dist`
+   - Framework: Vite
+5. **Set Environment Variables**
+   - `VITE_API_BASE_URL`: Your backend URL (e.g., `https://your-backend.railway.app`)
+6. **Deploy**
 
-# API Keys (NEVER commit these)
-OPENAI_API_KEY=sk-...  # Your OpenAI API key
-ANTHROPIC_API_KEY=sk-ant-...  # Your Anthropic API key
+Your frontend will be live at `https://your-project.vercel.app` in minutes!
 
-# JWT Configuration
-RSP_JWT_SECRET=your-very-long-random-secret-key-here  # REQUIRED
-# Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
-RSP_JWT_EXPIRATION_HOURS=24  # Token expiration time
-
-# Authentication
-RSP_REQUIRE_AUTH=true  # Enable JWT authentication (recommended)
-RSP_DEMO_PASSWORD=changeme  # Change the demo admin password
-
-# API Keys for programmatic access (optional)
-RSP_API_KEYS=key1:admin,key2:researcher  # format: key:role,key:role
-
-# Rate Limiting
-RSP_RATE_LIMIT_PER_MIN=60  # Requests per minute per IP
-RSP_RATE_LIMIT_PER_HOUR=1000  # Requests per hour per IP
-
-# Database Configuration
-RSP_DB_PATH=/data/rsp_production.db  # For SQLite
-# OR
-RSP_POSTGRES_URI=postgresql://user:pass@localhost:5432/rsp  # For PostgreSQL
-```
-
-### Optional Configuration
-
-```bash
-# Logging
-RSP_LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
-RSP_LOG_FILE=/var/log/rsp/api.log
-
-# WebSocket Limits
-RSP_MAX_WEBSOCKET_CONNECTIONS=100
-
-# Session Storage
-RSP_SESSIONS_DIR=/data/sessions
-```
-
-### Creating `.env` File
-
-```bash
-# Create .env file (NEVER commit this file!)
-cat > /app/.env << 'EOF'
-RSP_ENVIRONMENT=production
-RSP_ALLOWED_ORIGINS=https://your-domain.com
-OPENAI_API_KEY=sk-your-key-here
-RSP_JWT_SECRET=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
-RSP_REQUIRE_AUTH=true
-RSP_DEMO_PASSWORD=$(python -c "import secrets; print(secrets.token_urlsafe(16))")
-EOF
-
-# Secure the file
-chmod 600 /app/.env
-```
-
-## Deployment Options
-
-### Option 1: Docker (Recommended)
-
-#### 1. Build Docker Image
-
-```bash
-cd rsp-core
-docker build -t rsp-backend:latest backend/
-```
-
-#### 2. Run with Environment File
-
-```bash
-docker run -d \
-  --name rsp-api \
-  --env-file /path/to/.env \
-  -p 8000:8000 \
-  -v /data/rsp:/data \
-  --restart unless-stopped \
-  rsp-backend:latest
-```
-
-#### 3. Docker Compose
-
-```yaml
-version: '3.8'
-
-services:
-  rsp-api:
-    image: rsp-backend:latest
-    env_file:
-      - .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/data
-      - ./logs:/var/log/rsp
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          cpus: '2'
-          memory: 4G
-    security_opt:
-      - no-new-privileges:true
-    read_only: true
-    tmpfs:
-      - /tmp
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "443:443"
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - rsp-api
-```
-
-### Option 2: Systemd Service
-
-#### 1. Create Service File
-
-```bash
-sudo cat > /etc/systemd/system/rsp-api.service << 'EOF'
-[Unit]
-Description=Red Set ProtoCell API Server
-After=network.target
-
-[Service]
-Type=simple
-User=rsp
-Group=rsp
-WorkingDirectory=/opt/rsp-core/backend
-EnvironmentFile=/opt/rsp-core/.env
-ExecStart=/opt/rsp-core/venv/bin/uvicorn app.api_server:app --host 0.0.0.0 --port 8000 --workers 4
-Restart=always
-RestartSec=10
-
-# Security
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/data/rsp /var/log/rsp
-
-[Install]
-WantedBy=multi-user.target
-EOF
-```
-
-#### 2. Enable and Start
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable rsp-api
-sudo systemctl start rsp-api
-sudo systemctl status rsp-api
-```
-
-### Option 3: Cloud Platforms
-
-#### AWS Elastic Beanstalk
-
-```bash
-# Install EB CLI
-pip install awsebcli
-
-# Initialize
-cd rsp-core/backend
-eb init -p python-3.11 rsp-backend
-
-# Create environment
-eb create rsp-production \
-  --envvars RSP_ENVIRONMENT=production,RSP_ALLOWED_ORIGINS=https://app.example.com
-
-# Deploy
-eb deploy
-```
-
-#### Google Cloud Run
-
-```bash
-# Build and push
-gcloud builds submit --tag gcr.io/PROJECT-ID/rsp-backend
-
-# Deploy
-gcloud run deploy rsp-backend \
-  --image gcr.io/PROJECT-ID/rsp-backend \
-  --platform managed \
-  --region us-central1 \
-  --set-env-vars RSP_ENVIRONMENT=production \
-  --set-env-vars RSP_ALLOWED_ORIGINS=https://app.example.com \
-  --set-secrets OPENAI_API_KEY=openai-key:latest \
-  --set-secrets RSP_JWT_SECRET=jwt-secret:latest
-```
-
-#### Azure Container Instances
-
-```bash
-az container create \
-  --resource-group rsp-resources \
-  --name rsp-backend \
-  --image rsp-backend:latest \
-  --dns-name-label rsp-api \
-  --ports 8000 \
-  --environment-variables \
-    RSP_ENVIRONMENT=production \
-    RSP_ALLOWED_ORIGINS=https://app.example.com \
-  --secure-environment-variables \
-    OPENAI_API_KEY=$OPENAI_API_KEY \
-    RSP_JWT_SECRET=$RSP_JWT_SECRET
-```
-
-### Option 4: Serverless Deployment (Vercel)
-
-Red Set ProtoCell supports deployment on Vercel using serverless Python functions.
-
-See [Vercel Serverless Guide](./VERCEL_SERVERLESS_GUIDE.md) for detailed instructions.
-
-**Quick Deploy:**
+### Command Line (Alternative)
 
 ```bash
 # Install Vercel CLI
@@ -260,351 +53,201 @@ npm install -g vercel
 
 # Deploy from repository root
 vercel --prod
+
+# Set environment variable
+vercel env add VITE_API_BASE_URL
 ```
 
-**Key Features:**
-- ✅ Serverless API functions
-- ✅ React + Vite frontend with zero CORS issues
-- ✅ Auto-scaling and pay-per-request pricing
-- ✅ Production-ready security
+## Backend Deployment (Container Platforms)
 
-### Option 5: Serverless Deployment (Netlify)
+The backend runs as a Docker container and can be deployed to any container platform.
 
-Red Set ProtoCell also supports deployment on Netlify using serverless Python functions.
+### Option 1: Railway 🚂 (Recommended)
 
-See [Netlify Deployment Guide](./netlify.md) for detailed instructions.
+Railway provides the easiest container deployment with automatic HTTPS and domain.
 
-**Quick Deploy:**
+1. **Sign in to [Railway](https://railway.app)**
+2. **Create New Project**
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select `Arnoldlarry15/red-set-protocell`
+3. **Configure Service**
+   - Root Directory: `backend`
+   - Dockerfile Path: `backend/Dockerfile`
+4. **Set Environment Variables** (in Railway Dashboard)
+   ```
+   OPENAI_API_KEY=sk-...
+   ANTHROPIC_API_KEY=sk-ant-...
+   RSP_DEMO_PASSWORD=your-secure-password
+   RSP_ENVIRONMENT=production
+   RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+   ```
+5. **Deploy**
+   - Railway auto-deploys on git push
+   - Your backend will be at `https://your-app.railway.app`
+
+### Option 2: Render 🎨
+
+Render offers free tier with automatic deployments.
+
+1. **Sign in to [Render](https://render.com)**
+2. **Create Web Service**
+   - Dashboard → "New" → "Web Service"
+   - Connect GitHub repository
+3. **Configure Service**
+   - Environment: Docker
+   - Root Directory: `backend`
+   - Dockerfile Path: `./Dockerfile`
+4. **Set Environment Variables** (same as Railway)
+5. **Deploy**
+   - Your backend will be at `https://your-app.onrender.com`
+
+### Option 3: Fly.io ✈️
+
+Fly.io provides edge deployment worldwide.
 
 ```bash
-# Install Netlify CLI
-npm install -g netlify-cli
+# Install flyctl
+curl -L https://fly.io/install.sh | sh
 
-# Login to Netlify
-netlify login
+# Login
+fly auth login
 
-# Initialize and deploy
-netlify init
-netlify deploy --prod
+# Navigate to backend
+cd backend
+
+# Launch (interactive setup)
+fly launch
+
+# Set secrets
+fly secrets set OPENAI_API_KEY=sk-...
+fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+fly secrets set RSP_DEMO_PASSWORD=your-password
+fly secrets set RSP_ENVIRONMENT=production
+fly secrets set RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+
+# Deploy
+fly deploy
 ```
 
-**Key Features:**
-- ✅ Clearer function boundaries
-- ✅ Easy debugging
-- ✅ Auto-scaling serverless functions
-- ✅ Compatible with same codebase as Vercel
+### Option 4: Self-Hosted (Docker)
 
-**No Vendor Lock-In:** Red Set ProtoCell supports both Vercel and Netlify using the same project files. Choose what works best for you, or use both!
+Run on your own infrastructure:
+
+```bash
+cd backend
+
+# Build image
+docker build -t rsp-backend:latest .
+
+# Run backend
+docker run -d \
+  -p 8000:8000 \
+  -e OPENAI_API_KEY="sk-..." \
+  -e ANTHROPIC_API_KEY="sk-ant-..." \
+  -e RSP_DEMO_PASSWORD="changeme" \
+  -e RSP_ENVIRONMENT="production" \
+  -e RSP_ALLOWED_ORIGINS="https://your-frontend.vercel.app" \
+  --restart unless-stopped \
+  rsp-backend:latest
+
+# Backend available at http://localhost:8000
+```
+
+For production, add nginx reverse proxy with SSL:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name api.yourdomain.com;
+
+    ssl_certificate /etc/ssl/certs/yourdomain.crt;
+    ssl_certificate_key /etc/ssl/private/yourdomain.key;
+
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## Environment Variables Reference
+
+### Frontend (Vercel)
+
+```bash
+# Required
+VITE_API_BASE_URL=https://your-backend.railway.app
+```
+
+### Backend (Container Platforms)
+
+```bash
+# Required: At least one API key
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Required: Security
+RSP_DEMO_PASSWORD=your-secure-password
+RSP_ENVIRONMENT=production
+RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+
+# Optional
+RSP_MAX_ROUNDS=100
+RSP_REQUIRE_AUTH=true
+JWT_SECRET=your-random-32-char-string
+RSP_RATE_LIMIT_PER_MIN=60
+```
 
 ## Security Checklist
 
-Before deploying to production:
-
-- [ ] All secrets in environment variables or secrets manager
-- [ ] `RSP_ENVIRONMENT=production` is set
-- [ ] `RSP_ALLOWED_ORIGINS` is configured with specific domains
-- [ ] `RSP_JWT_SECRET` is set to a strong random value
-- [ ] API keys are NOT in source code or `.env.example`
-- [ ] HTTPS is enabled and enforced
-- [ ] Firewall rules restrict access to necessary ports only
-- [ ] Rate limiting is configured appropriately
-- [ ] Authentication is enabled (`RSP_REQUIRE_AUTH=true`)
-- [ ] Database is backed up regularly
-- [ ] Logs are being collected and monitored
-- [ ] Security headers are enabled (automatic with middleware)
-- [ ] Dependencies are up to date (`pip list --outdated`)
-- [ ] Vulnerability scans have been run (`safety check`)
-
-## Monitoring Setup
-
-### Health Checks
-
-Configure your load balancer or monitoring system to check:
-
-```bash
-# Basic health check (fast, minimal overhead)
-curl https://api.example.com/api/health
-
-# Detailed health check (includes component status)
-curl https://api.example.com/api/health/detailed
-```
-
-Expected responses:
-- HTTP 200 = Healthy
-- HTTP 5xx = Unhealthy
-
-### Metrics Endpoint
-
-RSP exposes Prometheus-compatible metrics:
-
-```bash
-curl https://api.example.com/api/metrics
-```
-
-Returns:
-- `requests_total` - Total number of requests
-- `requests_by_status` - Breakdown by HTTP status code
-- `requests_by_endpoint` - Breakdown by endpoint
-- `average_duration_ms` - Average request duration
-- `error_rate` - Percentage of failed requests
-- `rate_limit_hits` - Number of rate limit violations
-
-### Integration with Monitoring Tools
-
-#### Prometheus
-
-```yaml
-# prometheus.yml
-scrape_configs:
-  - job_name: 'rsp-api'
-    scrape_interval: 30s
-    static_configs:
-      - targets: ['api.example.com:8000']
-    metrics_path: '/api/metrics'
-```
-
-#### Datadog
-
-```python
-# Install datadog agent on host
-# Configure to scrape /api/metrics endpoint
-```
-
-#### New Relic
-
-```python
-# Install New Relic Python agent
-pip install newrelic
-
-# Run with agent
-NEW_RELIC_CONFIG_FILE=newrelic.ini \
-  newrelic-admin run-program uvicorn app.api_server:app
-```
-
-### Log Aggregation
-
-RSP outputs structured JSON logs. Configure your log aggregation:
-
-#### Example: Filebeat + Elasticsearch
-
-```yaml
-# filebeat.yml
-filebeat.inputs:
-  - type: log
-    enabled: true
-    paths:
-      - /var/log/rsp/*.log
-    json.keys_under_root: true
-
-output.elasticsearch:
-  hosts: ["elasticsearch:9200"]
-```
-
-## Rollback Procedures
-
-### Docker Rollback
-
-```bash
-# List previous images
-docker images rsp-backend
-
-# Tag current as backup
-docker tag rsp-backend:latest rsp-backend:backup
-
-# Rollback to previous version
-docker pull rsp-backend:v1.0.0
-docker tag rsp-backend:v1.0.0 rsp-backend:latest
-
-# Restart container
-docker-compose down
-docker-compose up -d
-```
-
-### Systemd Rollback
-
-```bash
-# Stop service
-sudo systemctl stop rsp-api
-
-# Restore previous version
-cd /opt/rsp-core
-git checkout v1.0.0
-
-# Reinstall dependencies if needed
-source venv/bin/activate
-pip install -r backend/requirements.txt
-
-# Start service
-sudo systemctl start rsp-api
-```
-
-### Cloud Platform Rollback
-
-#### AWS Elastic Beanstalk
-```bash
-eb deploy --version previous-version-label
-```
-
-#### Google Cloud Run
-```bash
-gcloud run services update-traffic rsp-backend \
-  --to-revisions=PREVIOUS-REVISION=100
-```
-
-## Disaster Recovery
-
-### Backup Strategy
-
-#### Database Backups
-
-```bash
-# SQLite backup
-cp /data/rsp_production.db /backups/rsp_$(date +%Y%m%d).db
-
-# PostgreSQL backup
-pg_dump -U rsp_user -h localhost rsp > /backups/rsp_$(date +%Y%m%d).sql
-```
-
-#### Automated Backup Script
-
-```bash
-#!/bin/bash
-# /opt/rsp-core/scripts/backup.sh
-
-BACKUP_DIR=/backups/rsp
-DATE=$(date +%Y%m%d_%H%M%S)
-
-mkdir -p $BACKUP_DIR
-
-# Backup database
-cp /data/rsp_production.db $BACKUP_DIR/db_$DATE.db
-
-# Backup sessions
-tar -czf $BACKUP_DIR/sessions_$DATE.tar.gz /data/sessions
-
-# Backup configuration
-cp /opt/rsp-core/.env $BACKUP_DIR/env_$DATE
-
-# Keep only last 30 days
-find $BACKUP_DIR -type f -mtime +30 -delete
-
-echo "Backup completed: $DATE"
-```
-
-#### Schedule with Cron
-
-```bash
-# Add to crontab
-0 2 * * * /opt/rsp-core/scripts/backup.sh >> /var/log/rsp/backup.log 2>&1
-```
-
-### Recovery Procedures
-
-#### Database Recovery
-
-```bash
-# Stop service
-sudo systemctl stop rsp-api
-
-# Restore database
-cp /backups/rsp_20260118.db /data/rsp_production.db
-
-# Restore sessions
-tar -xzf /backups/sessions_20260118.tar.gz -C /
-
-# Start service
-sudo systemctl start rsp-api
-```
-
-#### Full System Recovery
-
-1. Provision new server/container
-2. Install dependencies
-3. Restore backup files
-4. Configure environment variables
-5. Start services
-6. Verify health checks
-7. Update DNS/load balancer
-
-### Testing Recovery
-
-```bash
-# Regularly test recovery procedures
-# Schedule quarterly disaster recovery drills
-
-# Test script
-#!/bin/bash
-echo "=== Disaster Recovery Test ==="
-echo "1. Provisioning test environment..."
-echo "2. Restoring latest backup..."
-echo "3. Starting services..."
-echo "4. Running health checks..."
-echo "5. Verifying functionality..."
-echo "=== Test Complete ==="
-```
-
-## Performance Optimization
-
-### Recommended Settings
-
-```bash
-# Uvicorn workers (1-2x CPU cores)
-uvicorn app.api_server:app --workers 4
-
-# Connection limits
-RSP_MAX_WEBSOCKET_CONNECTIONS=100
-
-# Rate limiting (adjust based on capacity)
-RSP_RATE_LIMIT_PER_MIN=60
-RSP_RATE_LIMIT_PER_HOUR=1000
-```
-
-### Load Testing
-
-```bash
-# Install hey (HTTP load generator)
-go install github.com/rakyll/hey@latest
-
-# Test API endpoints
-hey -n 1000 -c 10 -m GET https://api.example.com/api/health
-
-# Expected results:
-# - 99% requests < 100ms
-# - 0% errors
-# - Rate limiting kicks in appropriately
-```
+Before going to production:
+
+### Frontend (Vercel)
+- [ ] `VITE_API_BASE_URL` set to production backend URL
+- [ ] Custom domain configured (optional)
+- [ ] HTTPS enabled (automatic on Vercel)
+
+### Backend (Container Platform)
+- [ ] `RSP_ENVIRONMENT=production` set
+- [ ] Strong `RSP_DEMO_PASSWORD` configured
+- [ ] `RSP_ALLOWED_ORIGINS` includes only trusted domains
+- [ ] API keys secured and not committed to git
+- [ ] HTTPS enabled (automatic on Railway/Render/Fly.io)
+- [ ] Rate limiting configured
+- [ ] Authentication enabled if needed (`RSP_REQUIRE_AUTH=true`)
+- [ ] Monitoring/logging enabled
+
+### Post-Deployment Verification
+- [ ] Frontend loads successfully
+- [ ] Backend health check responds: `curl https://your-backend/api/health`
+- [ ] Frontend can connect to backend
+- [ ] WebSocket connection works
+- [ ] CORS configured correctly
+- [ ] API authentication working (if enabled)
 
 ## Troubleshooting
 
-### Common Issues
+### Frontend can't connect to backend
+1. Verify `VITE_API_BASE_URL` is set correctly in Vercel
+2. Check backend is running: visit `https://your-backend/api/health`
+3. Verify CORS: `RSP_ALLOWED_ORIGINS` includes your Vercel domain
 
-#### Issue: CORS errors
-**Solution**: Verify `RSP_ALLOWED_ORIGINS` includes your frontend domain
+### Backend container failing
+1. Check environment variables are set
+2. Review container logs in platform dashboard
+3. Test locally: `cd backend && docker build -t test . && docker run test`
 
-#### Issue: Authentication failures
-**Solution**: Check `RSP_JWT_SECRET` is set and tokens haven't expired
-
-#### Issue: Rate limiting too aggressive
-**Solution**: Increase `RSP_RATE_LIMIT_PER_MIN` or `RSP_RATE_LIMIT_PER_HOUR`
-
-#### Issue: High memory usage
-**Solution**: Reduce `RSP_MAX_WEBSOCKET_CONNECTIONS` or add more resources
-
-### Debug Mode
-
-```bash
-# Enable debug logging (development only!)
-RSP_LOG_LEVEL=DEBUG uvicorn app.api_server:app
-```
+### WebSocket connections failing
+1. All recommended platforms support WebSocket by default
+2. If self-hosting, ensure nginx configuration includes WebSocket upgrade headers (shown above)
+3. Check firewall rules
 
 ## Support
 
-For production deployment support:
-- GitHub Issues: https://github.com/Arnoldlarry15/red-set-protocell/issues
-- Security Issues: Use GitHub Security Advisories
-- Documentation: See README.md and SECURITY.md
-
----
-
-Last Updated: January 2026
-Version: 1.0.0
+For deployment issues:
+- Check [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
+- Review platform-specific docs: [Railway](https://docs.railway.app), [Render](https://render.com/docs), [Fly.io](https://fly.io/docs)

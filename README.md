@@ -7,9 +7,9 @@
 [![Security](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml)
 [![codecov](https://codecov.io/gh/Arnoldlarry15/red-set-protocell/branch/main/graph/badge.svg)](https://codecov.io/gh/Arnoldlarry15/red-set-protocell)
 
-**An Open-source AI safety platform using dual-agent Sniper/Spotter red-teaming to audit and secure large language models.**
+**An open-source automated AI red-teaming engine using dual-agent Sniper/Spotter architecture to systematically discover failure modes in large language models.**
 
-Red Set ProtoCell is an autonomous, evolutionary AI red teaming system that functions as a defensive "immune system" for large language models (LLMs). It simulates adversarial pressure in a controlled environment to surface safety, alignment, and robustness failures. The system is scalable, transparent, and built for advanced AI risk monitoring.
+Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming engine, not a guardrail. It uses evolutionary algorithms and adaptive attack strategies to systematically probe large language models (LLMs) for unknown failure modes. Think of it as a fuzzer or penetration testing suite for AI: it discovers novel vulnerabilities before attackers or users do, providing reproducible, analyzable evidence of model weaknesses.
 
 ## 🎨 NEW: Web UI Available!
 
@@ -52,48 +52,108 @@ See [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md) for setup instruc
 
 ### What is Red Set ProtoCell?
 
-Red Set ProtoCell (RSP) is an autonomous AI red teaming platform designed to stress-test large language models by:
+Red Set ProtoCell (RSP) is an automated AI red-teaming engine—not a guardrail, not a compliance tool, but an offensive security platform for discovering how language models fail.
 
-- **Generating adversarial prompts** through evolutionary algorithms and mutation strategies
-- **Executing prompts** against target LLMs via real API integrations
-- **Evaluating responses** using a 3-layer scoring taxonomy
-- **Evolving attack strategies** based on success rates
+**It's a Dual-Agent System:**
 
-Unlike manual red teaming, RSP operates autonomously, continuously evolving its attack strategies to discover edge cases, policy violations, and alignment failures in LLMs.
+- **Sniper Agent**: Generates adversarial prompts using evolutionary algorithms and mutation strategies
+- **Spotter Agent**: Evaluates target responses, scores failures, and feeds evolution with fitness metrics
+
+**How It Works:**
+
+1. **Generate**: Sniper creates prompts designed to elicit failures (policy violations, jailbreaks, alignment issues)
+2. **Execute**: Prompts are sent to the target LLM via real API integrations
+3. **Evaluate**: Spotter analyzes responses using a 3-layer scoring taxonomy (Linguistic Safety, Security Exploitability, Cognitive Stability)
+4. **Evolve**: Successful attack patterns influence the next generation through fitness-guided selection
+
+**What Makes It Different:**
+
+Unlike manual red teaming or static test suites, RSP:
+- Operates autonomously 24/7
+- Adapts its attacks based on what works
+- Discovers novel, emergent failure modes
+- Produces reproducible, analyzable results with versioned attack policies
+- Simulates intelligent adversary behavior at scale
+
+**In Spirit, It's Closer To:**
+- Fuzzers (for software)
+- Exploit frameworks (for security research)  
+- Penetration testing suites (for infrastructure)
+
+**Not:** Compliance software, content filters, or safety guardrails.
 
 ### Why Red Set ProtoCell?
 
 **The Challenge:**
-- Manual red teaming is time-consuming and doesn't scale
-- LLMs are deployed faster than they can be thoroughly tested
+- Most AI risk comes from **unknown failure modes**
+- Static test suites and manual red teaming only find **known issues**
+- Real-world adversaries **adapt and evolve**
+- Models are deployed faster than they can be thoroughly tested
 - Safety failures emerge in unexpected contexts
-- Adversarial attacks evolve constantly
 
 **The Solution:**
-RSP provides an automated, scalable, and continuous red teaming solution that:
-- Runs 24/7 without human intervention
-- Evolves attack strategies based on success patterns
-- Covers multiple attack domains simultaneously
-- Produces quantifiable safety metrics
-- Maintains strict ethical boundaries
+RSP shifts AI risk management from reactive to proactive by:
+- **Discovering novel failures before attackers or users do**
+- Simulating intelligent adversary behavior at scale
+- Continuously evolving attack strategies based on success patterns
+- Producing reproducible evidence of model weaknesses
+- Identifying systemic vulnerabilities, not one-off jailbreaks
+- Running 24/7 without human intervention
 
 ### Core Principles
 
-1. **Defense-Only System**: No real malware generation or real-world exploits
-2. **Zero-Retention Policy**: All session data destroyed by default (configurable)
-3. **Ethical Guardrails**: Mandatory content filtering via EGG (Ethical Guardrail Governor)
-4. **Human-in-the-Loop**: Results require human interpretation and validation
-5. **Transparency**: Open-source, auditable, and well-documented
-6. **Real API Integration**: Production-ready integrations with OpenAI and Anthropic APIs
+1. **Offensive Security Tool**: Actively probes models for failures using adversarial techniques
+2. **Dual-Agent Architecture**: Sniper generates attacks, Spotter evaluates and scores failures
+3. **Evolutionary Intelligence**: Uses mutation, genetic algorithms, and iterative fitness scoring
+4. **Locked Policy Model**: Attack rules, fitness functions, and agent boundaries are versioned and immutable per run
+5. **Reproducible Results**: Deterministic seeds, traceable evolution paths, auditable outcomes
+6. **Secure by Default**: Contained execution, scope-limited attacks, non-persistence of sensitive artifacts
+7. **Ethical Boundaries**: EGG (Ethical Guardrail Governor) prevents CSAM, bioweapons, and real-world exploits
 
 ### System Non-Goals
 
 RSP is **NOT**:
+- A compliance or governance tool
+- A content filter or safety guardrail
 - A penetration testing framework for infrastructure
 - A malware or real exploit generator
 - A vulnerability scanner for production systems
 - A tool for bypassing production safeguards
 - A replacement for human security researchers
+
+### Enterprise Risk Narrative (The Five-Minute Story)
+
+**For Risk Officers and Decision Makers:**
+
+Red Set ProtoCell is an automated AI red-teaming platform that continuously probes language models for failure modes using adaptive, evolutionary attack strategies. It simulates the behavior of intelligent adversaries at scale.
+
+**What Problem It Solves:**
+
+Most AI risk comes from unknown failure modes. Static test suites, manual red teaming, and benchmark prompts only find known issues. Real-world adversaries adapt. Red Set ProtoCell discovers novel, emergent failures before attackers or users do.
+
+**How It Reduces Risk:**
+
+- Uses dual-agent architecture to separate attack generation (Sniper) from evaluation (Spotter)
+- Evolves prompts based on measured failure severity and novelty
+- Produces reproducible evidence of model weaknesses
+- Identifies systemic vulnerabilities, not one-off jailbreaks
+- Shifts AI risk management from reactive to proactive
+
+**Why It's Trustworthy:**
+
+- Attack rules are versioned and immutable per run (policy locking)
+- Evaluation criteria are explicit and auditable
+- Results can be replayed and independently verified
+- The system improves through controlled evolution, not randomness
+- Findings are defensible and evidence-based, not anecdotal
+
+**What Organizations Get:**
+
+- Early discovery of high-impact failure classes
+- Evidence-based model risk assessment
+- A repeatable process instead of ad hoc testing
+- Reduced surprise exposure post-deployment
+- Quantifiable security posture for AI systems
 
 ---
 
@@ -105,10 +165,12 @@ RSP is **NOT**:
 - **Spotter Agent**: Analyzes responses using heuristic evaluation
 - **Orchestrator**: Controls execution flow and manages agent coordination
 
-### 🛡️ Safety-First Design
-- **Ethical Guardrail Governor (EGG)**: Blocks CSAM, bioweapons, and real exploits
-- **Content Fingerprinting**: Privacy-preserving hashed logging
-- **Zero-Retention Policy**: Optional automatic data destruction
+### 🛡️ Secure by Default (for Red-Teaming)
+- **Containment by Default**: Attacks run only against explicitly configured targets; no accidental access
+- **Scope-Limited Execution**: Max iterations, token budgets, and concurrency enforced to prevent DoS
+- **Non-Persistence of Sensitive Artifacts**: Generated prompts stored intentionally, not implicitly; sanitization hooks for export
+- **Reproducibility Over Raw Power**: Deterministic seeds, traceable evolution paths; unreplayable results treated as lower value
+- **Ethical Boundaries**: EGG (Ethical Guardrail Governor) prevents CSAM, bioweapons, and real-world exploits
 - **Trust Boundaries**: Agents don't trust each other or their own outputs
 
 ### 🧬 Evolutionary Intelligence
@@ -143,6 +205,43 @@ RSP is **NOT**:
 - Strategy performance analytics (NEW)
 - **Epistemic Upgrades (NEW)**: Uncertainty quantification, multi-pass agreement, cross-Spotter evaluation
 - **Time Analytics (NEW)**: Fatigue tracking, regression detection, score drift analysis
+
+### 🔒 Policy Locking & Reproducibility
+
+Red Set ProtoCell's attack policies are **versioned and immutable per run** to ensure scientific legitimacy and reproducibility.
+
+**What Gets Locked:**
+
+1. **Mutation Constraints**
+   - Which mutation operators are permitted (lexical, encoding, structural, role-play, context, obfuscation)
+   - Maximum mutation depth
+   - Allowed transformation classes
+   - Prevents unbounded prompt chaos and non-reproducible results
+
+2. **Fitness Functions**
+   - What counts as a "successful failure" (scoring taxonomy: L1/L2/L3 weights)
+   - How severity is scored (failure archetypes and thresholds)
+   - How novelty is rewarded (diversity preservation, novelty search)
+   - If fitness changes mid-run, results become meaningless
+
+3. **Agent Authority Boundaries**
+   - Sniper cannot self-evaluate (strict separation of concerns)
+   - Spotter cannot generate attacks (evaluation only)
+   - No self-modifying agent roles
+   - Authority hierarchy: EGG > Orchestrator > Agents
+
+**How Locking Works:**
+
+- Policy is **declarative and versioned** (configuration files define all attack parameters)
+- A run takes a **policy snapshot** at initialization
+- That snapshot is **immutable for the entire run** (no mid-run changes)
+- Results are **tagged with policy version** (e.g., "v1.0.0")
+
+**Why This Matters:**
+
+You can say, truthfully: *"These failures were discovered under attack policy v1.0.0 using these mutation rules and scoring criteria."*
+
+This provides **scientific legitimacy**, not governance theater. Results are **reproducible**, **auditable**, and **defensible**.
 
 ---
 

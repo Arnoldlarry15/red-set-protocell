@@ -5,8 +5,10 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app ./app
+COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.api_server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use gunicorn with uvicorn worker for production
+# This provides better process management and performance
+CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000", "app.api_server:app"]

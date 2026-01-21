@@ -98,10 +98,10 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
           {/* Info Section */}
           <div className="auth-info">
             <p>
-              <strong>Defense-Only System</strong> | Zero-Retention Policy | Ethical Guardrails
+              <strong>Offensive Security Tool</strong> | Red Teaming Engine | Ethical Guardrails
             </p>
             <p className="text-small">
-              This system is designed for security research and LLM safety testing only.
+              This system is an automated AI red-teaming platform for discovering LLM vulnerabilities.
             </p>
           </div>
         </div>

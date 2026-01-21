@@ -404,7 +404,7 @@ python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ║         RED SET PROTOCELL (RSP)                           ║
 ║         Autonomous AI Red Teaming System                  ║
 ║                                                           ║
-║         Defense-Only | Zero-Retention | Ethical           ║
+║    Offensive Security Tool | Ethical Guardrails          ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
@@ -1718,7 +1718,7 @@ logging.basicConfig(
 ### General Questions
 
 **Q: Is RSP safe to use?**
-A: Yes. RSP is a defense-only system with mandatory ethical guardrails (EGG) that block harmful content. It does not generate real malware or exploits.
+A: Yes. RSP is an offensive security tool with mandatory ethical guardrails (EGG) that block harmful content generation. It's designed for security research to discover LLM vulnerabilities, not to generate real malware or exploits.
 
 **Q: Do I need API keys?**
 A: Yes. RSP requires real API keys from OpenAI or Anthropic. No mock/simulation backends are supported.
@@ -1827,7 +1827,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 ### Ethical Review
 
 All contributions undergo ethical review to ensure:
-1. Compliance with defense-only principle
+1. Compliance with ethical use principles
 2. No real-world harm potential
 3. Respect for safety boundaries
 4. Alignment with research ethics
@@ -1853,7 +1853,7 @@ If you discover a security vulnerability in RSP, please report it responsibly:
 
 ### Security Policy
 
-1. **Ethical Use Only**: RSP is for defensive security research only
+1. **Ethical Use Only**: RSP is for security research and LLM safety testing only
 2. **API Key Security**: Never commit API keys to version control
 3. **Data Privacy**: Enable zero-retention for sensitive tests
 4. **Access Control**: Restrict access to API keys and session data

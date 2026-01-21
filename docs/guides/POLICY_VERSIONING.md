@@ -356,6 +356,8 @@ python -m app.main \
 diff results.json researcher_results.json
 ```
 
+**Note**: In production, use environment variables for API keys instead of command-line arguments to avoid exposing credentials in shell history.
+
 ## Policy Locking vs Flexibility
 
 **Question**: Doesn't policy locking reduce adaptability?

@@ -4,7 +4,7 @@
 
 Red Set ProtoCell (RSP) is an automated AI red-teaming engine designed with security as a core principle. This document outlines our security policies, responsible disclosure procedures, and security best practices for users and contributors.
 
-**Important**: RSP is intentionally dangerous software—it's an offensive security tool for discovering AI failures. "Secure by default" here means the platform cannot accidentally cause harm outside its intended testing scope, not that it produces "safe" outputs.
+**Important**: RSP is an offensive security tool—intentionally adversarial software designed to probe AI systems for weaknesses in a controlled manner. "Secure by default" here means the platform cannot accidentally cause harm outside its intended testing scope, not that it produces "safe" outputs.
 
 ## Supported Versions
 

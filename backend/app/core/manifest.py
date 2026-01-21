@@ -30,6 +30,7 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any
 import json
 import hashlib
+import random
 
 
 @dataclass
@@ -256,9 +257,6 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
     Returns:
         AttackManifest ready to be saved
     """
-    import random
-    from datetime import datetime
-    
     # Generate manifest ID with timestamp
     timestamp = datetime.utcnow().isoformat().replace(':', '-').replace('.', '-')[:19] + 'Z'
     manifest_id = f"rsp-manifest-{timestamp}-{random.randint(1000, 9999):04x}"

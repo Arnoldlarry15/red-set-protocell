@@ -35,6 +35,7 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any
 import json
 import hashlib
+import random
 
 
 @dataclass
@@ -209,10 +210,11 @@ def create_specimen_from_evaluation(
     Returns:
         FailureSpecimen ready to be saved
     """
-    import random
-    
-    # Generate specimen ID
-    specimen_id = f"fsp-{random.randint(0x10000000, 0xFFFFFFFF):08x}"
+    # Generate specimen ID deterministically from content hash
+    # This ensures same prompt+response+score always gets same ID
+    content = f"{prompt}::{response}::{score}::{generation}"
+    content_hash = hashlib.sha256(content.encode()).hexdigest()
+    specimen_id = f"fsp-{content_hash[:8]}"
     
     # Create lineage
     lineage = Lineage(

@@ -1957,6 +1957,9 @@ Red Set ProtoCell builds upon research in:
 
 Special thanks to the AI safety research community for inspiration and guidance.
 
+**Development:**
+This project was built in collaboration with GitHub Copilot, which provided code assistance, architectural guidance, and helped bring this vision to life.
+
 ---
 
 ## 📞 Contact
@@ -2047,4 +2050,5 @@ Use responsibly. Test ethically. Build safer AI.
 
 ---
 
-**Made with ❤️ by Larry Arnold and the AI Safety Community**
+**Made with ❤️ by Larry Arnold and the AI Safety Community**  
+*Built in collaboration with GitHub Copilot*

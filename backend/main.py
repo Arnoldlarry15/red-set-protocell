@@ -1,27 +1,34 @@
 """
-Vercel Entry Point for Red Set ProtoCell Backend
+Red Set ProtoCell Backend - Main Server Entry Point
 
-This file serves as the entry point for Vercel's Python runtime.
-Vercel requires a top-level 'app' variable that contains the FastAPI application.
-
-The actual FastAPI application with all middleware, routes, and configuration
-is defined in app/api_server.py. This file simply imports and exposes it.
+This file serves as the main entry point for running the backend server.
+It can be run:
+- Locally: python main.py
+- With uvicorn: uvicorn app.api_server:app --host 0.0.0.0 --port 8000
+- With gunicorn: gunicorn -b 0.0.0.0:8000 app.api_server:app
+- In Docker containers
+- On cloud platforms (Render, Railway, Fly.io)
 """
 
+import os
 from app.api_server import app
 
-# Vercel looks for a variable named 'app' at the module level
-# This is already provided by the import above
+# Export app for WSGI servers (gunicorn) and ASGI servers (uvicorn)
+__all__ = ['app']
 
-# The app includes:
-# - CORS middleware (configured for production via environment variables)
-# - Authentication and authorization
-# - Rate limiting
-# - Security headers
-# - Request logging and metrics
-# - All API routes and WebSocket endpoints
-
-# For local development, you can still run:
-# uvicorn backend.main:app --reload
-# or
-# uvicorn app.api_server:app --reload (from the backend directory)
+if __name__ == "__main__":
+    import uvicorn
+    
+    # Get port from environment or default to 8000
+    # This allows deployment platforms to set their own port
+    port = int(os.getenv('PORT', 8000))
+    
+    # Run the server directly
+    # For production, use gunicorn or uvicorn via command line
+    uvicorn.run(
+        "app.api_server:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False,  # Set to True for development
+        log_level="info"
+    )

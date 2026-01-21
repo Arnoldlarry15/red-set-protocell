@@ -1086,31 +1086,40 @@ async def test_openai_integration():
 
 ## 🚢 Deployment
 
-Red Set ProtoCell supports deployment on both **Vercel** and **Netlify** using serverless Python functions. **No vendor lock-in required.**
+Red Set ProtoCell uses a **clean separation** between frontend and backend:
 
-### Serverless Deployment Options
+- **Frontend**: Static React/Vite app → Deploy on **Vercel**
+- **Backend**: FastAPI server in container → Deploy on **Render/Railway/Fly.io**
 
-Choose your preferred platform:
+### Architecture Overview
 
-| Feature | Vercel | Netlify |
-|---------|--------|---------|
-| Cold Starts | ~0.5-1s | ~1-2s |
-| Debugging | More abstracted | Clearer boundaries |
-| Configuration | `vercel.json` | `netlify.toml` |
-| API Path | `/api/*` | `/.netlify/functions/*` |
-| Redirect Support | ✅ | ✅ (maps `/api/*` to functions) |
-
-**Both work great!** Choose based on your preference or use both.
+```
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│  Frontend (Vercel)                                  │
+│  ├── React + Vite                                   │
+│  ├── Static assets                                  │
+│  └── Environment: VITE_API_BASE_URL                 │
+│                                                     │
+└──────────────────┬──────────────────────────────────┘
+                   │
+                   │ HTTPS/WebSocket
+                   │
+┌──────────────────▼──────────────────────────────────┐
+│                                                     │
+│  Backend (Container Platform)                       │
+│  ├── FastAPI + uvicorn/gunicorn                     │
+│  ├── WebSocket support                              │
+│  └── Docker container                               │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
 
 ---
 
-### Option 1: Vercel Deployment 🚀
+### Frontend Deployment (Vercel)
 
-Red Set ProtoCell is optimized for Vercel's serverless architecture with:
-- **Serverless API functions** in `/api` directory
-- **React + Vite frontend** with zero CORS issues
-- **Auto-scaling** and **pay-per-request** pricing
-- **Production-ready** security and monitoring
+The frontend lives in `frontend/` and deploys to Vercel as a static site.
 
 #### Quick Deploy to Vercel
 
@@ -1118,13 +1127,15 @@ Red Set ProtoCell is optimized for Vercel's serverless architecture with:
 2. **Go to [Vercel Dashboard](https://vercel.com/)**
 3. **Import your repository**
    - Select `Arnoldlarry15/red-set-protocell`
-4. **Configure Environment Variables** (Required)
-   - `JWT_SECRET`: Random 32+ character string
-   - `RSP_DEMO_PASSWORD`: Secure password (change from default!)
-   - `RSP_ENVIRONMENT`: `production`
-5. **Deploy**
+4. **Configure Build Settings** (should auto-detect from `vercel.json`)
+   - Build Command: `cd frontend && npm install && npm run build`
+   - Output Directory: `frontend/dist`
+   - Framework: Vite
+5. **Set Environment Variables**
+   - `VITE_API_BASE_URL`: Your backend URL (e.g., `https://your-backend.railway.app`)
+6. **Deploy**
 
-Your app will be live at `https://your-project.vercel.app` in minutes!
+Your frontend will be live at `https://your-project.vercel.app` in minutes!
 
 #### Command Line Deployment (Vercel)
 
@@ -1136,71 +1147,115 @@ npm install -g vercel
 vercel --prod
 ```
 
-📖 **Complete Guide**: See [docs/deployment/vercel.md](docs/deployment/vercel.md)
+📖 **Configuration**: The `frontend/.env.example` shows required environment variables.
 
 ---
 
-### Option 2: Netlify Deployment 🌐
+### Backend Deployment (Container Platforms)
 
-Red Set ProtoCell also supports Netlify's serverless architecture with:
-- **Serverless Python functions** in `netlify/functions/` directory
-- **Clearer function boundaries** - one file = one endpoint
-- **Easier debugging** with explicit function files
-- **Same API compatibility** via redirect rules
+The backend lives in `backend/` and runs as a Docker container.
 
-#### Quick Deploy to Netlify
+#### Option 1: Railway 🚂
 
-1. **Push to GitHub** (if not already done)
-2. **Go to [Netlify Dashboard](https://app.netlify.com/)**
-3. **Click "Add new site" → "Import an existing project"**
-4. **Connect to GitHub and select your repository**
-   - Repository: `Arnoldlarry15/red-set-protocell`
-5. **Configure Environment Variables**
-   - Go to Site Settings → Environment Variables
-   - `JWT_SECRET`: Random 32+ character string
-   - `RSP_DEMO_PASSWORD`: Secure password
-   - `RSP_ENVIRONMENT`: `production`
-6. **Deploy**
+[Railway](https://railway.app) provides the easiest container deployment:
 
-Your app will be live at `https://your-site.netlify.app` in minutes!
+1. **Connect GitHub Repository**
+   - Sign in to Railway
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select `Arnoldlarry15/red-set-protocell`
+   
+2. **Configure Service**
+   - Root Directory: `backend`
+   - Dockerfile Path: `backend/Dockerfile`
+   
+3. **Set Environment Variables**
+   ```
+   OPENAI_API_KEY=sk-...
+   ANTHROPIC_API_KEY=sk-ant-...
+   RSP_DEMO_PASSWORD=your-secure-password
+   RSP_ENVIRONMENT=production
+   RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+   ```
 
-#### Command Line Deployment (Netlify)
+4. **Deploy**
+   - Railway auto-deploys on git push
+   - Your backend will be at `https://your-app.railway.app`
+
+#### Option 2: Render 🎨
+
+[Render](https://render.com) offers free tier for containers:
+
+1. **Create Web Service**
+   - Dashboard → New → Web Service
+   - Connect your GitHub repository
+   
+2. **Configure Service**
+   - Environment: Docker
+   - Root Directory: `backend`
+   - Dockerfile Path: `./Dockerfile`
+   
+3. **Set Environment Variables** (same as Railway)
+
+4. **Deploy**
+   - Render auto-deploys on git push
+   - Your backend will be at `https://your-app.onrender.com`
+
+#### Option 3: Fly.io ✈️
+
+[Fly.io](https://fly.io) provides edge deployment:
 
 ```bash
-# Install Netlify CLI
-npm install -g netlify-cli
+# Install flyctl
+curl -L https://fly.io/install.sh | sh
 
-# Login to Netlify
-netlify login
+# Login
+fly auth login
 
-# Initialize and deploy
-netlify init
-netlify deploy --prod
+# Navigate to backend
+cd backend
+
+# Launch app (interactive setup)
+fly launch
+
+# Set secrets
+fly secrets set OPENAI_API_KEY=sk-...
+fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+fly secrets set RSP_DEMO_PASSWORD=your-password
+
+# Deploy
+fly deploy
 ```
 
-📖 **Complete Guide**: See [docs/deployment/netlify.md](docs/deployment/netlify.md)
+#### Option 4: Local/Self-Hosted with Docker
+
+Run the backend on your own infrastructure:
+
+```bash
+cd backend
+
+# Build image
+docker build -t rsp-backend:latest .
+
+# Run backend API server
+docker run -d \
+  -p 8000:8000 \
+  -e OPENAI_API_KEY="sk-..." \
+  -e RSP_DEMO_PASSWORD="changeme" \
+  rsp-backend:latest
+
+# Backend available at http://localhost:8000
+```
+
+For production deployment on VMs:
+- **AWS EC2**: Use Docker + nginx reverse proxy
+- **GCP Compute Engine**: Use Docker + Cloud Load Balancer
+- **Azure VMs**: Use Docker + Application Gateway
 
 ---
 
-**Repository Structure for Both Platforms:**
+### Docker Deployment (Full Stack)
 
-```
-/
-├── frontend/              # React/Vite frontend (shared)
-├── api/                  # Vercel serverless functions
-├── netlify/functions/    # Netlify serverless functions
-├── backend/              # Legacy FastAPI (local dev reference)
-├── vercel.json          # Vercel configuration
-└── netlify.toml         # Netlify configuration
-```
-
-Both deployment options coexist in the same project files. No conflicts.
-
----
-
-### Docker Deployment
-
-Red Set ProtoCell provides full Docker support with backend and frontend services orchestrated via Docker Compose.
+For **local development** or **self-hosted** deployment, use Docker Compose to run both frontend and backend:
 
 #### Quick Start with Docker
 
@@ -1226,6 +1281,8 @@ docker compose up --build
 red-set-protocell/
 ├── backend/
 │   ├── Dockerfile          # FastAPI backend image
+│   ├── main.py            # Server entry point
+│   ├── requirements.txt   # Python dependencies (includes gunicorn)
 │   └── app/
 ├── frontend/
 │   ├── Dockerfile          # React + nginx image
@@ -1235,35 +1292,11 @@ red-set-protocell/
 ```
 
 **Services:**
-- **Backend**: FastAPI on port 8000
+- **Backend**: FastAPI with gunicorn + uvicorn workers on port 8000
 - **Frontend**: React (built) + nginx on port 3000
 - **Networking**: Internal Docker network with service name resolution
 
-#### Single Container (Backend Only)
-
-```bash
-cd backend
-
-# Build image
-docker build -t rsp-backend:latest .
-
-# Run backend API server
-docker run -d \
-  -p 8000:8000 \
-  -e OPENAI_API_KEY="sk-..." \
-  -e RSP_DEMO_PASSWORD="changeme" \
-  rsp-backend:latest
-
-# Run CLI session
-docker run -it --rm \
-  -e OPENAI_API_KEY="sk-..." \
-  rsp-backend:latest \
-  python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
-```
-
-#### Full System with Docker Compose
-
-The root `docker-compose.yml` orchestrates both backend and frontend:
+#### Docker Compose Commands
 
 ```bash
 # Start all services in foreground
@@ -1313,41 +1346,73 @@ This Docker setup runs on:
 
 For comprehensive Docker documentation including troubleshooting, production deployment, and advanced configuration, see [DOCKER.md](DOCKER.md).
 
-### Production Deployment Considerations
+---
 
-#### 1. Environment Variables
+### Environment Variables Reference
 
-Store sensitive credentials in environment variables, never in code:
+#### Frontend (Vercel)
 
 ```bash
-# .env file (add to .gitignore!)
+# Required
+VITE_API_BASE_URL=https://your-backend.railway.app
+```
+
+#### Backend (Container Platforms)
+
+```bash
+# Required: At least one API key
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
+
+# Required: Security
+RSP_DEMO_PASSWORD=your-secure-password
+
+# Recommended
+RSP_ENVIRONMENT=production
+RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+
+# Optional
 RSP_MAX_ROUNDS=100
-RSP_DB_PATH=/data/rsp_production.db
+RSP_REQUIRE_AUTH=true
+JWT_SECRET=your-random-32-char-string
 ```
 
-#### 2. Persistent Storage
+---
 
-Mount volumes for persistent data storage:
+### Production Deployment Checklist
 
-```yaml
-# docker-compose.yaml
-volumes:
-  - ./data:/data
-  - ./logs:/app/logs
-```
+Before deploying to production:
 
-#### 3. Resource Limits
+- [ ] **Frontend deployed on Vercel**
+- [ ] **Backend deployed on container platform (Railway/Render/Fly.io)**
+- [ ] **Environment variables configured** on both platforms
+- [ ] **CORS configured** - `RSP_ALLOWED_ORIGINS` includes your Vercel domain
+- [ ] **Secrets secured** - Never commit API keys to git
+- [ ] **Monitoring enabled** - Check platform dashboards
+- [ ] **Health checks working** - Test `/api/health` endpoint
+- [ ] **WebSocket connection tested** - Verify real-time features work
 
-Set appropriate resource limits:
+---
 
-```yaml
-# docker-compose.yaml
-services:
-  rsp-backend:
-    deploy:
-      resources:
+### Deployment Troubleshooting
+
+#### Frontend can't connect to backend
+
+1. Check `VITE_API_BASE_URL` is set correctly in Vercel
+2. Verify backend is running and accessible
+3. Check CORS configuration in backend (`RSP_ALLOWED_ORIGINS`)
+
+#### Backend container failing to start
+
+1. Check environment variables are set
+2. Review container logs in platform dashboard
+3. Verify Dockerfile builds locally: `cd backend && docker build -t test .`
+
+#### WebSocket connections failing
+
+1. Ensure container platform supports WebSocket (all recommended platforms do)
+2. Verify no intermediate proxies are stripping WebSocket headers
+3. Check firewall rules if self-hosting
         limits:
           cpus: '2'
           memory: 4G
@@ -1714,8 +1779,7 @@ All documentation has been organized in the [`docs/`](docs/) directory:
 - [CHANGELOG.md](CHANGELOG.md) - Version history
 
 ### Deployment & Operations
-- [Vercel Serverless Guide](docs/deployment/VERCEL_SERVERLESS_GUIDE.md) - **Recommended** deployment method
-- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - General deployment options
+- [Deployment Guide](docs/deployment/DEPLOYMENT_GUIDE.md) - Production deployment instructions
 - [Production Checklist](docs/deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification
 - [Monitoring Guide](docs/guides/MONITORING_GUIDE.md) - System monitoring
 - [Incident Response](docs/guides/INCIDENT_RESPONSE.md) - Incident handling
@@ -1728,7 +1792,6 @@ All documentation has been organized in the [`docs/`](docs/) directory:
 
 ### Additional Resources
 - [Archive](docs/archive/) - Historical documentation and implementation details
-- [API README](api/README.md) - Serverless API endpoint documentation
 
 For a complete overview, see [docs/README.md](docs/README.md).
 

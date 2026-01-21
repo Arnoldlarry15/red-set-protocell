@@ -28,14 +28,14 @@ class TestInfraDashboard:
 
     def test_health_check(self):
         """Test health check endpoint"""
-        response = client.get("/api/health")
+        response = client.get("/health")
         assert response.status_code == 200
         assert "status" in response.json()
         assert response.json()["status"] == "healthy"
 
     def test_live_sessions_empty(self):
         """Test live sessions when no sessions are active"""
-        response = client.get("/api/dashboard/live-sessions")
+        response = client.get("/dashboard/live-sessions")
         assert response.status_code == 200
         assert "sessions" in response.json()
         # Should start with empty list
@@ -45,7 +45,7 @@ class TestInfraDashboard:
         """Test historical sessions endpoint"""
         # This will likely return empty or error if no database exists
         # but we're testing the endpoint is accessible
-        response = client.get("/api/dashboard/historical-sessions")
+        response = client.get("/dashboard/historical-sessions")
         assert response.status_code in [200, 500]  # May fail if no DB
         if response.status_code == 200:
             assert "sessions" in response.json()
@@ -90,7 +90,7 @@ class TestUserManagement:
 
     def test_list_users(self):
         """Test listing users"""
-        response = client.get("/api/auth/users")
+        response = client.get("/auth/users")
         assert response.status_code == 200
         data = response.json()
         assert "users" in data
@@ -157,7 +157,7 @@ class TestRemoteControl:
 
     def test_list_configs_empty(self):
         """Test listing configs when none exist"""
-        response = client.get("/api/remote/config/list")
+        response = client.get("/remote/config/list")
         assert response.status_code == 200
         data = response.json()
         assert "configs" in data
@@ -208,7 +208,7 @@ class TestRemoteControl:
 
     def test_get_nonexistent_config(self):
         """Test retrieving a config that doesn't exist"""
-        response = client.get("/api/remote/config/nonexistent_id")
+        response = client.get("/remote/config/nonexistent_id")
         assert response.status_code == 404
 
     def test_delete_config(self):

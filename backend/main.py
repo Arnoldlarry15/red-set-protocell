@@ -10,6 +10,7 @@ It can be run:
 - On cloud platforms (Render, Railway, Fly.io)
 """
 
+import os
 from app.api_server import app
 
 # Export app for WSGI servers (gunicorn) and ASGI servers (uvicorn)
@@ -18,12 +19,16 @@ __all__ = ['app']
 if __name__ == "__main__":
     import uvicorn
     
+    # Get port from environment or default to 8000
+    # This allows deployment platforms to set their own port
+    port = int(os.getenv('PORT', 8000))
+    
     # Run the server directly
     # For production, use gunicorn or uvicorn via command line
     uvicorn.run(
         "app.api_server:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=False,  # Set to True for development
         log_level="info"
     )

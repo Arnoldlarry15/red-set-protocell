@@ -81,6 +81,11 @@ Railway provides the easiest container deployment with automatic HTTPS and domai
    RSP_ENVIRONMENT=production
    RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
    ```
+   
+   **Note**: For multiple origins (dev/staging/production), use comma-separated list:
+   ```
+   RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app,https://staging.vercel.app,http://localhost:3000
+   ```
 5. **Deploy**
    - Railway auto-deploys on git push
    - Your backend will be at `https://your-app.railway.app`

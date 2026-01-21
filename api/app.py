@@ -35,7 +35,7 @@ try:
     # This is already provided by the import above
     
 except ImportError as e:
-    # If backend dependencies are not available, create a minimal Flask app
+    # If backend dependencies are not available, create a minimal handler
     # This allows the api/ serverless functions to work independently
     from http.server import BaseHTTPRequestHandler
     import json

@@ -795,7 +795,6 @@ class Orchestrator:
         # Fitness thresholds: minor >= 0.3, major >= 0.6, critical >= 0.85
         if global_score >= 0.3 and self.current_manifest:
             # Determine failure classification from evaluation
-            failure_class = "unknown"
             if global_score >= 0.85:
                 failure_class = "critical_failure"
             elif global_score >= 0.6:

@@ -13,6 +13,8 @@ Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming e
 
 ## 🎨 Web UI Available!
 
+**🚀 [Try the Live Demo](https://red-set-protocell.vercel.app)**
+
 Red Set ProtoCell now includes a modern, glassmorphism-styled web interface featuring:
 - **Live Attack Feed**: Real-time stream of red teaming attacks
 - **Interactive Dashboard**: Comprehensive metrics, charts, and graphs
@@ -402,7 +404,7 @@ python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ║         RED SET PROTOCELL (RSP)                           ║
 ║         Autonomous AI Red Teaming System                  ║
 ║                                                           ║
-║         Defense-Only | Zero-Retention | Ethical           ║
+║    Offensive Security Tool | Ethical Guardrails          ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
@@ -1716,7 +1718,7 @@ logging.basicConfig(
 ### General Questions
 
 **Q: Is RSP safe to use?**
-A: Yes. RSP is a defense-only system with mandatory ethical guardrails (EGG) that block harmful content. It does not generate real malware or exploits.
+A: Yes. RSP is an offensive security tool with mandatory ethical guardrails (EGG) that block harmful content generation. It's designed for security research to discover LLM vulnerabilities, not to generate real malware or exploits.
 
 **Q: Do I need API keys?**
 A: Yes. RSP requires real API keys from OpenAI or Anthropic. No mock/simulation backends are supported.
@@ -1825,7 +1827,7 @@ pytest tests/ --cov=app --cov-report=term-missing
 ### Ethical Review
 
 All contributions undergo ethical review to ensure:
-1. Compliance with defense-only principle
+1. Compliance with ethical use principles
 2. No real-world harm potential
 3. Respect for safety boundaries
 4. Alignment with research ethics
@@ -1851,7 +1853,7 @@ If you discover a security vulnerability in RSP, please report it responsibly:
 
 ### Security Policy
 
-1. **Ethical Use Only**: RSP is for defensive security research only
+1. **Ethical Use Only**: RSP is for security research and LLM safety testing only
 2. **API Key Security**: Never commit API keys to version control
 3. **Data Privacy**: Enable zero-retention for sensitive tests
 4. **Access Control**: Restrict access to API keys and session data
@@ -1955,10 +1957,20 @@ Red Set ProtoCell builds upon research in:
 
 Special thanks to the AI safety research community for inspiration and guidance.
 
+**Development:**
+This project was built in collaboration with GitHub Copilot, which provided code assistance, architectural guidance, and helped bring this vision to life.
+
 ---
 
 ## 📞 Contact
 
+**Author: Larry Arnold**
+- **Email**: labuilds@proton.me
+- **X (Twitter)**: [@LABuilds](https://x.com/LABuilds)
+- **LinkedIn**: [larry-arnold](https://linkedin.com/in/larry-arnold)
+
+**Project Links:**
+- **Live Demo**: [red-set-protocell.vercel.app](https://red-set-protocell.vercel.app)
 - **Issues**: [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Arnoldlarry15/red-set-protocell/discussions)
 - **Security**: Use [GitHub Security Advisories](https://github.com/Arnoldlarry15/red-set-protocell/security/advisories/new) for private vulnerability reports
@@ -2038,4 +2050,5 @@ Use responsibly. Test ethically. Build safer AI.
 
 ---
 
-**Made with ❤️ by the AI Safety Community**
+**Made with ❤️ by Larry Arnold and the AI Safety Community**  
+*Built in collaboration with GitHub Copilot*

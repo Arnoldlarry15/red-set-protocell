@@ -86,24 +86,54 @@ The `vercel.json` file wires frontend and backend together:
 
 ```json
 {
-  "framework": "vite",
-  "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "cd frontend && npm install",
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "src": "api/*.py",
+      "use": "@vercel/python"
+    },
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": { 
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/health",
+      "dest": "/api/health.py"
+    },
+    {
+      "src": "/api/info",
+      "dest": "/api/info.py"
+    },
+    {
+      "src": "/api/metrics",
+      "dest": "/api/metrics.py"
+    },
+    {
+      "src": "/api/auth",
+      "dest": "/api/auth.py"
+    },
+    {
+      "src": "/api/scan",
+      "dest": "/api/scan.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/$1"
     }
   ]
 }
 ```
 
 **Key Points:**
-- **Framework mode**: Uses `framework: "vite"` to enable Vercel's native Vite support
-- **No `builds` section**: Vercel auto-detects Python functions in `/api` directory
-- **Automatic static serving**: Vercel automatically serves `/index.html` for the root and handles SPA routing
-- **API routing**: Only `/api/*` paths need explicit routing to serverless functions
+- **Builds section**: Explicitly tells Vercel to build Python functions and React frontend
+- **Routes section**: Maps API endpoints to their serverless functions and frontend to static files
+- **Explicit routing**: All API paths are explicitly routed for clarity and control
+- **Static serving**: Frontend static files are served with proper routing
 
 This configuration eliminates CORS hell—frontend and backend share the same origin.
 
@@ -112,19 +142,21 @@ This configuration eliminates CORS hell—frontend and backend share the same or
 From React, use relative paths:
 
 ```typescript
-// Development (.env.local)
+// Development (.env.local) - for local backend at http://localhost:8000
 VITE_API_BASE_URL=http://localhost:8000
 
-// Production (Vercel environment variables)
-VITE_API_BASE_URL=/api
+// Production (Vercel) - leave empty to use relative paths
+VITE_API_BASE_URL=
 ```
 
 Then in your code:
 
 ```typescript
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+// Default to empty string for relative paths in production
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
-const response = await fetch(`${API_BASE_URL}/health`);
+// This will call /api/health in production or http://localhost:8000/api/health in development
+const response = await fetch(`${API_BASE_URL}/api/health`);
 const data = await response.json();
 ```
 

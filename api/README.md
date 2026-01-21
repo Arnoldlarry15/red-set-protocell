@@ -11,6 +11,9 @@ Each Python file in this directory becomes a serverless endpoint:
 - `/api/scan.py` → `https://your-app.vercel.app/api/scan`
 - `/api/metrics.py` → `https://your-app.vercel.app/api/metrics`
 - `/api/info.py` → `https://your-app.vercel.app/api/info`
+- `/api/app.py` → Main entrypoint that wraps the backend FastAPI (optional)
+
+The individual serverless functions (health.py, auth.py, etc.) are recommended for production use as they have faster cold start times. The `app.py` file provides an alternative approach using the full FastAPI application from the backend for more complex endpoints.
 
 ## Function Structure
 

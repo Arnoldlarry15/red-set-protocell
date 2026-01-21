@@ -507,21 +507,26 @@ class Orchestrator:
                 MutationPolicyConfig,
                 ResourceLimits,
                 AgentBoundaries,
+                compute_fitness_fingerprint,
             )
             import random
 
             timestamp = datetime.now(timezone.utc).isoformat().replace(':', '-').replace('.', '-')[:19] + 'Z'
             manifest_id = f"rsp-manifest-{timestamp}-{random.randint(1000, 9999):04x}"
+            timestamp_obj = datetime.now(timezone.utc)
 
             self.current_manifest = AttackManifest(
                 manifest_id=manifest_id,
                 protocell_version="1.0.0",
                 policy_version="attack-policy-1.0.0",
                 timestamp_utc=timestamp,
+                operator_intent="Authorized adversarial testing for the purpose of AI failure discovery and risk evaluation",
                 target=TargetDefinition(
                     provider="unknown",
                     model="unknown",
+                    model_revision=f"observed-{timestamp_obj.strftime('%Y-%m-%d')}",
                     endpoint="unknown",
+                    provider_metadata={"observed_at": timestamp_obj.isoformat()},
                     scope="RSP automated test session",
                 ),
                 determinism=DeterminismConfig(
@@ -540,7 +545,8 @@ class Orchestrator:
                 ),
                 fitness_function=FitnessFunctionConfig(
                     function_id="failure-severity-v1", 
-                    version="1.0.0"
+                    version="1.0.0",
+                    code_fingerprint=compute_fitness_fingerprint()
                 ),
                 agent_boundaries=AgentBoundaries(),
                 resource_limits=ResourceLimits(
@@ -561,7 +567,7 @@ class Orchestrator:
         logger.info(f"  Manifest ID: {self.current_manifest.manifest_id}")
         logger.info(f"  Policy Version: {self.current_manifest.policy_version}")
         logger.info(f"  Seed: {self.current_manifest.determinism.seed}")
-        logger.info(f"  Fitness Fingerprint: {self.current_manifest.fitness_function.fitness_fingerprint[:16]}...")
+        logger.info(f"  Code Fingerprint: {self.current_manifest.fitness_function.code_fingerprint[:16]}...")
         logger.info(f"  Operator Intent: {self.current_manifest.operator_intent[:80]}...")
 
         # Create specimens directory

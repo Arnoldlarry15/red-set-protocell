@@ -1981,28 +1981,36 @@ Special thanks to the AI safety research community for inspiration and guidance.
 - ✅ Cost management and tracking
 - ✅ FastAPI-based API server
 - ✅ WebSocket support
+- ✅ Parallel execution support
+- ✅ Time tracking analytics
+- ✅ Strategy tuning and optimization
+- ✅ Perturbation engine
+- ✅ Selection engine with tournament and fitness-based selection
+- ✅ Model zoo support
+- ✅ Benchmarking capabilities
+- ✅ Telemetry and metrics export
+- ✅ Uncertainty tracking with confidence intervals
+- ✅ Policy locking and versioning
+- ✅ Reproducible experiment artifacts
 
 ### Future Enhancements
-- [ ] Parallel execution for improved performance
-- [ ] Pluggable backends (local GGUF models, custom HTTP APIs)
-- [ ] Adaptive mutation strategies with performance tracking
-- [ ] Score uncertainty and variance tracking
-- [ ] Temporal analytics for model behavior
-- [ ] Automated benchmarking suites
-- [ ] Stronger telemetry abstraction
-- [ ] Formal mutation strategy tuning
-- [ ] Official model zoo for consistent benchmarking
+- [ ] Pluggable backends for additional model providers
+- [ ] Local GGUF model support via llama.cpp
+- [ ] Custom HTTP backend support
+- [ ] Adaptive mutation strategies with reinforcement learning
+- [ ] Advanced score uncertainty quantification
+- [ ] Temporal regression detection
 - [ ] ML-based classifiers for Spotter
 - [ ] Additional mutation strategies
 - [ ] More attack domains
-- [ ] PostgreSQL integration hardening
-- [ ] CLI commands for benchmarking and exports
+- [ ] PostgreSQL integration for large-scale deployments
+- [ ] CLI commands for batch benchmarking
 - [ ] Advanced analytics visualizations
-- [ ] Distributed execution support
+- [ ] Distributed execution across multiple machines
 - [ ] Custom strategy plugin system
 - [ ] Integration with SIEM tools
 - [ ] Automated report generation
-- [ ] Multi-model comparative testing
+- [ ] Multi-model comparative testing frameworks
 
 ---
 

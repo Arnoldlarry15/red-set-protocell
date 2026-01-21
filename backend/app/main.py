@@ -202,7 +202,10 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         scoring_engine=scoring_engine,
         state_manager=state_manager,
         max_rounds=config.orchestrator.max_rounds,
-        round_timeout=config.orchestrator.round_timeout_seconds
+        round_timeout=config.orchestrator.round_timeout_seconds,
+        concurrent_rounds=config.orchestrator.concurrent_rounds,
+        config=config,
+        artifacts_dir="runs"
     )
     logger.info("✓ Orchestrator initialized")
 

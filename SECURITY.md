@@ -2,7 +2,9 @@
 
 ## Overview
 
-Red Set ProtoCell (RSP) is a defensive AI red teaming platform designed with security as a core principle. This document outlines our security policies, responsible disclosure procedures, and security best practices for users and contributors.
+Red Set ProtoCell (RSP) is an automated AI red-teaming engine designed with security as a core principle. This document outlines our security policies, responsible disclosure procedures, and security best practices for users and contributors.
+
+**Important**: RSP is an offensive security tool—intentionally adversarial software designed to probe AI systems for weaknesses in a controlled manner. "Secure by default" here means the platform cannot accidentally cause harm outside its intended testing scope, not that it produces "safe" outputs.
 
 ## Supported Versions
 
@@ -50,6 +52,67 @@ We request a **90-day** disclosure timeline to:
 5. Release patch and disclosure
 
 ## Security Features
+
+### Secure by Default (for Red-Teaming)
+
+RSP is intentionally dangerous software—an offensive security tool. "Secure by default" does not mean "safe outputs." It means the platform cannot accidentally cause harm outside its intended testing scope.
+
+#### A. Containment by Default
+
+- **Explicit Target Configuration**: Attacks run only against explicitly configured targets
+- **No Open-Ended Endpoints**: No accidental internet or system access
+- **Scoped Execution**: Red Set cannot "wander off" to unintended systems
+
+**Implementation**:
+```python
+# Target must be explicitly configured
+config = {
+    "backend": "openai",  # Explicit backend
+    "api_key": "...",     # Explicit credentials
+    "model": "gpt-4"      # Explicit model
+}
+# No default fallback to other systems
+```
+
+#### B. Scope-Limited Attack Execution
+
+- **Max Iterations Enforced**: Configurable `max_rounds` (default: 100)
+- **Max Token Budgets Enforced**: Prevents runaway costs
+- **Max Concurrency Enforced**: Prevents accidental DoS (default: 1, max: 10)
+
+**Configuration**:
+```yaml
+orchestrator:
+  max_rounds: 100
+  concurrent_rounds: 1
+  round_timeout_seconds: 300
+```
+
+#### C. Non-Persistence of Sensitive Artifacts
+
+- **Intentional Storage Only**: Generated adversarial prompts stored deliberately, not implicitly
+- **No Silent Logging**: Raw model outputs not logged unless explicitly enabled
+- **Sanitization Hooks**: Export functions sanitize sensitive data
+
+**Zero-Retention Policy**:
+```python
+# Session data destroyed after completion (default)
+session.cleanup()  # Removes all prompts, responses, and metadata
+```
+
+#### D. Reproducibility Over Raw Power
+
+- **Deterministic Seeds**: Replay attacks with same initial conditions
+- **Traceable Evolution Paths**: Every mutation step is logged
+- **Policy Versioning**: Results tagged with attack policy version
+- **Unreplayable = Lower Value**: If results can't be reproduced, treated skeptically
+
+**Example**:
+```python
+# Reproducible run with fixed seed
+session = Session(config, seed=42, policy_version="v1.0.0")
+# Results can be replayed exactly
+```
 
 ### Built-in Security Mechanisms
 
@@ -391,9 +454,9 @@ RSP is designed with privacy in mind:
 
 RSP adheres to:
 
-- **Responsible AI Principles**: Defense-only, no harm
-- **Research Ethics**: Transparent, auditable
-- **Security Research Ethics**: Coordinated disclosure
+- **Responsible AI Principles**: Offensive security research with ethical boundaries (EGG prevents CSAM, bioweapons, real exploits)
+- **Research Ethics**: Transparent, auditable, reproducible
+- **Security Research Ethics**: Coordinated disclosure, contained execution
 
 ## Security Resources
 

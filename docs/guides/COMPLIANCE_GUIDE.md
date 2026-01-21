@@ -15,13 +15,17 @@ This guide covers compliance, privacy, and data handling for Red Set ProtoCell.
 
 ## Overview
 
-Red Set ProtoCell is designed with privacy and compliance in mind:
+Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming engine, not a compliance tool. However, the platform is designed with privacy and compliance in mind for operating in enterprise environments:
 
-- **Zero-Retention Policy**: All session data can be automatically deleted
-- **Content Fingerprinting**: Privacy-preserving hashed logging
-- **Minimal Data Collection**: Only collect what's necessary
-- **User Control**: Clear opt-in/opt-out mechanisms
-- **Transparent Operations**: Auditable and documented
+- **Purpose**: Discovers AI failure modes through adversarial testing (offensive security research)
+- **Zero-Retention Policy**: All session data can be automatically deleted (GDPR/CCPA compliance)
+- **Content Fingerprinting**: Privacy-preserving hashed logging (no plaintext storage of attacks)
+- **Minimal Data Collection**: Only collect what's necessary for attack evolution and analysis
+- **User Control**: Clear opt-in/opt-out mechanisms for data retention
+- **Transparent Operations**: Auditable and documented (policy versioning, traceable mutations)
+- **Ethical Boundaries**: EGG (Ethical Guardrail Governor) prevents CSAM, bioweapons, real exploits
+
+**Important**: Compliance here means operating the red-teaming platform responsibly, not filtering outputs for safety. RSP is intentionally designed to discover failures—that's its purpose.
 
 ## Privacy Policy Template
 

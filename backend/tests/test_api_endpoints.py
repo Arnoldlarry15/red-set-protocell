@@ -53,7 +53,7 @@ class TestInfraDashboard:
     def test_model_comparison(self):
         """Test model version comparison endpoint"""
         response = client.get(
-            "/api/dashboard/compare-models?model_v1=gpt-4-v1&model_v2=gpt-4-v2"
+            "/dashboard/compare-models?model_v1=gpt-4-v1&model_v2=gpt-4-v2"
         )
         assert response.status_code in [200, 500]  # May fail if no DB
         if response.status_code == 200:
@@ -68,7 +68,7 @@ class TestUserManagement:
     def test_login_success(self):
         """Test successful login"""
         response = client.post(
-            "/api/auth/login",
+            "/auth/login",
             json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
         )
         assert response.status_code == 200
@@ -83,7 +83,7 @@ class TestUserManagement:
     def test_login_failure(self):
         """Test failed login with invalid credentials"""
         response = client.post(
-            "/api/auth/login",
+            "/auth/login",
             json={"username": "invalid", "password": "wrong"}
         )
         assert response.status_code == 401
@@ -101,7 +101,7 @@ class TestUserManagement:
     def test_register_user(self):
         """Test user registration"""
         response = client.post(
-            "/api/auth/register",
+            "/auth/register",
             json={
                 "username": "test_user",
                 "email": "test@example.com",
@@ -118,7 +118,7 @@ class TestUserManagement:
         """Test registering a duplicate user"""
         # Register first time
         client.post(
-            "/api/auth/register",
+            "/auth/register",
             json={
                 "username": "duplicate_user",
                 "email": "dup@example.com",
@@ -128,7 +128,7 @@ class TestUserManagement:
         )
         # Try to register again
         response = client.post(
-            "/api/auth/register",
+            "/auth/register",
             json={
                 "username": "duplicate_user",
                 "email": "dup2@example.com",
@@ -141,7 +141,7 @@ class TestUserManagement:
     def test_register_invalid_role(self):
         """Test registering with invalid role"""
         response = client.post(
-            "/api/auth/register",
+            "/auth/register",
             json={
                 "username": "invalid_role_user",
                 "email": "invalid@example.com",
@@ -177,7 +177,7 @@ class TestRemoteControl:
             "mutation_weights": {"lexical": 1.0, "encoding": 0.8},
             "thresholds": {"critical": 0.8, "high": 0.6}
         }
-        response = client.post("/api/remote/config/save", json=config)
+        response = client.post("/remote/config/save", json=config)
         assert response.status_code == 200
         data = response.json()
         assert "config_id" in data
@@ -196,11 +196,11 @@ class TestRemoteControl:
             "selected_domains": ["refusal_erosion"],
             "selected_strategies": ["structural"]
         }
-        save_response = client.post("/api/remote/config/save", json=config)
+        save_response = client.post("/remote/config/save", json=config)
         config_id = save_response.json()["config_id"]
 
         # Now retrieve it
-        response = client.get(f"/api/remote/config/{config_id}")
+        response = client.get(f"/remote/config/{config_id}")
         assert response.status_code == 200
         data = response.json()
         assert "config" in data
@@ -224,15 +224,15 @@ class TestRemoteControl:
             "selected_domains": ["injection"],
             "selected_strategies": ["lexical"]
         }
-        save_response = client.post("/api/remote/config/save", json=config)
+        save_response = client.post("/remote/config/save", json=config)
         config_id = save_response.json()["config_id"]
 
         # Delete it
-        response = client.delete(f"/api/remote/config/{config_id}")
+        response = client.delete(f"/remote/config/{config_id}")
         assert response.status_code == 200
 
         # Verify it's gone
-        get_response = client.get(f"/api/remote/config/{config_id}")
+        get_response = client.get(f"/remote/config/{config_id}")
         assert get_response.status_code == 404
 
 
@@ -243,7 +243,7 @@ class TestAPIIntegration:
         """Test a complete workflow: login -> save config -> start run"""
         # 1. Login
         login_response = client.post(
-            "/api/auth/login",
+            "/auth/login",
             json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
         )
         assert login_response.status_code == 200
@@ -259,7 +259,7 @@ class TestAPIIntegration:
             "selected_domains": ["injection"],
             "selected_strategies": ["lexical"]
         }
-        save_response = client.post("/api/remote/config/save", json=config)
+        save_response = client.post("/remote/config/save", json=config)
         assert save_response.status_code == 200
 
         # 3. Note: We can't actually start a run without a real API key
@@ -275,7 +275,7 @@ class TestCustomPromptExecution:
     def test_custom_prompt_no_session(self):
         """Test custom prompt execution with non-existent session"""
         response = client.post(
-            "/api/prompt/execute",
+            "/prompt/execute",
             json={
                 "prompt": "What is 2+2?",
                 "session_id": "nonexistent_session"
@@ -288,14 +288,14 @@ class TestCustomPromptExecution:
         """Test custom prompt execution with missing required fields"""
         # Missing session_id
         response = client.post(
-            "/api/prompt/execute",
+            "/prompt/execute",
             json={"prompt": "Test prompt"}
         )
         assert response.status_code == 422  # Validation error
 
         # Missing prompt
         response = client.post(
-            "/api/prompt/execute",
+            "/prompt/execute",
             json={"session_id": "test_session"}
         )
         assert response.status_code == 422  # Validation error

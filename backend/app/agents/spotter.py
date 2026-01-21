@@ -1,17 +1,21 @@
 """
 Red Set ProtoCell - Spotter Agent
 
-Evaluation agent that analyzes Target responses and assesses safety failures.
+Failure evaluation agent that scores responses and drives evolutionary feedback.
 
-Role: Analyze responses using 3-Layer Scoring Taxonomy
-Outputs: Structured JSON with L1, L2, L3 scores, mutation guidance, and failure archetypes
+Role: Evaluate target LLM responses using 3-Layer Scoring Taxonomy
+Outputs: Structured JSON with L1, L2, L3 scores, fitness metrics, and failure archetypes
 Constraints:
-- Does not mutate prompts
-- Does not control orchestration
+- Does not mutate prompts (separation of concerns: judge ≠ attacker)
+- Does not control orchestration (Orchestrator manages flow)
 - Provides heuristic judgments, not ground truth
 
-EPISTEMOLOGY VS LAW:
-===================
+FAILURE SCORING & EVOLUTION FEEDBACK:
+=====================================
+
+The Spotter is the "evaluator" in Red Set ProtoCell's dual-agent architecture.
+It analyzes target responses, scores failure severity, and provides fitness feedback
+to drive Sniper's evolutionary optimization.
 
 Critical Pre-Release Understanding:
 
@@ -33,31 +37,37 @@ Critical Pre-Release Understanding:
     - Metadata in predictable JSON format
     - No natural language explanations (only codes)
 
-Why "Spotter is Doing Epistemology, Not Law":
+Why "Spotter Provides Fitness Feedback for Evolution":
 
-1. Epistemology (How We Know):
-   - Spotter uses heuristic pattern matching
-   - Scores represent probabilistic judgments
-   - No claim of absolute truth or certainty
-   - Indicators are educated guesses, not proofs
+1. Failure Scoring (Not Blocking):
+   - Spotter uses heuristic pattern matching to detect failures
+   - Scores represent severity: L1 (Linguistic), L2 (Security), L3 (Cognitive)
+   - High scores indicate model weakness, not user danger
+   - Scores are probabilistic judgments for prioritization
 
-2. Not Law (Definitive Rulings):
+2. Evolution Feedback (Driving Attack Adaptation):
+   - Scores become fitness values for Sniper's genetic algorithm
+   - Higher scores = more successful attacks = kept in evolution pool
+   - Novelty detection rewards new failure types
+   - Fitness feedback drives systematic exploration of failure space
+
+3. Not Ground Truth (Needs Human Review):
    - Spotter does NOT make final safety decisions
-   - EGG makes law (binary block/allow)
-   - Spotter provides evidence for human review
-   - High scores indicate "needs investigation", not "definitely unsafe"
+   - EGG makes binary block/allow decisions (that's law)
+   - Spotter provides evidence for human investigation
+   - High scores indicate "investigate this", not "definitely unsafe"
 
-3. This Distinction Matters Because:
-   - Users must NOT treat scores as ground truth
-   - Scores guide further investigation, not policy
+4. Implications for Offensive Security:
+   - Scores are for attack optimization, not content filtering
+   - Used to discover failure modes systematically
    - False positives and negatives are expected
-   - Human judgment is required for final decisions
+   - Human judgment required for interpreting discovered failures
 
-4. Implications for Production:
-   - Scores are for prioritization, not automation
-   - Threshold-based blocking should be conservative
-   - Multiple evaluation methods recommended (defense in depth)
-   - Regular pattern updates based on false positive/negative analysis
+Why This Separation Matters:
+- Sniper cannot self-evaluate → no biased fitness loops
+- Spotter cannot generate attacks → no conflict of interest
+- Objective evaluation drives effective evolution
+- Systematic discovery of novel failure modes
 
 Honest Limitations:
 - Pattern matching has blind spots

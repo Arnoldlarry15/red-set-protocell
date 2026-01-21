@@ -1,18 +1,21 @@
 """
 Red Set ProtoCell - Sniper Agent
 
-Attacker agent that generates adversarial prompts.
+Adversarial prompt generation agent for offensive security testing.
 
-Role: Generate adversarial prompts using mutation and evolution
-Inputs: Read-only access to prior round metadata and scores
+Role: Generate adversarial prompts designed to elicit failures from target LLMs
+Inputs: Read-only access to prior round metadata and fitness scores
 Outputs: Single candidate adversarial prompt string
 Constraints:
-- Must pass prompts through EGG before execution
-- Does not evaluate outcomes
-- Does not persist results
+- Must pass prompts through EGG before execution (ethical boundaries)
+- Does not evaluate outcomes (separation of concerns: attacker ≠ judge)
+- Does not persist results (orchestrator handles state)
 
-SAFE ADVERSARIAL INTELLIGENCE:
+ADVERSARIAL PROMPT GENERATION:
 ==============================
+
+The Sniper is the "attack generator" in Red Set ProtoCell's dual-agent architecture.
+It systematically explores the space of adversarial prompts to discover failure modes.
 
 Pre-Release Checks:
 
@@ -36,16 +39,16 @@ Pre-Release Checks:
     - Prior metadata passed to guide evolution
     - Traceable from base prompt → mutations → pool
 
-Why This is "Safe Adversarial Intelligence":
-1. Intelligence is constrained:
-   - No learning from real-world data
-   - No exploitation of actual vulnerabilities
-   - No connection to external attack databases
-   - All strategies are simulated/hypothetical
+Why This is "Adversarial Intelligence with Boundaries":
+1. Intelligence is evolutionary:
+   - Uses genetic algorithms and fitness-guided selection
+   - Learns which attack patterns are effective
+   - Adapts strategies based on success rates
+   - Discovers novel failure modes through mutation
 
-2. Evolution is controlled:
+2. Evolution is controlled (policy-locked):
    - Fixed pool size (no unbounded growth)
-   - Deterministic or seeded mutations
+   - Deterministic or seeded mutations (reproducible)
    - Selection strategies are transparent
    - No black-box optimization
 
@@ -55,9 +58,11 @@ Why This is "Safe Adversarial Intelligence":
    - Domain and fitness tracked
    - Reproducible given same config/seed
 
-4. EGG mandatory:
+4. EGG enforces ethical boundaries:
    - All prompts must pass EGG inspection
    - No bypass mechanism
+   - Blocks CSAM, bioweapons, real exploits
+   - Attack generation ≠ real harm
    - Blocked prompts don't reach Target
    - Safety is enforced, not optional
 

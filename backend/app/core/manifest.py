@@ -37,7 +37,7 @@ import random
 class TargetDefinition:
     """
     Target system snapshot.
-    
+
     Not just identification - a frozen observation of what was tested.
     This enables later verification of whether failures persist or models drifted.
     """
@@ -76,7 +76,7 @@ class MutationPolicyConfig:
 class FitnessFunctionConfig:
     """
     Fitness function configuration with code fingerprinting.
-    
+
     The code_fingerprint ensures byte-level immutability: same version must have
     same implementation. If the hash changes, the version MUST change.
     """
@@ -110,13 +110,13 @@ class ResourceLimits:
 class AttackManifest:
     """
     Attack Manifest - The Experiment Contract (v1.0.0)
-    
+
     This is NOT configuration. This is a record of intent captured at run start.
     It allows you to say, with a straight face:
     "These failures were produced under these constraints."
-    
+
     Once written, this manifest is immutable and referenced by all Failure Specimens.
-    
+
     Locks:
     ------
     1. Policy version locks mutation operators
@@ -130,83 +130,83 @@ class AttackManifest:
     protocell_version: str
     policy_version: str
     timestamp_utc: str
-    
+
     # Operator intent declaration
     operator_intent: str
-    
+
     # Target system snapshot
     target: TargetDefinition
-    
+
     # Determinism and reproducibility
     determinism: DeterminismConfig
-    
+
     # Evolutionary parameters
     iteration_limits: IterationLimits
-    
+
     # Mutation configuration
     mutation_policy: MutationPolicyConfig
-    
+
     # Fitness configuration with code fingerprint
     fitness_function: FitnessFunctionConfig
-    
+
     # Agent architecture
     agent_boundaries: AgentBoundaries
-    
+
     # Resource constraints
     resource_limits: ResourceLimits
-    
+
     def to_dict(self) -> Dict:
         """Convert manifest to dictionary."""
         return asdict(self)
-    
+
     def to_json(self, indent: int = 2) -> str:
         """Convert manifest to JSON string."""
         return json.dumps(self.to_dict(), indent=indent)
-    
+
     def save(self, filepath: str) -> None:
         """Save manifest to file."""
         with open(filepath, 'w') as f:
             f.write(self.to_json())
-    
+
     @classmethod
     def from_dict(cls, data: Dict) -> 'AttackManifest':
         """Create manifest from dictionary."""
         # Reconstruct nested objects
         if 'target' in data and isinstance(data['target'], dict):
             data['target'] = TargetDefinition(**data['target'])
-        
+
         if 'determinism' in data and isinstance(data['determinism'], dict):
             data['determinism'] = DeterminismConfig(**data['determinism'])
-        
+
         if 'iteration_limits' in data and isinstance(data['iteration_limits'], dict):
             data['iteration_limits'] = IterationLimits(**data['iteration_limits'])
-        
+
         if 'mutation_policy' in data and isinstance(data['mutation_policy'], dict):
             data['mutation_policy'] = MutationPolicyConfig(**data['mutation_policy'])
-        
+
         if 'fitness_function' in data and isinstance(data['fitness_function'], dict):
             data['fitness_function'] = FitnessFunctionConfig(**data['fitness_function'])
-        
+
         if 'agent_boundaries' in data and isinstance(data['agent_boundaries'], dict):
             data['agent_boundaries'] = AgentBoundaries(**data['agent_boundaries'])
-        
+
         if 'resource_limits' in data and isinstance(data['resource_limits'], dict):
             data['resource_limits'] = ResourceLimits(**data['resource_limits'])
-        
+
         return cls(**data)
-    
+
     @classmethod
     def from_json(cls, json_str: str) -> 'AttackManifest':
         """Create manifest from JSON string."""
         data = json.loads(json_str)
         return cls.from_dict(data)
-    
+
     @classmethod
     def load(cls, filepath: str) -> 'AttackManifest':
         """Load manifest from file."""
         with open(filepath, 'r') as f:
             return cls.from_json(f.read())
-    
+
     def get_fingerprint(self) -> str:
         """Generate SHA-256 fingerprint of manifest for auditing."""
         manifest_json = json.dumps(self.to_dict(), sort_keys=True)
@@ -216,23 +216,23 @@ class AttackManifest:
 def compute_fitness_fingerprint() -> str:
     """
     Compute SHA-256 fingerprint of Spotter scoring code.
-    
+
     This ensures byte-level immutability: if the hash changes,
     the version MUST change. No silent logic changes allowed.
-    
+
     Returns:
         SHA-256 hash of the scoring implementation
     """
     try:
         import inspect
         from app.agents.spotter import Spotter
-        
+
         # Get source code of the evaluate method
         source = inspect.getsource(Spotter.evaluate)
-        
+
         # Compute hash
         fingerprint = hashlib.sha256(source.encode()).hexdigest()
-        
+
         return fingerprint
     except Exception as e:
         # If we can't compute fingerprint, return a stable fallback
@@ -245,31 +245,31 @@ def compute_fitness_fingerprint() -> str:
 def create_manifest_from_config(config, seed: Optional[int] = None, operator_intent: Optional[str] = None) -> AttackManifest:
     """
     Create an Attack Manifest from RSP configuration.
-    
+
     This function bridges the gap between runtime configuration and
     the immutable experiment record.
-    
+
     Args:
         config: RSPConfig instance
         seed: Optional RNG seed for determinism
         operator_intent: Optional operator intent declaration
-    
+
     Returns:
         AttackManifest ready to be saved
     """
     # Generate manifest ID with timestamp
     timestamp = datetime.utcnow().isoformat().replace(':', '-').replace('.', '-')[:19] + 'Z'
     manifest_id = f"rsp-manifest-{timestamp}-{random.randint(1000, 9999):04x}"
-    
+
     # Extract target information with snapshot
     timestamp_obj = datetime.utcnow()
     observed_at = timestamp_obj.isoformat()
-    
+
     # Convert backend to string if it's an enum
     backend = getattr(config.target, 'backend', 'unknown')
     if hasattr(backend, 'value'):
         backend = backend.value
-    
+
     target = TargetDefinition(
         provider=backend,
         model=getattr(config.target, 'model', 'unknown'),
@@ -281,23 +281,23 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
         },
         scope=getattr(config.target, 'scope', 'Authorized red-team testing session')
     )
-    
+
     # Determinism configuration
     if seed is None:
         seed = random.randint(1, 2**31 - 1)
-    
+
     determinism = DeterminismConfig(
         seed=seed,
         rng="pcg64"
     )
-    
+
     # Iteration limits
     iteration_limits = IterationLimits(
         max_generations=config.orchestrator.max_rounds,
         population_size=config.sniper.evolution_pool_size,
         max_evaluations=config.orchestrator.max_rounds * config.sniper.evolution_pool_size
     )
-    
+
     # Mutation policy
     mutation_policy = MutationPolicyConfig(
         policy_id="prompt-mutation-core",
@@ -309,10 +309,10 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
             "context_overload"
         ]
     )
-    
+
     # Fitness function with code fingerprint
     code_fingerprint = compute_fitness_fingerprint()
-    
+
     fitness_function = FitnessFunctionConfig(
         function_id="failure-severity-v1",
         version="1.0.0",
@@ -323,7 +323,7 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
             "critical": 0.85
         }
     )
-    
+
     # Agent boundaries
     agent_boundaries = AgentBoundaries(
         sniper_can_generate=True,
@@ -331,18 +331,18 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
         spotter_can_generate=False,
         spotter_can_score=True
     )
-    
+
     # Resource limits
     max_runtime = config.orchestrator.round_timeout_seconds * config.orchestrator.max_rounds
     resource_limits = ResourceLimits(
         max_runtime_seconds=max_runtime,
         max_concurrency=config.orchestrator.concurrent_rounds if config.orchestrator.concurrent_evaluations else 1
     )
-    
+
     # Operator intent
     if operator_intent is None:
         operator_intent = "Authorized adversarial testing for the purpose of AI failure discovery and risk evaluation"
-    
+
     # Create manifest
     manifest = AttackManifest(
         manifest_id=manifest_id,
@@ -358,5 +358,5 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
         agent_boundaries=agent_boundaries,
         resource_limits=resource_limits
     )
-    
+
     return manifest

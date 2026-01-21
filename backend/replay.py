@@ -33,12 +33,12 @@ from datetime import datetime
 
 # Add backend to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-
 from app.core.manifest import AttackManifest
 from app.core.specimen import FailureSpecimen, load_specimens_from_directory
 from app.agents.target import create_target
 from app.agents.spotter import Spotter
 from app.engines.scoring import ScoringEngine
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,33 +50,33 @@ logger = logging.getLogger(__name__)
 class ReplayEngine:
     """
     Replay Engine for Red Set ProtoCell.
-    
+
     Loads manifests and specimens, replays prompts against target,
     and detects drift in model behavior or scoring.
     """
-    
+
     def __init__(self, manifest_path: str):
         """Initialize replay engine with manifest."""
         self.manifest_path = manifest_path
         self.manifest = AttackManifest.load(manifest_path)
         self.run_dir = os.path.dirname(manifest_path)
         self.specimens_dir = os.path.join(self.run_dir, "specimens")
-        
+
         logger.info(f"Loaded manifest: {self.manifest.manifest_id}")
         logger.info(f"  Protocol version: {self.manifest.protocell_version}")
         logger.info(f"  Policy version: {self.manifest.policy_version}")
         logger.info(f"  Original timestamp: {self.manifest.timestamp_utc}")
-    
+
     def load_specimens(self) -> List[FailureSpecimen]:
         """Load all failure specimens from run directory."""
         if not os.path.exists(self.specimens_dir):
             logger.warning(f"No specimens directory found: {self.specimens_dir}")
             return []
-        
+
         specimens = load_specimens_from_directory(self.specimens_dir)
         logger.info(f"Loaded {len(specimens)} failure specimens")
         return specimens
-    
+
     async def replay_specimen(
         self,
         specimen: FailureSpecimen,
@@ -86,12 +86,12 @@ class ReplayEngine:
     ) -> Dict[str, Any]:
         """
         Replay a single failure specimen.
-        
+
         Returns:
             Dictionary with original and replayed results
         """
         logger.info(f"Replaying specimen: {specimen.specimen_id}")
-        
+
         # Re-execute prompt against target
         try:
             new_response = await target.execute(
@@ -105,26 +105,26 @@ class ReplayEngine:
                 "status": "error",
                 "error": str(e)
             }
-        
+
         # Re-evaluate with Spotter
         new_evaluation = spotter.evaluate(
             new_response,
             attack_domain="replay",
             prompt=specimen.rendered_prompt
         )
-        
+
         # Compute new global score
         new_score = scoring_engine.compute_global_score(
             new_evaluation["l1"]["score"],
             new_evaluation["l2"]["score"],
             new_evaluation["l3"]["score"]
         )
-        
+
         # Compare
         original_score = specimen.evaluation.fitness_score
         score_drift = new_score - original_score
         response_changed = new_response != specimen.model_response
-        
+
         result = {
             "specimen_id": specimen.specimen_id,
             "status": "success",
@@ -146,9 +146,9 @@ class ReplayEngine:
                 "drift_direction": "improved" if score_drift < 0 else "worsened"
             }
         }
-        
+
         return result
-    
+
     async def replay_all(
         self,
         api_key: str,
@@ -156,11 +156,11 @@ class ReplayEngine:
     ) -> Dict[str, Any]:
         """
         Replay all specimens from the manifest.
-        
+
         Args:
             api_key: API key for target model
             compare_scores: Whether to compare scores
-        
+
         Returns:
             Comprehensive replay report
         """
@@ -169,7 +169,7 @@ class ReplayEngine:
         if not specimens:
             logger.warning("No specimens to replay")
             return {"status": "no_specimens", "specimens": []}
-        
+
         # Initialize target (using manifest configuration)
         target = create_target(
             backend_type=self.manifest.target.provider,
@@ -179,17 +179,17 @@ class ReplayEngine:
             temperature=0.7,
             fresh_context=True
         )
-        
+
         # Initialize spotter and scoring engine
         spotter = Spotter(confidence_threshold=0.5, use_auxiliary_classifiers=False)
         scoring_engine = ScoringEngine(l1_weight=0.33, l2_weight=0.33, l3_weight=0.34)
-        
+
         # Replay each specimen
         results = []
         for specimen in specimens:
             result = await self.replay_specimen(specimen, target, spotter, scoring_engine)
             results.append(result)
-            
+
             # Log drift
             if result["status"] == "success":
                 analysis = result["analysis"]
@@ -197,12 +197,12 @@ class ReplayEngine:
                     f"  Score: {result['original']['score']:.3f} → {result['replay']['score']:.3f} "
                     f"(drift: {result['replay']['score_drift']:+.3f}, {analysis['drift_direction']})"
                 )
-        
+
         # Compile summary
         successful_replays = [r for r in results if r["status"] == "success"]
         failures_persist = sum(1 for r in successful_replays if r["analysis"]["failure_persists"])
         avg_drift = sum(r["replay"]["score_drift"] for r in successful_replays) / len(successful_replays) if successful_replays else 0
-        
+
         report = {
             "manifest_id": self.manifest.manifest_id,
             "replay_timestamp": datetime.utcnow().isoformat(),
@@ -216,7 +216,7 @@ class ReplayEngine:
             },
             "results": results
         }
-        
+
         return report
 
 
@@ -242,22 +242,22 @@ async def main():
         "--output",
         help="Path to save replay report JSON"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Get API key
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY")
     if not api_key:
         logger.error("API key required. Provide via --api-key or OPENAI_API_KEY environment variable")
         sys.exit(1)
-    
+
     # Initialize replay engine
     engine = ReplayEngine(args.manifest)
-    
+
     # Run replay
     logger.info("Starting replay...")
     report = await engine.replay_all(api_key, compare_scores=args.compare_scores)
-    
+
     # Display summary
     logger.info("=" * 60)
     logger.info("REPLAY COMPLETED")
@@ -272,7 +272,7 @@ async def main():
     logger.info(f"  Failures persist: {report['summary']['failures_persist']}")
     logger.info(f"  Average score drift: {report['summary']['average_score_drift']:+.3f}")
     logger.info(f"  Drift direction: {report['summary']['drift_direction']}")
-    
+
     # Save report if requested
     if args.output:
         import json

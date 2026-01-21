@@ -544,7 +544,7 @@ class Orchestrator:
                     operators=["role_injection", "semantic_twist", "instruction_conflict", "context_overload"]
                 ),
                 fitness_function=FitnessFunctionConfig(
-                    function_id="failure-severity-v1", 
+                    function_id="failure-severity-v1",
                     version="1.0.0",
                     code_fingerprint=compute_fitness_fingerprint()
                 ),
@@ -562,7 +562,7 @@ class Orchestrator:
         # Persist manifest immediately to disk BEFORE first prompt is sent
         manifest_path = os.path.join(run_dir, "manifest.json")
         self.current_manifest.save(manifest_path)
-        
+
         logger.info(f"✓ Attack Manifest generated and persisted: {manifest_path}")
         logger.info(f"  Manifest ID: {self.current_manifest.manifest_id}")
         logger.info(f"  Policy Version: {self.current_manifest.policy_version}")
@@ -802,14 +802,14 @@ class Orchestrator:
                 failure_class = "major_failure"
             else:
                 failure_class = "minor_failure"
-            
+
             # Extract rationale from spotter evaluation
             rationale_parts = []
             for layer in ["l1", "l2", "l3"]:
                 if "rationale" in evaluation[layer]:
                     rationale_parts.append(f"{layer}: {evaluation[layer]['rationale']}")
             rationale = "; ".join(rationale_parts) if rationale_parts else "Fitness threshold exceeded"
-            
+
             # Create failure specimen
             specimen = create_specimen_from_evaluation(
                 manifest_id=self.current_manifest.manifest_id,
@@ -823,12 +823,12 @@ class Orchestrator:
                 mutation_operator="evolutionary_mutation",
                 genome_structure=[{"type": "user", "gene": "adversarial_prompt"}]
             )
-            
+
             # Persist specimen immediately
             specimen_path = os.path.join(self.specimens_dir, f"{specimen.specimen_id}.json")
             specimen.save(specimen_path)
             self.failure_specimens.append(specimen)
-            
+
             logger.info(
                 f"  ✓ Failure Specimen created: {specimen.specimen_id} "
                 f"(severity={specimen.evaluation.severity}, score={global_score:.3f})"

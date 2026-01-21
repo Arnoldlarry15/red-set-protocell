@@ -1962,7 +1962,7 @@ Special thanks to the AI safety research community for inspiration and guidance.
 ## 📞 Contact
 
 **Author: Larry Arnold**
-- **Email**: labuilds.proton.me
+- **Email**: labuilds@proton.me
 - **X (Twitter)**: [@LABuilds](https://x.com/LABuilds)
 - **LinkedIn**: [larry-arnold](https://linkedin.com/in/larry-arnold)
 

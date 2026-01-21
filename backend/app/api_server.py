@@ -450,7 +450,16 @@ async def root():
     }
 
 
-@app.get("/api/health")
+@app.get("/ping")
+async def ping():
+    """
+    Simple ping endpoint to test routing is working correctly.
+    Useful for verifying Vercel routing configuration.
+    """
+    return {"pong": True, "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+@app.get("/health")
 async def health_check_endpoint():
     """
     Basic health check endpoint for load balancers and monitoring.
@@ -464,7 +473,7 @@ async def health_check_endpoint():
     }
 
 
-@app.get("/api/health/detailed")
+@app.get("/health/detailed")
 async def detailed_health_check():
     """
     Detailed health check with component status.
@@ -479,7 +488,7 @@ async def detailed_health_check():
     return health_status
 
 
-@app.get("/api/metrics")
+@app.get("/metrics")
 async def get_metrics():
     """
     Prometheus-compatible metrics endpoint.
@@ -494,7 +503,7 @@ async def get_metrics():
     return metrics
 
 
-@app.get("/api/info")
+@app.get("/info")
 async def get_api_info():
     """
     API information endpoint.
@@ -519,7 +528,7 @@ async def get_api_info():
     }
 
 
-@app.post("/api/session/start")
+@app.post("/session/start")
 async def start_session(config: SessionConfig):
     """Start a new red teaming session"""
     try:
@@ -615,7 +624,7 @@ async def start_session(config: SessionConfig):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/session/{session_id}/execute")
+@app.post("/session/{session_id}/execute")
 async def execute_session(session_id: str):
     """Execute a red teaming session"""
     if session_id not in active_sessions:
@@ -640,7 +649,7 @@ async def execute_session(session_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/session/{session_id}/stop")
+@app.post("/session/{session_id}/stop")
 async def stop_session(session_id: str):
     """Stop a running session"""
     if session_id not in active_sessions:
@@ -656,7 +665,7 @@ async def stop_session(session_id: str):
     }
 
 
-@app.post("/api/prompt/execute")
+@app.post("/prompt/execute")
 async def execute_custom_prompt(request: CustomPromptRequest):
     """Execute a custom user prompt"""
     if request.session_id not in active_sessions:
@@ -702,7 +711,7 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/session/{session_id}/stats")
+@app.get("/session/{session_id}/stats")
 async def get_session_stats(session_id: str):
     """Get session statistics"""
     if session_id not in active_sessions:
@@ -725,7 +734,7 @@ async def get_session_stats(session_id: str):
 # Unified Infra Dashboard endpoints
 
 
-@app.get("/api/dashboard/live-sessions")
+@app.get("/dashboard/live-sessions")
 async def get_live_sessions():
     """Get all currently active/live sessions"""
     try:
@@ -749,7 +758,7 @@ async def get_live_sessions():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/dashboard/historical-sessions")
+@app.get("/dashboard/historical-sessions")
 async def get_historical_sessions(db_path: str = "rsp_session.db"):
     """Get historical session data for comparison"""
     try:
@@ -761,7 +770,7 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/dashboard/compare-models")
+@app.get("/dashboard/compare-models")
 async def compare_model_versions(
     model_v1: str,
     model_v2: str,
@@ -798,7 +807,7 @@ async def compare_model_versions(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/dashboard/export/{session_id}")
+@app.get("/dashboard/export/{session_id}")
 async def export_session_results(
     session_id: str,
     format: str = "json",
@@ -833,7 +842,7 @@ async def export_session_results(
 # User Management endpoints - Production-ready authentication
 
 
-@app.post("/api/auth/login")
+@app.post("/auth/login")
 async def login(credentials: UserLogin):
     """
     User login with JWT token generation.
@@ -891,7 +900,7 @@ async def login(credentials: UserLogin):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/api/auth/register")
+@app.post("/auth/register")
 async def register(user_data: UserCreate):
     """Register new user (admin only)"""
     try:
@@ -924,7 +933,7 @@ async def register(user_data: UserCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/auth/users")
+@app.get("/auth/users")
 async def list_users():
     """List all users (admin only)"""
     try:
@@ -945,7 +954,7 @@ async def list_users():
 # Remote Triggering endpoints
 
 
-@app.post("/api/remote/start-run")
+@app.post("/remote/start-run")
 async def start_remote_run(config: SessionConfig):
     """Start a run remotely with parameters"""
     try:
@@ -967,7 +976,7 @@ async def start_remote_run(config: SessionConfig):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/remote/config/save")
+@app.post("/remote/config/save")
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
     try:
@@ -984,7 +993,7 @@ async def save_experiment_config(config: ExperimentConfig):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/remote/config/list")
+@app.get("/remote/config/list")
 async def list_experiment_configs():
     """List all saved experiment configurations"""
     try:
@@ -1005,7 +1014,7 @@ async def list_experiment_configs():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/remote/config/{config_id}")
+@app.get("/remote/config/{config_id}")
 async def get_experiment_config(config_id: str):
     """Get a specific experiment configuration"""
     try:
@@ -1024,7 +1033,7 @@ async def get_experiment_config(config_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/api/remote/config/{config_id}")
+@app.delete("/remote/config/{config_id}")
 async def delete_experiment_config(config_id: str):
     """Delete an experiment configuration"""
     try:

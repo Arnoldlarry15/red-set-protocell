@@ -15,24 +15,8 @@
   ],
   "routes": [
     {
-      "src": "/api/health",
-      "dest": "/api/health.py"
-    },
-    {
-      "src": "/api/info",
-      "dest": "/api/info.py"
-    },
-    {
-      "src": "/api/metrics",
-      "dest": "/api/metrics.py"
-    },
-    {
-      "src": "/api/auth",
-      "dest": "/api/auth.py"
-    },
-    {
-      "src": "/api/scan",
-      "dest": "/api/scan.py"
+      "src": "/api/(.*)",
+      "dest": "/api/app.py"
     },
     {
       "src": "/(.*)",

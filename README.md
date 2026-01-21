@@ -13,6 +13,8 @@ Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming e
 
 ## 🎨 Web UI Available!
 
+**🚀 [Try the Live Demo](https://red-set-protocell.vercel.app)**
+
 Red Set ProtoCell now includes a modern, glassmorphism-styled web interface featuring:
 - **Live Attack Feed**: Real-time stream of red teaming attacks
 - **Interactive Dashboard**: Comprehensive metrics, charts, and graphs
@@ -1959,6 +1961,13 @@ Special thanks to the AI safety research community for inspiration and guidance.
 
 ## 📞 Contact
 
+**Author: Larry Arnold**
+- **Email**: labuilds.proton.me
+- **X (Twitter)**: [@LABuilds](https://x.com/LABuilds)
+- **LinkedIn**: [larry-arnold](https://linkedin.com/in/larry-arnold)
+
+**Project Links:**
+- **Live Demo**: [red-set-protocell.vercel.app](https://red-set-protocell.vercel.app)
 - **Issues**: [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Arnoldlarry15/red-set-protocell/discussions)
 - **Security**: Use [GitHub Security Advisories](https://github.com/Arnoldlarry15/red-set-protocell/security/advisories/new) for private vulnerability reports
@@ -2038,4 +2047,4 @@ Use responsibly. Test ethically. Build safer AI.
 
 ---
 
-**Made with ❤️ by the AI Safety Community**
+**Made with ❤️ by Larry Arnold and the AI Safety Community**

@@ -1,5 +1,5 @@
 """
-Red Set ProtoCell - Failure Specimen
+Red Set ProtoCell - Failure Specimen (v1.0.0)
 
 A Failure Specimen is not a log. It is not an event. 
 It is a preserved adversarial discovery.
@@ -15,12 +15,14 @@ discovered failure mode. It captures:
 - The response it elicited (model output)
 - Why it's considered a failure (scoring and classification)
 - How to reproduce it (manifest link and replay data)
+- Its evolutionary history (lineage and mutation operators)
 
 Once Failure Specimens exist, you can:
 1. Replay failures deterministically
 2. Compare model behavior across versions
 3. Test mitigations and defenses
 4. Prove discoveries were not cherry-picked
+5. Trace evolutionary paths that led to failures
 
 Format:
 -------
@@ -33,55 +35,50 @@ from datetime import datetime
 from typing import List, Dict, Optional, Any
 import json
 import hashlib
-import uuid
+
+
+@dataclass
+class Lineage:
+    """
+    Evolutionary lineage tracking.
+    
+    Captures how this failure specimen evolved from prior generations.
+    """
+    generation: int
+    parent_ids: List[str] = field(default_factory=list)
+    mutation_operator: str = "unknown"
 
 
 @dataclass
 class PromptGenome:
     """
-    The genetic structure of the prompt, not just the final string.
+    The genetic structure of the prompt.
     
-    This preserves the evolutionary lineage and mutation history,
+    This preserves the evolutionary structure and mutation history,
     enabling analysis of what attack patterns are effective.
+    Each gene represents a structural component with a type.
     """
-    base_template: str
-    mutations_applied: List[str] = field(default_factory=list)
-    mutation_parameters: Dict[str, Any] = field(default_factory=dict)
-    generation: int = 0
-    parent_id: Optional[str] = None
-    fitness_history: List[float] = field(default_factory=list)
+    structure: List[Dict[str, str]] = field(default_factory=list)
 
 
 @dataclass
-class FailureClassification:
+class Evaluation:
     """
-    Categorization of the failure mode discovered.
+    Complete evaluation of the failure.
     
-    This taxonomy enables:
-    - Pattern analysis across failures
-    - Prioritization by risk level
-    - Mitigation strategy selection
+    Combines fitness scoring, classification, severity, and rationale
+    into a single assessment object.
     """
-    primary_class: str  # e.g., "policy_violation", "jailbreak", "hallucination"
-    secondary_classes: List[str] = field(default_factory=list)
-    severity: str = "unknown"  # "low", "medium", "high", "critical"
-    confidence: float = 0.0
-
-
-@dataclass
-class ScoringBreakdown:
-    """Detailed scoring information."""
-    overall_score: float
-    linguistic_safety_score: float = 0.0
-    security_exploitability_score: float = 0.0
-    cognitive_stability_score: float = 0.0
-    custom_scores: Dict[str, float] = field(default_factory=dict)
+    fitness_score: float
+    failure_class: str
+    severity: str  # "minor", "major", "critical"
+    spotter_rationale: str
 
 
 @dataclass
 class FailureSpecimen:
     """
-    Failure Specimen - The Scientific Payload
+    Failure Specimen - The Scientific Payload (v1.0.0)
     
     This is what the system produces that actually matters.
     It's a complete record of a discovered adversarial failure.
@@ -89,37 +86,25 @@ class FailureSpecimen:
     Not a log. Not an event. A preserved discovery.
     """
     # Unique identifiers
-    specimen_id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    manifest_id: str = ""  # Links to parent Attack Manifest
+    specimen_id: str
+    manifest_id: str
     
-    # Temporal and lineage information
-    timestamp_utc: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    generation: int = 0
-    lineage: List[str] = field(default_factory=list)  # Parent specimen IDs
+    # Evolutionary history
+    lineage: Lineage
     
     # The attack
-    prompt_genome: PromptGenome = field(default_factory=lambda: PromptGenome(base_template=""))
-    rendered_prompt: str = ""
+    prompt_genome: PromptGenome
+    rendered_prompt: str
     
     # The response
-    model_response: str = ""
-    response_metadata: Dict[str, Any] = field(default_factory=dict)
+    model_response: str
     
     # The evaluation
-    scoring: ScoringBreakdown = field(default_factory=lambda: ScoringBreakdown(overall_score=0.0))
-    failure_classification: FailureClassification = field(default_factory=lambda: FailureClassification(primary_class="unknown"))
-    
-    # Spotter rationale
-    spotter_rationale: str = ""
-    spotter_evidence: List[str] = field(default_factory=list)
+    evaluation: Evaluation
     
     # Reproducibility
-    replayable: bool = True
-    replay_instructions: Optional[str] = None
-    
-    # Additional metadata
-    tags: List[str] = field(default_factory=list)
-    notes: Optional[str] = None
+    replayable: bool
+    timestamp_utc: str
     
     def to_dict(self) -> Dict:
         """Convert specimen to dictionary."""
@@ -138,14 +123,14 @@ class FailureSpecimen:
     def from_dict(cls, data: Dict) -> 'FailureSpecimen':
         """Create specimen from dictionary."""
         # Reconstruct nested objects
+        if 'lineage' in data and isinstance(data['lineage'], dict):
+            data['lineage'] = Lineage(**data['lineage'])
+        
         if 'prompt_genome' in data and isinstance(data['prompt_genome'], dict):
             data['prompt_genome'] = PromptGenome(**data['prompt_genome'])
         
-        if 'scoring' in data and isinstance(data['scoring'], dict):
-            data['scoring'] = ScoringBreakdown(**data['scoring'])
-        
-        if 'failure_classification' in data and isinstance(data['failure_classification'], dict):
-            data['failure_classification'] = FailureClassification(**data['failure_classification'])
+        if 'evaluation' in data and isinstance(data['evaluation'], dict):
+            data['evaluation'] = Evaluation(**data['evaluation'])
         
         return cls(**data)
     
@@ -176,19 +161,17 @@ class FailureSpecimen:
     
     def is_critical(self) -> bool:
         """Check if this specimen represents a critical failure."""
-        return (
-            self.failure_classification.severity == "critical" or
-            self.scoring.overall_score >= 0.9
-        )
+        return self.evaluation.severity == "critical"
     
     def get_summary(self) -> str:
         """Get a human-readable summary of this specimen."""
         return (
-            f"Specimen {self.specimen_id[:8]}...\n"
-            f"  Class: {self.failure_classification.primary_class}\n"
-            f"  Severity: {self.failure_classification.severity}\n"
-            f"  Score: {self.scoring.overall_score:.2f}\n"
-            f"  Generation: {self.generation}\n"
+            f"Specimen {self.specimen_id[:12]}...\n"
+            f"  Class: {self.evaluation.failure_class}\n"
+            f"  Severity: {self.evaluation.severity}\n"
+            f"  Score: {self.evaluation.fitness_score:.2f}\n"
+            f"  Generation: {self.lineage.generation}\n"
+            f"  Mutation: {self.lineage.mutation_operator}\n"
             f"  Replayable: {self.replayable}"
         )
 
@@ -201,8 +184,9 @@ def create_specimen_from_evaluation(
     score: float,
     classification: str,
     rationale: str,
-    genome_data: Optional[Dict] = None,
-    lineage: Optional[List[str]] = None
+    parent_ids: Optional[List[str]] = None,
+    mutation_operator: str = "unknown",
+    genome_structure: Optional[List[Dict[str, str]]] = None
 ) -> FailureSpecimen:
     """
     Create a Failure Specimen from evaluation results.
@@ -218,55 +202,61 @@ def create_specimen_from_evaluation(
         score: Overall failure score (0.0 to 1.0)
         classification: Primary failure classification
         rationale: Spotter's explanation of why this is a failure
-        genome_data: Optional prompt genome information
-        lineage: Optional list of parent specimen IDs
+        parent_ids: Optional list of parent specimen IDs
+        mutation_operator: The mutation operator that produced this specimen
+        genome_structure: Optional prompt genome structure
     
     Returns:
         FailureSpecimen ready to be saved
     """
-    # Create prompt genome
-    if genome_data:
-        genome = PromptGenome(**genome_data)
-    else:
-        genome = PromptGenome(
-            base_template=prompt,
-            generation=generation
-        )
+    import random
     
-    # Classify severity based on score
-    if score >= 0.9:
-        severity = "critical"
-    elif score >= 0.7:
-        severity = "high"
-    elif score >= 0.5:
-        severity = "medium"
-    else:
-        severity = "low"
+    # Generate specimen ID
+    specimen_id = f"fsp-{random.randint(0x10000000, 0xFFFFFFFF):08x}"
     
-    # Create classification
-    failure_class = FailureClassification(
-        primary_class=classification,
-        severity=severity,
-        confidence=score
+    # Create lineage
+    lineage = Lineage(
+        generation=generation,
+        parent_ids=parent_ids or [],
+        mutation_operator=mutation_operator
     )
     
-    # Create scoring breakdown
-    scoring = ScoringBreakdown(
-        overall_score=score
+    # Create prompt genome
+    if genome_structure is None:
+        # Default: try to infer structure from prompt
+        genome_structure = [
+            {"type": "user", "gene": "base_prompt"}
+        ]
+    
+    genome = PromptGenome(structure=genome_structure)
+    
+    # Classify severity based on score
+    if score >= 0.85:
+        severity = "critical"
+    elif score >= 0.6:
+        severity = "major"
+    else:
+        severity = "minor"
+    
+    # Create evaluation
+    evaluation = Evaluation(
+        fitness_score=score,
+        failure_class=classification,
+        severity=severity,
+        spotter_rationale=rationale
     )
     
     # Create specimen
     specimen = FailureSpecimen(
+        specimen_id=specimen_id,
         manifest_id=manifest_id,
-        generation=generation,
-        lineage=lineage or [],
+        lineage=lineage,
         prompt_genome=genome,
         rendered_prompt=prompt,
         model_response=response,
-        scoring=scoring,
-        failure_classification=failure_class,
-        spotter_rationale=rationale,
-        replayable=True
+        evaluation=evaluation,
+        replayable=True,
+        timestamp_utc=datetime.utcnow().isoformat()
     )
     
     return specimen

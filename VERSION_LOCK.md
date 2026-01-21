@@ -20,7 +20,7 @@ The following are **guaranteed stable** in v1.0.0 and will not change in minor o
 - Strict separation prevents self-justifying attacks
 - Agent boundaries are enforced at the architectural level
 
-**Invariant:** `sniper_cannot_score = true` and `spotter_cannot_generate = true`
+**Invariant:** `sniper_can_score = false` and `spotter_can_generate = false`
 
 ### 2. Locked Mutation Policies
 - Mutation operators are versioned (e.g., `semantic_perturbation-1.0.0`)
@@ -38,7 +38,31 @@ The following are **guaranteed stable** in v1.0.0 and will not change in minor o
 
 **Invariant:** Same fitness function version produces same scores for same inputs
 
-### 4. Deterministic Evolution
+### 4. Fitness Code Fingerprinting
+- Spotter scoring code is fingerprinted at the byte level
+- SHA-256 hash of scoring implementation stored in manifest
+- If the hash changes, the version **must** change
+- No silent logic changes allowed
+
+**Invariant:** Same fitness fingerprint = same scoring implementation
+
+### 5. Target Descriptor Snapshot
+- Target model observed at specific date/time
+- Provider metadata captured when available
+- Model revision tracked if provided
+- Enables drift detection on replay
+
+**Invariant:** Manifest records what was tested, not just what was intended
+
+### 6. Operator Intent Declaration
+- Every manifest includes explicit authorization statement
+- Anchors run to professional, authorized use
+- Prevents reframing as "autonomous attack generation"
+- Default: "Authorized adversarial testing for failure discovery and risk evaluation"
+
+**Invariant:** Intent is declared, not implied
+
+### 7. Deterministic Evolution
 - Random number generator (RNG) is seeded per run
 - Given same seed and same inputs, evolution is reproducible
 - Mutation application order is deterministic
@@ -46,7 +70,7 @@ The following are **guaranteed stable** in v1.0.0 and will not change in minor o
 
 **Invariant:** Same manifest + same seed = same failure specimens
 
-### 5. Reproducible Failure Specimens
+### 8. Reproducible Failure Specimens
 - Every failure is captured as a structured Failure Specimen
 - Specimens include complete replay information
 - Prompt genomes preserve evolutionary history
@@ -54,7 +78,7 @@ The following are **guaranteed stable** in v1.0.0 and will not change in minor o
 
 **Invariant:** Failure Specimens can be replayed to verify claims
 
-### 6. Immutable Experiment Records
+### 9. Immutable Experiment Records
 - Attack Manifests are written once at run start
 - Manifests are never modified after creation
 - Specimens always reference their parent manifest
@@ -82,7 +106,23 @@ The following are **explicitly not guaranteed** in v1.0.0:
 
 **No guarantee:** "All vulnerabilities will be discovered"
 
-### 3. Safety of Target Systems
+### 3. Statistical Completeness
+- Red Set ProtoCell does not provide statistical coverage guarantees
+- Sample size and exploration depth affect discovery
+- Absence of discovered failures is **not** evidence of safety
+- The tool discovers examples, not populations
+
+**No guarantee:** "This model is safe because no failures were found"
+
+### 4. Absolute Risk Measures
+- Fitness scores are **ordinal**, not absolute risk measures
+- A score of 0.9 means "worse than 0.8", not "90% risk"
+- Scores enable comparison and prioritization
+- They do not map to probability of exploitation
+
+**No guarantee:** "Score X means Y% chance of real-world harm"
+
+### 5. Safety of Target Systems
 - Red Set ProtoCell is offensive, not defensive
 - It discovers failures but does not fix them
 - Discovered failures remain exploitable until mitigated
@@ -90,7 +130,7 @@ The following are **explicitly not guaranteed** in v1.0.0:
 
 **No guarantee:** "Tested systems are safe after scanning"
 
-### 4. Performance Characteristics
+### 6. Performance Characteristics
 - Execution time depends on target API latency
 - Resource usage varies with configuration
 - Convergence speed is not guaranteed
@@ -98,13 +138,19 @@ The following are **explicitly not guaranteed** in v1.0.0:
 
 **No guarantee:** "Runs will complete in X time"
 
-### 5. Cost Predictability
+### 7. Cost Predictability
 - API costs depend on target model pricing
 - Usage varies with evolutionary progress
 - Cost caps provide upper bounds, not estimates
 - Efficient discovery is best-effort
 
 **No guarantee:** "Runs will cost exactly X dollars"
+
+## Critical Distinction
+
+**Absence of discovered failures ≠ Evidence of safety**
+
+Red Set ProtoCell discovers examples of failure modes. It does not prove their absence. Negative results should be interpreted as "no failures found under these constraints" rather than "this system is safe."
 
 ## What Can Evolve in Future Versions
 

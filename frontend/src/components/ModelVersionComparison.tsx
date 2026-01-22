@@ -36,7 +36,7 @@ const ModelVersionComparison: React.FC = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${API_BASE_URL}/api/dashboard/compare-models?model_v1=${modelV1}&model_v2=${modelV2}`
+        `${API_BASE_URL}/dashboard/compare-models?model_v1=${modelV1}&model_v2=${modelV2}`
       );
       setComparison(response.data);
     } catch (error) {

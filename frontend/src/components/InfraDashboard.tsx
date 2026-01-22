@@ -14,7 +14,7 @@ const InfraDashboard: React.FC = () => {
   const fetchLiveSessions = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/dashboard/live-sessions`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/live-sessions`);
       setLiveSessions(response.data.sessions);
     } catch (error) {
       console.error('Error fetching live sessions:', error);
@@ -26,7 +26,7 @@ const InfraDashboard: React.FC = () => {
   const fetchHistoricalSessions = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/dashboard/historical-sessions`);
+      const response = await axios.get(`${API_BASE_URL}/dashboard/historical-sessions`);
       setHistoricalSessions(response.data.sessions);
     } catch (error) {
       console.error('Error fetching historical sessions:', error);
@@ -48,7 +48,7 @@ const InfraDashboard: React.FC = () => {
   const exportSession = async (sessionId: string, format: 'json' | 'csv') => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/api/dashboard/export/${sessionId}?format=${format}`
+        `${API_BASE_URL}/dashboard/export/${sessionId}?format=${format}`
       );
       const blob = new Blob([response.data.data], {
         type: format === 'csv' ? 'text/csv' : 'application/json',

@@ -29,7 +29,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/auth/users`);
+      const response = await axios.get(`${API_BASE_URL}/auth/users`);
       setUsers(response.data.users);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -39,7 +39,7 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(`${API_BASE_URL}/api/auth/register`, newUser);
+      await axios.post(`${API_BASE_URL}/auth/register`, newUser);
       alert('User created successfully');
       setShowAddUser(false);
       setNewUser({ username: '', email: '', role: 'observer', password: '' });

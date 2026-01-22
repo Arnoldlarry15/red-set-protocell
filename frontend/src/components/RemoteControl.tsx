@@ -47,7 +47,7 @@ const RemoteControl: React.FC<RemoteControlProps> = ({ apiKey, userRole }) => {
 
   const fetchConfigs = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/remote/config/list`);
+      const response = await axios.get(`${API_BASE_URL}/remote/config/list`);
       setConfigs(response.data.configs);
     } catch (error) {
       console.error('Error fetching configs:', error);
@@ -56,7 +56,7 @@ const RemoteControl: React.FC<RemoteControlProps> = ({ apiKey, userRole }) => {
 
   const loadConfig = async (configId: string) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/remote/config/${configId}`);
+      const response = await axios.get(`${API_BASE_URL}/remote/config/${configId}`);
       setConfig(response.data.config);
       setSelectedConfig(configId);
     } catch (error) {
@@ -66,7 +66,7 @@ const RemoteControl: React.FC<RemoteControlProps> = ({ apiKey, userRole }) => {
 
   const saveConfig = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/api/remote/config/save`, config);
+      await axios.post(`${API_BASE_URL}/remote/config/save`, config);
       alert('Configuration saved successfully');
       fetchConfigs();
       setShowConfigForm(false);
@@ -95,7 +95,7 @@ const RemoteControl: React.FC<RemoteControlProps> = ({ apiKey, userRole }) => {
         selected_strategies: config.selected_strategies,
       };
 
-      const response = await axios.post(`${API_BASE_URL}/api/remote/start-run`, sessionConfig);
+      const response = await axios.post(`${API_BASE_URL}/remote/start-run`, sessionConfig);
       alert(`Run started successfully! Session ID: ${response.data.session_id}`);
     } catch (error) {
       console.error('Error starting run:', error);

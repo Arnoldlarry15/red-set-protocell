@@ -40,10 +40,10 @@ Red Set ProtoCell uses a **clean separation** between frontend and backend:
    - Output Directory: `frontend/dist`
    - Framework: Vite
 5. **Set Environment Variables**
-   - `VITE_API_BASE_URL`: Your backend URL (e.g., `https://your-backend.railway.app`)
+   - `VITE_API_BASE_URL`: Your backend URL (e.g., `https://red-set-protocell.onrender.com`)
 6. **Deploy**
 
-Your frontend will be live at `https://your-project.vercel.app` in minutes!
+Your frontend will be live at `https://red-set-protocell.vercel.app` in minutes!
 
 ### Command Line (Alternative)
 

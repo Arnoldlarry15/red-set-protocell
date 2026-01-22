@@ -103,26 +103,31 @@ def validate_production_environment():
 # Validate production environment on startup
 validate_production_environment()
 
+# SECURITY: RSP_ALLOWED_ORIGINS is REQUIRED in all environments
+# Fail fast if not set - no implicit defaults
+if not ALLOWED_ORIGINS_ENV:
+    raise ValueError(
+        "FATAL: RSP_ALLOWED_ORIGINS environment variable must be set.\n"
+        "For production: RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app\n"
+        "For local dev: RSP_ALLOWED_ORIGINS=http://localhost:3000\n"
+        "SECURITY: No defaults. No wildcards. Explicit trust only."
+    )
+
+# Parse allowed origins - exact match only (no wildcards, no substrings)
+ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
+
+# Log CORS configuration
 if RSP_ENVIRONMENT == "production":
-    if not ALLOWED_ORIGINS_ENV:
-        raise ValueError(
-            "FATAL: RSP_ENVIRONMENT=production requires RSP_ALLOWED_ORIGINS to be set. "
-            "Example: RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app\n"
-            "SECURITY: Set to ONE trusted origin. No commas. No wildcards. No localhost."
-        )
-    ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
-    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s)")
+    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}")
+    # Validate production doesn't include localhost
+    for origin in ALLOWED_ORIGINS:
+        if "localhost" in origin or "127.0.0.1" in origin:
+            raise ValueError(
+                f"FATAL: Production backend cannot trust localhost origin: {origin}\n"
+                "Use separate backend instance for local development."
+            )
 else:
-    # Development mode: Allow localhost and common dev origins
-    ALLOWED_ORIGINS = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "http://localhost:8080",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:8080",
-    ]
-    logger.warning("Development mode: CORS configured for local development origins only")
+    logger.info(f"Development mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}")
 
 # FastAPI app with production-ready configuration
 app = FastAPI(
@@ -162,6 +167,11 @@ require_auth = os.getenv("RSP_REQUIRE_AUTH", "true" if RSP_ENVIRONMENT == "produ
 app.add_middleware(AuthenticationMiddleware, require_auth=require_auth)
 
 # 7. CORS middleware - Explicit and defensive (applied last, executed first)
+# SECURITY: FastAPI's CORSMiddleware performs EXACT origin matching
+# - No wildcards (unless explicitly "*" which we never use)
+# - No substring matching
+# - No implicit defaults
+# Origin must match exactly including protocol (http/https) and port
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,

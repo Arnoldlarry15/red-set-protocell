@@ -19,7 +19,7 @@ const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
       <div className="nav-brand">
         <img 
           src="/logo.png" 
-          alt="RSP" 
+          alt="Red Set ProtoCell logo" 
           style={{ width: '32px', height: '32px', objectFit: 'contain' }}
         />
         <span className="nav-title">RED SET PROTOCELL</span>

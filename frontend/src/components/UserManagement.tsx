@@ -153,26 +153,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
       </div>
 
       {error && (
-        <div className="error-message glass-panel" style={{ 
-          background: 'rgba(239, 68, 68, 0.1)', 
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          padding: '1rem',
-          marginBottom: '1rem',
-          borderRadius: '12px'
-        }}>
+        <div className="error-message glass-panel">
           <strong>Error:</strong> {error}
         </div>
       )}
 
       {success && (
-        <div className="success-message glass-panel" style={{ 
-          background: 'rgba(34, 197, 94, 0.1)', 
-          border: '1px solid rgba(34, 197, 94, 0.3)',
-          padding: '1rem',
-          marginBottom: '1rem',
-          borderRadius: '12px',
-          color: '#22c55e'
-        }}>
+        <div className="success-message glass-panel">
           <strong>Success:</strong> {success}
         </div>
       )}
@@ -238,7 +225,8 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
                 required
                 className="form-control"
                 disabled={loading}
-                minLength={8}
+                minLength={12}
+                placeholder="Minimum 12 characters"
               />
             </div>
             <div className="form-actions">
@@ -264,11 +252,11 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
       <div className="users-list">
         <h3>Current Users</h3>
         {loading && users.length === 0 ? (
-          <div className="loading-state glass-panel" style={{ padding: '2rem', textAlign: 'center' }}>
+          <div className="loading-state glass-panel">
             Loading users...
           </div>
         ) : users.length === 0 ? (
-          <div className="empty-state glass-panel" style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-gray)' }}>
+          <div className="empty-state glass-panel">
             No users found. Add your first user above.
           </div>
         ) : (

@@ -233,6 +233,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .nav-title {
+  color: #ef4444; /* Fallback for non-supporting browsers */
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -309,4 +310,33 @@ input::placeholder, textarea::placeholder {
 .dashboard,
 .admin-dashboard {
   margin-top: 90px;
+}
+
+/* Message Components */
+.error-message {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  color: var(--color-red);
+}
+
+.success-message {
+  background: rgba(34, 197, 94, 0.1) !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  color: #22c55e;
+}
+
+.loading-state,
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state {
+  color: var(--color-gray);
 }

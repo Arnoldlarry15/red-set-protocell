@@ -82,13 +82,7 @@ const ModelVersionComparison: React.FC = () => {
       </div>
 
       {error && (
-        <div className="error-message glass-panel" style={{ 
-          background: 'rgba(239, 68, 68, 0.1)', 
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          padding: '1rem',
-          marginBottom: '1rem',
-          borderRadius: '12px'
-        }}>
+        <div className="error-message glass-panel">
           <strong>Error:</strong> {error}
         </div>
       )}

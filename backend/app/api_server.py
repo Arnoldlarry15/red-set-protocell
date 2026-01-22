@@ -50,7 +50,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Environment-aware CORS configuration
-# PRODUCTION: Set RSP_ENVIRONMENT=production and RSP_ALLOWED_ORIGINS with comma-separated list
+# PRODUCTION: Set RSP_ENVIRONMENT=production and RSP_ALLOWED_ORIGINS to single origin
+# Example: RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
+# SECURITY: One backend trusts ONE frontend. No commas. No wildcards. No localhost in production.
 RSP_ENVIRONMENT = os.getenv("RSP_ENVIRONMENT", "development")
 ALLOWED_ORIGINS_ENV = os.getenv("RSP_ALLOWED_ORIGINS", "")
 
@@ -105,10 +107,11 @@ if RSP_ENVIRONMENT == "production":
     if not ALLOWED_ORIGINS_ENV:
         raise ValueError(
             "FATAL: RSP_ENVIRONMENT=production requires RSP_ALLOWED_ORIGINS to be set. "
-            "Example: RSP_ALLOWED_ORIGINS=https://app.example.com,https://dashboard.example.com"
+            "Example: RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app\n"
+            "SECURITY: Set to ONE trusted origin. No commas. No wildcards. No localhost."
         )
     ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
-    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origins")
+    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s)")
 else:
     # Development mode: Allow localhost and common dev origins
     ALLOWED_ORIGINS = [

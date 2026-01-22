@@ -36,8 +36,9 @@ OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 RSP_DEMO_PASSWORD=your-secure-password
 
-# CORS Configuration
-RSP_ALLOWED_ORIGINS=https://red-set-protocell.vercel.app,http://localhost:3000
+# CORS Configuration - PRODUCTION ONLY
+# WARNING: Only trust the production frontend. No localhost. No wildcards.
+RSP_ALLOWED_ORIGINS=https://red-set-protocell.vercel.app
 
 # Environment
 RSP_ENVIRONMENT=production
@@ -106,16 +107,51 @@ Render automatically deploys on push to main branch. To trigger manual deploy:
 
 ## CORS Configuration
 
-The backend must be configured to accept requests from the Vercel frontend:
+The backend must be configured to accept requests ONLY from its trusted frontend.
 
-**Current Configuration:**
-- Frontend: `https://red-set-protocell.vercel.app`
-- Backend accepts requests from: `https://red-set-protocell.vercel.app`
+### Security Principle: One Backend, One UI, One Trust Relationship
+
+**Production Backend (Render):**
+- Trusts ONLY: `https://red-set-protocell.vercel.app`
+- No localhost, no wildcards, no comma-separated list
+
+**Local Development Backend (Your Machine):**
+- Trusts ONLY: `http://localhost:3000` (or `http://localhost:5173` if using Vite)
+- Never mix production and local in the same deployment
+
+### Why This Matters
+
+Mixing production and local dev origins in the same backend:
+- Creates unnecessary attack surface
+- Violates principle of least privilege
+- Contradicts v1.0.0's scope-limited security model
+
+CORS is part of your containment story - same philosophy as:
+- Policy locking per run
+- Deterministic execution
+- Scope-limited attack surfaces
+
+**Production Configuration on Render:**
+```bash
+RSP_ALLOWED_ORIGINS=https://red-set-protocell.vercel.app
+```
+
+**Local Development Configuration:**
+```bash
+# If frontend runs on port 3000
+RSP_ALLOWED_ORIGINS=http://localhost:3000
+
+# If using Vite on default port 5173
+RSP_ALLOWED_ORIGINS=http://localhost:5173
+```
+
+### Troubleshooting CORS Errors
 
 If you encounter CORS errors, verify:
-1. `RSP_ALLOWED_ORIGINS` is set correctly on Render
-2. Frontend is using the correct `VITE_API_BASE_URL` on Vercel
-3. Backend is running in production mode (`RSP_ENVIRONMENT=production`)
+1. `RSP_ALLOWED_ORIGINS` contains ONLY the appropriate origin (no commas in production)
+2. Frontend is using the correct `VITE_API_BASE_URL` 
+3. Backend is running in correct mode (`RSP_ENVIRONMENT=production` or `development`)
+4. No typos in URLs (trailing slashes, http vs https, etc.)
 
 ## Monitoring
 

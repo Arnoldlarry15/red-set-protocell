@@ -2,7 +2,7 @@
 """
 Example: Using New Features in Red Set ProtoCell
 
-This script demonstrates the new improvements:
+This script shows the new improvements:
 1. Parallel execution for faster processing
 2. Custom HTTP backend support
 3. Adaptive mutation strategy learning

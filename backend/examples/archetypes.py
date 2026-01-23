@@ -1,7 +1,7 @@
 """
-Failure Archetypes Demo
+Failure Archetypes Analysis
 
-This demo shows how to use the failure archetypes taxonomy to analyze
+This example shows how to use the failure archetypes taxonomy to analyze
 model responses and gain insights into failure patterns.
 """
 
@@ -16,10 +16,10 @@ from app.engines.scoring import ScoringEngine, FailureArchetype
 from collections import Counter
 
 
-def demo_single_evaluation():
-    """Demonstrate archetype detection on a single response."""
+def run_single_evaluation():
+    """Show archetype detection on a single response."""
     print("=" * 70)
-    print("DEMO 1: Single Response Evaluation")
+    print("EXAMPLE 1: Single Response Evaluation")
     print("=" * 70)
 
     spotter = Spotter()
@@ -63,10 +63,10 @@ def demo_single_evaluation():
     print(f"  L3 (Cognitive): {[a.value for a in result.l3_cognitive_stability.archetypes]}")
 
 
-def demo_archetype_comparison():
+def run_archetype_comparison():
     """Compare different types of failure archetypes."""
     print("\n" + "=" * 70)
-    print("DEMO 2: Archetype Pattern Comparison")
+    print("EXAMPLE 2: Archetype Pattern Comparison")
     print("=" * 70)
 
     spotter = Spotter()
@@ -117,10 +117,10 @@ def demo_archetype_comparison():
         print(f"  Archetypes: {[a.value for a in result.archetypes]}")
 
 
-def demo_archetype_heatmap():
-    """Demonstrate building an archetype heatmap over multiple evaluations."""
+def run_archetype_heatmap():
+    """Build an archetype heatmap over multiple evaluations."""
     print("\n" + "=" * 70)
-    print("DEMO 3: Archetype Heatmap Analysis")
+    print("EXAMPLE 3: Archetype Heatmap Analysis")
     print("=" * 70)
 
     BAR_MAX_LENGTH = 30  # Maximum bar length for visualization
@@ -182,10 +182,10 @@ def demo_archetype_heatmap():
     print(f"  Unique archetypes: {len(archetype_counter)}")
 
 
-def demo_layer_distribution():
+def run_layer_distribution():
     """Show how archetypes are distributed across layers."""
     print("\n" + "=" * 70)
-    print("DEMO 4: Layer-Level Archetype Distribution")
+    print("EXAMPLE 4: Layer-Level Archetype Distribution")
     print("=" * 70)
 
     spotter = Spotter()
@@ -236,20 +236,20 @@ def demo_layer_distribution():
 
 
 def main():
-    """Run all demos."""
+    """Run all examples."""
     print("\n" + "=" * 70)
-    print("FAILURE ARCHETYPES TAXONOMY - DEMONSTRATION")
+    print("FAILURE ARCHETYPES TAXONOMY - EXAMPLES")
     print("=" * 70)
-    print("\nThis demo showcases the failure archetypes feature that tags")
+    print("\nThis showcases the failure archetypes feature that tags")
     print("responses with qualitative failure patterns.")
 
-    demo_single_evaluation()
-    demo_archetype_comparison()
-    demo_archetype_heatmap()
-    demo_layer_distribution()
+    run_single_evaluation()
+    run_archetype_comparison()
+    run_archetype_heatmap()
+    run_layer_distribution()
 
     print("\n" + "=" * 70)
-    print("DEMO COMPLETE")
+    print("EXAMPLES COMPLETE")
     print("=" * 70)
     print("\nFor more information, see FAILURE_ARCHETYPES.md")
 

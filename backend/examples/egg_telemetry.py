@@ -1,7 +1,7 @@
 """
-Demo script showcasing EGG telemetry, shadow mode, and coverage features.
+Example script showcasing EGG telemetry, shadow mode, and coverage features.
 
-This demonstrates:
+This shows:
 1. EGG telemetry tracking category hits
 2. Shadow mode logging near-miss prompts
 3. Rule coverage metrics showing which patterns are used
@@ -19,8 +19,8 @@ def print_header(title):
     print("=" * 70)
 
 
-def demo_telemetry():
-    """Demonstrate telemetry tracking."""
+def run_telemetry():
+    """Show telemetry tracking."""
     print_header("1. EGG Telemetry - Category Hit Tracking")
 
     egg = EthicalGuardrailGovernor()
@@ -53,8 +53,8 @@ def demo_telemetry():
         print(f"    - {category}: {count} hit(s)")
 
 
-def demo_shadow_mode():
-    """Demonstrate shadow mode for near-miss detection."""
+def run_shadow_mode():
+    """Show shadow mode for near-miss detection."""
     print_header("2. Shadow Mode - Near-Miss Detection")
 
     egg = EthicalGuardrailGovernor(shadow_mode=True, shadow_threshold=0.5)
@@ -84,8 +84,8 @@ def demo_shadow_mode():
                   f"Match score: {match['match_score']:.2f}")
 
 
-def demo_coverage_metrics():
-    """Demonstrate rule coverage metrics."""
+def run_coverage_metrics():
+    """Show rule coverage metrics."""
     print_header("3. Rule Coverage Metrics")
 
     egg = EthicalGuardrailGovernor()
@@ -109,8 +109,8 @@ def demo_coverage_metrics():
                 print(f"      - {pattern[:60]}...")
 
 
-def demo_adversarial_testing():
-    """Demonstrate adversarial testing capability."""
+def run_adversarial_testing():
+    """Show adversarial testing capability."""
     print_header("4. Adversarial Testing - Guard Coverage")
 
     egg = EthicalGuardrailGovernor()
@@ -137,8 +137,8 @@ def demo_adversarial_testing():
             print(f"    - {category}: {stats['blocked']} blocked")
 
 
-def demo_full_integration():
-    """Demonstrate full integration with all features enabled."""
+def run_full_integration():
+    """Show full integration with all features enabled."""
     print_header("5. Full Integration - Monitored Immune Response")
 
     egg = EthicalGuardrailGovernor(
@@ -188,24 +188,24 @@ def demo_full_integration():
 
 
 def main():
-    """Run all demos."""
+    """Run all examples."""
     print("""
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
-║  EGG Evolution Demo - Monitored Immune Response                   ║
+║  EGG Evolution Examples - Monitored Immune Response                   ║
 ║  Red Set ProtoCell - Ethical Guardrail Governor                   ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
 """)
 
-    demo_telemetry()
-    demo_shadow_mode()
-    demo_coverage_metrics()
-    demo_adversarial_testing()
-    demo_full_integration()
+    run_telemetry()
+    run_shadow_mode()
+    run_coverage_metrics()
+    run_adversarial_testing()
+    run_full_integration()
 
     print("\n" + "=" * 70)
-    print("Demo complete! EGG is now a fully monitored immune response system.")
+    print("Examples complete! EGG is now a fully monitored immune response system.")
     print("=" * 70 + "\n")
 
 

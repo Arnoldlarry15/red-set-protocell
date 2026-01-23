@@ -1,7 +1,7 @@
 """
-Target Perturbation Modes - Demo Script
+Target Perturbation Modes - Example Script
 
-This script demonstrates how to use Target perturbation modes to test model
+This script shows how to use Target perturbation modes to test model
 robustness under various deployment conditions.
 
 Perturbation modes help you test not just "can this model fail?" but
@@ -13,14 +13,14 @@ from app.agents.target import (
 )
 
 
-def demo_basic_perturbations():
+def run_basic_perturbations():
     """
-    Demo: Basic perturbation usage
+    Example: Basic perturbation usage
 
     Shows how to enable all perturbation modes with default settings.
     """
     print("=" * 60)
-    print("DEMO 1: Basic Perturbations (All Modes Enabled)")
+    print("EXAMPLE 1: Basic Perturbations (All Modes Enabled)")
     print("=" * 60)
 
     # Create a perturbation config with all modes enabled
@@ -60,14 +60,14 @@ def demo_basic_perturbations():
         print(f"Active modes: {stats.get('perturbation_modes', [])}")
 
 
-def demo_selective_perturbations():
+def run_selective_perturbations():
     """
-    Demo: Selective perturbation modes
+    Example: Selective perturbation modes
 
     Shows how to enable only specific perturbation modes for targeted testing.
     """
     print("\n\n" + "=" * 60)
-    print("DEMO 2: Selective Perturbations (Temperature Jitter Only)")
+    print("EXAMPLE 2: Selective Perturbations (Temperature Jitter Only)")
     print("=" * 60)
 
     # Enable only temperature jitter to test temperature sensitivity
@@ -99,14 +99,14 @@ def demo_selective_perturbations():
         print("(Execution would use temperature in range [0.5, 0.9])")
 
 
-def demo_system_prompt_variation():
+def run_system_prompt_variation():
     """
-    Demo: System prompt variations
+    Example: System prompt variations
 
     Shows how to test robustness to different system prompt phrasings.
     """
     print("\n\n" + "=" * 60)
-    print("DEMO 3: System Prompt Variations")
+    print("EXAMPLE 3: System Prompt Variations")
     print("=" * 60)
 
     # Define custom system prompt variations
@@ -141,14 +141,14 @@ def demo_system_prompt_variation():
     print("(Each execution would use a different system prompt variant)")
 
 
-def demo_deployment_realism():
+def run_deployment_realism():
     """
-    Demo: Realistic deployment conditions
+    Example: Realistic deployment conditions
 
     Combines multiple perturbations to simulate real-world deployment variations.
     """
     print("\n\n" + "=" * 60)
-    print("DEMO 4: Realistic Deployment Simulation")
+    print("EXAMPLE 4: Realistic Deployment Simulation")
     print("=" * 60)
 
     perturb_config = PerturbationConfig(
@@ -189,14 +189,14 @@ def demo_deployment_realism():
         print("(Each request experiences different deployment conditions)")
 
 
-def demo_testing_strategy():
+def run_testing_strategy():
     """
-    Demo: Testing strategy with perturbations
+    Example: Testing strategy with perturbations
 
     Shows how to use perturbations for systematic robustness testing.
     """
     print("\n\n" + "=" * 60)
-    print("DEMO 5: Systematic Robustness Testing Strategy")
+    print("EXAMPLE 5: Systematic Robustness Testing Strategy")
     print("=" * 60)
 
     print("\nRecommended testing approach:")
@@ -233,14 +233,14 @@ def demo_testing_strategy():
     print("   - Identify brittle behavior patterns")
 
 
-def demo_custom_configuration():
+def run_custom_configuration():
     """
-    Demo: Advanced custom configuration
+    Example: Advanced custom configuration
 
     Shows fine-grained control over perturbation parameters.
     """
     print("\n\n" + "=" * 60)
-    print("DEMO 6: Advanced Custom Configuration")
+    print("EXAMPLE 6: Advanced Custom Configuration")
     print("=" * 60)
 
     # Highly customized configuration
@@ -284,22 +284,22 @@ def demo_custom_configuration():
 
 
 def main():
-    """Run all demos."""
+    """Run all examples."""
     print("\n" + "=" * 60)
-    print("Target Perturbation Modes - Demonstration")
+    print("Target Perturbation Modes - Examples")
     print("=" * 60)
-    print("\nThis demo shows how to use perturbations to test model")
+    print("\nThis shows how to use perturbations to test model")
     print("robustness under various deployment conditions.")
     print("\nNote: API execution is commented out. Add your API key")
     print("and uncomment execution lines to run live tests.")
 
-    # Run all demos
-    demo_basic_perturbations()
-    demo_selective_perturbations()
-    demo_system_prompt_variation()
-    demo_deployment_realism()
-    demo_testing_strategy()
-    demo_custom_configuration()
+    # Run all examples
+    run_basic_perturbations()
+    run_selective_perturbations()
+    run_system_prompt_variation()
+    run_deployment_realism()
+    run_testing_strategy()
+    run_custom_configuration()
 
     print("\n\n" + "=" * 60)
     print("KEY BENEFITS OF PERTURBATION MODES")
@@ -324,7 +324,7 @@ def main():
     print("   - Where to focus hardening efforts")
 
     print("\n" + "=" * 60)
-    print("Demo complete!")
+    print("Examples complete!")
     print("=" * 60 + "\n")
 
 

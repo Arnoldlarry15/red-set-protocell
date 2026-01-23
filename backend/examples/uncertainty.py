@@ -1,7 +1,7 @@
 """
-Demo: Epistemic Upgrades - Score Uncertainty and Variance Tracking
+Example: Epistemic Upgrades - Score Uncertainty and Variance Tracking
 
-This example demonstrates the new uncertainty tracking features in RSP,
+This example shows the new uncertainty tracking features in RSP,
 which transform simple scores into confidence intervals with variance metrics.
 
 Example output:
@@ -13,10 +13,10 @@ from app.engines.scoring import ScoringEngine
 from app.agents.spotter import Spotter
 
 
-def demo_basic_uncertainty():
-    """Demo 1: Basic uncertainty in single evaluation."""
+def run_basic_uncertainty():
+    """Example: Basic uncertainty in single evaluation."""
     print("=" * 70)
-    print("DEMO 1: Basic Uncertainty Tracking")
+    print("EXAMPLE 1: Basic Uncertainty Tracking")
     print("=" * 70)
 
     spotter = Spotter()
@@ -70,10 +70,10 @@ def demo_basic_uncertainty():
     print("  - Useful for audit trails and scientific analysis")
 
 
-def demo_multi_pass_agreement():
-    """Demo 2: Multi-pass evaluation for agreement measurement."""
+def run_multi_pass_agreement():
+    """Example: Multi-pass evaluation for agreement measurement."""
     print("\n\n" + "=" * 70)
-    print("DEMO 2: Multi-Pass Agreement (Variance Across Passes)")
+    print("EXAMPLE 2: Multi-Pass Agreement (Variance Across Passes)")
     print("=" * 70)
 
     spotter = Spotter(enable_multi_pass=True, multi_pass_count=5)
@@ -117,10 +117,10 @@ def demo_multi_pass_agreement():
     print("  - This is a valuable signal for audit and research")
 
 
-def demo_cross_spotter_evaluation():
-    """Demo 3: Cross-Spotter evaluation for disagreement detection."""
+def run_cross_spotter_evaluation():
+    """Example: Cross-Spotter evaluation for disagreement detection."""
     print("\n\n" + "=" * 70)
-    print("DEMO 3: Cross-Spotter Evaluation (Disagreement Detection)")
+    print("EXAMPLE 3: Cross-Spotter Evaluation (Disagreement Detection)")
     print("=" * 70)
 
     # Two Spotter configs with different thresholds
@@ -186,10 +186,10 @@ def demo_cross_spotter_evaluation():
     print("  - Disagreement itself is useful data for improving the system")
 
 
-def demo_scientific_format():
-    """Demo 4: Scientific output format."""
+def run_scientific_format():
+    """Example: Scientific output format."""
     print("\n\n" + "=" * 70)
-    print("DEMO 4: Scientific Output Format")
+    print("EXAMPLE 4: Scientific Output Format")
     print("=" * 70)
 
     spotter = Spotter(enable_multi_pass=True, multi_pass_count=3)
@@ -226,16 +226,16 @@ def demo_scientific_format():
 
 
 def main():
-    """Run all demos."""
+    """Run all examples."""
     print("\n" + "=" * 70)
     print("EPISTEMIC UPGRADES: Score Uncertainty & Variance Tracking")
     print("Red Set ProtoCell (RSP) - Advanced Evaluation Metrics")
     print("=" * 70)
 
-    demo_basic_uncertainty()
-    demo_multi_pass_agreement()
-    demo_cross_spotter_evaluation()
-    demo_scientific_format()
+    run_basic_uncertainty()
+    run_multi_pass_agreement()
+    run_cross_spotter_evaluation()
+    run_scientific_format()
 
     print("\n\n" + "=" * 70)
     print("KEY BENEFITS")

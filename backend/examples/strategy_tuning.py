@@ -1,7 +1,7 @@
 """
-Red Set ProtoCell - Strategy Tuning Demo
+Red Set ProtoCell - Strategy Tuning Examples
 
-Demonstrates mutation strategy tuning capabilities.
+Shows mutation strategy tuning capabilities.
 """
 
 import logging
@@ -17,9 +17,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def demo_strategy_advisor():
-    """Demonstrate strategy advisor functionality."""
-    logger.info("=== Strategy Advisor Demo ===")
+def run_strategy_advisor():
+    """Show strategy advisor functionality."""
+    logger.info("=== Strategy Advisor Example ===")
 
     advisor = MutationStrategyAdvisor(
         success_threshold=0.4,
@@ -64,9 +64,9 @@ def demo_strategy_advisor():
         logger.info(f"    Effectiveness: {perf.effectiveness.value}")
 
 
-def demo_strategy_optimizer():
-    """Demonstrate strategy optimizer functionality."""
-    logger.info("\n\n=== Strategy Optimizer Demo ===")
+def run_strategy_optimizer():
+    """Show strategy optimizer functionality."""
+    logger.info("\n\n=== Strategy Optimizer Example ===")
 
     advisor = MutationStrategyAdvisor()
     config = OptimizationConfig(
@@ -103,9 +103,9 @@ def demo_strategy_optimizer():
     logger.info(f"\nTop 3 priority strategies: {[s.value for s in priority]}")
 
 
-def demo_optimization_report():
-    """Demonstrate optimization report generation."""
-    logger.info("\n\n=== Optimization Report Demo ===")
+def run_optimization_report():
+    """Show optimization report generation."""
+    logger.info("\n\n=== Optimization Report Example ===")
 
     advisor = MutationStrategyAdvisor()
     optimizer = StrategyOptimizer(advisor)
@@ -126,24 +126,24 @@ def demo_optimization_report():
 
 
 def main():
-    """Main demo function."""
+    """Main function."""
     print("\n" + "="*60)
-    print("Red Set ProtoCell - Strategy Tuning Demo")
+    print("Red Set ProtoCell - Strategy Tuning Examples")
     print("="*60 + "\n")
 
-    print("This demo shows the new mutation strategy tuning capabilities:")
+    print("This shows the new mutation strategy tuning capabilities:")
     print("1. Strategy performance tracking and analysis")
     print("2. Automatic strategy weight recommendations")
     print("3. Adaptive optimization based on feedback")
     print("4. Priority strategy selection")
     print("\n")
 
-    demo_strategy_advisor()
-    demo_strategy_optimizer()
-    demo_optimization_report()
+    run_strategy_advisor()
+    run_strategy_optimizer()
+    run_optimization_report()
 
     print("\n" + "="*60)
-    print("Demo completed!")
+    print("Examples completed!")
     print("="*60 + "\n")
 
 

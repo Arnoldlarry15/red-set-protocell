@@ -258,7 +258,7 @@ if telemetry['block_rate'] > 20.0:
 ## See Also
 
 - [Main README](../../../README.md)
-- [Demo Script](../examples/egg_telemetry_demo.py)
+- [Demo Script](../examples/egg_telemetry.py)
 - [Test Suite](../tests/test_egg_telemetry.py)
 
 ---

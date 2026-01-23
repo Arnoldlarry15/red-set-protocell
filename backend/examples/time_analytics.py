@@ -1,12 +1,12 @@
 """
-Time Analytics Demo for Red Set ProtoCell
+Time Analytics Examples for Red Set ProtoCell
 
-Demonstrates the time-based analytics features:
+Shows the time-based analytics features:
 - Fatigue tracking
 - Regression detection
 - Score drift analysis
 
-This demo shows how to use RSP's time analytics to answer questions like:
+This shows how to use RSP's time analytics to answer questions like:
 - "Does this model get worse after sustained pressure?"
 - "Did yesterday's model actually improve, or just shift failure modes?"
 """
@@ -52,7 +52,7 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
     config = get_default_config()
     config.orchestrator.max_rounds = rounds
     config.storage.zero_retention = False  # Keep data for analysis
-    config.storage.database_path = "time_analytics_demo.db"
+    config.storage.database_path = "time_analytics_example.db"
 
     # Initialize components
     egg = EthicalGuardrailGovernor()
@@ -65,25 +65,39 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
         creativity_temperature=0.8
     )
 
-    # Mock target for demo (doesn't make real API calls)
-    class MockTarget:
-        def __init__(self):
-            self.stats = {'total_executions': 0}
+    # Create real target with API
+    import os
+    from app.factories import TargetFactory
+    
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        print("ERROR: No API key found.")
+        print("Set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.")
+        print("Example: export OPENAI_API_KEY=sk-your-key-here")
+        raise ValueError("API key required for live execution")
 
-        def execute(self, prompt, metadata=None):
-            self.stats['total_executions'] += 1
-            # Return mock response
-            return "This is a mock response for demonstration purposes."
-
-        def get_statistics(self):
-            return self.stats
-
-    target = MockTarget()
+    # Use OpenAI by default, or Anthropic if available
+    if os.getenv("OPENAI_API_KEY"):
+        target = TargetFactory.create(
+            "openai",
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model_name="gpt-3.5-turbo",
+            max_tokens=500
+        )
+        print(f"Using OpenAI backend: gpt-3.5-turbo")
+    else:
+        target = TargetFactory.create(
+            "anthropic",
+            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            model_name="claude-3-haiku-20240307",
+            max_tokens=500
+        )
+        print(f"Using Anthropic backend: claude-3-haiku-20240307")
 
     spotter = Spotter()
 
     state_manager = StateManager(
-        database_path="time_analytics_demo.db",
+        database_path="time_analytics_example.db",
         zero_retention=False,
         model_version=model_version
     )
@@ -119,7 +133,7 @@ def analyze_fatigue(session_id: str):
     print("FATIGUE ANALYSIS")
     print(f"{'='*60}")
 
-    tracker = FatigueTracker("time_analytics_demo.db")
+    tracker = FatigueTracker("time_analytics_example.db")
     report = tracker.analyze_fatigue(session_id)
 
     print(f"Session: {session_id}")
@@ -149,7 +163,7 @@ def analyze_regression(baseline: str, comparison: str):
     print("REGRESSION ANALYSIS")
     print(f"{'='*60}")
 
-    detector = RegressionDetector("time_analytics_demo.db")
+    detector = RegressionDetector("time_analytics_example.db")
     report = detector.compare_versions(baseline, comparison)
 
     print(f"Baseline: {report.baseline_version}")
@@ -178,7 +192,7 @@ def analyze_drift(session_id: str):
     print("SCORE DRIFT ANALYSIS")
     print(f"{'='*60}")
 
-    analyzer = ScoreDriftAnalyzer("time_analytics_demo.db")
+    analyzer = ScoreDriftAnalyzer("time_analytics_example.db")
     metrics = analyzer.analyze_drift(session_id)
 
     print(f"Session: {session_id}")
@@ -197,17 +211,17 @@ def analyze_drift(session_id: str):
 
 
 async def main():
-    """Main demo function."""
+    """Main function."""
     print("""
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
-    ║         RSP Time Analytics Demo                           ║
+    ║         RSP Time Analytics Examples                           ║
     ║         Time as a First-Class Dimension                   ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
     """)
 
-    print("\nThis demo showcases RSP's time-based analytics:")
+    print("\nThis showcases RSP's time-based analytics:")
     print("1. Fatigue tracking - Does the model degrade over rounds?")
     print("2. Regression detection - Did the new version improve?")
     print("3. Score drift - What are the performance trends?")
@@ -234,7 +248,7 @@ async def main():
     analyze_drift(session3)
 
     print("\n" + "="*60)
-    print("DEMO COMPLETE")
+    print("EXAMPLE COMPLETE")
     print("="*60)
     print("\nKey Insights:")
     print("• Time analytics provide quantitative measures of model behavior")
@@ -242,7 +256,7 @@ async def main():
     print("• Regression analysis compares model versions objectively")
     print("• Drift analysis reveals performance trends over time")
     print()
-    print("Database saved at: time_analytics_demo.db")
+    print("Database saved at: time_analytics_example.db")
     print("You can run additional queries on this database for further analysis.")
 
 

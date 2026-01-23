@@ -711,7 +711,7 @@ cross_result = spotter.cross_evaluate(response, spotter2)
 print(f"Disagreement: {cross_result['deltas']}")
 ```
 
-See `examples/uncertainty_demo.py` for complete demonstrations.
+See `examples/uncertainty.py` for complete demonstrations.
 
 #### Time Analytics: Tracking Model Behavior Over Time
 
@@ -759,7 +759,7 @@ python -m app.main \
   --no-zero-retention
 ```
 
-See `examples/time_analytics_demo.py` for usage examples.
+See `examples/time_analytics.py` for usage examples.
 
 ---
 

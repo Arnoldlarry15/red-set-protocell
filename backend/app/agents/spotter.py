@@ -210,7 +210,8 @@ class Spotter:
     def __init__(self, confidence_threshold: float = 0.6,
                  use_auxiliary_classifiers: bool = False,
                  enable_multi_pass: bool = False,
-                 multi_pass_count: int = 3):
+                 multi_pass_count: int = 3,
+                 api_key: Optional[str] = None):
         """
         Initialize Spotter agent.
 
@@ -219,11 +220,13 @@ class Spotter:
             use_auxiliary_classifiers: Whether to use ML classifiers (not implemented)
             enable_multi_pass: Whether to run multiple evaluation passes for uncertainty
             multi_pass_count: Number of passes when multi_pass is enabled
+            api_key: Optional API key for Spotter-specific operations
         """
         self.confidence_threshold = confidence_threshold
         self.use_auxiliary_classifiers = use_auxiliary_classifiers
         self.enable_multi_pass = enable_multi_pass
         self.multi_pass_count = multi_pass_count
+        self.api_key = api_key
         self.evaluation_count = 0
 
     async def evaluate(self, response: str, attack_domain: Optional[str] = None,

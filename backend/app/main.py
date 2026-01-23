@@ -161,7 +161,8 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         evolution_pool_size=config.sniper.evolution_pool_size,
         creativity_temperature=config.sniper.creativity_temperature,
         selection_engine=selection_engine,
-        selection_strategy=selection_strategy_enum
+        selection_strategy=selection_strategy_enum,
+        api_key=config.sniper.api_key
     )
     logger.info("✓ Sniper Agent initialized")
 
@@ -180,7 +181,8 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     # Initialize Spotter Agent
     spotter = Spotter(
         confidence_threshold=config.spotter.confidence_threshold,
-        use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers
+        use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers,
+        api_key=config.spotter.api_key
     )
     logger.info("✓ Spotter Agent initialized")
 

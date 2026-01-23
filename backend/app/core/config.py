@@ -65,6 +65,7 @@ class SniperConfig:
     mutation_rate: float = 0.7
     evolution_pool_size: int = 10
     creativity_temperature: float = 0.9
+    api_key: Optional[str] = None  # Sniper-specific API key
 
     # Selection engine parameters
     use_selection_engine: bool = True
@@ -86,6 +87,7 @@ class SpotterConfig:
     enable_multi_pass: bool = False  # Enable multi-pass evaluation for uncertainty
     multi_pass_count: int = 3  # Number of passes when multi_pass enabled
     enable_cross_spotter: bool = False  # Enable cross-Spotter evaluation
+    api_key: Optional[str] = None  # Spotter-specific API key
 
 
 @dataclass

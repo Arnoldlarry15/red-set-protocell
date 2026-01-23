@@ -319,17 +319,19 @@ Vercel will detect the change and redeploy automatically.
 
 ### Paid Tier (Production Use)
 
-- **Render Starter Plan**: $7/month
+> **Note**: Pricing may change. Check [Render Pricing](https://render.com/pricing) and [Vercel Pricing](https://vercel.com/pricing) for current rates.
+
+- **Render Starter Plan**: ~$7/month (as of 2026)
   - Always-on instance
   - No cold starts
   - 0.5 GB RAM, shared CPU
 
-- **Vercel Pro Plan**: $20/month
+- **Vercel Pro Plan**: ~$20/month (as of 2026)
   - 1 TB bandwidth/month
   - Advanced analytics
   - Custom domains
 
-**Total: $27/month** (Recommended for production)
+**Estimated Total: ~$27/month** (Recommended for production)
 
 ## Next Steps
 

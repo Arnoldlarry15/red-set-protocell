@@ -67,7 +67,7 @@ services:
     autoDeploy: true
     
     # Resource allocation (adjust based on your needs)
-    plan: starter  # Options: starter, standard, pro
+    plan: starter  # Options: starter, standard (check Render pricing for current plans)
     
     # Region (choose closest to your users)
     region: oregon  # Options: oregon, frankfurt, singapore, ohio

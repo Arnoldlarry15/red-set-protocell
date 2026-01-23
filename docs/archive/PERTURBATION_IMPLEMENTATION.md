@@ -164,8 +164,8 @@ Randomly truncates model responses:
 - Best practices
 - Troubleshooting
 
-### 2. Executable Demo (`examples/perturbation.py`)
-Six demo scenarios:
+### 2. Executable Example (`examples/perturbation.py`)
+Six example scenarios:
 1. Basic perturbations (all modes)
 2. Selective perturbations (temperature only)
 3. System prompt variations
@@ -243,7 +243,7 @@ print(f"Active modes: {stats['perturbation_modes']}")
 1. **app/agents/target.py** - Core implementation (+~300 lines)
 2. **app/core/config.py** - Configuration additions (+7 lines)
 3. **tests/test_perturbations.py** - Test suite (new file, 500+ lines)
-4. **examples/perturbation.py** - Demo script (new file, 350+ lines)
+4. **examples/perturbation.py** - Example script (new file, 350+ lines)
 5. **TARGET_PERTURBATIONS.md** - Documentation (new file, 400+ lines)
 
 ## Migration Guide

@@ -36,6 +36,10 @@ OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 RSP_DEMO_PASSWORD=your-secure-password
 
+# Agent-specific API Keys (optional, for independent agent operations)
+SNIPER_ANTHROPIC_API_KEY=sk-ant-...
+SPOTTER_ANTHROPIC_API_KEY=sk-ant-...
+
 # CORS Configuration - PRODUCTION ONLY
 # WARNING: Only trust the production frontend. No localhost. No wildcards.
 RSP_ALLOWED_ORIGINS=https://red-set-protocell.vercel.app
@@ -51,6 +55,29 @@ RSP_JWT_SECRET=your-generated-secret
 RSP_RATE_LIMIT_PER_MIN=60
 RSP_RATE_LIMIT_PER_HOUR=1000
 ```
+
+### Agent-Specific API Keys
+
+Red Set ProtoCell v1.0.0+ supports independent API keys for the Sniper and Spotter agents:
+
+- **SNIPER_ANTHROPIC_API_KEY**: Optional API key for Sniper agent operations
+- **SPOTTER_ANTHROPIC_API_KEY**: Optional API key for Spotter agent operations
+
+**Benefits of Separate API Keys:**
+
+1. **Resource Isolation**: Each agent can have its own rate limits and quotas
+2. **Cost Tracking**: Track API usage per agent for better cost attribution
+3. **Fault Tolerance**: Issues with one agent's key won't affect others
+4. **Security**: Principle of least privilege - each agent only has access to its own credentials
+5. **Modularity**: Agents operate independently without shared resource contention
+
+**When to Use:**
+- Production deployments requiring high reliability
+- Environments with strict cost tracking requirements
+- Systems with separate API key quotas per service
+- Architectures prioritizing agent independence
+
+**Note:** If not set, agents will operate without making external API calls. This is suitable for most use cases where agents perform local computations only.
 
 ## Quick Start
 

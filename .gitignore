@@ -72,3 +72,4 @@ rsp-core/backend/coverage.xml
 
 # Vercel local metadata (do not commit)
 .vercel/
+backend/coverage.xml

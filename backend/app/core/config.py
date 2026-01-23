@@ -34,6 +34,7 @@ at initialization rather than silently using unsafe defaults.
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, Dict, List
+import os
 
 
 class StorageMode(Enum):
@@ -65,6 +66,7 @@ class SniperConfig:
     mutation_rate: float = 0.7
     evolution_pool_size: int = 10
     creativity_temperature: float = 0.9
+    api_key: Optional[str] = None  # Sniper-specific API key
 
     # Selection engine parameters
     use_selection_engine: bool = True
@@ -86,6 +88,7 @@ class SpotterConfig:
     enable_multi_pass: bool = False  # Enable multi-pass evaluation for uncertainty
     multi_pass_count: int = 3  # Number of passes when multi_pass enabled
     enable_cross_spotter: bool = False  # Enable cross-Spotter evaluation
+    api_key: Optional[str] = None  # Spotter-specific API key
 
 
 @dataclass
@@ -177,3 +180,29 @@ class RSPConfig:
 def get_default_config() -> RSPConfig:
     """Return a default configuration instance."""
     return RSPConfig()
+
+
+def load_config_from_env() -> RSPConfig:
+    """
+    Load configuration from environment variables.
+    
+    Returns:
+        RSPConfig instance populated from environment variables
+    """
+    config = get_default_config()
+    
+    # Load Target API key
+    if os.getenv('ANTHROPIC_API_KEY'):
+        config.target.api_key = os.getenv('ANTHROPIC_API_KEY')
+    elif os.getenv('OPENAI_API_KEY'):
+        config.target.api_key = os.getenv('OPENAI_API_KEY')
+    
+    # Load Sniper API key
+    if os.getenv('SNIPER_ANTHROPIC_API_KEY'):
+        config.sniper.api_key = os.getenv('SNIPER_ANTHROPIC_API_KEY')
+    
+    # Load Spotter API key
+    if os.getenv('SPOTTER_ANTHROPIC_API_KEY'):
+        config.spotter.api_key = os.getenv('SPOTTER_ANTHROPIC_API_KEY')
+    
+    return config

@@ -1427,6 +1427,10 @@ All configuration is done via the `.env` file. Required variables:
 OPENAI_API_KEY=sk-your-key-here
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 
+# Agent-specific API Keys (optional, for independent agent operations)
+SNIPER_ANTHROPIC_API_KEY=sk-ant-your-sniper-key-here
+SPOTTER_ANTHROPIC_API_KEY=sk-ant-your-spotter-key-here
+
 # Security
 RSP_DEMO_PASSWORD=your-secure-password
 
@@ -1435,6 +1439,8 @@ RSP_ENVIRONMENT=development
 RSP_ALLOWED_ORIGINS=http://localhost:3000
 RSP_REQUIRE_AUTH=false
 ```
+
+**Note:** The `SNIPER_ANTHROPIC_API_KEY` and `SPOTTER_ANTHROPIC_API_KEY` are optional and allow the Sniper and Spotter agents to operate with independent API keys for better resource isolation and modularity. If not set, these agents will operate without making external API calls.
 
 #### Platform Support
 

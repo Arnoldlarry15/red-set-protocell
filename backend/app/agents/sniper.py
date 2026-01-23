@@ -188,7 +188,8 @@ class Sniper:
     def __init__(self, mutation_engine, evolution_pool_size: int = 10,
                  creativity_temperature: float = 0.9,
                  selection_engine: Optional[SelectionEngine] = None,
-                 selection_strategy: SelectionStrategy = SelectionStrategy.HYBRID):
+                 selection_strategy: SelectionStrategy = SelectionStrategy.HYBRID,
+                 api_key: Optional[str] = None):
         """
         Initialize Sniper agent.
 
@@ -198,10 +199,12 @@ class Sniper:
             creativity_temperature: Temperature for creative variations
             selection_engine: Optional SelectionEngine for advanced evolution
             selection_strategy: Strategy for selecting prompts from pool
+            api_key: Optional API key for Sniper-specific operations
         """
         self.mutation_engine = mutation_engine
         self.evolution_pool_size = evolution_pool_size
         self.creativity_temperature = creativity_temperature
+        self.api_key = api_key
 
         # Initialize selection engine
         self.selection_engine = selection_engine or SelectionEngine()

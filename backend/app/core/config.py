@@ -34,6 +34,7 @@ at initialization rather than silently using unsafe defaults.
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, Dict, List
+import os
 
 
 class StorageMode(Enum):
@@ -188,8 +189,6 @@ def load_config_from_env() -> RSPConfig:
     Returns:
         RSPConfig instance populated from environment variables
     """
-    import os
-    
     config = get_default_config()
     
     # Load Target API key

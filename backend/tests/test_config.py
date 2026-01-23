@@ -6,10 +6,14 @@ import pytest
 from app.core.config import (
     RSPConfig,
     get_default_config,
+    load_config_from_env,
     ScoringConfig,
     StorageMode,
     ModelBackend
 )
+from app.agents.sniper import Sniper
+from app.agents.spotter import Spotter
+from app.engines.mutation import MutationEngine
 
 
 def test_default_config():
@@ -95,10 +99,6 @@ def test_separate_agent_api_keys():
 
 def test_agent_initialization_with_api_keys():
     """Test that agents can be initialized with API keys."""
-    from app.agents.sniper import Sniper
-    from app.agents.spotter import Spotter
-    from app.engines.mutation import MutationEngine
-
     # Initialize mutation engine for Sniper
     mutation_engine = MutationEngine(mutation_rate=0.7)
 
@@ -124,9 +124,6 @@ def test_agent_initialization_with_api_keys():
 
 def test_load_config_from_env(monkeypatch):
     """Test loading config from environment variables."""
-    import os
-    from app.core.config import load_config_from_env
-    
     # Set environment variables
     monkeypatch.setenv("SNIPER_ANTHROPIC_API_KEY", "sniper-env-key")
     monkeypatch.setenv("SPOTTER_ANTHROPIC_API_KEY", "spotter-env-key")

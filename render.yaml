@@ -1,0 +1,82 @@
+# Render Blueprint for Red Set ProtoCell
+# This file enables one-click deployment to Render.com
+# Visit: https://dashboard.render.com/select-repo?type=blueprint
+
+services:
+  # Backend API Service
+  - type: web
+    name: red-set-protocell-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      # Environment Configuration
+      - key: RSP_ENVIRONMENT
+        value: production
+      
+      # CORS Configuration - REQUIRED
+      # Set this to your Vercel frontend URL after deployment
+      - key: RSP_ALLOWED_ORIGINS
+        sync: false  # Must be set manually in Render Dashboard
+      
+      # API Keys - REQUIRED
+      # Add these in Render Dashboard -> Environment
+      - key: OPENAI_API_KEY
+        sync: false  # Must be set manually - never commit API keys
+      
+      - key: ANTHROPIC_API_KEY
+        sync: false  # Must be set manually - never commit API keys
+      
+      # Agent-specific API Keys (optional)
+      - key: SNIPER_ANTHROPIC_API_KEY
+        sync: false  # Optional: for independent Sniper operations
+      
+      - key: SPOTTER_ANTHROPIC_API_KEY
+        sync: false  # Optional: for independent Spotter operations
+      
+      # Authentication - REQUIRED
+      - key: RSP_DEMO_PASSWORD
+        generateValue: true  # Render will generate a secure password
+      
+      - key: RSP_REQUIRE_AUTH
+        value: true
+      
+      - key: RSP_JWT_SECRET
+        generateValue: true  # Render will generate a secure secret
+      
+      # Rate Limiting
+      - key: RSP_RATE_LIMIT_PER_MIN
+        value: 60
+      
+      - key: RSP_RATE_LIMIT_PER_HOUR
+        value: 1000
+      
+      # Gunicorn Configuration
+      - key: WORKERS
+        value: 2  # Adjust based on your Render plan
+      
+      - key: WORKER_CONNECTIONS
+        value: 1000
+      
+      - key: PORT
+        value: 8000
+    
+    healthCheckPath: /health
+    
+    # Auto-deploy on push to main branch
+    autoDeploy: true
+    
+    # Resource allocation (adjust based on your needs)
+    plan: starter  # Options: starter, standard, pro
+    
+    # Region (choose closest to your users)
+    region: oregon  # Options: oregon, frankfurt, singapore, ohio
+
+# Post-Deployment Steps:
+# 1. After deployment, go to Render Dashboard -> red-set-protocell-api -> Environment
+# 2. Set RSP_ALLOWED_ORIGINS to your Vercel frontend URL (e.g., https://red-set-protocell.vercel.app)
+# 3. Set OPENAI_API_KEY and/or ANTHROPIC_API_KEY
+# 4. Optionally set SNIPER_ANTHROPIC_API_KEY and SPOTTER_ANTHROPIC_API_KEY for independent agent operations
+# 5. Click "Save Changes" to restart the service
+# 6. Your backend API will be available at: https://red-set-protocell-api.onrender.com
+# 7. Update your Vercel frontend VITE_API_BASE_URL to point to this URL

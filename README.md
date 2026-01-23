@@ -17,6 +17,8 @@ Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming e
 
 **Backend API**: https://red-set-protocell.onrender.com
 
+**📦 Easy Deployment**: One-click deploy to Render + Vercel - see [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+
 Red Set ProtoCell now includes a modern, glassmorphism-styled web interface featuring:
 - **Live Attack Feed**: Real-time stream of red teaming attacks
 - **Interactive Dashboard**: Comprehensive metrics, charts, and graphs
@@ -25,7 +27,12 @@ Red Set ProtoCell now includes a modern, glassmorphism-styled web interface feat
 - **User Input**: Test custom adversarial prompts
 - **Auto-Halt**: Stops on critical vulnerabilities or cost limits
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for production configuration and [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md) for local setup instructions.
+**Deployment Options:**
+- 🔵 **One-Click**: Use `render.yaml` for automated Render deployment
+- 📖 **Step-by-Step**: Follow [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for detailed instructions
+- 🔧 **Advanced**: See [DEPLOYMENT.md](DEPLOYMENT.md) for production configuration
+
+Local setup: [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md)
 
 ---
 

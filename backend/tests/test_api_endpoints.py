@@ -14,6 +14,9 @@ from fastapi.testclient import TestClient
 TEST_DEMO_PASSWORD = "test_demo_password_not_real"
 os.environ["RSP_DEMO_PASSWORD"] = TEST_DEMO_PASSWORD
 
+# Set CORS allowed origins for tests before importing app
+os.environ["RSP_ALLOWED_ORIGINS"] = "http://localhost:3000"
+
 from app.api_server import app  # noqa: E402
 
 client = TestClient(app)

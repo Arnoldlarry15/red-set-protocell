@@ -65,20 +65,34 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
         creativity_temperature=0.8
     )
 
-    # Mock target for example (doesn't make real API calls)
-    class MockTarget:
-        def __init__(self):
-            self.stats = {'total_executions': 0}
+    # Create real target with API
+    import os
+    from app.factories import TargetFactory
+    
+    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        print("ERROR: No API key found.")
+        print("Set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.")
+        print("Example: export OPENAI_API_KEY=sk-your-key-here")
+        raise ValueError("API key required for live execution")
 
-        def execute(self, prompt, metadata=None):
-            self.stats['total_executions'] += 1
-            # Return mock response
-            return "This is a mock response for example purposes."
-
-        def get_statistics(self):
-            return self.stats
-
-    target = MockTarget()
+    # Use OpenAI by default, or Anthropic if available
+    if os.getenv("OPENAI_API_KEY"):
+        target = TargetFactory.create(
+            "openai",
+            api_key=os.getenv("OPENAI_API_KEY"),
+            model_name="gpt-3.5-turbo",
+            max_tokens=500
+        )
+        print(f"Using OpenAI backend: gpt-3.5-turbo")
+    else:
+        target = TargetFactory.create(
+            "anthropic",
+            api_key=os.getenv("ANTHROPIC_API_KEY"),
+            model_name="claude-3-haiku-20240307",
+            max_tokens=500
+        )
+        print(f"Using Anthropic backend: claude-3-haiku-20240307")
 
     spotter = Spotter()
 

@@ -120,3 +120,22 @@ def test_agent_initialization_with_api_keys():
 
     # Verify they have different API keys
     assert sniper.api_key != spotter.api_key
+
+
+def test_load_config_from_env(monkeypatch):
+    """Test loading config from environment variables."""
+    import os
+    from app.core.config import load_config_from_env
+    
+    # Set environment variables
+    monkeypatch.setenv("SNIPER_ANTHROPIC_API_KEY", "sniper-env-key")
+    monkeypatch.setenv("SPOTTER_ANTHROPIC_API_KEY", "spotter-env-key")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "target-env-key")
+    
+    # Load config from environment
+    config = load_config_from_env()
+    
+    # Verify API keys were loaded
+    assert config.sniper.api_key == "sniper-env-key"
+    assert config.spotter.api_key == "spotter-env-key"
+    assert config.target.api_key == "target-env-key"

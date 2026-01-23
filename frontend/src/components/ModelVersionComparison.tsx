@@ -26,22 +26,39 @@ const ModelVersionComparison: React.FC = () => {
   const [modelV2, setModelV2] = useState('');
   const [comparison, setComparison] = useState<ModelComparison | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const compareModels = async () => {
     if (!modelV1 || !modelV2) {
-      alert('Please enter both model versions');
+      setError('Please enter both model versions');
+      return;
+    }
+
+    if (!API_BASE_URL) {
+      setError('Backend API URL not configured. Please set VITE_API_BASE_URL environment variable.');
       return;
     }
 
     try {
       setLoading(true);
+      setError(null);
       const response = await axios.get(
-        `${API_BASE_URL}/api/dashboard/compare-models?model_v1=${modelV1}&model_v2=${modelV2}`
+        `${API_BASE_URL}/dashboard/compare-models?model_v1=${modelV1}&model_v2=${modelV2}`
       );
       setComparison(response.data);
     } catch (error) {
       console.error('Error comparing models:', error);
-      alert('Error comparing models');
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 404) {
+          setError('No session data found for one or both model versions');
+        } else if (error.code === 'ERR_NETWORK') {
+          setError('Cannot connect to backend. Please check if the backend is running.');
+        } else {
+          setError(error.response?.data?.detail || 'Error comparing models. Please try again.');
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -64,13 +81,22 @@ const ModelVersionComparison: React.FC = () => {
         </h2>
       </div>
 
+      {error && (
+        <div className="error-message glass-panel">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
       <div className="comparison-inputs glass-panel">
         <div className="input-group">
           <label>Model Version 1</label>
           <input
             type="text"
             value={modelV1}
-            onChange={(e) => setModelV1(e.target.value)}
+            onChange={(e) => {
+              setModelV1(e.target.value);
+              setError(null);
+            }}
             placeholder="e.g., gpt-4-v1.0"
             className="form-control"
           />
@@ -80,7 +106,10 @@ const ModelVersionComparison: React.FC = () => {
           <input
             type="text"
             value={modelV2}
-            onChange={(e) => setModelV2(e.target.value)}
+            onChange={(e) => {
+              setModelV2(e.target.value);
+              setError(null);
+            }}
             placeholder="e.g., gpt-4-v2.0"
             className="form-control"
           />

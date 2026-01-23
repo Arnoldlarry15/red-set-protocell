@@ -147,19 +147,12 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
 
   return (
     <div className="dashboard">
-      {/* Header */}
+      {/* Session Controls Header */}
       <header className="dashboard-header glass-panel">
         <div className="header-left">
-          <div className="header-logo">
-            <img 
-              src="/logo.png" 
-              alt="RSP" 
-              style={{ width: '32px', height: '32px', objectFit: 'contain' }}
-            />
-          </div>
           <div className="header-info">
-            <h1>RED SET PROTOCELL</h1>
-            <p className="session-id">Session: {sessionStats.sessionId}</p>
+            <h2>Active Red Teaming Session</h2>
+            <p className="session-id">Session ID: {sessionStats.sessionId}</p>
           </div>
         </div>
         
@@ -175,6 +168,7 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
             className="btn btn-secondary control-btn"
             onClick={handleStart}
             disabled={sessionStats.status === 'running'}
+            aria-label="Start session"
           >
             <Play size={16} /> Start
           </button>
@@ -182,12 +176,14 @@ const Dashboard: React.FC<DashboardProps> = ({ backend }) => {
             className="btn btn-secondary control-btn"
             onClick={handlePause}
             disabled={sessionStats.status !== 'running'}
+            aria-label="Pause session"
           >
             <Pause size={16} /> Pause
           </button>
           <button 
             className="btn btn-primary control-btn"
             onClick={handleStop}
+            aria-label="Stop session"
           >
             <Square size={16} /> Stop
           </button>

@@ -12,6 +12,9 @@ interface UserManagementProps {
 const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [showAddUser, setShowAddUser] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
@@ -28,25 +31,64 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
   }, [isAdmin]);
 
   const fetchUsers = async () => {
+    if (!API_BASE_URL) {
+      setError('Backend API URL not configured');
+      return;
+    }
+
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/auth/users`);
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(`${API_BASE_URL}/auth/users`);
       setUsers(response.data.users);
     } catch (error) {
       console.error('Error fetching users:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ERR_NETWORK') {
+          setError('Cannot connect to backend. Please check if the backend is running.');
+        } else {
+          setError(error.response?.data?.detail || 'Failed to load users');
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!newUser.username || !newUser.email || !newUser.password) {
+      setError('All fields are required');
+      return;
+    }
+
     try {
-      await axios.post(`${API_BASE_URL}/api/auth/register`, newUser);
-      alert('User created successfully');
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+      await axios.post(`${API_BASE_URL}/auth/register`, newUser);
+      setSuccess(`User ${newUser.username} created successfully`);
       setShowAddUser(false);
       setNewUser({ username: '', email: '', role: 'observer', password: '' });
       fetchUsers();
     } catch (error) {
       console.error('Error creating user:', error);
-      alert('Error creating user');
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 400) {
+          setError('User already exists or invalid data provided');
+        } else if (error.code === 'ERR_NETWORK') {
+          setError('Cannot connect to backend. Please check if the backend is running.');
+        } else {
+          setError(error.response?.data?.detail || 'Failed to create user');
+        }
+      } else {
+        setError('An unexpected error occurred');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,11 +138,31 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
           <Users size={24} />
           User Management
         </h2>
-        <button onClick={() => setShowAddUser(!showAddUser)} className="btn btn-primary">
+        <button 
+          onClick={() => {
+            setShowAddUser(!showAddUser);
+            setError(null);
+            setSuccess(null);
+          }} 
+          className="btn btn-primary"
+          disabled={loading}
+        >
           <UserPlus size={18} />
           Add User
         </button>
       </div>
+
+      {error && (
+        <div className="error-message glass-panel">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="success-message glass-panel">
+          <strong>Success:</strong> {success}
+        </div>
+      )}
 
       {showAddUser && (
         <div className="add-user-form glass-panel">
@@ -111,9 +173,13 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
               <input
                 type="text"
                 value={newUser.username}
-                onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                onChange={(e) => {
+                  setNewUser({ ...newUser, username: e.target.value });
+                  setError(null);
+                }}
                 required
                 className="form-control"
+                disabled={loading}
               />
             </div>
             <div className="form-group">
@@ -121,17 +187,25 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
               <input
                 type="email"
                 value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                onChange={(e) => {
+                  setNewUser({ ...newUser, email: e.target.value });
+                  setError(null);
+                }}
                 required
                 className="form-control"
+                disabled={loading}
               />
             </div>
             <div className="form-group">
               <label>Role</label>
               <select
                 value={newUser.role}
-                onChange={(e) => setNewUser({ ...newUser, role: e.target.value as 'admin' | 'researcher' | 'observer' })}
+                onChange={(e) => {
+                  setNewUser({ ...newUser, role: e.target.value as 'admin' | 'researcher' | 'observer' });
+                  setError(null);
+                }}
                 className="form-control"
+                disabled={loading}
               >
                 <option value="observer">Observer</option>
                 <option value="researcher">Researcher</option>
@@ -144,14 +218,30 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
               <input
                 type="password"
                 value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                onChange={(e) => {
+                  setNewUser({ ...newUser, password: e.target.value });
+                  setError(null);
+                }}
                 required
                 className="form-control"
+                disabled={loading}
+                minLength={12}
+                placeholder="Minimum 12 characters"
               />
             </div>
             <div className="form-actions">
-              <button type="submit" className="btn btn-primary">Create User</button>
-              <button type="button" onClick={() => setShowAddUser(false)} className="btn btn-secondary">
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? 'Creating...' : 'Create User'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  setShowAddUser(false);
+                  setError(null);
+                }} 
+                className="btn btn-secondary"
+                disabled={loading}
+              >
                 Cancel
               </button>
             </div>
@@ -161,23 +251,33 @@ const UserManagement: React.FC<UserManagementProps> = ({ currentUser }) => {
 
       <div className="users-list">
         <h3>Current Users</h3>
-        <div className="users-grid">
-          {users.map((user) => (
-            <div key={user.username} className="user-card glass-panel">
-              <div className="user-header">
-                <h4>{user.username}</h4>
-                <div className="user-role">
-                  {getRoleIcon(user.role)}
-                  <span>{user.role}</span>
+        {loading && users.length === 0 ? (
+          <div className="loading-state glass-panel">
+            Loading users...
+          </div>
+        ) : users.length === 0 ? (
+          <div className="empty-state glass-panel">
+            No users found. Add your first user above.
+          </div>
+        ) : (
+          <div className="users-grid">
+            {users.map((user) => (
+              <div key={user.username} className="user-card glass-panel">
+                <div className="user-header">
+                  <h4>{user.username}</h4>
+                  <div className="user-role">
+                    {getRoleIcon(user.role)}
+                    <span>{user.role}</span>
+                  </div>
+                </div>
+                <div className="user-details">
+                  <p className="user-email">{user.email}</p>
+                  <p className="user-permissions">{getRoleDescription(user.role)}</p>
                 </div>
               </div>
-              <div className="user-details">
-                <p className="user-email">{user.email}</p>
-                <p className="user-permissions">{getRoleDescription(user.role)}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="role-info glass-panel">

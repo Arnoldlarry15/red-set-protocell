@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import Navigation from './components/Navigation';
 import { User } from './types';
 import './styles/globals.css';
 
@@ -21,8 +22,16 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    setAuthenticated(false);
+    setApiKey('');
+    setBackend('openai');
+    setUser(null);
+  };
+
   return (
     <Router>
+      {authenticated && <Navigation user={user} onLogout={handleLogout} />}
       <Routes>
         <Route 
           path="/" 

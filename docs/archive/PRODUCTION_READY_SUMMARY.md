@@ -386,7 +386,8 @@ OPENAI_API_KEY=sk-your-key
 ```bash
 # Full production .env
 RSP_ENVIRONMENT=production
-RSP_ALLOWED_ORIGINS=https://your-domain.com,https://app.your-domain.com
+# SECURITY: One backend = One frontend. No commas. No localhost.
+RSP_ALLOWED_ORIGINS=https://your-domain.com
 RSP_JWT_SECRET=<generated-secret-32-chars-min>
 RSP_JWT_EXPIRATION_HOURS=24
 RSP_REQUIRE_AUTH=true

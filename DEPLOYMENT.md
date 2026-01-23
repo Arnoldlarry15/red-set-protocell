@@ -2,6 +2,10 @@
 
 This document provides the production deployment configuration for Red Set ProtoCell v1.0.0.
 
+> 🚀 **Quick Start:** For step-by-step deployment instructions, see [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+
+> 🔵 **One-Click Deploy:** Use `render.yaml` for automated Render deployment
+
 ## Live Deployments
 
 ### Frontend (Vercel)
@@ -15,6 +19,21 @@ This document provides the production deployment configuration for Red Set Proto
 - **Platform**: Render
 - **Framework**: FastAPI + Python 3.11
 - **Container**: Docker-based deployment
+
+## Quick Deployment Options
+
+### Option 1: One-Click Deployment (Recommended)
+
+Use the included `render.yaml` blueprint for automated Render deployment:
+
+1. Click: [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Arnoldlarry15/red-set-protocell)
+2. Set your API keys in the Render Dashboard
+3. Deploy frontend to Vercel (see [QUICK_DEPLOY.md](QUICK_DEPLOY.md))
+4. Update `RSP_ALLOWED_ORIGINS` with your Vercel URL
+
+### Option 2: Manual Deployment
+
+Follow the detailed instructions in [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for manual deployment.
 
 ## Environment Configuration
 

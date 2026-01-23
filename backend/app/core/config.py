@@ -185,24 +185,24 @@ def get_default_config() -> RSPConfig:
 def load_config_from_env() -> RSPConfig:
     """
     Load configuration from environment variables.
-    
+
     Returns:
         RSPConfig instance populated from environment variables
     """
     config = get_default_config()
-    
+
     # Load Target API key
     if os.getenv('ANTHROPIC_API_KEY'):
         config.target.api_key = os.getenv('ANTHROPIC_API_KEY')
     elif os.getenv('OPENAI_API_KEY'):
         config.target.api_key = os.getenv('OPENAI_API_KEY')
-    
+
     # Load Sniper API key
     if os.getenv('SNIPER_ANTHROPIC_API_KEY'):
         config.sniper.api_key = os.getenv('SNIPER_ANTHROPIC_API_KEY')
-    
+
     # Load Spotter API key
     if os.getenv('SPOTTER_ANTHROPIC_API_KEY'):
         config.spotter.api_key = os.getenv('SPOTTER_ANTHROPIC_API_KEY')
-    
+
     return config

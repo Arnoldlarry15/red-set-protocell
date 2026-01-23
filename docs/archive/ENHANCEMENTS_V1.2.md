@@ -21,7 +21,7 @@ All five requested features have been successfully implemented, tested, and docu
 - Regression detection and recommendations
 - 5 comprehensive tests, all passing
 
-**Files**: `app/benchmarking/`, `examples/benchmarking_demo.py`, `tests/test_benchmarking.py`
+**Files**: `app/benchmarking/`, `examples/benchmarking.py`, `tests/test_benchmarking.py`
 
 ---
 
@@ -34,7 +34,7 @@ All five requested features have been successfully implemented, tested, and docu
 - Session and round-level metrics
 - 7 comprehensive tests, all passing
 
-**Files**: `app/telemetry/`, `examples/telemetry_export_demo.py`, `tests/test_telemetry.py`
+**Files**: `app/telemetry/`, `examples/telemetry_export.py`, `tests/test_telemetry.py`
 
 ---
 
@@ -60,7 +60,7 @@ All five requested features have been successfully implemented, tested, and docu
 - Priority strategy suggestions
 - 10 comprehensive tests, all passing
 
-**Files**: `app/strategy_tuning/`, `examples/strategy_tuning_demo.py`, `tests/test_strategy_tuning.py`
+**Files**: `app/strategy_tuning/`, `examples/strategy_tuning.py`, `tests/test_strategy_tuning.py`
 
 ---
 
@@ -73,7 +73,7 @@ All five requested features have been successfully implemented, tested, and docu
 - Provider filtering
 - 11 comprehensive tests, all passing
 
-**Files**: `app/model_zoo/`, `examples/model_zoo_demo.py`, `tests/test_model_zoo.py`
+**Files**: `app/model_zoo/`, `examples/model_zoo.py`, `tests/test_model_zoo.py`
 
 ---
 

@@ -1,7 +1,7 @@
 """
-Red Set ProtoCell - Benchmarking Demo
+Red Set ProtoCell - Automated Benchmarking
 
-Demonstrates automated benchmarking capabilities.
+Shows automated benchmarking capabilities.
 """
 
 import asyncio
@@ -20,18 +20,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-async def demo_quick_benchmark():
-    """Run a quick benchmark demonstration."""
-    logger.info("=== Quick Benchmark Demo ===")
+async def run_quick_benchmark():
+    """Run a quick benchmark example."""
+    logger.info("=== Quick Benchmark Example ===")
 
     # Create benchmark suite
-    suite = BenchmarkSuite(results_dir="demo_benchmarks")
+    suite = BenchmarkSuite(results_dir="example_benchmarks")
 
     # Get standard benchmark configs
     benchmarks = create_standard_benchmarks()
     quick_config = benchmarks['quick']
 
-    # Setup RSP system (using mock for demo - replace with real API key)
+    # Setup RSP system (using mock for examples - replace with real API key)
     config = get_default_config()
     config.orchestrator.max_rounds = quick_config.rounds
 
@@ -43,7 +43,7 @@ async def demo_quick_benchmark():
     logger.info(f"Running benchmark: {quick_config.name}")
     logger.info(f"Description: {quick_config.description}")
 
-    # For demo purposes, we'll create a mock result
+    # For example purposes, we'll create a mock result
     # In real usage, you would do:
     # orchestrator = setup_system(config)
     # runner = BenchmarkRunner(orchestrator)
@@ -58,11 +58,11 @@ async def demo_quick_benchmark():
     logger.info("Results saved to benchmark suite")
 
 
-async def demo_model_comparison():
-    """Demonstrate model version comparison."""
-    logger.info("\n=== Model Comparison Demo ===")
+async def run_model_comparison():
+    """Show model version comparison."""
+    logger.info("\n=== Model Comparison Example ===")
 
-    suite = BenchmarkSuite(results_dir="demo_benchmarks")
+    suite = BenchmarkSuite(results_dir="example_benchmarks")
 
     # In real usage, you would load actual benchmark results
     # baseline = suite.load_result(Path("benchmark_gpt35_v1.json"))
@@ -78,24 +78,24 @@ async def demo_model_comparison():
 
 
 def main():
-    """Main demo function."""
+    """Main function."""
     print("\n" + "="*60)
-    print("Red Set ProtoCell - Benchmarking Demo")
+    print("Red Set ProtoCell - Automated Benchmarking")
     print("="*60 + "\n")
 
-    print("This demo shows the new automated benchmarking capabilities:")
+    print("This shows the automated benchmarking capabilities:")
     print("1. Standard benchmark configurations (quick, standard, comprehensive, stress)")
     print("2. Automated benchmark execution and result storage")
     print("3. Model version comparison with statistical analysis")
     print("4. Benchmark report generation")
     print("\n")
 
-    # Run async demos
-    asyncio.run(demo_quick_benchmark())
-    asyncio.run(demo_model_comparison())
+    # Run async examples
+    asyncio.run(run_quick_benchmark())
+    asyncio.run(run_model_comparison())
 
     print("\n" + "="*60)
-    print("Demo completed!")
+    print("Examples completed!")
     print("="*60 + "\n")
 
 

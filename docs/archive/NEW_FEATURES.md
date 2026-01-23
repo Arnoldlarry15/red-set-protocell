@@ -475,10 +475,10 @@ python -m app.main models list --provider openai
 - `app/model_zoo/presets.py`
 
 ### Examples
-- `examples/benchmarking_demo.py`
-- `examples/telemetry_export_demo.py`
-- `examples/strategy_tuning_demo.py`
-- `examples/model_zoo_demo.py`
+- `examples/benchmarking.py`
+- `examples/telemetry_export.py`
+- `examples/strategy_tuning.py`
+- `examples/model_zoo.py`
 
 ---
 
@@ -500,16 +500,16 @@ Run demos to verify functionality:
 cd rsp-core/backend
 
 # Test benchmarking
-python examples/benchmarking_demo.py
+python examples/benchmarking.py
 
 # Test telemetry export
-python examples/telemetry_export_demo.py
+python examples/telemetry_export.py
 
 # Test strategy tuning
-python examples/strategy_tuning_demo.py
+python examples/strategy_tuning.py
 
 # Test model zoo
-python examples/model_zoo_demo.py
+python examples/model_zoo.py
 ```
 
 ---

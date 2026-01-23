@@ -1,7 +1,7 @@
 """
-Red Set ProtoCell - Model Zoo Demo
+Red Set ProtoCell - Model Zoo Examples
 
-Demonstrates model zoo and registry capabilities.
+Shows model zoo and registry capabilities.
 """
 
 import logging
@@ -18,9 +18,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def demo_model_listing():
-    """Demonstrate model listing functionality."""
-    logger.info("=== Model Listing Demo ===")
+def run_model_listing():
+    """Show model listing functionality."""
+    logger.info("=== Model Listing Example ===")
 
     registry = create_default_registry()
 
@@ -36,9 +36,9 @@ def demo_model_listing():
         logger.info(f"  Recommended for: {', '.join(model.recommended_for)}")
 
 
-def demo_model_config():
-    """Demonstrate getting model configuration."""
-    logger.info("\n\n=== Model Configuration Demo ===")
+def run_model_config():
+    """Show getting model configuration."""
+    logger.info("\n\n=== Model Configuration Example ===")
 
     registry = create_default_registry()
 
@@ -53,9 +53,9 @@ def demo_model_config():
     logger.info(f"  Context window: {config['context_window']:,} tokens")
 
 
-def demo_model_comparison():
-    """Demonstrate model comparison functionality."""
-    logger.info("\n\n=== Model Comparison Demo ===")
+def run_model_comparison():
+    """Show model comparison functionality."""
+    logger.info("\n\n=== Model Comparison Example ===")
 
     registry = create_default_registry()
 
@@ -81,9 +81,9 @@ def demo_model_comparison():
         logger.info(f"  {model_id}: {', '.join(caps)}")
 
 
-def demo_version_tracking():
-    """Demonstrate version tracking functionality."""
-    logger.info("\n\n=== Version Tracking Demo ===")
+def run_version_tracking():
+    """Show version tracking functionality."""
+    logger.info("\n\n=== Version Tracking Example ===")
 
     registry = create_default_registry()
 
@@ -103,9 +103,9 @@ def demo_version_tracking():
     logger.info(f"\nLatest version: {latest.version_id}")
 
 
-def demo_provider_filtering():
-    """Demonstrate filtering by provider."""
-    logger.info("\n\n=== Provider Filtering Demo ===")
+def run_provider_filtering():
+    """Show filtering by provider."""
+    logger.info("\n\n=== Provider Filtering Example ===")
 
     registry = create_default_registry()
 
@@ -125,12 +125,12 @@ def demo_provider_filtering():
 
 
 def main():
-    """Main demo function."""
+    """Main function."""
     print("\n" + "="*60)
-    print("Red Set ProtoCell - Model Zoo Demo")
+    print("Red Set ProtoCell - Model Zoo Examples")
     print("="*60 + "\n")
 
-    print("This demo shows the new model zoo capabilities:")
+    print("This shows the new model zoo capabilities:")
     print("1. Reference model registry with preconfigured models")
     print("2. Model version tracking")
     print("3. Model comparison utilities")
@@ -138,14 +138,14 @@ def main():
     print("5. Easy configuration for benchmarking")
     print("\n")
 
-    demo_model_listing()
-    demo_model_config()
-    demo_model_comparison()
-    demo_version_tracking()
-    demo_provider_filtering()
+    run_model_listing()
+    run_model_config()
+    run_model_comparison()
+    run_version_tracking()
+    run_provider_filtering()
 
     print("\n" + "="*60)
-    print("Demo completed!")
+    print("Examples completed!")
     print("="*60 + "\n")
 
 

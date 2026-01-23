@@ -399,6 +399,6 @@ config = PerturbationConfig(
 
 ## References
 
-- See `examples/perturbation_demo.py` for comprehensive examples
+- See `examples/perturbation.py` for comprehensive examples
 - See `tests/test_perturbations.py` for test coverage
 - See problem statement in repository for original requirements

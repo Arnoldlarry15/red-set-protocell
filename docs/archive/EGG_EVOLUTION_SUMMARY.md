@@ -107,7 +107,7 @@ Example output:
 
 ### Files Added
 - `rsp-core/backend/tests/test_egg_telemetry.py` (15 new tests)
-- `rsp-core/backend/examples/egg_telemetry_demo.py` (demo script)
+- `rsp-core/backend/examples/egg_telemetry.py` (demo script)
 - `rsp-core/backend/docs/EGG_TELEMETRY.md` (documentation)
 
 ### Backward Compatibility

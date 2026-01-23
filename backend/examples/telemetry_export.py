@@ -1,7 +1,7 @@
 """
-Red Set ProtoCell - Telemetry Export Demo
+Red Set ProtoCell - Telemetry Export Examples
 
-Demonstrates telemetry export capabilities.
+Shows telemetry export capabilities.
 """
 
 import logging
@@ -18,11 +18,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def demo_csv_export():
-    """Demonstrate CSV export functionality."""
-    logger.info("=== CSV Export Demo ===")
+def run_csv_export():
+    """Show CSV export functionality."""
+    logger.info("=== CSV Export Example ===")
 
-    exporter = TelemetryExporter(output_dir="demo_exports")
+    exporter = TelemetryExporter(output_dir="example_exports")
 
     # Sample metrics data
     data = [
@@ -50,21 +50,21 @@ def demo_csv_export():
     filepath = exporter.export(
         data=data,
         format=ExportFormat.CSV,
-        filename="demo_metrics.csv"
+        filename="example_metrics.csv"
     )
 
     logger.info(f"Exported to: {filepath}")
 
 
-def demo_json_export():
-    """Demonstrate JSON export functionality."""
-    logger.info("\n=== JSON Export Demo ===")
+def run_json_export():
+    """Show JSON export functionality."""
+    logger.info("\n=== JSON Export Example ===")
 
-    exporter = TelemetryExporter(output_dir="demo_exports")
+    exporter = TelemetryExporter(output_dir="example_exports")
 
     # Sample session summary
     data = {
-        'session_id': 'rsp_demo_20260109',
+        'session_id': 'rsp_example_20260109',
         'total_rounds': 50,
         'average_score': 0.34,
         'critical_findings': 2,
@@ -76,15 +76,15 @@ def demo_json_export():
     filepath = exporter.export(
         data=data,
         format=ExportFormat.JSON,
-        filename="demo_session.json"
+        filename="example_session.json"
     )
 
     logger.info(f"Exported to: {filepath}")
 
 
-def demo_metrics_extraction():
-    """Demonstrate metrics extraction from database."""
-    logger.info("\n=== Metrics Extraction Demo ===")
+def run_metrics_extraction():
+    """Show metrics extraction from database."""
+    logger.info("\n=== Metrics Extraction Example ===")
 
     extractor = SessionMetricsExtractor()
 
@@ -96,12 +96,12 @@ def demo_metrics_extraction():
     logger.info("- Export in multiple formats (CSV, JSON, JSON Lines)")
 
 
-def demo_metrics_snapshot():
-    """Demonstrate metrics snapshot creation."""
-    logger.info("\n=== Metrics Snapshot Demo ===")
+def run_metrics_snapshot():
+    """Show metrics snapshot creation."""
+    logger.info("\n=== Metrics Snapshot Example ===")
 
     snapshot = create_metrics_snapshot(
-        session_id="rsp_demo_20260109",
+        session_id="rsp_example_20260109",
         metrics={
             'total_rounds': 50,
             'average_score': 0.34,
@@ -119,26 +119,26 @@ def demo_metrics_snapshot():
 
 
 def main():
-    """Main demo function."""
+    """Main function."""
     print("\n" + "="*60)
-    print("Red Set ProtoCell - Telemetry Export Demo")
+    print("Red Set ProtoCell - Telemetry Export Examples")
     print("="*60 + "\n")
 
-    print("This demo shows the new telemetry export capabilities:")
+    print("This shows the new telemetry export capabilities:")
     print("1. Export metrics to CSV for spreadsheet analysis")
     print("2. Export metrics to JSON for programmatic processing")
     print("3. Extract metrics from session database")
     print("4. Create metrics snapshots")
     print("\n")
 
-    demo_csv_export()
-    demo_json_export()
-    demo_metrics_extraction()
-    demo_metrics_snapshot()
+    run_csv_export()
+    run_json_export()
+    run_metrics_extraction()
+    run_metrics_snapshot()
 
     print("\n" + "="*60)
-    print("Demo completed!")
-    print("See 'demo_exports/' directory for exported files")
+    print("Examples completed!")
+    print("See 'example_exports'/' directory for exported files")
     print("="*60 + "\n")
 
 

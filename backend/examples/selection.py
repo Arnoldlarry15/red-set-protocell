@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Demonstration of Selection Engine Features
+Example of Selection Engine Features
 
 This script shows how the selection engine transforms evolution from
 random mutation to directed exploration with explicit selection pressure.
@@ -12,10 +12,10 @@ from app.engines.selection import SelectionEngine, SelectionStrategy, PromptCand
 from app.agents.sniper import Sniper
 
 
-def demo_selection_strategies():
-    """Demonstrate different selection strategies."""
+def run_selection_strategies():
+    """Show different selection strategies."""
     print("=" * 60)
-    print("DEMO: Selection Strategies")
+    print("EXAMPLE: Selection Strategies")
     print("=" * 60)
 
     # Create candidates with varying scores
@@ -41,10 +41,10 @@ def demo_selection_strategies():
             print(f"  {i}. Score: {candidate.score:.2f} - {candidate.prompt}")
 
 
-def demo_novelty_search():
-    """Demonstrate novelty search rewarding structural differences."""
+def run_novelty_search():
+    """Show novelty search rewarding structural differences."""
     print("\n" + "=" * 60)
-    print("DEMO: Novelty Search")
+    print("EXAMPLE: Novelty Search")
     print("=" * 60)
 
     engine = SelectionEngine(novelty_weight=0.4)
@@ -75,10 +75,10 @@ def demo_novelty_search():
     print(f"  Selected despite lower score due to novelty!")
 
 
-def demo_decay_function():
-    """Demonstrate time-based decay of old winners."""
+def run_decay_function():
+    """Show time-based decay of old winners."""
     print("\n" + "=" * 60)
-    print("DEMO: Decay Function")
+    print("EXAMPLE: Decay Function")
     print("=" * 60)
 
     engine = SelectionEngine(decay_rate=0.8, decay_interval=1.0)
@@ -109,10 +109,10 @@ def demo_decay_function():
         print(f"  {i}. {age:3} - effective score in selection")
 
 
-def demo_overfitting_penalties():
-    """Demonstrate overfitting penalties for repeated patterns."""
+def run_overfitting_penalties():
+    """Show overfitting penalties for repeated patterns."""
     print("\n" + "=" * 60)
-    print("DEMO: Overfitting Penalties")
+    print("EXAMPLE: Overfitting Penalties")
     print("=" * 60)
 
     engine = SelectionEngine(overfitting_threshold=2)
@@ -140,10 +140,10 @@ def demo_overfitting_penalties():
     print(f"  Penalty system encouraged exploration!")
 
 
-def demo_full_evolution():
-    """Demonstrate full evolution cycle with selection."""
+def run_full_evolution():
+    """Show full evolution cycle with selection."""
     print("\n" + "=" * 60)
-    print("DEMO: Full Evolution Cycle")
+    print("EXAMPLE: Full Evolution Cycle")
     print("=" * 60)
 
     mutation_engine = MutationEngine(mutation_rate=0.7)
@@ -187,20 +187,20 @@ def demo_full_evolution():
 
 
 def main():
-    """Run all demonstrations."""
+    """Run all examples."""
     print("\n" + "=" * 60)
-    print("SELECTION ENGINE DEMONSTRATION")
+    print("SELECTION ENGINE EXAMPLES")
     print("Showing how selection pressure transforms evolution")
     print("=" * 60)
 
-    demo_selection_strategies()
-    demo_novelty_search()
-    demo_decay_function()
-    demo_overfitting_penalties()
-    demo_full_evolution()
+    run_selection_strategies()
+    run_novelty_search()
+    run_decay_function()
+    run_overfitting_penalties()
+    run_full_evolution()
 
     print("\n" + "=" * 60)
-    print("✅ All demonstrations completed!")
+    print("✅ All examples completed!")
     print("=" * 60)
     print("\nThe system now:")
     print("  ✓ Applies explicit selection pressure")

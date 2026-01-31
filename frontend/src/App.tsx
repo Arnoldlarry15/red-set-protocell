@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -58,6 +59,7 @@ function App() {
           } 
         />
       </Routes>
+      <Analytics />
     </Router>
   );
 }

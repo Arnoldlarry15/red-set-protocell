@@ -8,7 +8,7 @@ import UserInput from '../components/UserInput';
 import CostTracker from '../components/CostTracker';
 import { useSessionStream } from '../hooks/useSessionStream';
 import '../styles/Dashboard.css';
-import { Attack, SessionStats, SessionConfig, WebSocketMessage } from '../types';
+import { Attack, SessionStats, SessionConfig, WebSocketMessage, OutgoingWebSocketMessage } from '../types';
 
 interface DashboardProps {
   apiKey: string;
@@ -48,7 +48,11 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
   const [sessionId, setSessionId] = useState<string>('');
   
   // Refs to track session state
-  const wsConnectionRef = useRef<any>(null);
+  const wsConnectionRef = useRef<{
+    isConnected: boolean;
+    disconnect: () => void;
+    sendMessage: (message: OutgoingWebSocketMessage) => boolean;
+  } | null>(null);
 
   // Helper to calculate severity from score
   const getSeverity = (score: number): Attack['severity'] => {
@@ -64,7 +68,24 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
     console.log('[Dashboard] WebSocket message received:', message.type);
     
     if (message.type === 'attack') {
-      const attackData = message.data as any;
+      const attackData = message.data as {
+        id: string;
+        timestamp: string;
+        round: number;
+        prompt: string;
+        response: string;
+        domain: string;
+        strategy: string;
+        mutation: string;
+        score: {
+          global: number;
+          l1_linguistic: number;
+          l2_security: number;
+          l3_cognitive: number;
+        };
+        severity: Attack['severity'];
+        blocked: boolean;
+      };
       const newAttack: Attack = {
         id: attackData.id,
         timestamp: attackData.timestamp,
@@ -85,7 +106,15 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
       };
       setAttacks(prevAttacks => [newAttack, ...prevAttacks].slice(0, 100));
     } else if (message.type === 'stats') {
-      const statsData = message.data as any;
+      const statsData = message.data as {
+        session_id?: string;
+        completed_rounds: number;
+        total_rounds: number;
+        average_score: number;
+        blocked_count: number;
+        api_cost: number;
+        status: SessionStats['status'];
+      };
       setSessionStats(prev => ({
         ...prev,
         sessionId: statsData.session_id || prev.sessionId,
@@ -97,13 +126,17 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
         status: statsData.status,
       }));
     } else if (message.type === 'status') {
-      const statusData = message.data as any;
+      const statusData = message.data as {
+        status: SessionStats['status'];
+      };
       setSessionStats(prev => ({
         ...prev,
         status: statusData.status,
       }));
     } else if (message.type === 'error') {
-      const errorData = message.data as any;
+      const errorData = message.data as {
+        message?: string;
+      };
       setError(errorData.message || 'An error occurred');
     }
   }, []);
@@ -163,9 +196,10 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
       await axios.post(`${API_BASE_URL}/session/${newSessionId}/execute`);
       console.log('[Dashboard] Session execution started');
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('[Dashboard] Error starting session:', error);
-      setError(error.response?.data?.detail || error.message || 'Failed to start session');
+      const axiosError = error as { response?: { data?: { detail?: string } }; message?: string };
+      setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to start session');
       setSessionStats(prev => ({ ...prev, status: 'idle' }));
     } finally {
       setIsConnecting(false);
@@ -193,9 +227,10 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
       setSessionStats(prev => ({ ...prev, status: 'completed' }));
       wsConnectionRef.current?.disconnect();
       setSessionId('');
-    } catch (error: any) {
+    } catch (error) {
       console.error('[Dashboard] Error stopping session:', error);
-      setError(error.response?.data?.detail || error.message || 'Failed to stop session');
+      const axiosError = error as { response?: { data?: { detail?: string } }; message?: string };
+      setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to stop session');
     }
   }, [sessionId]);
 
@@ -203,14 +238,18 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
   const handleUserInput = useCallback(async (prompt: string) => {
     if (!prompt.trim()) return;
     
+    // Need an active session to execute custom prompts
+    if (!sessionId) {
+      setError('Please start a session before submitting custom prompts');
+      return;
+    }
+    
     try {
       console.log('[Dashboard] Executing custom prompt:', prompt);
       
       const response = await axios.post(`${API_BASE_URL}/prompt/execute`, {
+        session_id: sessionId,
         prompt: prompt,
-        api_key: apiKey,
-        backend: config.backend,
-        model: config.model,
       });
 
       console.log('[Dashboard] Custom prompt response:', response.data);
@@ -218,7 +257,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
       // Add result as an attack entry
       const customAttack: Attack = {
         id: `custom_${Date.now()}`,
-        timestamp: response.data.timestamp,
+        timestamp: response.data.timestamp || new Date().toISOString(),
         round: 0, // Custom prompts are not part of regular rounds
         prompt: response.data.prompt,
         response: response.data.response,
@@ -237,19 +276,31 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
       
       setAttacks(prevAttacks => [customAttack, ...prevAttacks].slice(0, 100));
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('[Dashboard] Error executing custom prompt:', error);
-      setError(error.response?.data?.detail || error.message || 'Failed to execute prompt');
+      const axiosError = error as { response?: { data?: { detail?: string } }; message?: string };
+      setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to execute prompt');
     }
-  }, [apiKey, config.backend, config.model]);
+  }, [sessionId]);
 
   // Cleanup on unmount
   useEffect(() => {
-    return () => {
+    const cleanup = async () => {
       if (sessionId && sessionStats.status === 'running') {
-        handleStop();
+        try {
+          await axios.post(`${API_BASE_URL}/session/${sessionId}/stop`);
+          console.log('[Dashboard] Session cleaned up on unmount');
+        } catch (error) {
+          console.error('[Dashboard] Error cleaning up session:', error);
+        }
       }
     };
+    
+    return () => {
+      cleanup();
+    };
+    // Only run on unmount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

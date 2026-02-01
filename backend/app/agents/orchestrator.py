@@ -722,7 +722,7 @@ class Orchestrator:
 
         # Step 1: Sniper generates adversarial prompt
         prior_metadata = self.state_manager.get_prior_rounds(limit=10)
-        prompt, attack_domain = self.sniper.generate_prompt(prior_metadata)
+        prompt, attack_domain = await self.sniper.generate_prompt(prior_metadata)
 
         # INVARIANT: Sniper must produce valid outputs
         assert (
@@ -766,7 +766,7 @@ class Orchestrator:
         assert isinstance(target_response, str), "Target must return string response"
 
         # Step 4: Spotter evaluates response
-        evaluation = self.spotter.evaluate(
+        evaluation = await self.spotter.evaluate(
             target_response, attack_domain=attack_domain.value, prompt=prompt
         )
 

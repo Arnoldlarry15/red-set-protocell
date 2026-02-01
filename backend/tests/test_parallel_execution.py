@@ -6,7 +6,7 @@ import pytest
 import asyncio
 import tempfile
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
 from app.agents.orchestrator import Orchestrator, StateManager
 from app.engines.scoring import ScoringEngine
 
@@ -16,18 +16,18 @@ async def test_sequential_execution():
     """Test that sequential execution works correctly."""
     # Create mock agents
     sniper = Mock()
-    sniper.generate_prompt = Mock(return_value=("test prompt", Mock(value="test_domain")))
+    sniper.generate_prompt = AsyncMock(return_value=("test prompt", Mock(value="test_domain")))
     sniper.update_prompt_score = Mock()
     sniper.get_statistics = Mock(return_value={})
     sniper.mutation_engine = Mock()
     sniper.mutation_engine.get_statistics = Mock(return_value={})
 
     target = Mock()
-    target.execute = Mock(return_value="test response")
+    target.execute = AsyncMock(return_value="test response")
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = Mock(return_value={
+    spotter.evaluate = AsyncMock(return_value={
         'l1': {'score': 0.3},
         'l2': {'score': 0.4},
         'l3': {'score': 0.2}
@@ -73,18 +73,18 @@ async def test_parallel_execution():
     """Test that parallel execution works correctly."""
     # Create mock agents with async support
     sniper = Mock()
-    sniper.generate_prompt = Mock(return_value=("test prompt", Mock(value="test_domain")))
+    sniper.generate_prompt = AsyncMock(return_value=("test prompt", Mock(value="test_domain")))
     sniper.update_prompt_score = Mock()
     sniper.get_statistics = Mock(return_value={})
     sniper.mutation_engine = Mock()
     sniper.mutation_engine.get_statistics = Mock(return_value={})
 
     target = Mock()
-    target.execute = Mock(return_value="test response")
+    target.execute = AsyncMock(return_value="test response")
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = Mock(return_value={
+    spotter.evaluate = AsyncMock(return_value={
         'l1': {'score': 0.3},
         'l2': {'score': 0.4},
         'l3': {'score': 0.2}

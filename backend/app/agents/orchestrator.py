@@ -1005,9 +1005,9 @@ class Orchestrator:
                 "error": str(e),
             }
 
-        # Step 3: Spotter evaluates response (synchronous)
+        # Step 3: Spotter evaluates response (async)
         try:
-            evaluation = self.spotter.evaluate(
+            evaluation = await self.spotter.evaluate(
                 target_response,
                 attack_domain=attack_domain,
                 prompt=prompt

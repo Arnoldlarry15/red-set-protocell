@@ -46,6 +46,7 @@ htmlcov/
 *.log
 rsp_session.db
 rsp.log
+rsp_artifacts/
 
 # Environment variables and secrets (NEVER COMMIT)
 .env

@@ -42,7 +42,7 @@ class MockSniper(MockAgent):
         super().__init__()
         self.mutation_engine = MockMutationEngine()
 
-    def generate_prompt(self, prior_metadata):
+    async def generate_prompt(self, prior_metadata):
         from app.agents.sniper import AttackDomain
 
         return "test prompt", AttackDomain.PROMPT_INJECTION
@@ -68,7 +68,7 @@ class MockTarget(MockAgent):
 class MockSpotter(MockAgent):
     """Mock Spotter agent."""
 
-    def evaluate(self, response, attack_domain=None, prompt=None):
+    async def evaluate(self, response, attack_domain=None, prompt=None):
         return {"l1": {"score": 0.2}, "l2": {"score": 0.3}, "l3": {"score": 0.1}}
 
 
@@ -317,7 +317,7 @@ async def test_execute_round_validates_sniper_output(temp_db):
             super().__init__()
             self.mutation_engine = MockMutationEngine()
 
-        def generate_prompt(self, prior_metadata):
+        async def generate_prompt(self, prior_metadata):
             # Return empty prompt (invalid)
             from app.agents.sniper import AttackDomain
 
@@ -418,7 +418,7 @@ async def test_execute_round_validates_spotter_output(temp_db):
     class BadSpotter(MockAgent):
         """Spotter that returns invalid evaluation."""
 
-        def evaluate(self, response, attack_domain=None, prompt=None):
+        async def evaluate(self, response, attack_domain=None, prompt=None):
             # Missing layer scores
             return {"l1": {}}
 

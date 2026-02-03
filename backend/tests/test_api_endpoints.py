@@ -16,6 +16,8 @@ os.environ["RSP_DEMO_PASSWORD"] = TEST_DEMO_PASSWORD
 
 # Set CORS allowed origins for tests before importing app
 os.environ["RSP_ALLOWED_ORIGINS"] = "http://localhost:3000"
+# Provide a provider key to satisfy production validation (tests run with production check)
+os.environ["OPENAI_API_KEY"] = "sk-test-key"
 
 from app.api_server import app  # noqa: E402
 

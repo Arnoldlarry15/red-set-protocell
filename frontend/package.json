@@ -14,7 +14,7 @@
     "@types/react-window": "^1.8.8",
     "@vercel/analytics": "^1.4.1",
     "axios": "^1.13.4",
-    "framer-motion": "^10.16.16",
+    "framer-motion": "^12.29.2",
     "lucide-react": "^0.563.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

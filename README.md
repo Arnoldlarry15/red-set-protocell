@@ -905,8 +905,7 @@ red-set-protocell/
 │   ├── package.json
 │   └── vite.config.ts
 ├── backend/                    # FastAPI Python backend
-│   ├── main.py                # Vercel entry point
-│   ├── docker-compose.yaml    # Docker orchestration
+│   ├── main.py                # Server entry point
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py            # CLI entry point

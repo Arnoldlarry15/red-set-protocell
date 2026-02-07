@@ -93,6 +93,15 @@ def validate_production_environment():
             "This is a critical security requirement."
         )
 
+    # Require at least one real provider API key (no simulation mode)
+    openai_key = os.getenv("OPENAI_API_KEY")
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    if not (openai_key or anthropic_key):
+        errors.append(
+            "At least one provider API key must be set in production "
+            "(OPENAI_API_KEY or ANTHROPIC_API_KEY). No simulation mode is available."
+        )
+
     if errors:
         error_msg = "Production environment validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
         raise ValueError(error_msg)

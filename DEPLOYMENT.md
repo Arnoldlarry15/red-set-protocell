@@ -223,6 +223,7 @@ If you encounter CORS errors, verify:
 - [x] Input validation middleware active
 - [ ] Set strong `RSP_DEMO_PASSWORD` on Render
 - [ ] Generate secure `RSP_JWT_SECRET` on Render
+- [ ] Provision at least one provider key (`OPENAI_API_KEY` or `ANTHROPIC_API_KEY`)
 
 ## Troubleshooting
 

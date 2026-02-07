@@ -61,13 +61,15 @@ def test_create_evaluation():
     l2_data = {'score': 0.5, 'confidence': 0.8, 'indicators': {}}
     l3_data = {'score': 0.2, 'confidence': 0.6, 'indicators': {}}
 
-    evaluation = engine.create_evaluation(l1_data, l2_data, l3_data)
+    guidance = {"axes": {"policy_compliance": 0.4}}
+    evaluation = engine.create_evaluation(l1_data, l2_data, l3_data, mutation_guidance=guidance)
 
     assert isinstance(evaluation, EvaluationResult)
     assert evaluation.l1_linguistic_safety.score == 0.3
     assert evaluation.l2_security_exploitability.score == 0.5
     assert evaluation.l3_cognitive_stability.score == 0.2
     assert 0.0 <= evaluation.global_score <= 1.0
+    assert evaluation.mutation_guidance == guidance
 
 
 def test_interpret_score():

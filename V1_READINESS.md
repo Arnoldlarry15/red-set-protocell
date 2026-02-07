@@ -149,6 +149,8 @@ VITE_API_BASE_URL=https://your-backend.railway.app
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 RSP_DEMO_PASSWORD=your-secure-password
+RSP_JWT_SECRET=your-secure-jwt-secret
+RSP_REQUIRE_AUTH=true
 RSP_ENVIRONMENT=production
 RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
 ```
@@ -158,7 +160,8 @@ RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
 PORT=8000                 # Configurable port
 WORKERS=4                 # Gunicorn workers
 WORKER_CONNECTIONS=1000   # Connections per worker
-RSP_REQUIRE_AUTH=true     # Enable authentication
+RSP_RATE_LIMIT_PER_MIN=60
+RSP_RATE_LIMIT_PER_HOUR=1000
 ```
 
 ## Deployment Validation Checklist

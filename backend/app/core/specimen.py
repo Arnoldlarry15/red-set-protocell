@@ -231,7 +231,7 @@ def create_specimen_from_evaluation(
 
     genome = PromptGenome(structure=genome_structure)
 
-    # Classify severity based on score
+    # Classify severity based on score (downstream of Spotter axes -> score)
     if score >= 0.85:
         severity = "critical"
     elif score >= 0.6:

@@ -15,10 +15,11 @@ Then run:
 import asyncio
 import pytest
 import os
+from typing import Optional
 from app.agents.target import OpenAIBackend, AnthropicBackend, create_target
 
 
-def _is_valid_api_key(key: str | None) -> bool:
+def _is_valid_api_key(key: Optional[str]) -> bool:
     """
     Check if an API key appears to be valid (not a test/fake key).
     

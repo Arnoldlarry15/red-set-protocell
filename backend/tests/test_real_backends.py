@@ -43,8 +43,10 @@ def test_create_target_rejects_mock():
 
 
 @pytest.mark.skipif(
-    not os.environ.get('OPENAI_API_KEY'),
-    reason="OPENAI_API_KEY environment variable not set"
+    os.environ.get('SKIP_REAL_API_TESTS', '').lower() == 'true' or
+    not os.environ.get('OPENAI_API_KEY') or
+    os.environ.get('OPENAI_API_KEY', '').startswith('sk-test-'),
+    reason="Real API tests are skipped in CI or API key not set/invalid"
 )
 def test_openai_real_execution():
     """
@@ -64,8 +66,10 @@ def test_openai_real_execution():
 
 
 @pytest.mark.skipif(
-    not os.environ.get('ANTHROPIC_API_KEY'),
-    reason="ANTHROPIC_API_KEY environment variable not set"
+    os.environ.get('SKIP_REAL_API_TESTS', '').lower() == 'true' or
+    not os.environ.get('ANTHROPIC_API_KEY') or
+    os.environ.get('ANTHROPIC_API_KEY', '').startswith('sk-test-'),
+    reason="Real API tests are skipped in CI or API key not set/invalid"
 )
 def test_anthropic_real_execution():
     """
@@ -83,8 +87,10 @@ def test_anthropic_real_execution():
 
 
 @pytest.mark.skipif(
-    not os.environ.get('OPENAI_API_KEY'),
-    reason="OPENAI_API_KEY environment variable not set"
+    os.environ.get('SKIP_REAL_API_TESTS', '').lower() == 'true' or
+    not os.environ.get('OPENAI_API_KEY') or
+    os.environ.get('OPENAI_API_KEY', '').startswith('sk-test-'),
+    reason="Real API tests are skipped in CI or API key not set/invalid"
 )
 def test_target_with_openai():
     """
@@ -105,8 +111,10 @@ def test_target_with_openai():
 
 
 @pytest.mark.skipif(
-    not os.environ.get('ANTHROPIC_API_KEY'),
-    reason="ANTHROPIC_API_KEY environment variable not set"
+    os.environ.get('SKIP_REAL_API_TESTS', '').lower() == 'true' or
+    not os.environ.get('ANTHROPIC_API_KEY') or
+    os.environ.get('ANTHROPIC_API_KEY', '').startswith('sk-test-'),
+    reason="Real API tests are skipped in CI or API key not set/invalid"
 )
 def test_target_with_anthropic():
     """

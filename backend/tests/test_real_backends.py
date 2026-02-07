@@ -12,6 +12,7 @@ Then run:
   pytest tests/test_real_backends.py -v -s
 """
 
+import asyncio
 import pytest
 import os
 from app.agents.target import OpenAIBackend, AnthropicBackend, create_target
@@ -116,7 +117,9 @@ def test_target_with_anthropic():
     api_key = os.environ.get('ANTHROPIC_API_KEY')
     target = create_target('anthropic', api_key=api_key)
 
-    response = target.execute("Say 'hello' in one word")
+    response = asyncio.get_event_loop().run_until_complete(
+        target.execute("Say 'hello' in one word")
+    )
 
     assert isinstance(response, str)
     assert len(response) > 0

@@ -26,8 +26,10 @@ def _is_valid_api_key(key: str | None) -> bool:
     - Empty or None keys
     - Keys that start with 'sk-test-' (common test pattern)
     - Keys that contain obvious test markers like 'test', 'fake', 'demo', 'mock'
-    - Keys that are too short (less than 20 chars)
+    - Keys that are too short (less than minimum required length)
     """
+    MIN_API_KEY_LENGTH = 20
+    
     if not key:
         return False
     
@@ -38,12 +40,12 @@ def _is_valid_api_key(key: str | None) -> bool:
         return False
     
     # Check for test-related strings in the key
-    test_markers = ['test', 'fake', 'demo', 'mock', 'invalid']
+    test_markers = ['test', 'fake', 'demo', 'mock']
     if any(marker in key_lower for marker in test_markers):
         return False
     
-    # Real API keys are typically longer than 20 characters
-    if len(key) < 20:
+    # Real API keys are typically longer than MIN_API_KEY_LENGTH characters
+    if len(key) < MIN_API_KEY_LENGTH:
         return False
     
     return True

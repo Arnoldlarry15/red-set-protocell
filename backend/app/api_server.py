@@ -1029,17 +1029,16 @@ async def validate_llm_key(validation: LLMKeyValidation):
         # Check for network/connection errors first (highest priority)
         # These can come from the underlying HTTP libraries (httpx, aiohttp, requests)
         # or from the OpenAI/Anthropic SDKs
+        # Use exact type name matching to avoid false positives
         is_connection_error = (
-            'APIConnectionError' in error_type
-            or 'APITimeoutError' in error_type
-            or 'ConnectionError' in error_type
-            or 'TimeoutError' in error_type
-            or 'Timeout' in error_type
+            error_type in ['APIConnectionError', 'APITimeoutError', 'ConnectionError',
+                           'TimeoutError', 'Timeout', 'ConnectTimeout', 'ReadTimeout']
             or 'connection' in error_message
             or 'timeout' in error_message
             or 'network' in error_message
             or 'dns' in error_message
             or 'unreachable' in error_message
+            or 'timed out' in error_message
         )
 
         # Check for authentication errors (only if not a connection error)
@@ -1047,13 +1046,14 @@ async def validate_llm_key(validation: LLMKeyValidation):
         is_auth_error = (
             not is_connection_error
             and (
-                'AuthenticationError' in error_type
-                or 'Unauthorized' in error_type
+                error_type in ['AuthenticationError', 'Unauthorized', 'PermissionDenied']
                 or 'authentication' in error_message
                 or 'invalid api key' in error_message
                 or 'invalid key' in error_message
                 or 'incorrect api key' in error_message
-                or '401' in error_message
+                or 'unauthorized' in error_message
+                or error_message.startswith('401')
+                or ' 401 ' in error_message
             )
         )
 

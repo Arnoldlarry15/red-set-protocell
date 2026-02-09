@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
+import axios from 'axios';
 import { User } from '../types';
 import '../styles/Auth.css';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 interface AuthPageProps {
   onAuth: (apiKey: string, backend: string, userData?: User) => void;
@@ -12,27 +15,41 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
   const [apiKey, setApiKey] = useState('');
   const [backend, setBackend] = useState<'openai' | 'anthropic'>('openai');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!apiKey.trim()) {
-      alert('Please enter an API key');
+      setError('Please enter an API key');
       return;
     }
     
     setLoading(true);
-    // Simulate API key validation and user login
-    setTimeout(() => {
-      // Create a demo user based on API key
-      const demoUser: User = {
-        username: 'demo_user',
-        email: 'demo@rsp.com',
-        role: 'admin', // Default to admin for demo
-      };
-      onAuth(apiKey, backend, demoUser);
-      navigate('/admin'); // Navigate to admin dashboard
-    }, 1000);
+    setError(null);
+    
+    try {
+      // Validate the API key with the backend
+      const response = await axios.post(`${API_BASE_URL}/auth/validate-llm-key`, {
+        api_key: apiKey,
+        backend: backend
+      });
+      
+      if (response.data.valid) {
+        // Create a demo user based on validated API key
+        const demoUser: User = {
+          username: 'demo_user',
+          email: 'demo@rsp.com',
+          role: 'admin', // Default to admin for demo
+        };
+        onAuth(apiKey, backend, demoUser);
+        navigate('/admin'); // Navigate to admin dashboard
+      }
+    } catch (err) {
+      const axiosError = err as { response?: { data?: { detail?: string } }; message?: string };
+      setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to validate API key');
+      setLoading(false);
+    }
   };
 
   return (
@@ -85,6 +102,19 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
                 />
               </div>
             </div>
+
+            {error && (
+              <div className="error-message" style={{
+                padding: '10px',
+                marginBottom: '15px',
+                backgroundColor: '#ff4444',
+                color: 'white',
+                borderRadius: '4px',
+                fontSize: '14px'
+              }}>
+                {error}
+              </div>
+            )}
 
             <button 
               type="submit" 

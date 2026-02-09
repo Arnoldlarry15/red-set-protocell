@@ -241,6 +241,11 @@ class UserLogin(BaseModel):
     password: str
 
 
+class LLMKeyValidation(BaseModel):
+    api_key: str
+    backend: str  # 'openai' or 'anthropic'
+
+
 # Global state
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
@@ -972,6 +977,59 @@ async def list_users():
     except Exception as e:
         logger.error(f"Error listing users: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/auth/validate-llm-key")
+async def validate_llm_key(validation: LLMKeyValidation):
+    """
+    Validate an LLM API key by making a test call to the provider.
+    Returns success if the key is valid, error otherwise.
+    """
+    try:
+        # Create a minimal test backend instance
+        if validation.backend.lower() == 'openai':
+            from app.agents.target import OpenAIBackend
+            test_backend = OpenAIBackend(
+                api_key=validation.api_key,
+                model_name="gpt-3.5-turbo",
+                max_tokens=10,
+                temperature=0.0
+            )
+        elif validation.backend.lower() == 'anthropic':
+            from app.agents.target import AnthropicBackend
+            test_backend = AnthropicBackend(
+                api_key=validation.api_key,
+                model_name="claude-3-haiku-20240307",
+                max_tokens=10,
+                temperature=0.0
+            )
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid backend: {validation.backend}. Must be 'openai' or 'anthropic'"
+            )
+        
+        # Make a minimal test call to validate the key
+        test_prompt = "Hi"
+        response = await test_backend.execute(test_prompt)
+        
+        # If we got here, the key is valid
+        return {
+            "valid": True,
+            "backend": validation.backend,
+            "message": "API key validated successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        # API key is invalid or there was an error
+        error_msg = str(e)
+        logger.warning(f"LLM API key validation failed: {error_msg}")
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid API key or service unavailable: {error_msg}"
+        )
+
 
 # Remote Triggering endpoints
 

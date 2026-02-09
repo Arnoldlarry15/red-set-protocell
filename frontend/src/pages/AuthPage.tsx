@@ -43,6 +43,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuth }) => {
           role: 'admin', // Default to admin for demo
         };
         onAuth(apiKey, backend, demoUser);
+        setLoading(false);
         navigate('/admin'); // Navigate to admin dashboard
       }
     } catch (err) {

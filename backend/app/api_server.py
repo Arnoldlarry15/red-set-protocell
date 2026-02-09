@@ -1023,11 +1023,11 @@ async def validate_llm_key(validation: LLMKeyValidation):
         raise
     except Exception as e:
         # API key is invalid or there was an error
-        error_msg = str(e)
-        logger.warning(f"LLM API key validation failed: {error_msg}")
+        # Sanitize error message to avoid exposing sensitive details
+        logger.warning(f"LLM API key validation failed: {type(e).__name__}")
         raise HTTPException(
             status_code=401,
-            detail=f"Invalid API key or service unavailable: {error_msg}"
+            detail="Invalid API key or authentication failed. Please verify your API key is correct."
         )
 
 

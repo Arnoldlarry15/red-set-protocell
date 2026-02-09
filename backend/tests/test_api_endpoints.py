@@ -156,6 +156,30 @@ class TestUserManagement:
         )
         assert response.status_code == 400
 
+    def test_validate_llm_key_invalid_backend(self):
+        """Test LLM key validation with invalid backend"""
+        response = client.post(
+            "/auth/validate-llm-key",
+            json={
+                "api_key": "sk-test-key",
+                "backend": "invalid_backend"
+            }
+        )
+        assert response.status_code == 400
+        assert "Invalid backend" in response.json()["detail"]
+
+    def test_validate_llm_key_invalid_format(self):
+        """Test LLM key validation with invalid key format"""
+        response = client.post(
+            "/auth/validate-llm-key",
+            json={
+                "api_key": "invalid-key",
+                "backend": "openai"
+            }
+        )
+        # Should return 401 because key is invalid
+        assert response.status_code == 401
+
 
 class TestRemoteControl:
     """Test Remote Control endpoints"""

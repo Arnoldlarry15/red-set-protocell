@@ -1008,11 +1008,11 @@ async def validate_llm_key(validation: LLMKeyValidation):
                 status_code=400,
                 detail=f"Invalid backend: {validation.backend}. Must be 'openai' or 'anthropic'"
             )
-        
+
         # Make a minimal test call to validate the key
         test_prompt = "Hi"
-        response = await test_backend.execute(test_prompt)
-        
+        await test_backend.execute(test_prompt)
+
         # If we got here, the key is valid
         return {
             "valid": True,

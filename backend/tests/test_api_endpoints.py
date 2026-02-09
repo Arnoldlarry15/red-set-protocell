@@ -180,6 +180,34 @@ class TestUserManagement:
         # Should return 401 because key is invalid
         assert response.status_code == 401
 
+    def test_validate_llm_key_network_error(self):
+        """Test LLM key validation handles network errors appropriately"""
+        # This test verifies that the endpoint can distinguish between
+        # network errors and authentication errors
+        # We'll use mocking to simulate a connection error
+        from unittest.mock import patch, AsyncMock
+
+        # Mock the backend to raise a connection error
+        with patch('app.agents.target.OpenAIBackend') as mock_backend:
+            # Create a mock instance that raises a connection error
+            mock_instance = AsyncMock()
+            mock_instance.execute.side_effect = ConnectionError("Network unreachable")
+            mock_backend.return_value = mock_instance
+
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={
+                    "api_key": "sk-test-key",
+                    "backend": "openai"
+                }
+            )
+
+            # Should return 503 (Service Unavailable) for network errors
+            # not 401 (Unauthorized) which would imply invalid credentials
+            assert response.status_code == 503
+            assert "Network error" in response.json()["detail"]
+            assert "connection" in response.json()["detail"].lower()
+
 
 class TestRemoteControl:
     """Test Remote Control endpoints"""

@@ -1022,13 +1022,55 @@ async def validate_llm_key(validation: LLMKeyValidation):
     except HTTPException:
         raise
     except Exception as e:
-        # API key is invalid or there was an error
-        # Sanitize error message to avoid exposing sensitive details
-        logger.warning(f"LLM API key validation failed: {type(e).__name__}")
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid API key or authentication failed. Please verify your API key is correct."
+        # Distinguish between different error types for better user feedback
+        error_type = type(e).__name__
+        error_message = str(e).lower()
+
+        # Check for network/connection errors
+        # These can come from the underlying HTTP libraries (httpx, aiohttp, requests)
+        # or from the OpenAI/Anthropic SDKs
+        is_connection_error = (
+            'APIConnectionError' in error_type
+            or 'APITimeoutError' in error_type
+            or 'ConnectionError' in error_type
+            or 'TimeoutError' in error_type
+            or 'Timeout' in error_type
+            or 'connection' in error_message
+            or 'timeout' in error_message
+            or 'network' in error_message
+            or 'dns' in error_message
+            or 'unreachable' in error_message
         )
+
+        # Check for authentication errors
+        is_auth_error = (
+            'AuthenticationError' in error_type
+            or 'Unauthorized' in error_type
+            or 'authentication' in error_message
+            or 'invalid' in error_message
+            or '401' in error_message
+        )
+
+        # Log the error with details for debugging
+        logger.warning(f"LLM API key validation failed: {error_type} - {error_message[:100]}")
+
+        # Return appropriate error based on type
+        if is_connection_error:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Network error: Unable to connect to {validation.backend} API. Please check your internet connection and try again."
+            )
+        elif is_auth_error:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
+        else:
+            # Generic error for other cases
+            raise HTTPException(
+                status_code=500,
+                detail=f"API validation failed: {error_type}. Please try again or contact support if the issue persists."
+            )
 
 
 # Remote Triggering endpoints

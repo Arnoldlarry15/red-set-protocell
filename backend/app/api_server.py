@@ -1026,7 +1026,7 @@ async def validate_llm_key(validation: LLMKeyValidation):
         error_type = type(e).__name__
         error_message = str(e).lower()
 
-        # Check for network/connection errors
+        # Check for network/connection errors first (highest priority)
         # These can come from the underlying HTTP libraries (httpx, aiohttp, requests)
         # or from the OpenAI/Anthropic SDKs
         is_connection_error = (
@@ -1042,13 +1042,19 @@ async def validate_llm_key(validation: LLMKeyValidation):
             or 'unreachable' in error_message
         )
 
-        # Check for authentication errors
+        # Check for authentication errors (only if not a connection error)
+        # Use specific authentication-related terms to avoid false positives
         is_auth_error = (
-            'AuthenticationError' in error_type
-            or 'Unauthorized' in error_type
-            or 'authentication' in error_message
-            or 'invalid' in error_message
-            or '401' in error_message
+            not is_connection_error
+            and (
+                'AuthenticationError' in error_type
+                or 'Unauthorized' in error_type
+                or 'authentication' in error_message
+                or 'invalid api key' in error_message
+                or 'invalid key' in error_message
+                or 'incorrect api key' in error_message
+                or '401' in error_message
+            )
         )
 
         # Log the error with details for debugging
@@ -1066,10 +1072,10 @@ async def validate_llm_key(validation: LLMKeyValidation):
                 detail="Invalid API key or authentication failed. Please verify your API key is correct."
             )
         else:
-            # Generic error for other cases
+            # Generic error for other cases (no error_type exposure for security)
             raise HTTPException(
                 status_code=500,
-                detail=f"API validation failed: {error_type}. Please try again or contact support if the issue persists."
+                detail="API validation failed. Please try again or contact support if the issue persists."
             )
 
 

@@ -219,6 +219,9 @@ class SelectionEngine:
     This engine transforms raw fitness scores into selection decisions that
     encourage exploration, prevent local maxima, and maintain diversity.
     """
+    
+    # Constants for single-selection scoring
+    SINGLE_SELECT_FITNESS_WEIGHT = 0.7  # Weight for fitness in balanced single selection
 
     def __init__(
         self,
@@ -351,7 +354,8 @@ class SelectionEngine:
                 performance_decay_factor = 1.0
                 if candidate.performance_history and len(candidate.performance_history) >= 2:
                     # Check if performance is declining
-                    recent_avg = sum(candidate.performance_history[-3:]) / min(3, len(candidate.performance_history[-3:]))
+                    recent_scores = candidate.performance_history[-3:]
+                    recent_avg = sum(recent_scores) / len(recent_scores)
                     overall_avg = sum(candidate.performance_history) / len(candidate.performance_history)
                     
                     if recent_avg < overall_avg:
@@ -541,7 +545,7 @@ class SelectionEngine:
             if self.single_select_strategy == "balanced":
                 # Balanced: combine elite fitness with novelty
                 scored = [
-                    (c, c.score * 0.7 + c.novelty_score * self.novelty_weight)
+                    (c, c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * self.novelty_weight)
                     for c in candidates
                 ]
                 scored.sort(key=lambda x: x[1], reverse=True)

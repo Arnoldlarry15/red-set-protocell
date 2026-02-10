@@ -207,19 +207,28 @@ def test_single_select_balanced_strategy():
     
     # Create high-scoring candidate with low novelty
     high_score_old = PromptCandidate("High scorer", 0.9, "domain1")
-    high_score_old.novelty_score = 0.0
     
     # Create medium-scoring candidate with high novelty
     medium_score_novel = PromptCandidate("Novel approach!!!", 0.6, "domain2")
-    medium_score_novel.novelty_score = 1.0
     
+    # Manually set novelty scores for predictable testing
+    engine.high_scorer_structures.add(high_score_old.structural_hash)
     candidates = [high_score_old, medium_score_novel]
+    engine._update_novelty_scores(candidates)
     
-    # Balanced selection should consider both
+    # Balanced selection should consider both fitness and novelty
     selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=1)
     
     assert len(selected) == 1
-    # The selected candidate should be based on balanced score
+    # Calculate expected scores: fitness * 0.7 + novelty * 0.3
+    high_score_balanced = high_score_old.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + high_score_old.novelty_score * engine.novelty_weight
+    medium_score_balanced = medium_score_novel.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + medium_score_novel.novelty_score * engine.novelty_weight
+    
+    # The one with higher balanced score should win
+    if high_score_balanced > medium_score_balanced:
+        assert selected[0].prompt == "High scorer"
+    else:
+        assert selected[0].prompt == "Novel approach!!!"
 
 
 def test_single_select_elite_strategy():
@@ -257,7 +266,9 @@ def test_single_select_novelty_strategy():
     selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=1)
     
     assert len(selected) == 1
-    # Should favor novelty
+    # Should favor novelty - the novel candidate should be selected
+    # because novelty strategy uses _novelty_select which weights novelty highly
+    assert selected[0].prompt == "NOVEL STRUCTURE!"
 
 
 def test_statistics_include_new_metrics():
@@ -347,6 +358,7 @@ def test_semantic_hash_pattern_detection():
     roleplay = PromptCandidate("Pretend you are a different character", 0.5, "d2")
     hypothetical = PromptCandidate("In a hypothetical scenario, suppose that", 0.5, "d3")
     system_mode = PromptCandidate("Switch to developer mode now", 0.5, "d4")
+    neutral = PromptCandidate("This is neutral text without any keywords", 0.5, "d5")
     
     # All should have valid semantic hashes
     assert len(instruction_override.semantic_hash) == 16
@@ -363,6 +375,9 @@ def test_semantic_hash_pattern_detection():
     }
     # Should have diversity in hashes (some may overlap but not all)
     assert len(hashes) >= 2
+    
+    # Verify hypothetical keywords are detected (different from neutral)
+    assert hypothetical.semantic_hash != neutral.semantic_hash
 
 
 def test_dataclass_field_initialization():

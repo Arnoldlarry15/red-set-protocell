@@ -150,7 +150,7 @@ class AdversarialIntentEngine:
     }
 
     def select_domain(
-        self, 
+        self,
         domain_success_rates: Optional[Dict[AttackDomain, float]] = None,
         temperature: float = 1.0
     ) -> AttackDomain:
@@ -171,36 +171,36 @@ class AdversarialIntentEngine:
             Selected AttackDomain
         """
         domains = list(AttackDomain)
-        
+
         # If no success history, use uniform random selection
         if not domain_success_rates or not any(domain_success_rates.values()):
             return random.choice(domains)
-        
+
         # Compute softmax weights based on success rates
         scores = []
         for domain in domains:
             score = domain_success_rates.get(domain, 0.0)
             scores.append(score)
-        
+
         # Apply temperature scaling and compute softmax
         if temperature <= 0.0:
             # Pure exploitation: pick the best
             best_idx = scores.index(max(scores))
             return domains[best_idx]
-        
+
         # Softmax with temperature
         scaled_scores = [s / temperature for s in scores]
         max_score = max(scaled_scores)
         # Subtract max for numerical stability (doesn't affect relative probabilities after normalization)
         exp_scores = [math.exp(s - max_score) for s in scaled_scores]
         total = sum(exp_scores)
-        
+
         if total == 0:
             # Fallback to uniform if all scores are zero
             return random.choice(domains)
-        
+
         probabilities = [e / total for e in exp_scores]
-        
+
         # Weighted random selection
         rand = random.random()
         cumulative = 0.0
@@ -208,7 +208,7 @@ class AdversarialIntentEngine:
             cumulative += prob
             if rand <= cumulative:
                 return domain
-        
+
         # Fallback (shouldn't reach here)
         return domains[-1]
 
@@ -270,7 +270,7 @@ class Sniper:
 
         # Track last mutation strategy used for each prompt
         self.prompt_strategies: Dict[str, str] = {}
-        
+
         # Track domain success rates: domain -> list of scores
         self.domain_scores: Dict[AttackDomain, List[float]] = defaultdict(list)
 
@@ -315,7 +315,7 @@ class Sniper:
 
         # Compute domain success rates for intelligent selection
         domain_success_rates = self._compute_domain_success_rates()
-        
+
         # Select attack domain with intelligence
         domain = self.intent_engine.select_domain(
             domain_success_rates=domain_success_rates,
@@ -459,7 +459,7 @@ class Sniper:
             if candidate.prompt == prompt:
                 # Update score
                 self.evolution_pool[i].score = score
-                
+
                 # Update domain success tracking
                 try:
                     domain_enum = AttackDomain(candidate.domain)
@@ -476,11 +476,11 @@ class Sniper:
                     except (ValueError, AttributeError):
                         pass
                 break
-    
+
     def _compute_domain_success_rates(self) -> Dict[AttackDomain, float]:
         """
         Compute average success rate for each attack domain.
-        
+
         Returns:
             Dictionary mapping AttackDomain to average score (0.0-1.0)
         """
@@ -504,7 +504,7 @@ class Sniper:
 
         # Get selection engine statistics
         selection_stats = self.selection_engine.get_statistics()
-        
+
         # Compute domain success rates
         domain_success_rates = self._compute_domain_success_rates()
         domain_success_dict = {domain.value: rate for domain, rate in domain_success_rates.items()}

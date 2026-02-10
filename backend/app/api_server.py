@@ -594,7 +594,8 @@ async def start_session(config: SessionConfig):
         sniper = Sniper(
             mutation_engine=mutation_engine,
             evolution_pool_size=rsp_config.sniper.evolution_pool_size,
-            creativity_temperature=rsp_config.sniper.creativity_temperature
+            creativity_temperature=rsp_config.sniper.creativity_temperature,
+            domain_selection_temperature=rsp_config.sniper.domain_selection_temperature
         )
 
         backend_value = rsp_config.target.backend.value if hasattr(rsp_config.target.backend, 'value') else rsp_config.target.backend

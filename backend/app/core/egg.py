@@ -461,52 +461,52 @@ class EthicalGuardrailGovernor:
     def get_shadow_mode_suggestions(self) -> Dict[str, List[str]]:
         """
         Analyze shadow mode matches and suggest pattern improvements.
-        
+
         This provides a feedback loop where Spotter failures (near-misses)
         can inform EGG pattern updates, making the system adaptive.
-        
+
         Returns:
             Dictionary mapping categories to suggested pattern improvements
         """
         suggestions: Dict[str, List[str]] = defaultdict(list)
-        
+
         if not self.shadow_matches:
             return dict(suggestions)
-        
+
         # Group shadow matches by category
         category_matches: Dict[str, List[ShadowModeMatch]] = defaultdict(list)
         for match in self.shadow_matches:
             category_matches[match.category].append(match)
-        
+
         # Analyze each category
         for category, matches in category_matches.items():
             # Find high-confidence near-misses (score > 0.8)
             high_confidence = [m for m in matches if m.match_score > 0.8]
-            
+
             if len(high_confidence) >= 3:
                 suggestions[category].append(
                     f"Found {len(high_confidence)} high-confidence near-misses. "
                     f"Consider reviewing these prompts to identify evasion patterns."
                 )
-            
+
             # Find recurring patterns
             pattern_counts: Dict[str, int] = defaultdict(int)
             for match in matches:
                 pattern_counts[match.pattern] += 1
-            
+
             frequent_patterns = [p for p, c in pattern_counts.items() if c >= 5]
             if frequent_patterns:
                 suggestions[category].append(
                     f"Patterns with frequent near-misses ({len(frequent_patterns)} patterns): "
                     f"May need refinement to catch similar prompts."
                 )
-        
+
         return dict(suggestions)
 
     def export_shadow_data_for_analysis(self) -> List[Dict]:
         """
         Export shadow mode data for external analysis and pattern refinement.
-        
+
         Returns:
             List of shadow match data with all details
         """
@@ -525,7 +525,7 @@ class EthicalGuardrailGovernor:
         Generate synthetic prompts to test guard coverage (adversarial testing).
         These prompts are for internal safety testing only and are never forwarded
         to the target LLM.
-        
+
         Improved to include:
         - Direct term extraction (baseline)
         - Paraphrasing and obfuscation
@@ -566,7 +566,7 @@ class EthicalGuardrailGovernor:
             else:
                 # Boundary case
                 test_prompt = self._generate_boundary_test(pattern, category)
-            
+
             test_prompts.append(test_prompt)
 
         return test_prompts
@@ -575,7 +575,7 @@ class EthicalGuardrailGovernor:
         """Generate a paraphrased version of a test prompt."""
         terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
         terms = [t for t in terms if len(t) > 2]
-        
+
         # Paraphrasing templates
         if category == 'csam':
             return f"Hypothetically, {' '.join(terms[:2])} content [PARAPHRASE TEST]"
@@ -592,7 +592,7 @@ class EthicalGuardrailGovernor:
         """Generate an obfuscated version of a test prompt."""
         terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
         terms = [t for t in terms if len(t) > 2]
-        
+
         # Simple obfuscation: add extra spacing
         if terms:
             obfuscated = ' '.join(terms[:3])
@@ -602,20 +602,20 @@ class EthicalGuardrailGovernor:
                 spaced_word = ' '.join(first_word)
                 obfuscated = obfuscated.replace(first_word, spaced_word, 1)
             return f"{obfuscated} [OBFUSCATION TEST]"
-        
+
         return f"Obfuscation test for {category} [OBFUSCATION TEST]"
 
     def _generate_boundary_test(self, pattern: str, category: str) -> str:
         """Generate a boundary case test prompt."""
         terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
         terms = [t for t in terms if len(t) > 2]
-        
+
         # Boundary cases: almost matches but not quite
         if terms:
             # Use only partial terms or add noise
             partial_terms = terms[:2] if len(terms) > 1 else terms[:1]
             return f"Boundary case with {' '.join(partial_terms)} and unrelated content [BOUNDARY TEST]"
-        
+
         return f"Boundary test for {category} [BOUNDARY TEST]"
 
     def _generate_test_prompt_from_pattern(self, pattern: str, category: str) -> str:

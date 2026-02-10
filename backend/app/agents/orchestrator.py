@@ -357,14 +357,14 @@ class StateManager:
             )
 
     # Async versions of StateManager methods for non-blocking I/O
-    
+
     async def save_round_async(self, round_result: RoundResult):
         """Save round result to database asynchronously."""
         if not AIOSQLITE_AVAILABLE:
             # Fallback to synchronous version
             self.save_round(round_result)
             return
-            
+
         async with aiosqlite.connect(self.database_path) as db:
             await db.execute(
                 """
@@ -403,7 +403,7 @@ class StateManager:
         if not AIOSQLITE_AVAILABLE:
             # Fallback to synchronous version
             return self.get_prior_rounds(limit)
-            
+
         async with aiosqlite.connect(self.database_path) as db:
             async with db.execute(
                 """
@@ -432,7 +432,7 @@ class StateManager:
         if not AIOSQLITE_AVAILABLE:
             # Fallback to synchronous version
             return self.get_statistics()
-            
+
         async with aiosqlite.connect(self.database_path) as db:
             # Total rounds
             async with db.execute(
@@ -465,12 +465,12 @@ class StateManager:
         """Cleanup session data asynchronously (Zero-Retention Policy)."""
         if not self.zero_retention:
             return
-            
+
         if not AIOSQLITE_AVAILABLE:
             # Fallback to synchronous version
             self.cleanup()
             return
-            
+
         async with aiosqlite.connect(self.database_path) as db:
             await db.execute(
                 "DELETE FROM rounds WHERE session_id = ?", (self.session_id,)
@@ -625,7 +625,7 @@ class Orchestrator:
 
         # Create artifacts directory
         os.makedirs(artifacts_dir, exist_ok=True)
-        
+
         # Warn if using batched evolution with concurrent rounds
         if concurrent_rounds > 1 and evolution_mode == "batched":
             logger.warning(
@@ -894,9 +894,9 @@ class Orchestrator:
         # INVARIANT: EGG inspection is mandatory and cannot be bypassed
         assert isinstance(is_allowed, bool), "EGG must return boolean for is_allowed"
         # Note: blocked_info can be None when allowed, or BlockedContent when blocked
-        
-        # Meta-guardrail: Audit EGG decision
-        audit_result = self.egg_auditor.audit_decision(
+
+        # Meta-guardrail: Audit EGG decision (logged internally by auditor)
+        _ = self.egg_auditor.audit_decision(
             prompt=prompt,
             egg_allowed=is_allowed,
             egg_blocked_category=blocked_info.category if blocked_info else None
@@ -1110,7 +1110,7 @@ class Orchestrator:
         """
         # Use synchronous state manager method for backward compatibility
         state_stats = self.state_manager.get_statistics()
-        
+
         # Import time analytics
         try:
             from app.analytics.time_tracking import FatigueTracker, ScoreDriftAnalyzer
@@ -1290,7 +1290,7 @@ class Orchestrator:
     def cleanup(self):
         """
         Cleanup session data (Zero-Retention Policy).
-        
+
         When zero_retention is enabled, this deletes:
         - Database records for this session
         - Failure specimens on disk
@@ -1299,7 +1299,7 @@ class Orchestrator:
         """
         # Clean up database records
         self.state_manager.cleanup()
-        
+
         # Clean up disk artifacts if zero-retention is enabled
         if self.state_manager.zero_retention and self.current_manifest:
             run_dir = os.path.join(self.artifacts_dir, self.current_manifest.manifest_id)

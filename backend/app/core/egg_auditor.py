@@ -30,9 +30,8 @@ Examples of what EGGAuditor looks for:
 
 import re
 import logging
-from typing import Tuple, List, Dict, Optional
+from typing import List, Dict, Optional
 from dataclasses import dataclass
-from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -50,10 +49,10 @@ class AuditResult:
 class EGGAuditor:
     """
     Meta-guardrail that audits EGG decisions.
-    
+
     Identifies cases where EGG may have incorrectly allowed harmful content.
     """
-    
+
     # Suspicious patterns that suggest evasion attempts
     EVASION_INDICATORS = {
         'leet_speak': r'[l1][e3][e3][t]|[h4][a@][c]{1,2}[k]|[p][w][n]',
@@ -63,45 +62,45 @@ class EGGAuditor:
         'base64_like': r'[A-Za-z0-9+/]{16,}={0,2}',  # Base64 encoded content
         'rot13_like': r'\b[nopqrstuvwxyzabcdefghijklm]{8,}\b',  # ROT13 obfuscation
     }
-    
+
     # High-risk keywords (more generic than EGG patterns)
     RISK_KEYWORDS = {
         'exploit': ['vulnerability', 'exploit', 'payload', 'shellcode', 'overflow'],
         'harmful': ['weapon', 'harm', 'attack', 'illegal', 'unauthorized'],
         'csam': ['child', 'minor', 'underage'],
     }
-    
+
     def __init__(self, enabled: bool = True, log_audit_failures: bool = True):
         """
         Initialize EGG Auditor.
-        
+
         Args:
             enabled: Enable auditing
             log_audit_failures: Log cases where audit flags suggest EGG may have failed
         """
         self.enabled = enabled
         self.log_audit_failures = log_audit_failures
-        
+
         self.audit_count = 0
         self.flagged_count = 0
         self.audit_history: List[AuditResult] = []
-        
+
         logger.info(f"EGGAuditor initialized - Enabled: {enabled}")
-    
+
     def audit_decision(
-        self, 
-        prompt: str, 
+        self,
+        prompt: str,
         egg_allowed: bool,
         egg_blocked_category: Optional[str] = None
     ) -> AuditResult:
         """
         Audit an EGG decision.
-        
+
         Args:
             prompt: The prompt that was evaluated
             egg_allowed: True if EGG allowed, False if blocked
             egg_blocked_category: Category if blocked (None if allowed)
-            
+
         Returns:
             AuditResult with findings
         """
@@ -113,13 +112,13 @@ class EGGAuditor:
                 confidence=0.0,
                 notes="Auditor disabled"
             )
-        
+
         self.audit_count += 1
-        
+
         # Compute fingerprint (same as EGG)
         from app.core.security import hash_prompt
         fingerprint = hash_prompt(prompt)
-        
+
         # Only audit prompts that EGG allowed through
         if not egg_allowed:
             return AuditResult(
@@ -129,17 +128,17 @@ class EGGAuditor:
                 confidence=0.0,
                 notes=f"EGG correctly blocked (category: {egg_blocked_category})"
             )
-        
+
         # Check for evasion indicators
         flags = []
-        
+
         prompt_lower = prompt.lower()
-        
+
         # Check evasion techniques
         for technique, pattern in self.EVASION_INDICATORS.items():
             if re.search(pattern, prompt, re.IGNORECASE):
                 flags.append(f"evasion:{technique}")
-        
+
         # Check for suspicious keyword density
         risk_score = 0
         for category, keywords in self.RISK_KEYWORDS.items():
@@ -147,11 +146,11 @@ class EGGAuditor:
             if matches >= 2:  # At least 2 keywords from same category
                 flags.append(f"keyword_density:{category}")
                 risk_score += matches
-        
+
         # Calculate confidence that EGG may have failed
         # More flags = higher confidence
         confidence = min(len(flags) * 0.3, 1.0) if flags else 0.0
-        
+
         # Log if we found concerning flags
         if flags and self.log_audit_failures:
             self.flagged_count += 1
@@ -159,7 +158,7 @@ class EGGAuditor:
                 f"⚠️  EGG Audit: Potentially harmful prompt allowed through. "
                 f"Fingerprint: {fingerprint}, Flags: {flags}, Confidence: {confidence:.2f}"
             )
-        
+
         result = AuditResult(
             prompt_fingerprint=fingerprint,
             egg_decision=egg_allowed,
@@ -167,14 +166,14 @@ class EGGAuditor:
             confidence=confidence,
             notes=f"Audited {len(flags)} suspicious characteristics"
         )
-        
+
         # Store in history (keep last 100)
         self.audit_history.append(result)
         if len(self.audit_history) > 100:
             self.audit_history.pop(0)
-        
+
         return result
-    
+
     def get_statistics(self) -> Dict:
         """Get audit statistics."""
         return {
@@ -183,14 +182,14 @@ class EGGAuditor:
             'flagged_count': self.flagged_count,
             'flagged_rate': self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0,
         }
-    
+
     def get_high_confidence_failures(self, min_confidence: float = 0.5) -> List[AuditResult]:
         """
         Get audit results where we have high confidence EGG may have failed.
-        
+
         Args:
             min_confidence: Minimum confidence threshold (0.0 to 1.0)
-            
+
         Returns:
             List of AuditResult with confidence >= min_confidence
         """

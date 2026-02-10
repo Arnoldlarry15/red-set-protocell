@@ -161,7 +161,7 @@ def test_egg_malformed_pattern_handling():
 
     # Add a malformed pattern temporarily
     EthicalGuardrailGovernor.BLOCKED_PATTERNS = {
-        'csam': [r'\b(child|minor).{0,20}(sexual)', r'(?P<bad'],  # Second is malformed
+        'csam': [r'\b(child|minor).{0,20}(sexual)', r'(?P<bad'],  # second pattern is malformed
         'bioweapons': [r'\bweaponi[sz]e.{0,30}anthrax'],
         'real_exploits': [],
         'real_hacking': []

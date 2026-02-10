@@ -101,6 +101,8 @@ class EthicalGuardrailGovernor:
     STOPWORDS = {'this', 'that', 'with', 'from', 'have', 'the', 'and', 'for'}
     DEFAULT_SHADOW_MATCH_LIMIT = 10
     DEFAULT_TEST_COUNT = 50
+    MIN_HIGH_CONFIDENCE_MATCHES = 3  # Threshold for suggesting pattern review
+    MIN_FREQUENT_PATTERN_COUNT = 5  # Threshold for identifying frequently near-missed patterns
 
     # Patterns for content that must be blocked
     BLOCKED_PATTERNS = {
@@ -193,9 +195,10 @@ class EthicalGuardrailGovernor:
                 except re.error as e:
                     # Log the malformed pattern but don't crash
                     self.malformed_patterns[category].append(pattern)
+                    pattern_display = pattern[:50] + ('...' if len(pattern) > 50 else '')
                     logger.error(
                         f"EGG pattern validation failed - Category: {category}, "
-                        f"Pattern: {pattern[:50]}..., Error: {e}. "
+                        f"Pattern: {pattern_display}, Error: {e}. "
                         f"This pattern will be skipped (fail-open)."
                     )
 
@@ -483,7 +486,7 @@ class EthicalGuardrailGovernor:
             # Find high-confidence near-misses (score > 0.8)
             high_confidence = [m for m in matches if m.match_score > 0.8]
 
-            if len(high_confidence) >= 3:
+            if len(high_confidence) >= self.MIN_HIGH_CONFIDENCE_MATCHES:
                 suggestions[category].append(
                     f"Found {len(high_confidence)} high-confidence near-misses. "
                     f"Consider reviewing these prompts to identify evasion patterns."
@@ -494,7 +497,10 @@ class EthicalGuardrailGovernor:
             for match in matches:
                 pattern_counts[match.pattern] += 1
 
-            frequent_patterns = [p for p, c in pattern_counts.items() if c >= 5]
+            frequent_patterns = [
+                p for p, c in pattern_counts.items()
+                if c >= self.MIN_FREQUENT_PATTERN_COUNT
+            ]
             if frequent_patterns:
                 suggestions[category].append(
                     f"Patterns with frequent near-misses ({len(frequent_patterns)} patterns): "

@@ -445,7 +445,12 @@ class Sniper:
                 num_select=self.evolution_pool_size
             )
 
-    def update_prompt_score(self, prompt: str, score: float):
+    def update_prompt_score(
+        self,
+        prompt: str,
+        score: float,
+        structured_feedback: Optional[Dict[str, Any]] = None
+    ):
         """
         Update the score for a prompt in the evolution pool.
 
@@ -454,11 +459,23 @@ class Sniper:
         Args:
             prompt: The prompt to update
             score: New fitness score
+            structured_feedback: Optional rich evaluation data from Spotter
+                               (includes l1/l2/l3 scores, axes, mutation_guidance)
         """
         for i, candidate in enumerate(self.evolution_pool):
             if candidate.prompt == prompt:
                 # Update score
                 self.evolution_pool[i].score = score
+
+                # Store structured feedback for future use
+                # This enables higher-resolution evolution guidance
+                if structured_feedback:
+                    if not hasattr(candidate, 'feedback_history'):
+                        candidate.feedback_history = []
+                    candidate.feedback_history.append(structured_feedback)
+                    # Keep only last 3 feedback entries to avoid memory bloat
+                    if len(candidate.feedback_history) > 3:
+                        candidate.feedback_history = candidate.feedback_history[-3:]
 
                 # Update domain success tracking
                 try:

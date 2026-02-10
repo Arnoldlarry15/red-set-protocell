@@ -109,6 +109,7 @@ import sqlite3
 import json
 import os
 import shutil
+import statistics
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
@@ -481,6 +482,211 @@ class StateManager:
             f"Zero-retention cleanup completed for session {self.session_id}"
         )
 
+    def get_high_performing_patterns(
+        self,
+        threshold: float = 0.6,
+        limit: int = 10
+    ) -> List[Dict[str, Any]]:
+        """
+        Query high-performing patterns to guide evolution.
+
+        This actively helps evolution by identifying what works well,
+        addressing the problem statement concern that StateManager
+        "doesn't actively help evolution."
+
+        Args:
+            threshold: Minimum score to be considered high-performing
+            limit: Maximum number of patterns to return
+
+        Returns:
+            List of high-performing patterns with metadata
+        """
+        conn = sqlite3.connect(self.database_path)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT attack_domain, prompt, global_score, evaluation
+            FROM rounds
+            WHERE session_id = ? AND global_score >= ?
+            ORDER BY global_score DESC
+            LIMIT ?
+        """,
+            (self.session_id, threshold, limit),
+        )
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        patterns = []
+        for row in rows:
+            try:
+                evaluation = json.loads(row[3])
+            except (json.JSONDecodeError, TypeError):
+                evaluation = {}
+
+            patterns.append({
+                "domain": row[0],
+                "prompt": row[1],
+                "score": row[2],
+                "evaluation": evaluation
+            })
+
+        return patterns
+
+    def get_underexplored_domains(self) -> List[Dict[str, Any]]:
+        """
+        Identify attack domains that have been underexplored.
+
+        This actively guides evolution by highlighting gaps in exploration,
+        helping to prevent premature convergence to a single domain.
+
+        Returns:
+            List of domains with their exploration statistics
+        """
+        conn = sqlite3.connect(self.database_path)
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                attack_domain,
+                COUNT(*) as attempt_count,
+                AVG(global_score) as avg_score,
+                MAX(global_score) as max_score
+            FROM rounds
+            WHERE session_id = ?
+            GROUP BY attack_domain
+            ORDER BY attempt_count ASC, avg_score ASC
+        """,
+            (self.session_id,)
+        )
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        domains = []
+        for row in rows:
+            domains.append({
+                "domain": row[0],
+                "attempts": row[1],
+                "avg_score": row[2] or 0.0,
+                "max_score": row[3] or 0.0,
+                "exploration_priority": 1.0 / (row[1] + 1)  # Lower attempts = higher priority
+            })
+
+        return domains
+
+    def get_evolution_analytics(self) -> Dict[str, Any]:
+        """
+        Get comprehensive evolution analytics to actively guide selection.
+
+        This transforms StateManager from "just a log" to an active
+        evolution helper, addressing the problem statement directly.
+
+        Returns:
+            Dictionary with evolution insights
+        """
+        high_performers = self.get_high_performing_patterns(threshold=0.6, limit=5)
+        underexplored = self.get_underexplored_domains()
+
+        conn = sqlite3.connect(self.database_path)
+        cursor = conn.cursor()
+
+        # Get score trend
+        cursor.execute(
+            """
+            SELECT global_score, round_number
+            FROM rounds
+            WHERE session_id = ?
+            ORDER BY round_number ASC
+        """,
+            (self.session_id,)
+        )
+        score_history = [(row[0], row[1]) for row in cursor.fetchall()]
+
+        # Calculate trend
+        if len(score_history) >= 5:
+            recent_scores = [s[0] for s in score_history[-5:]]
+            early_scores = [s[0] for s in score_history[:5]]
+            trend = sum(recent_scores) / len(recent_scores) - sum(early_scores) / len(early_scores)
+        else:
+            trend = 0.0
+
+        conn.close()
+
+        return {
+            "high_performers": high_performers,
+            "underexplored_domains": underexplored,
+            "score_trend": trend,
+            "total_patterns": len(score_history)
+        }
+
+    def analyze_batch_coherence(
+        self,
+        batch_round_numbers: List[int]
+    ) -> Dict[str, Any]:
+        """
+        Analyze evolutionary coherence of a batch of rounds.
+
+        This addresses the problem statement concern that "batched mode is
+        fast but slightly chaotic" by quantifying batch coherence.
+
+        Args:
+            batch_round_numbers: List of round numbers in the batch
+
+        Returns:
+            Coherence metrics for the batch
+        """
+        if not batch_round_numbers:
+            return {"coherence_score": 0.0, "diversity_score": 0.0}
+
+        conn = sqlite3.connect(self.database_path)
+        cursor = conn.cursor()
+
+        # Get batch results
+        placeholders = ",".join("?" * len(batch_round_numbers))
+        cursor.execute(
+            f"""
+            SELECT attack_domain, global_score
+            FROM rounds
+            WHERE session_id = ? AND round_number IN ({placeholders})
+        """,
+            (self.session_id, *batch_round_numbers)
+        )
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        if not rows:
+            return {"coherence_score": 0.0, "diversity_score": 0.0}
+
+        domains = [row[0] for row in rows]
+        scores = [row[1] for row in rows]
+
+        # Calculate domain diversity (how many unique domains in batch)
+        unique_domains = len(set(domains))
+        diversity_score = unique_domains / len(domains)
+
+        # Calculate score coherence (how consistent are scores)
+        if len(scores) > 1:
+            score_std = statistics.stdev(scores)
+            score_mean = statistics.mean(scores)
+            # Lower coefficient of variation = more coherent
+            coherence_score = 1.0 - min(1.0, score_std / max(score_mean, 0.01))
+        else:
+            coherence_score = 1.0
+            score_std = 0.0
+
+        return {
+            "coherence_score": coherence_score,
+            "diversity_score": diversity_score,
+            "batch_size": len(rows),
+            "unique_domains": unique_domains,
+            "avg_score": sum(scores) / len(scores),
+            "score_std": score_std
+        }
+
 
 class Orchestrator:
     """
@@ -852,6 +1058,15 @@ class Orchestrator:
                     f"Blocked: {result.blocked_by_egg}"
                 )
 
+            # Analyze batch coherence for evolutionary insight
+            if self.evolution_mode == "batched" and batch_size > 1:
+                coherence = self.state_manager.analyze_batch_coherence(batch_rounds)
+                logger.info(
+                    f"Batch coherence: {coherence['coherence_score']:.2f}, "
+                    f"diversity: {coherence['diversity_score']:.2f} "
+                    f"({coherence['unique_domains']}/{coherence['batch_size']} unique domains)"
+                )
+
             round_num += batch_size
 
     async def _execute_round_with_timeout(
@@ -1007,9 +1222,13 @@ class Orchestrator:
                 f"(severity={specimen.evaluation.severity}, score={global_score:.3f})"
             )
 
-        # Update Sniper with score for evolution (AFTER specimen generation)
-        # Sniper receives only the score, never sees specimen internals
-        self.sniper.update_prompt_score(prompt, global_score)
+        # Update Sniper with score and structured feedback for evolution
+        # Pass rich evaluation data to enable higher-resolution evolution
+        self.sniper.update_prompt_score(
+            prompt,
+            global_score,
+            structured_feedback=evaluation
+        )
 
         return RoundResult(
             round_number=round_number,

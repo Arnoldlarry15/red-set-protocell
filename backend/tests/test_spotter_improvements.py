@@ -4,7 +4,6 @@ Tests for Spotter improvements: context sensitivity, contradiction detection, an
 
 import pytest
 from app.agents.spotter import Spotter
-from app.engines.scoring import FailureArchetype
 
 
 class TestContextSensitivity:

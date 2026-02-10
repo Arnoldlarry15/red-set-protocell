@@ -160,13 +160,23 @@ class MutationEngine:
         self.strategy_performance: Dict[str, List[float]] = {
             strategy.value: [] for strategy in MutationStrategy
         }
+        # Track strategy-archetype correlations
+        self.strategy_archetype_performance: Dict[str, Dict[str, List[float]]] = {
+            strategy.value: {} for strategy in MutationStrategy
+        }
         self.adaptive_mode: bool = False
+        # Track novelty bonus for exploration
+        self.strategy_last_used: Dict[str, int] = {
+            strategy.value: 0 for strategy in MutationStrategy
+        }
+        self.total_mutations: int = 0
 
     def mutate(
         self,
         prompt: str,
         fitness_score: float = 0.0,
         strategy: Optional[MutationStrategy] = None,
+        archetypes: Optional[List[str]] = None,
     ) -> str:
         """
         Apply a mutation to a prompt.
@@ -175,6 +185,7 @@ class MutationEngine:
             prompt: The base prompt to mutate
             fitness_score: Prior fitness score (0.0 to 1.0) to guide mutation
             strategy: Specific strategy to use, or None for random selection
+            archetypes: List of failure archetypes detected (for correlation tracking)
 
         Returns:
             Mutated prompt string
@@ -212,44 +223,85 @@ class MutationEngine:
             "mutated_length": len(mutated),
             "strategy": strategy.value,
             "fitness_score": fitness_score,
+            "archetypes": archetypes if archetypes else [],
         }
         self.mutation_history.append(mutation_record)
+
+        # Update strategy usage tracking
+        self.total_mutations += 1
+        self.strategy_last_used[strategy.value] = self.total_mutations
 
         return mutated
 
     def _select_strategy_adaptive(self) -> MutationStrategy:
         """
-        Select mutation strategy based on past performance.
+        Select mutation strategy based on past performance with decay and novelty bonus.
+
+        Implements:
+        - Performance-based weighting: better strategies get higher probability
+        - Decay for poorly performing strategies
+        - Novelty bonus: strategies not used recently get exploration boost
 
         Returns:
-            Best performing strategy
+            Best performing strategy (with exploration bonus)
         """
-        # Calculate average score for each strategy
+        # Calculate average score for each strategy with decay
         strategy_scores = {}
         for strategy_name, scores in self.strategy_performance.items():
             if scores:
-                strategy_scores[strategy_name] = sum(scores) / len(scores)
-            else:
-                strategy_scores[strategy_name] = 0.5  # Default for unexplored
+                # Use recent performance (last 10 scores) with decay for poor performance
+                recent_scores = scores[-10:]
+                avg_score = sum(recent_scores) / len(recent_scores)
 
-        # Use weighted random selection based on performance
+                # Apply decay if performance is declining
+                if len(recent_scores) >= 3:
+                    recent_trend = recent_scores[-3:]
+                    # Check if scores are declining (each score is less than the previous)
+                    if all(recent_trend[i] < recent_trend[i - 1] for i in range(1, len(recent_trend))):
+                        # Declining performance - apply decay
+                        avg_score *= 0.8
+
+                strategy_scores[strategy_name] = avg_score
+            else:
+                # Unexplored strategies get neutral score
+                strategy_scores[strategy_name] = 0.5
+
+        # Add novelty bonus for strategies not used recently
         strategies = list(strategy_scores.keys())
-        weights = [
-            strategy_scores[s] + 0.1 for s in strategies
-        ]  # Add epsilon for exploration
+        weights = []
+        for s in strategies:
+            base_weight = strategy_scores[s]
+
+            # Novelty bonus based on how long since last use
+            mutations_since_use = self.total_mutations - self.strategy_last_used[s]
+            novelty_bonus = min(0.3, mutations_since_use * 0.01)  # Up to 0.3 bonus
+
+            # Ensure minimum exploration (10% chance even for poor performers)
+            final_weight = max(0.1, base_weight + novelty_bonus)
+            weights.append(final_weight)
 
         selected = random.choices(strategies, weights=weights, k=1)[0]
         return MutationStrategy(selected)
 
-    def update_strategy_performance(self, strategy: MutationStrategy, score: float):
+    def update_strategy_performance(
+        self, strategy: MutationStrategy, score: float, archetypes: Optional[List[str]] = None
+    ):
         """
         Update performance tracking for a strategy.
 
         Args:
             strategy: The mutation strategy used
             score: The fitness score achieved
+            archetypes: Optional list of failure archetypes for correlation tracking
         """
         self.strategy_performance[strategy.value].append(score)
+
+        # Track strategy-archetype correlations
+        if archetypes:
+            for archetype in archetypes:
+                if archetype not in self.strategy_archetype_performance[strategy.value]:
+                    self.strategy_archetype_performance[strategy.value][archetype] = []
+                self.strategy_archetype_performance[strategy.value][archetype].append(score)
 
     def enable_adaptive_mode(self):
         """Enable adaptive strategy selection based on performance."""
@@ -381,22 +433,117 @@ class MutationEngine:
         return new_population[:population_size]
 
     def get_statistics(self) -> Dict[str, Any]:
-        """Get mutation statistics."""
+        """
+        Get comprehensive mutation statistics.
+
+        Returns detailed analytics including:
+        - Strategy usage distribution
+        - Performance metrics (best/worst/variance)
+        - Exploration vs exploitation balance
+        - Strategy-archetype correlations
+        """
         # Calculate performance analytics
         avg_scores_by_strategy = {}
+        variance_by_strategy = {}
         for strategy_name, scores in self.strategy_performance.items():
             if scores:
-                avg_scores_by_strategy[strategy_name] = sum(scores) / len(scores)
+                avg = sum(scores) / len(scores)
+                avg_scores_by_strategy[strategy_name] = avg
+                # Calculate variance
+                if len(scores) > 1:
+                    variance = sum((s - avg) ** 2 for s in scores) / len(scores)
+                    variance_by_strategy[strategy_name] = variance
+                else:
+                    variance_by_strategy[strategy_name] = 0.0
 
         if not self.mutation_history:
+            # Build strategy-archetype correlation summary even without mutations
+            archetype_insights = {}
+            for strategy_name, archetype_scores in self.strategy_archetype_performance.items():
+                if archetype_scores:
+                    strategy_archetype_summary = {}
+                    for archetype, scores in archetype_scores.items():
+                        if scores:
+                            strategy_archetype_summary[archetype] = {
+                                "avg_score": sum(scores) / len(scores),
+                                "count": len(scores),
+                            }
+                    if strategy_archetype_summary:
+                        archetype_insights[strategy_name] = strategy_archetype_summary
+
+            # Identify best and worst performing strategies even without mutations
+            best_strategy = None
+            worst_strategy = None
+            best_score = -1.0
+            worst_score = 2.0
+
+            for strategy_name, avg_score in avg_scores_by_strategy.items():
+                if avg_score > best_score:
+                    best_score = avg_score
+                    best_strategy = strategy_name
+                if avg_score < worst_score:
+                    worst_score = avg_score
+                    worst_strategy = strategy_name
+
             return {
                 "total_mutations": 0,
                 "adaptive_mode": self.adaptive_mode,
                 "strategy_performance": avg_scores_by_strategy,
+                "performance_variance": variance_by_strategy,
+                "best_performing_strategy": {
+                    "strategy": best_strategy,
+                    "avg_score": best_score,
+                } if best_strategy else None,
+                "worst_performing_strategy": {
+                    "strategy": worst_strategy,
+                    "avg_score": worst_score,
+                } if worst_strategy else None,
+                "exploration_metrics": {
+                    "strategies_used": 0,
+                    "total_strategies": len(MutationStrategy),
+                    "exploration_ratio": 0.0,
+                },
+                "strategy_archetype_correlations": archetype_insights,
             }
 
-        strategies = [m["strategy"] for m in self.mutation_history]
-        strategy_counts = {s: strategies.count(s) for s in set(strategies)}
+        # Build strategy counts in O(n) instead of O(n^2)
+        strategy_counts = {}
+        for mutation in self.mutation_history:
+            strategy = mutation["strategy"]
+            strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
+
+        # Identify best and worst performing strategies
+        best_strategy = None
+        worst_strategy = None
+        best_score = -1.0
+        worst_score = 2.0
+
+        for strategy_name, avg_score in avg_scores_by_strategy.items():
+            if avg_score > best_score:
+                best_score = avg_score
+                best_strategy = strategy_name
+            if avg_score < worst_score:
+                worst_score = avg_score
+                worst_strategy = strategy_name
+
+        # Calculate exploration vs exploitation metrics
+        total_strategies = len(MutationStrategy)
+        strategies_used = len(strategy_counts)
+        exploration_ratio = strategies_used / total_strategies if total_strategies > 0 else 0.0
+
+        # Build strategy-archetype correlation summary
+        archetype_insights = {}
+        for strategy_name, archetype_scores in self.strategy_archetype_performance.items():
+            if archetype_scores:
+                strategy_archetype_summary = {}
+                for archetype, scores in archetype_scores.items():
+                    if scores:
+                        strategy_archetype_summary[archetype] = {
+                            "avg_score": sum(scores) / len(scores),
+                            "count": len(scores),
+                        }
+                if strategy_archetype_summary:
+                    archetype_insights[strategy_name] = strategy_archetype_summary
 
         return {
             "total_mutations": len(self.mutation_history),
@@ -408,4 +555,19 @@ class MutationEngine:
             / len(self.mutation_history),
             "adaptive_mode": self.adaptive_mode,
             "strategy_performance": avg_scores_by_strategy,
+            "performance_variance": variance_by_strategy,
+            "best_performing_strategy": {
+                "strategy": best_strategy,
+                "avg_score": best_score,
+            } if best_strategy else None,
+            "worst_performing_strategy": {
+                "strategy": worst_strategy,
+                "avg_score": worst_score,
+            } if worst_strategy else None,
+            "exploration_metrics": {
+                "strategies_used": strategies_used,
+                "total_strategies": total_strategies,
+                "exploration_ratio": exploration_ratio,
+            },
+            "strategy_archetype_correlations": archetype_insights,
         }

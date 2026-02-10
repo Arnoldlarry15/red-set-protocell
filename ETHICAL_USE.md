@@ -21,7 +21,6 @@ This includes:
 ## Analogous Tools
 
 Red Set ProtoCell is analogous to:
-- **Fuzzers** (e.g., AFL, libFuzzer) - automated bug discovery through mutation
 - **Exploit frameworks** (e.g., Metasploit) - structured offensive security testing
 - **Penetration testing suites** (e.g., Burp Suite, OWASP ZAP) - systematic vulnerability assessment
 

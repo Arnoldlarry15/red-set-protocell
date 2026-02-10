@@ -9,7 +9,7 @@
 
 **An open-source automated AI red-teaming engine using dual-agent Sniper/Spotter architecture to systematically discover failure modes in large language models.**
 
-Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming engine, not a guardrail. It uses evolutionary algorithms and adaptive attack strategies to systematically probe large language models (LLMs) for unknown failure modes. Think of it as a fuzzer or penetration testing suite for AI: it discovers novel vulnerabilities before attackers or users do, providing reproducible, analyzable evidence of model weaknesses.
+Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming engine, not a guardrail. It uses evolutionary algorithms and adaptive attack strategies to systematically probe large language models (LLMs) for unknown failure modes. Think of it as a penetration testing suite for AI: it discovers novel vulnerabilities before attackers or users do, providing reproducible, analyzable evidence of model weaknesses.
 
 ## 🎨 Web UI Available!
 
@@ -87,7 +87,6 @@ Unlike manual red teaming or static test suites, RSP:
 - Simulates intelligent adversary behavior at scale
 
 **In Spirit, It's Closer To:**
-- Fuzzers (for software)
 - Exploit frameworks (for security research)  
 - Penetration testing suites (for infrastructure)
 

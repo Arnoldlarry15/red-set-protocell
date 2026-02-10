@@ -59,7 +59,8 @@ class MockSniper(MockAgent):
 
         return "test prompt", AttackDomain.PROMPT_INJECTION
 
-    def update_prompt_score(self, prompt, score):
+    def update_prompt_score(self, prompt, score, structured_feedback=None):
+        """Update prompt score with optional structured feedback."""
         pass
 
 

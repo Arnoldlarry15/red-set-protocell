@@ -573,6 +573,8 @@ class Orchestrator:
                            - "sequential": Updates Sniper evolution pool after each round completes.
                              Ensures strict evolutionary progression where round N+1 uses
                              fitness scores from round N. Use when evolutionary dynamics matter.
+                             NOTE: In sequential mode, rounds execute one at a time regardless
+                             of concurrent_rounds setting to maintain strict ordering.
                            - "batched": Updates evolution pool after entire batch completes.
                              Allows concurrent rounds within a batch but may cause subtle
                              interference in evolutionary dynamics. Use for maximum throughput.
@@ -625,6 +627,13 @@ class Orchestrator:
 
         # Create artifacts directory
         os.makedirs(artifacts_dir, exist_ok=True)
+
+        # Log evolution mode configuration
+        if evolution_mode == "sequential" and concurrent_rounds > 1:
+            logger.info(
+                f"Evolution mode is 'sequential' - rounds will execute one at a time "
+                f"(concurrent_rounds={concurrent_rounds} is ignored for strict evolutionary progression)"
+            )
 
         # Warn if using batched evolution with concurrent rounds
         if concurrent_rounds > 1 and evolution_mode == "batched":

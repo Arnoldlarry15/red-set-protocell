@@ -55,7 +55,9 @@ class EGGAuditor:
 
     # Suspicious patterns that suggest evasion attempts
     EVASION_INDICATORS = {
-        'leet_speak': r'[l1][e3][e3][t]|[h4][a@][c]{1,2}[k]|[p][w][n]',
+        'leet_speak': r'[l1][e3]{2}[t]|[h4][a@][c]{1,2}[k]|[p][w][n]',  # Matches l33t, h4ck, pwn
+        # Note: Only detects Cyrillic homoglyphs that look like Latin characters.
+        # Other Unicode homoglyphs exist (Greek, mathematical symbols) but are less common.
         'homoglyphs': r'[а-яА-Я]',  # Cyrillic characters that look like Latin
         'excessive_spacing': r'\b[a-z]\s+[a-z]\s+[a-z]',  # C h a r a c t e r  s p a c i n g
         'unicode_tricks': r'[\u200b-\u200f\u2060-\u2069]',  # Zero-width and invisible chars

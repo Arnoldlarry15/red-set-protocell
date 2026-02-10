@@ -106,7 +106,9 @@ def test_adversarial_test_prompt_generation():
 
     assert len(test_prompts) == 10
     assert all(isinstance(p, str) for p in test_prompts)
-    assert all('[SYNTHETIC TEST]' in p for p in test_prompts)
+    # Updated to check for any test marker (SYNTHETIC, PARAPHRASE, OBFUSCATION, or BOUNDARY)
+    test_markers = ['[SYNTHETIC TEST]', '[PARAPHRASE TEST]', '[OBFUSCATION TEST]', '[BOUNDARY TEST]']
+    assert all(any(marker in p for marker in test_markers) for p in test_prompts)
 
 
 def test_guard_coverage_testing():

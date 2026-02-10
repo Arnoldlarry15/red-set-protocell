@@ -30,7 +30,8 @@ Why EGG is Defensible:
 4. Fail-Closed Design:
    - If EGG is disabled, system behavior is explicit (documented warning)
    - Pattern matching errors default to ALLOW (with error log)
-   - But malformed regex causes initialization failure (fail-fast)
+   - Malformed regex detected at initialization, logged and skipped (fail-open)
+   - Runtime regex errors are caught and logged (fail-open)
 
 5. Audit Trail:
    - category_hits tracks which categories triggered
@@ -100,6 +101,8 @@ class EthicalGuardrailGovernor:
     STOPWORDS = {'this', 'that', 'with', 'from', 'have', 'the', 'and', 'for'}
     DEFAULT_SHADOW_MATCH_LIMIT = 10
     DEFAULT_TEST_COUNT = 50
+    MIN_HIGH_CONFIDENCE_MATCHES = 3  # Threshold for suggesting pattern review
+    MIN_FREQUENT_PATTERN_COUNT = 5  # Threshold for identifying frequently near-missed patterns
 
     # Patterns for content that must be blocked
     BLOCKED_PATTERNS = {
@@ -129,8 +132,8 @@ class EthicalGuardrailGovernor:
 
     def __init__(self, enabled: bool = True, log_fingerprints: bool = True,
                  block_csam: bool = True, block_bioweapons: bool = True,
-                 block_real_exploits: bool = True, shadow_mode: bool = False,
-                 shadow_threshold: float = 0.6):
+                 block_real_exploits: bool = True, block_real_hacking: bool = True,
+                 shadow_mode: bool = False, shadow_threshold: float = 0.6):
         """
         Initialize the Ethical Guardrail Governor.
 
@@ -140,6 +143,7 @@ class EthicalGuardrailGovernor:
             block_csam: Block child safety violations
             block_bioweapons: Block biological weapon instructions
             block_real_exploits: Block real exploit payloads
+            block_real_hacking: Block real hacking attempts
             shadow_mode: Enable shadow mode to log near-miss prompts
             shadow_threshold: Score threshold for shadow mode (0.0-1.0)
         """
@@ -148,6 +152,7 @@ class EthicalGuardrailGovernor:
         self.block_csam = block_csam
         self.block_bioweapons = block_bioweapons
         self.block_real_exploits = block_real_exploits
+        self.block_real_hacking = block_real_hacking
         self.shadow_mode = shadow_mode
         self.shadow_threshold = shadow_threshold
 
@@ -170,6 +175,38 @@ class EthicalGuardrailGovernor:
 
         # Track total inspections
         self.total_inspections = 0
+
+        # Validate patterns at initialization and track malformed ones
+        self.malformed_patterns: Dict[str, List[str]] = defaultdict(list)
+        self._validate_patterns()
+
+    def _validate_patterns(self) -> None:
+        """
+        Validate all regex patterns at initialization.
+        Logs errors for malformed patterns but continues (fail-open design).
+        This aligns the implementation with the documented philosophy:
+        "Pattern matching errors default to ALLOW (with error log)".
+        """
+        for category, patterns in self.BLOCKED_PATTERNS.items():
+            for pattern in patterns:
+                try:
+                    # Test compilation of the pattern
+                    re.compile(pattern, re.IGNORECASE)
+                except re.error as e:
+                    # Log the malformed pattern but don't crash
+                    self.malformed_patterns[category].append(pattern)
+                    pattern_display = pattern[:50] + ('...' if len(pattern) > 50 else '')
+                    logger.error(
+                        f"EGG pattern validation failed - Category: {category}, "
+                        f"Pattern: {pattern_display}, Error: {e}. "
+                        f"This pattern will be skipped (fail-open)."
+                    )
+
+        if self.malformed_patterns:
+            logger.warning(
+                f"EGG initialized with {sum(len(v) for v in self.malformed_patterns.values())} "
+                f"malformed patterns that will be skipped."
+            )
 
     def inspect_prompt(self, prompt: str) -> Tuple[bool, Optional[BlockedContent]]:
         """
@@ -194,46 +231,73 @@ class EthicalGuardrailGovernor:
         # Check each category
         if self.block_csam:
             for pattern in self.BLOCKED_PATTERNS['csam']:
-                match = re.search(pattern, prompt_lower, re.IGNORECASE)
-                if match:
-                    self.pattern_usage['csam'].add(pattern)
-                    return False, self._block_prompt(
-                        prompt, 'csam', 'CSAM content detected'
-                    )
-                elif self.shadow_mode:
-                    self._check_shadow_mode(prompt, pattern, 'csam', prompt_lower)
+                # Skip malformed patterns (fail-open)
+                if pattern in self.malformed_patterns.get('csam', []):
+                    continue
+                try:
+                    match = re.search(pattern, prompt_lower, re.IGNORECASE)
+                    if match:
+                        self.pattern_usage['csam'].add(pattern)
+                        return False, self._block_prompt(
+                            prompt, 'csam', 'CSAM content detected'
+                        )
+                    elif self.shadow_mode:
+                        self._check_shadow_mode(prompt, pattern, 'csam', prompt_lower)
+                except re.error as e:
+                    # Runtime regex error - log and continue (fail-open)
+                    logger.error(f"EGG runtime pattern error in csam: {e}")
+                    continue
 
         if self.block_bioweapons:
             for pattern in self.BLOCKED_PATTERNS['bioweapons']:
-                match = re.search(pattern, prompt_lower, re.IGNORECASE)
-                if match:
-                    self.pattern_usage['bioweapons'].add(pattern)
-                    return False, self._block_prompt(
-                        prompt, 'bioweapons', 'Bioweapon instructions detected'
-                    )
-                elif self.shadow_mode:
-                    self._check_shadow_mode(prompt, pattern, 'bioweapons', prompt_lower)
+                if pattern in self.malformed_patterns.get('bioweapons', []):
+                    continue
+                try:
+                    match = re.search(pattern, prompt_lower, re.IGNORECASE)
+                    if match:
+                        self.pattern_usage['bioweapons'].add(pattern)
+                        return False, self._block_prompt(
+                            prompt, 'bioweapons', 'Bioweapon instructions detected'
+                        )
+                    elif self.shadow_mode:
+                        self._check_shadow_mode(prompt, pattern, 'bioweapons', prompt_lower)
+                except re.error as e:
+                    logger.error(f"EGG runtime pattern error in bioweapons: {e}")
+                    continue
 
         if self.block_real_exploits:
             for pattern in self.BLOCKED_PATTERNS['real_exploits']:
-                match = re.search(pattern, prompt_lower, re.IGNORECASE)
-                if match:
-                    self.pattern_usage['real_exploits'].add(pattern)
-                    return False, self._block_prompt(
-                        prompt, 'real_exploits', 'Real exploit payload detected'
-                    )
-                elif self.shadow_mode:
-                    self._check_shadow_mode(prompt, pattern, 'real_exploits', prompt_lower)
+                if pattern in self.malformed_patterns.get('real_exploits', []):
+                    continue
+                try:
+                    match = re.search(pattern, prompt_lower, re.IGNORECASE)
+                    if match:
+                        self.pattern_usage['real_exploits'].add(pattern)
+                        return False, self._block_prompt(
+                            prompt, 'real_exploits', 'Real exploit payload detected'
+                        )
+                    elif self.shadow_mode:
+                        self._check_shadow_mode(prompt, pattern, 'real_exploits', prompt_lower)
+                except re.error as e:
+                    logger.error(f"EGG runtime pattern error in real_exploits: {e}")
+                    continue
 
+        if self.block_real_hacking:
             for pattern in self.BLOCKED_PATTERNS['real_hacking']:
-                match = re.search(pattern, prompt_lower, re.IGNORECASE)
-                if match:
-                    self.pattern_usage['real_hacking'].add(pattern)
-                    return False, self._block_prompt(
-                        prompt, 'real_hacking', 'Real hacking attempt detected'
-                    )
-                elif self.shadow_mode:
-                    self._check_shadow_mode(prompt, pattern, 'real_hacking', prompt_lower)
+                if pattern in self.malformed_patterns.get('real_hacking', []):
+                    continue
+                try:
+                    match = re.search(pattern, prompt_lower, re.IGNORECASE)
+                    if match:
+                        self.pattern_usage['real_hacking'].add(pattern)
+                        return False, self._block_prompt(
+                            prompt, 'real_hacking', 'Real hacking attempt detected'
+                        )
+                    elif self.shadow_mode:
+                        self._check_shadow_mode(prompt, pattern, 'real_hacking', prompt_lower)
+                except re.error as e:
+                    logger.error(f"EGG runtime pattern error in real_hacking: {e}")
+                    continue
 
         return True, None
 
@@ -397,11 +461,81 @@ class EthicalGuardrailGovernor:
             if self.total_inspections > 0 else 0.0
         }
 
+    def get_shadow_mode_suggestions(self) -> Dict[str, List[str]]:
+        """
+        Analyze shadow mode matches and suggest pattern improvements.
+
+        This provides a feedback loop where Spotter failures (near-misses)
+        can inform EGG pattern updates, making the system adaptive.
+
+        Returns:
+            Dictionary mapping categories to suggested pattern improvements
+        """
+        suggestions: Dict[str, List[str]] = defaultdict(list)
+
+        if not self.shadow_matches:
+            return dict(suggestions)
+
+        # Group shadow matches by category
+        category_matches: Dict[str, List[ShadowModeMatch]] = defaultdict(list)
+        for match in self.shadow_matches:
+            category_matches[match.category].append(match)
+
+        # Analyze each category
+        for category, matches in category_matches.items():
+            # Find high-confidence near-misses (score > 0.8)
+            high_confidence = [m for m in matches if m.match_score > 0.8]
+
+            if len(high_confidence) >= self.MIN_HIGH_CONFIDENCE_MATCHES:
+                suggestions[category].append(
+                    f"Found {len(high_confidence)} high-confidence near-misses. "
+                    f"Consider reviewing these prompts to identify evasion patterns."
+                )
+
+            # Find recurring patterns
+            pattern_counts: Dict[str, int] = defaultdict(int)
+            for match in matches:
+                pattern_counts[match.pattern] += 1
+
+            frequent_patterns = [
+                p for p, c in pattern_counts.items()
+                if c >= self.MIN_FREQUENT_PATTERN_COUNT
+            ]
+            if frequent_patterns:
+                suggestions[category].append(
+                    f"Patterns with frequent near-misses ({len(frequent_patterns)} patterns): "
+                    f"May need refinement to catch similar prompts."
+                )
+
+        return dict(suggestions)
+
+    def export_shadow_data_for_analysis(self) -> List[Dict]:
+        """
+        Export shadow mode data for external analysis and pattern refinement.
+
+        Returns:
+            List of shadow match data with all details
+        """
+        return [
+            {
+                'pattern': match.pattern,
+                'category': match.category,
+                'match_score': match.match_score,
+                'prompt_fingerprint': match.prompt_fingerprint
+            }
+            for match in self.shadow_matches
+        ]
+
     def generate_adversarial_test_prompts(self, count: int = None) -> List[str]:
         """
         Generate synthetic prompts to test guard coverage (adversarial testing).
         These prompts are for internal safety testing only and are never forwarded
         to the target LLM.
+
+        Improved to include:
+        - Direct term extraction (baseline)
+        - Paraphrasing and obfuscation
+        - Boundary cases and evasion attempts
 
         Args:
             count: Number of test prompts to generate (default: 10)
@@ -424,11 +558,71 @@ class EthicalGuardrailGovernor:
             # Pick a random pattern from the category
             pattern = random.choice(patterns)
 
-            # Generate a test prompt based on the pattern
-            test_prompt = self._generate_test_prompt_from_pattern(pattern, category)
+            # Generate different types of test prompts
+            test_type = i % 4
+            if test_type == 0:
+                # Direct extraction (baseline)
+                test_prompt = self._generate_test_prompt_from_pattern(pattern, category)
+            elif test_type == 1:
+                # Paraphrased version
+                test_prompt = self._generate_paraphrased_test(pattern, category)
+            elif test_type == 2:
+                # Obfuscated version
+                test_prompt = self._generate_obfuscated_test(pattern, category)
+            else:
+                # Boundary case
+                test_prompt = self._generate_boundary_test(pattern, category)
+
             test_prompts.append(test_prompt)
 
         return test_prompts
+
+    def _generate_paraphrased_test(self, pattern: str, category: str) -> str:
+        """Generate a paraphrased version of a test prompt."""
+        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = [t for t in terms if len(t) > 2]
+
+        # Paraphrasing templates
+        if category == 'csam':
+            return f"Hypothetically, {' '.join(terms[:2])} content [PARAPHRASE TEST]"
+        elif category == 'bioweapons':
+            return f"Theoretically speaking, {' '.join(terms[:3])} [PARAPHRASE TEST]"
+        elif category == 'real_exploits':
+            return f"Imagine I wanted to {' '.join(terms[:3])} [PARAPHRASE TEST]"
+        elif category == 'real_hacking':
+            return f"In a fictional scenario, {' '.join(terms[:3])} [PARAPHRASE TEST]"
+        else:
+            return f"Paraphrase test: {' '.join(terms[:3])} [PARAPHRASE TEST]"
+
+    def _generate_obfuscated_test(self, pattern: str, category: str) -> str:
+        """Generate an obfuscated version of a test prompt."""
+        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = [t for t in terms if len(t) > 2]
+
+        # Simple obfuscation: add extra spacing
+        if terms:
+            obfuscated = ' '.join(terms[:3])
+            # Add character spacing to first term
+            if obfuscated:
+                first_word = obfuscated.split()[0]
+                spaced_word = ' '.join(first_word)
+                obfuscated = obfuscated.replace(first_word, spaced_word, 1)
+            return f"{obfuscated} [OBFUSCATION TEST]"
+
+        return f"Obfuscation test for {category} [OBFUSCATION TEST]"
+
+    def _generate_boundary_test(self, pattern: str, category: str) -> str:
+        """Generate a boundary case test prompt."""
+        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = [t for t in terms if len(t) > 2]
+
+        # Boundary cases: almost matches but not quite
+        if terms:
+            # Use only partial terms or add noise
+            partial_terms = terms[:2] if len(terms) > 1 else terms[:1]
+            return f"Boundary case with {' '.join(partial_terms)} and unrelated content [BOUNDARY TEST]"
+
+        return f"Boundary test for {category} [BOUNDARY TEST]"
 
     def _generate_test_prompt_from_pattern(self, pattern: str, category: str) -> str:
         """

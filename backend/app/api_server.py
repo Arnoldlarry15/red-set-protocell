@@ -577,7 +577,8 @@ async def start_session(config: SessionConfig):
             log_fingerprints=rsp_config.egg.log_blocked_fingerprints,
             block_csam=rsp_config.egg.block_csam,
             block_bioweapons=rsp_config.egg.block_bioweapons,
-            block_real_exploits=rsp_config.egg.block_real_exploits
+            block_real_exploits=rsp_config.egg.block_real_exploits,
+            block_real_hacking=rsp_config.egg.block_real_hacking
         )
 
         scoring_engine = ScoringEngine(

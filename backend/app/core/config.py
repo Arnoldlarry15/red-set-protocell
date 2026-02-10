@@ -123,6 +123,7 @@ class EGGConfig:
     """Configuration for Ethical Guardrail Governor."""
     enabled: bool = True
     block_real_exploits: bool = True
+    block_real_hacking: bool = True
     block_csam: bool = True
     block_bioweapons: bool = True
     log_blocked_fingerprints: bool = True

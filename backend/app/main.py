@@ -105,7 +105,8 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         log_fingerprints=config.egg.log_blocked_fingerprints,
         block_csam=config.egg.block_csam,
         block_bioweapons=config.egg.block_bioweapons,
-        block_real_exploits=config.egg.block_real_exploits
+        block_real_exploits=config.egg.block_real_exploits,
+        block_real_hacking=config.egg.block_real_hacking
     )
     logger.info("✓ EGG initialized")
 

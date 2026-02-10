@@ -469,10 +469,9 @@ class Sniper:
 
                 # Store structured feedback for future use
                 # This enables higher-resolution evolution guidance
-                if structured_feedback and not hasattr(candidate, 'feedback_history'):
-                    candidate.feedback_history = []
                 if structured_feedback:
-                    candidate.feedback_history = getattr(candidate, 'feedback_history', [])
+                    if not hasattr(candidate, 'feedback_history'):
+                        candidate.feedback_history = []
                     candidate.feedback_history.append(structured_feedback)
                     # Keep only last 3 feedback entries to avoid memory bloat
                     if len(candidate.feedback_history) > 3:

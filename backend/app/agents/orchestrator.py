@@ -109,6 +109,7 @@ import sqlite3
 import json
 import os
 import shutil
+import statistics
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
@@ -669,13 +670,13 @@ class StateManager:
 
         # Calculate score coherence (how consistent are scores)
         if len(scores) > 1:
-            import statistics
             score_std = statistics.stdev(scores)
             score_mean = statistics.mean(scores)
             # Lower coefficient of variation = more coherent
             coherence_score = 1.0 - min(1.0, score_std / max(score_mean, 0.01))
         else:
             coherence_score = 1.0
+            score_std = 0.0
 
         return {
             "coherence_score": coherence_score,
@@ -683,7 +684,7 @@ class StateManager:
             "batch_size": len(rows),
             "unique_domains": unique_domains,
             "avg_score": sum(scores) / len(scores),
-            "score_std": statistics.stdev(scores) if len(scores) > 1 else 0.0
+            "score_std": score_std
         }
 
 

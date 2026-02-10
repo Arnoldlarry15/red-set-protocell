@@ -81,7 +81,7 @@ class PromptCandidate:
 
         This captures the "shape" of the prompt rather than exact content,
         allowing novelty detection to focus on structural differences.
-        
+
         Enhanced with finer granularity to reduce bucket collisions.
         """
         # Extract structural features with finer buckets
@@ -92,17 +92,17 @@ class PromptCandidate:
         # Character composition with more precision
         upper_ratio = sum(1 for c in self.prompt if c.isupper()) / max(len(self.prompt), 1)
         features.append(f"upper:{int(upper_ratio * 20)}")  # More precision (was * 10)
-        
+
         lower_ratio = sum(1 for c in self.prompt if c.islower()) / max(len(self.prompt), 1)
         features.append(f"lower:{int(lower_ratio * 20)}")
-        
+
         digit_ratio = sum(1 for c in self.prompt if c.isdigit()) / max(len(self.prompt), 1)
         features.append(f"digits:{int(digit_ratio * 20)}")
 
         # Punctuation patterns with categories
         punct_count = sum(1 for c in self.prompt if c in "!?.,;:")
         features.append(f"punct:{punct_count // 2}")
-        
+
         # Different punctuation types
         exclamation_count = self.prompt.count('!')
         question_count = self.prompt.count('?')
@@ -112,7 +112,7 @@ class PromptCandidate:
         # Encoding/special char patterns
         special_count = sum(1 for c in self.prompt if c in "{}[]()<>@#$%^&*")
         features.append(f"special:{special_count // 2}")
-        
+
         # Bracket patterns
         bracket_count = sum(1 for c in self.prompt if c in "{}[]()<>")
         features.append(f"brackets:{bracket_count}")
@@ -121,15 +121,15 @@ class PromptCandidate:
         keywords = ["ignore", "bypass", "override", "pretend", "hypothetical", "character"]
         keyword_count = sum(1 for kw in keywords if kw.lower() in self.prompt.lower())
         features.append(f"keywords:{keyword_count}")
-        
+
         # Sentence structure
         sentences = self.prompt.split('.')
         features.append(f"sentences:{len(sentences) // 2}")
-        
+
         # Newline patterns (multi-line structure)
         newline_count = self.prompt.count('\n')
         features.append(f"newlines:{newline_count}")
-        
+
         # Quote patterns
         quote_count = self.prompt.count('"') + self.prompt.count("'")
         features.append(f"quotes:{quote_count // 2}")
@@ -137,21 +137,21 @@ class PromptCandidate:
         # Create hash from structural features
         feature_str = "|".join(sorted(features))
         return hashlib.md5(feature_str.encode()).hexdigest()[:16]
-    
+
     def _compute_semantic_hash(self) -> str:
         """
         Compute a semantic hash based on content keywords and meaning.
-        
+
         This captures the semantic intent rather than just structure,
         allowing detection of clever rewordings that maintain meaning.
         """
         # Extract semantic features
         features = []
-        
+
         # Normalize text for semantic analysis
         normalized = self.prompt.lower()
         words = normalized.split()
-        
+
         # Semantic keyword categories
         instruction_keywords = ["ignore", "disregard", "forget", "bypass", "override", "skip"]
         roleplay_keywords = ["pretend", "act", "character", "role", "persona", "imagine"]
@@ -159,7 +159,7 @@ class PromptCandidate:
         system_keywords = ["system", "admin", "root", "developer", "mode", "setting"]
         extraction_keywords = ["reveal", "show", "tell", "extract", "display", "output"]
         encoding_keywords = ["base64", "encode", "decode", "translate", "cipher", "rot13"]
-        
+
         # Count presence in each semantic category
         for category, keywords in [
             ("instruction", instruction_keywords),
@@ -172,7 +172,7 @@ class PromptCandidate:
             count = sum(1 for kw in keywords if kw in normalized)
             if count > 0:
                 features.append(f"{category}:{count}")
-        
+
         # Detect common patterns
         if "previous" in normalized and "instruction" in normalized:
             features.append("previous_instruction_pattern")
@@ -182,19 +182,19 @@ class PromptCandidate:
             features.append("identity_assertion")
         if "now" in normalized and ("you" in normalized or "we" in normalized):
             features.append("state_transition")
-        
+
         # Linguistic complexity
         avg_word_length = sum(len(w) for w in words) / max(len(words), 1)
         features.append(f"avg_word_len:{int(avg_word_length)}")
-        
+
         # Unique word ratio (vocabulary richness)
         unique_ratio = len(set(words)) / max(len(words), 1)
         features.append(f"unique_ratio:{int(unique_ratio * 10)}")
-        
+
         # Create hash from semantic features
         if not features:
             features.append("neutral")  # Fallback for neutral content
-        
+
         feature_str = "|".join(sorted(features))
         return hashlib.md5(feature_str.encode()).hexdigest()[:16]
 
@@ -219,7 +219,7 @@ class SelectionEngine:
     This engine transforms raw fitness scores into selection decisions that
     encourage exploration, prevent local maxima, and maintain diversity.
     """
-    
+
     # Constants for single-selection scoring
     SINGLE_SELECT_FITNESS_WEIGHT = 0.7  # Weight for fitness in balanced single selection
 
@@ -325,7 +325,7 @@ class SelectionEngine:
             # Track high scorers for novelty calculation
             if candidate.score >= self.high_scorer_threshold:
                 self.high_scorer_structures.add(candidate.structural_hash)
-            
+
             # Update performance history
             candidate.performance_history.append(candidate.score)
             # Keep only last 5 scores for performance tracking
@@ -349,7 +349,7 @@ class SelectionEngine:
             if decay_periods > 0:
                 # Apply exponential time-based decay
                 time_decay_factor = self.decay_rate ** decay_periods
-                
+
                 # Calculate performance-based decay
                 performance_decay_factor = 1.0
                 if candidate.performance_history and len(candidate.performance_history) >= 2:
@@ -357,19 +357,19 @@ class SelectionEngine:
                     recent_scores = candidate.performance_history[-3:]
                     recent_avg = sum(recent_scores) / len(recent_scores)
                     overall_avg = sum(candidate.performance_history) / len(candidate.performance_history)
-                    
+
                     MIN_AVG_SCORE = 0.01  # Guard against division by zero
                     if recent_avg < overall_avg:
                         # Performance is declining - apply additional decay
                         decline_ratio = recent_avg / max(overall_avg, MIN_AVG_SCORE)
                         performance_decay_factor = 0.5 + (0.5 * decline_ratio)  # Range: 0.5 to 1.0
-                
+
                 # Combine time and performance decay as weighted average
                 combined_decay = (
-                    time_decay_factor * (1 - self.performance_decay_weight) +
-                    performance_decay_factor * self.performance_decay_weight
+                    time_decay_factor * (1 - self.performance_decay_weight)
+                    + performance_decay_factor * self.performance_decay_weight
                 )
-                
+
                 candidate.score = candidate.score * combined_decay
 
         return candidates
@@ -389,32 +389,32 @@ class SelectionEngine:
             else:
                 # Calculate minimum distance to any high scorer
                 min_distance = float('inf')
-                
+
                 for high_scorer_hash in self.high_scorer_structures:
                     distance = self._hash_distance(candidate.structural_hash, high_scorer_hash)
                     min_distance = min(min_distance, distance)
-                
+
                 # Normalize distance to 0-1 range
                 # Max distance between 16-char hex hashes is 16 (all chars different)
                 max_possible_distance = 16
                 normalized_distance = min(min_distance / max_possible_distance, 1.0)
-                
+
                 # Use sigmoid-like curve for smoother gradient
                 # Maps [0, 1] to [0, 1] with smooth transition
                 candidate.novelty_score = normalized_distance
 
         return candidates
-    
+
     def _hash_distance(self, hash1: str, hash2: str) -> float:
         """
         Calculate distance between two hashes.
-        
+
         Uses Hamming distance on hex strings to measure structural difference.
         Returns a value between 0 (identical) and len(hash) (completely different).
         """
         if len(hash1) != len(hash2):
             return max(len(hash1), len(hash2))
-        
+
         # Hamming distance - count differing characters
         distance = sum(c1 != c2 for c1, c2 in zip(hash1, hash2))
         return float(distance)
@@ -446,7 +446,7 @@ class SelectionEngine:
         for candidate in candidates:
             structural_usage = self.pattern_usage[candidate.structural_hash]
             semantic_usage = self.semantic_pattern_usage[candidate.semantic_hash]
-            
+
             # Use the maximum usage count (most restrictive)
             max_usage = max(structural_usage, semantic_usage)
 

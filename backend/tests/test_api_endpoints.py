@@ -208,6 +208,36 @@ class TestUserManagement:
             assert "Network error" in response.json()["detail"]
             assert "connection" in response.json()["detail"].lower()
 
+    def test_validate_llm_key_auth_error_with_connection_in_message(self):
+        """Test that auth errors aren't misclassified as network errors"""
+        # This test verifies the fix for the bug where an authentication error
+        # message containing the word "connection" (e.g., in the API key itself)
+        # was incorrectly classified as a network error instead of auth error
+        from unittest.mock import patch, AsyncMock
+
+        # Mock the backend to raise an auth error that contains "connection"
+        # This simulates cases like: "Incorrect API key provided: sk-proj-...connection..."
+        with patch('app.agents.target.OpenAIBackend') as mock_backend:
+            mock_instance = AsyncMock()
+            # Simulate an authentication error with "connection" in the message
+            mock_instance.execute.side_effect = Exception(
+                "Error code: 401 - Incorrect API key provided: sk-proj-connection123"
+            )
+            mock_backend.return_value = mock_instance
+
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={
+                    "api_key": "sk-proj-connection123",
+                    "backend": "openai"
+                }
+            )
+
+            # Should return 401 (Unauthorized) for auth errors
+            # NOT 503 (Network error) even though message contains "connection"
+            assert response.status_code == 401
+            assert "Invalid API key" in response.json()["detail"]
+
 
 class TestRemoteControl:
     """Test Remote Control endpoints"""

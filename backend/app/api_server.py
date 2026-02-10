@@ -1026,50 +1026,52 @@ async def validate_llm_key(validation: LLMKeyValidation):
         error_type = type(e).__name__
         error_message = str(e).lower()
 
-        # Check for network/connection errors first (highest priority)
+        # Check for authentication errors FIRST (highest priority)
+        # Authentication errors should be identified before network errors to avoid
+        # false positives where auth error messages contain words like "connection"
+        # (e.g., in API keys like "sk-proj-connection123")
+        is_auth_error = (
+            error_type in ['AuthenticationError', 'Unauthorized', 'PermissionDenied']
+            or 'authentication' in error_message
+            or 'invalid api key' in error_message
+            or 'invalid key' in error_message
+            or 'incorrect api key' in error_message
+            or 'unauthorized' in error_message
+            or error_message.startswith('401')
+            or ' 401 ' in error_message
+        )
+
+        # Check for network/connection errors (only if not an auth error)
         # These can come from the underlying HTTP libraries (httpx, aiohttp, requests)
         # or from the OpenAI/Anthropic SDKs
         # Use exact type name matching to avoid false positives
         is_connection_error = (
-            error_type in ['APIConnectionError', 'APITimeoutError', 'ConnectionError',
-                           'TimeoutError', 'Timeout', 'ConnectTimeout', 'ReadTimeout']
-            or 'connection' in error_message
-            or 'timeout' in error_message
-            or 'network' in error_message
-            or 'dns' in error_message
-            or 'unreachable' in error_message
-            or 'timed out' in error_message
-        )
-
-        # Check for authentication errors (only if not a connection error)
-        # Use specific authentication-related terms to avoid false positives
-        is_auth_error = (
-            not is_connection_error
+            not is_auth_error
             and (
-                error_type in ['AuthenticationError', 'Unauthorized', 'PermissionDenied']
-                or 'authentication' in error_message
-                or 'invalid api key' in error_message
-                or 'invalid key' in error_message
-                or 'incorrect api key' in error_message
-                or 'unauthorized' in error_message
-                or error_message.startswith('401')
-                or ' 401 ' in error_message
+                error_type in ['APIConnectionError', 'APITimeoutError', 'ConnectionError',
+                               'TimeoutError', 'Timeout', 'ConnectTimeout', 'ReadTimeout']
+                or 'connection' in error_message
+                or 'timeout' in error_message
+                or 'network' in error_message
+                or 'dns' in error_message
+                or 'unreachable' in error_message
+                or 'timed out' in error_message
             )
         )
 
         # Log the error with details for debugging
         logger.warning(f"LLM API key validation failed: {error_type} - {error_message[:100]}")
 
-        # Return appropriate error based on type
-        if is_connection_error:
-            raise HTTPException(
-                status_code=503,
-                detail=f"Network error: Unable to connect to {validation.backend} API. Please check your internet connection and try again."
-            )
-        elif is_auth_error:
+        # Return appropriate error based on type (check auth first)
+        if is_auth_error:
             raise HTTPException(
                 status_code=401,
                 detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
+        elif is_connection_error:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Network error: Unable to connect to {validation.backend} API. Please check your internet connection and try again."
             )
         else:
             # Generic error for other cases (no error_type exposure for security)

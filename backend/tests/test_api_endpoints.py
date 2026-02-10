@@ -160,19 +160,33 @@ class TestUserManagement:
         """Test that LLM key validation endpoint is publicly accessible without JWT"""
         # This endpoint should be accessible without authentication
         # because users need to validate their API key before they can get a JWT token
-        response = client.post(
-            "/auth/validate-llm-key",
-            json={
-                "api_key": "sk-test-key",
-                "backend": "openai"
-            }
-        )
-        # Should not return 401 (Unauthorized) due to missing JWT
-        # Will return 401 due to invalid API key, but that's after endpoint access
-        assert response.status_code in [401, 503, 500]  # Auth error, network error, or other error, but NOT JWT auth error
-        # If it was blocked by JWT auth middleware, we'd get a different response structure
-        # The endpoint-level response should contain 'detail' key (FastAPI HTTPException)
-        assert "detail" in response.json()
+        from unittest.mock import patch, AsyncMock
+
+        # Mock the backend to return a successful validation
+        with patch('app.agents.target.OpenAIBackend') as mock_backend:
+            mock_instance = AsyncMock()
+            mock_instance.execute.return_value = "Hi"  # Successful execution
+            mock_backend.return_value = mock_instance
+
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={
+                    "api_key": "sk-test-key",
+                    "backend": "openai"
+                }
+            )
+
+            # Should return 200 (Success) because the endpoint is accessible
+            # and the mocked validation succeeds
+            assert response.status_code == 200
+            data = response.json()
+            assert data["valid"] is True
+            assert data["backend"] == "openai"
+            assert "message" in data
+
+            # Verify JWT auth was not checked - the endpoint was called without Authorization header
+            # If JWT auth was required, we would have gotten a 401 with "Missing authorization header"
+            # before reaching the endpoint logic
 
     def test_validate_llm_key_invalid_backend(self):
         """Test LLM key validation with invalid backend"""

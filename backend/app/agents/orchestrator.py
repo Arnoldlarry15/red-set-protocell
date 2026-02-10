@@ -108,14 +108,22 @@ import logging
 import sqlite3
 import json
 import os
+import shutil
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
+
+try:
+    import aiosqlite
+    AIOSQLITE_AVAILABLE = True
+except ImportError:
+    AIOSQLITE_AVAILABLE = False
 
 from app.core.security import generate_session_id
 from app.engines.scoring import ScoringEngine
 from app.core.manifest import AttackManifest, create_manifest_from_config
 from app.core.specimen import FailureSpecimen, create_specimen_from_evaluation
+from app.core.egg_auditor import EGGAuditor
 
 logger = logging.getLogger(__name__)
 
@@ -348,6 +356,131 @@ class StateManager:
                 f"Zero-retention cleanup completed for session {self.session_id}"
             )
 
+    # Async versions of StateManager methods for non-blocking I/O
+    
+    async def save_round_async(self, round_result: RoundResult):
+        """Save round result to database asynchronously."""
+        if not AIOSQLITE_AVAILABLE:
+            # Fallback to synchronous version
+            self.save_round(round_result)
+            return
+            
+        async with aiosqlite.connect(self.database_path) as db:
+            await db.execute(
+                """
+                INSERT INTO rounds (
+                    session_id, round_number, prompt, attack_domain,
+                    target_response, evaluation, global_score, blocked_by_egg,
+                    timestamp, model_version, session_start_time
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+                (
+                    self.session_id,
+                    round_result.round_number,
+                    round_result.prompt,
+                    round_result.attack_domain,
+                    round_result.target_response,
+                    json.dumps(round_result.evaluation),
+                    round_result.global_score,
+                    1 if round_result.blocked_by_egg else 0,
+                    round_result.timestamp,
+                    round_result.model_version,
+                    round_result.session_start_time,
+                ),
+            )
+            await db.commit()
+
+    async def get_prior_rounds_async(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Retrieve prior round metadata asynchronously.
+
+        Args:
+            limit: Maximum number of rounds to retrieve
+
+        Returns:
+            List of round metadata dictionaries
+        """
+        if not AIOSQLITE_AVAILABLE:
+            # Fallback to synchronous version
+            return self.get_prior_rounds(limit)
+            
+        async with aiosqlite.connect(self.database_path) as db:
+            async with db.execute(
+                """
+                SELECT round_number, attack_domain, global_score, timestamp
+                FROM rounds
+                WHERE session_id = ?
+                ORDER BY round_number DESC
+                LIMIT ?
+            """,
+                (self.session_id, limit),
+            ) as cursor:
+                rows = await cursor.fetchall()
+
+        return [
+            {
+                "round_number": row[0],
+                "attack_domain": row[1],
+                "global_score": row[2],
+                "timestamp": row[3],
+            }
+            for row in rows
+        ]
+
+    async def get_statistics_async(self) -> Dict[str, Any]:
+        """Get aggregate statistics asynchronously."""
+        if not AIOSQLITE_AVAILABLE:
+            # Fallback to synchronous version
+            return self.get_statistics()
+            
+        async with aiosqlite.connect(self.database_path) as db:
+            # Total rounds
+            async with db.execute(
+                "SELECT COUNT(*) FROM rounds WHERE session_id = ?", (self.session_id,)
+            ) as cursor:
+                total_rounds = (await cursor.fetchone())[0]
+
+            # Average score
+            async with db.execute(
+                "SELECT AVG(global_score) FROM rounds WHERE session_id = ?",
+                (self.session_id,),
+            ) as cursor:
+                avg_score = (await cursor.fetchone())[0] or 0.0
+
+            # Blocked count
+            async with db.execute(
+                "SELECT COUNT(*) FROM rounds WHERE session_id = ? AND blocked_by_egg = 1",
+                (self.session_id,),
+            ) as cursor:
+                blocked_count = (await cursor.fetchone())[0]
+
+        return {
+            "total_rounds": total_rounds,
+            "average_score": avg_score,
+            "blocked_count": blocked_count,
+            "session_id": self.session_id,
+        }
+
+    async def cleanup_async(self):
+        """Cleanup session data asynchronously (Zero-Retention Policy)."""
+        if not self.zero_retention:
+            return
+            
+        if not AIOSQLITE_AVAILABLE:
+            # Fallback to synchronous version
+            self.cleanup()
+            return
+            
+        async with aiosqlite.connect(self.database_path) as db:
+            await db.execute(
+                "DELETE FROM rounds WHERE session_id = ?", (self.session_id,)
+            )
+            await db.commit()
+
+        logger.info(
+            f"Zero-retention cleanup completed for session {self.session_id}"
+        )
+
 
 class Orchestrator:
     """
@@ -418,6 +551,8 @@ class Orchestrator:
         max_rounds: int = 100,
         round_timeout: int = 300,
         concurrent_rounds: int = 1,
+        evolution_mode: str = "sequential",
+        egg_auditor: Optional[EGGAuditor] = None,
         config=None,
         artifacts_dir: str = "rsp_artifacts",
     ):
@@ -434,6 +569,15 @@ class Orchestrator:
             max_rounds: Maximum number of rounds
             round_timeout: Timeout per round in seconds
             concurrent_rounds: Number of rounds to execute concurrently (1=sequential)
+            evolution_mode: Evolution strategy - "sequential" (default) or "batched"
+                           - "sequential": Updates Sniper evolution pool after each round completes.
+                             Ensures strict evolutionary progression where round N+1 uses
+                             fitness scores from round N. Use when evolutionary dynamics matter.
+                           - "batched": Updates evolution pool after entire batch completes.
+                             Allows concurrent rounds within a batch but may cause subtle
+                             interference in evolutionary dynamics. Use for maximum throughput.
+            egg_auditor: Optional EGGAuditor instance for meta-guardrail monitoring.
+                        If provided, audits EGG decisions to detect potential failures.
             config: Optional RSPConfig for manifest generation
             artifacts_dir: Directory for manifests and specimens
         """
@@ -451,6 +595,9 @@ class Orchestrator:
         assert (
             concurrent_rounds > 0
         ), f"concurrent_rounds must be > 0, got {concurrent_rounds}"
+        assert evolution_mode in ["sequential", "batched"], (
+            f"evolution_mode must be 'sequential' or 'batched', got {evolution_mode}"
+        )
 
         # INVARIANT: EGG must be enabled (cannot be bypassed)
         assert hasattr(
@@ -466,6 +613,8 @@ class Orchestrator:
         self.max_rounds = max_rounds
         self.round_timeout = round_timeout
         self.concurrent_rounds = concurrent_rounds
+        self.evolution_mode = evolution_mode
+        self.egg_auditor = egg_auditor if egg_auditor else EGGAuditor(enabled=False)
         self.config = config
         self.artifacts_dir = artifacts_dir
 
@@ -476,6 +625,15 @@ class Orchestrator:
 
         # Create artifacts directory
         os.makedirs(artifacts_dir, exist_ok=True)
+        
+        # Warn if using batched evolution with concurrent rounds
+        if concurrent_rounds > 1 and evolution_mode == "batched":
+            logger.warning(
+                f"⚠️  Batched evolution mode with concurrent_rounds={concurrent_rounds}: "
+                f"Evolution pool updates happen after entire batch completes. "
+                f"This may cause subtle interference in evolutionary dynamics. "
+                f"Consider using evolution_mode='sequential' for strict evolutionary progression."
+            )
 
         logger.info("Orchestrator initialized with invariant checks passed")
 
@@ -575,11 +733,11 @@ class Orchestrator:
         os.makedirs(self.specimens_dir, exist_ok=True)
 
         try:
-            if self.concurrent_rounds > 1:
-                # Parallel execution mode
+            if self.concurrent_rounds > 1 and self.evolution_mode == "batched":
+                # Parallel execution mode with batched evolution
                 await self._run_session_parallel()
             else:
-                # Sequential execution mode
+                # Sequential execution mode (default for evolution_mode="sequential")
                 await self._run_session_sequential()
 
         finally:
@@ -592,7 +750,7 @@ class Orchestrator:
                 )
 
         # Get final statistics
-        stats = self._compile_statistics()
+        stats = await self._compile_statistics()
 
         # Add experiment metadata to stats
         stats["experiment"] = {
@@ -626,8 +784,8 @@ class Orchestrator:
                     self._execute_round(round_num), timeout=self.round_timeout
                 )
 
-                # Save result
-                self.state_manager.save_round(result)
+                # Save result (async for non-blocking I/O)
+                await self.state_manager.save_round_async(result)
 
                 logger.info(
                     f"Round {round_num} completed - "
@@ -676,8 +834,8 @@ class Orchestrator:
                     logger.error(f"Round {rnum} timed out")
                     continue
 
-                # Save result
-                self.state_manager.save_round(result)
+                # Save result (async for non-blocking I/O)
+                await self.state_manager.save_round_async(result)
 
                 logger.info(
                     f"Round {rnum} completed - "
@@ -721,7 +879,7 @@ class Orchestrator:
         timestamp = datetime.now(timezone.utc).isoformat()
 
         # Step 1: Sniper generates adversarial prompt
-        prior_metadata = self.state_manager.get_prior_rounds(limit=10)
+        prior_metadata = await self.state_manager.get_prior_rounds_async(limit=10)
         prompt, attack_domain = await self.sniper.generate_prompt(prior_metadata)
 
         # INVARIANT: Sniper must produce valid outputs
@@ -736,6 +894,13 @@ class Orchestrator:
         # INVARIANT: EGG inspection is mandatory and cannot be bypassed
         assert isinstance(is_allowed, bool), "EGG must return boolean for is_allowed"
         # Note: blocked_info can be None when allowed, or BlockedContent when blocked
+        
+        # Meta-guardrail: Audit EGG decision
+        audit_result = self.egg_auditor.audit_decision(
+            prompt=prompt,
+            egg_allowed=is_allowed,
+            egg_blocked_category=blocked_info.category if blocked_info else None
+        )
 
         if not is_allowed:
             # Prompt blocked by EGG
@@ -850,9 +1015,9 @@ class Orchestrator:
             session_start_time=self.state_manager.session_start_time,
         )
 
-    def _compile_statistics(self) -> Dict[str, Any]:
+    async def _compile_statistics(self) -> Dict[str, Any]:
         """Compile comprehensive session statistics."""
-        state_stats = self.state_manager.get_statistics()
+        state_stats = await self.state_manager.get_statistics_async()
 
         # Import time analytics
         try:
@@ -895,6 +1060,7 @@ class Orchestrator:
                 "egg": self.egg.get_statistics(),
             },
             "mutation": self.sniper.mutation_engine.get_statistics(),
+            "egg_auditor": self.egg_auditor.get_statistics(),
         }
 
         # Add time analytics if available
@@ -934,15 +1100,81 @@ class Orchestrator:
 
     def get_statistics(self) -> Dict[str, Any]:
         """
-        Get session statistics.
+        Get session statistics (synchronous wrapper).
 
-        This is a convenience method that wraps _compile_statistics
-        for API server integration.
+        This is a convenience method for API server integration.
+        For async contexts, prefer get_statistics_async().
 
         Returns:
             Dictionary with session statistics
         """
-        return self._compile_statistics()
+        # Use synchronous state manager method for backward compatibility
+        state_stats = self.state_manager.get_statistics()
+        
+        # Import time analytics
+        try:
+            from app.analytics.time_tracking import FatigueTracker, ScoreDriftAnalyzer
+
+            # Analyze fatigue
+            fatigue_tracker = FatigueTracker(self.state_manager.database_path)
+            fatigue_report = fatigue_tracker.analyze_fatigue(
+                self.state_manager.session_id
+            )
+
+            # Analyze score drift
+            drift_analyzer = ScoreDriftAnalyzer(self.state_manager.database_path)
+            drift_metrics = drift_analyzer.analyze_drift(self.state_manager.session_id)
+
+            return {
+                "session": {
+                    "session_id": state_stats["session_id"],
+                    "total_rounds": state_stats["total_rounds"],
+                },
+                "scores": {
+                    "average_global_score": state_stats["average_score"],
+                    "total_blocked": state_stats["blocked_count"],
+                },
+                "temporal_analysis": {
+                    "fatigue": fatigue_report,
+                    "drift": drift_metrics,
+                },
+            }
+        except ImportError:
+            # Fallback if analytics module not available
+            return {
+                "session": {
+                    "session_id": state_stats["session_id"],
+                    "total_rounds": state_stats["total_rounds"],
+                },
+                "scores": {
+                    "average_global_score": state_stats["average_score"],
+                    "total_blocked": state_stats["blocked_count"],
+                },
+            }
+        except Exception as e:
+            logger.warning(f"Error computing advanced statistics: {e}")
+            return {
+                "session": {
+                    "session_id": state_stats["session_id"],
+                    "total_rounds": state_stats["total_rounds"],
+                },
+                "scores": {
+                    "average_global_score": state_stats["average_score"],
+                    "total_blocked": state_stats["blocked_count"],
+                },
+                "error": str(e),
+            }
+
+    async def get_statistics_async(self) -> Dict[str, Any]:
+        """
+        Get session statistics (async version).
+
+        Preferred in async contexts for non-blocking I/O.
+
+        Returns:
+            Dictionary with session statistics
+        """
+        return await self._compile_statistics()
 
     async def execute_custom_prompt(self, prompt: str, attack_domain: str = "custom") -> Dict[str, Any]:
         """
@@ -1056,5 +1288,28 @@ class Orchestrator:
         logger.info("Session termination requested")
 
     def cleanup(self):
-        """Cleanup session data (Zero-Retention Policy)."""
+        """
+        Cleanup session data (Zero-Retention Policy).
+        
+        When zero_retention is enabled, this deletes:
+        - Database records for this session
+        - Failure specimens on disk
+        - Attack manifest
+        - All artifacts in the run directory
+        """
+        # Clean up database records
         self.state_manager.cleanup()
+        
+        # Clean up disk artifacts if zero-retention is enabled
+        if self.state_manager.zero_retention and self.current_manifest:
+            run_dir = os.path.join(self.artifacts_dir, self.current_manifest.manifest_id)
+            if os.path.exists(run_dir):
+                try:
+                    shutil.rmtree(run_dir)
+                    logger.info(
+                        f"Zero-retention: Deleted artifacts directory {run_dir}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to delete artifacts directory {run_dir}: {e}"
+                    )

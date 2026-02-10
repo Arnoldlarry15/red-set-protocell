@@ -256,6 +256,7 @@ class MutationEngine:
                 # Apply decay if performance is declining
                 if len(recent_scores) >= 3:
                     recent_trend = recent_scores[-3:]
+                    # Check if scores are declining (each score is less than the previous)
                     if all(recent_trend[i] < recent_trend[i - 1] for i in range(1, len(recent_trend))):
                         # Declining performance - apply decay
                         avg_score *= 0.8
@@ -527,7 +528,7 @@ class MutationEngine:
 
         # Calculate exploration vs exploitation metrics
         total_strategies = len(MutationStrategy)
-        strategies_used = len([s for s in strategy_counts.keys()])
+        strategies_used = len(strategy_counts)
         exploration_ratio = strategies_used / total_strategies if total_strategies > 0 else 0.0
 
         # Build strategy-archetype correlation summary

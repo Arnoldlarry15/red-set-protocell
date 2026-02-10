@@ -241,7 +241,7 @@ Added 20 comprehensive tests in `test_selection_improvements.py`:
 - Single-selection strategy modes
 - Integration with existing functionality
 
-All 42 tests pass (22 existing + 20 new).
+All 52 tests pass (22 existing + 20 new + 10 integration).
 
 ## Backward Compatibility
 

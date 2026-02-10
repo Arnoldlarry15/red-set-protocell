@@ -358,15 +358,16 @@ class SelectionEngine:
                     recent_avg = sum(recent_scores) / len(recent_scores)
                     overall_avg = sum(candidate.performance_history) / len(candidate.performance_history)
                     
+                    MIN_AVG_SCORE = 0.01  # Guard against division by zero
                     if recent_avg < overall_avg:
                         # Performance is declining - apply additional decay
-                        decline_ratio = recent_avg / max(overall_avg, 0.01)
+                        decline_ratio = recent_avg / max(overall_avg, MIN_AVG_SCORE)
                         performance_decay_factor = 0.5 + (0.5 * decline_ratio)  # Range: 0.5 to 1.0
                 
-                # Combine time and performance decay based on weight
+                # Combine time and performance decay as weighted average
                 combined_decay = (
                     time_decay_factor * (1 - self.performance_decay_weight) +
-                    performance_decay_factor * time_decay_factor * self.performance_decay_weight
+                    performance_decay_factor * self.performance_decay_weight
                 )
                 
                 candidate.score = candidate.score * combined_decay
@@ -544,8 +545,10 @@ class SelectionEngine:
             # For single selection, use configurable strategy to avoid drift
             if self.single_select_strategy == "balanced":
                 # Balanced: combine elite fitness with novelty
+                # Use complementary weights to ensure they sum to 1.0
+                novelty_component_weight = 1.0 - self.SINGLE_SELECT_FITNESS_WEIGHT
                 scored = [
-                    (c, c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * self.novelty_weight)
+                    (c, c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * novelty_component_weight)
                     for c in candidates
                 ]
                 scored.sort(key=lambda x: x[1], reverse=True)

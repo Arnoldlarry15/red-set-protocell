@@ -201,7 +201,7 @@ def test_overfitting_penalties_with_semantic_tracking():
 def test_single_select_balanced_strategy():
     """Test balanced strategy for single selection to prevent drift."""
     engine = SelectionEngine(
-        novelty_weight=0.3,
+        novelty_weight=0.3,  # This is for other selection methods
         single_select_strategy="balanced"
     )
     
@@ -220,9 +220,10 @@ def test_single_select_balanced_strategy():
     selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=1)
     
     assert len(selected) == 1
-    # Calculate expected scores: fitness * 0.7 + novelty * 0.3
-    high_score_balanced = high_score_old.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + high_score_old.novelty_score * engine.novelty_weight
-    medium_score_balanced = medium_score_novel.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + medium_score_novel.novelty_score * engine.novelty_weight
+    # Calculate expected scores: fitness * 0.7 + novelty * 0.3 (complementary)
+    novelty_component_weight = 1.0 - engine.SINGLE_SELECT_FITNESS_WEIGHT
+    high_score_balanced = high_score_old.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + high_score_old.novelty_score * novelty_component_weight
+    medium_score_balanced = medium_score_novel.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + medium_score_novel.novelty_score * novelty_component_weight
     
     # The one with higher balanced score should win
     if high_score_balanced > medium_score_balanced:

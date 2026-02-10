@@ -47,8 +47,10 @@ class PromptCandidate:
         timestamp: When the prompt was created
         usage_count: Number of times used in evolution
         structural_hash: Hash representing prompt structure
+        semantic_hash: Hash representing prompt semantics
         diversity_score: Score for maintaining diversity
         novelty_score: Score for novelty relative to high scorers
+        performance_history: List of recent scores for performance-based decay
     """
     prompt: str
     score: float
@@ -57,8 +59,10 @@ class PromptCandidate:
     timestamp: float = 0.0
     usage_count: int = 0
     structural_hash: str = ""
+    semantic_hash: str = ""
     diversity_score: float = 0.0
     novelty_score: float = 0.0
+    performance_history: List[float] = None
 
     def __post_init__(self):
         """Initialize computed fields."""
@@ -66,6 +70,10 @@ class PromptCandidate:
             self.timestamp = time.time()
         if not self.structural_hash:
             self.structural_hash = self._compute_structural_hash()
+        if not self.semantic_hash:
+            self.semantic_hash = self._compute_semantic_hash()
+        if self.performance_history is None:
+            self.performance_history = []
 
     def _compute_structural_hash(self) -> str:
         """
@@ -73,30 +81,120 @@ class PromptCandidate:
 
         This captures the "shape" of the prompt rather than exact content,
         allowing novelty detection to focus on structural differences.
+        
+        Enhanced with finer granularity to reduce bucket collisions.
         """
-        # Extract structural features
+        # Extract structural features with finer buckets
         features = []
-        features.append(f"length:{len(self.prompt) // 10}")  # Length bucket
-        features.append(f"words:{len(self.prompt.split()) // 5}")  # Word count bucket
+        features.append(f"length:{len(self.prompt) // 5}")  # Finer length bucket (was // 10)
+        features.append(f"words:{len(self.prompt.split()) // 3}")  # Finer word count bucket (was // 5)
 
-        # Character composition
+        # Character composition with more precision
         upper_ratio = sum(1 for c in self.prompt if c.isupper()) / max(len(self.prompt), 1)
-        features.append(f"upper:{int(upper_ratio * 10)}")
+        features.append(f"upper:{int(upper_ratio * 20)}")  # More precision (was * 10)
+        
+        lower_ratio = sum(1 for c in self.prompt if c.islower()) / max(len(self.prompt), 1)
+        features.append(f"lower:{int(lower_ratio * 20)}")
+        
+        digit_ratio = sum(1 for c in self.prompt if c.isdigit()) / max(len(self.prompt), 1)
+        features.append(f"digits:{int(digit_ratio * 20)}")
 
-        # Punctuation patterns
+        # Punctuation patterns with categories
         punct_count = sum(1 for c in self.prompt if c in "!?.,;:")
         features.append(f"punct:{punct_count // 2}")
+        
+        # Different punctuation types
+        exclamation_count = self.prompt.count('!')
+        question_count = self.prompt.count('?')
+        features.append(f"exclaim:{exclamation_count}")
+        features.append(f"question:{question_count}")
 
         # Encoding/special char patterns
         special_count = sum(1 for c in self.prompt if c in "{}[]()<>@#$%^&*")
         features.append(f"special:{special_count // 2}")
+        
+        # Bracket patterns
+        bracket_count = sum(1 for c in self.prompt if c in "{}[]()<>")
+        features.append(f"brackets:{bracket_count}")
 
         # Domain patterns (keywords)
         keywords = ["ignore", "bypass", "override", "pretend", "hypothetical", "character"]
         keyword_count = sum(1 for kw in keywords if kw.lower() in self.prompt.lower())
         features.append(f"keywords:{keyword_count}")
+        
+        # Sentence structure
+        sentences = self.prompt.split('.')
+        features.append(f"sentences:{len(sentences) // 2}")
+        
+        # Newline patterns (multi-line structure)
+        newline_count = self.prompt.count('\n')
+        features.append(f"newlines:{newline_count}")
+        
+        # Quote patterns
+        quote_count = self.prompt.count('"') + self.prompt.count("'")
+        features.append(f"quotes:{quote_count // 2}")
 
         # Create hash from structural features
+        feature_str = "|".join(sorted(features))
+        return hashlib.md5(feature_str.encode()).hexdigest()[:16]
+    
+    def _compute_semantic_hash(self) -> str:
+        """
+        Compute a semantic hash based on content keywords and meaning.
+        
+        This captures the semantic intent rather than just structure,
+        allowing detection of clever rewordings that maintain meaning.
+        """
+        # Extract semantic features
+        features = []
+        
+        # Normalize text for semantic analysis
+        normalized = self.prompt.lower()
+        words = normalized.split()
+        
+        # Semantic keyword categories
+        instruction_keywords = ["ignore", "disregard", "forget", "bypass", "override", "skip"]
+        roleplay_keywords = ["pretend", "act", "character", "role", "persona", "imagine"]
+        hypothetical_keywords = ["hypothetical", "suppose", "assume", "imagine", "what if"]
+        system_keywords = ["system", "admin", "root", "developer", "mode", "setting"]
+        extraction_keywords = ["reveal", "show", "tell", "extract", "display", "output"]
+        encoding_keywords = ["base64", "encode", "decode", "translate", "cipher", "rot13"]
+        
+        # Count presence in each semantic category
+        for category, keywords in [
+            ("instruction", instruction_keywords),
+            ("roleplay", roleplay_keywords),
+            ("hypothetical", hypothetical_keywords),
+            ("system", system_keywords),
+            ("extraction", extraction_keywords),
+            ("encoding", encoding_keywords)
+        ]:
+            count = sum(1 for kw in keywords if kw in normalized)
+            if count > 0:
+                features.append(f"{category}:{count}")
+        
+        # Detect common patterns
+        if "previous" in normalized and "instruction" in normalized:
+            features.append("previous_instruction_pattern")
+        if "new" in normalized and ("instruction" in normalized or "directive" in normalized):
+            features.append("new_instruction_pattern")
+        if "you are" in normalized or "you're" in normalized:
+            features.append("identity_assertion")
+        if "now" in normalized and ("you" in normalized or "we" in normalized):
+            features.append("state_transition")
+        
+        # Linguistic complexity
+        avg_word_length = sum(len(w) for w in words) / max(len(words), 1)
+        features.append(f"avg_word_len:{int(avg_word_length)}")
+        
+        # Unique word ratio (vocabulary richness)
+        unique_ratio = len(set(words)) / max(len(words), 1)
+        features.append(f"unique_ratio:{int(unique_ratio * 10)}")
+        
+        # Create hash from semantic features
+        if not features:
+            features.append("neutral")  # Fallback for neutral content
+        
         feature_str = "|".join(sorted(features))
         return hashlib.md5(feature_str.encode()).hexdigest()[:16]
 
@@ -130,7 +228,9 @@ class SelectionEngine:
         diversity_weight: float = 0.2,
         overfitting_threshold: int = 3,
         tournament_size: int = 3,
-        elite_fraction: float = 0.2
+        elite_fraction: float = 0.2,
+        performance_decay_weight: float = 0.5,
+        single_select_strategy: str = "balanced"
     ):
         """
         Initialize selection engine.
@@ -143,6 +243,8 @@ class SelectionEngine:
             overfitting_threshold: Max times a pattern can dominate
             tournament_size: Number of candidates in tournament selection
             elite_fraction: Fraction of population to preserve as elite
+            performance_decay_weight: Weight for performance-based decay (0.0 = time-only, 1.0 = performance-only)
+            single_select_strategy: Strategy for num_select==1: 'balanced', 'elite', or 'novelty'
         """
         self.decay_rate = decay_rate
         self.decay_interval = decay_interval
@@ -151,13 +253,16 @@ class SelectionEngine:
         self.overfitting_threshold = overfitting_threshold
         self.tournament_size = tournament_size
         self.elite_fraction = elite_fraction
+        self.performance_decay_weight = performance_decay_weight
+        self.single_select_strategy = single_select_strategy
 
         # Track high-scoring prompt structures for novelty calculation
         self.high_scorer_structures: Set[str] = set()
         self.high_scorer_threshold = 0.6  # Score threshold for "high scorer"
 
-        # Track pattern usage for overfitting detection
+        # Track pattern usage for overfitting detection (both structural and semantic)
         self.pattern_usage: Dict[str, int] = defaultdict(int)
+        self.semantic_pattern_usage: Dict[str, int] = defaultdict(int)
 
         # Track strategy performance
         self.strategy_stats: Dict[str, List[float]] = defaultdict(list)
@@ -212,19 +317,26 @@ class SelectionEngine:
         for candidate in selected:
             candidate.usage_count += 1
             self.pattern_usage[candidate.structural_hash] += 1
+            self.semantic_pattern_usage[candidate.semantic_hash] += 1
 
             # Track high scorers for novelty calculation
             if candidate.score >= self.high_scorer_threshold:
                 self.high_scorer_structures.add(candidate.structural_hash)
+            
+            # Update performance history
+            candidate.performance_history.append(candidate.score)
+            # Keep only last 5 scores for performance tracking
+            if len(candidate.performance_history) > 5:
+                candidate.performance_history = candidate.performance_history[-5:]
 
         return selected
 
     def _apply_decay(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
-        Apply time-based decay to candidate scores.
+        Apply time-based and performance-based decay to candidate scores.
 
-        Old "winning" prompts lose dominance over time, encouraging
-        exploration of new patterns.
+        Old "winning" prompts lose dominance over time, and prompts with
+        declining performance decay faster, encouraging exploration of new patterns.
         """
         # Modify scores in-place to preserve object identity
         for candidate in candidates:
@@ -232,33 +344,75 @@ class SelectionEngine:
             decay_periods = int(age_seconds / self.decay_interval)
 
             if decay_periods > 0:
-                # Apply exponential decay
-                decay_factor = self.decay_rate ** decay_periods
-                candidate.score = candidate.score * decay_factor
+                # Apply exponential time-based decay
+                time_decay_factor = self.decay_rate ** decay_periods
+                
+                # Calculate performance-based decay
+                performance_decay_factor = 1.0
+                if candidate.performance_history and len(candidate.performance_history) >= 2:
+                    # Check if performance is declining
+                    recent_avg = sum(candidate.performance_history[-3:]) / min(3, len(candidate.performance_history[-3:]))
+                    overall_avg = sum(candidate.performance_history) / len(candidate.performance_history)
+                    
+                    if recent_avg < overall_avg:
+                        # Performance is declining - apply additional decay
+                        decline_ratio = recent_avg / max(overall_avg, 0.01)
+                        performance_decay_factor = 0.5 + (0.5 * decline_ratio)  # Range: 0.5 to 1.0
+                
+                # Combine time and performance decay based on weight
+                combined_decay = (
+                    time_decay_factor * (1 - self.performance_decay_weight) +
+                    performance_decay_factor * time_decay_factor * self.performance_decay_weight
+                )
+                
+                candidate.score = candidate.score * combined_decay
 
         return candidates
 
     def _update_novelty_scores(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
-        Update novelty scores based on structural difference from high scorers.
+        Update novelty scores based on structural distance from high scorers.
 
-        Prompts that are structurally different from previous high scorers
-        get bonus points, even if their raw score is slightly lower.
+        Uses gradient-based distance measure instead of binary 0/1 scoring.
+        Prompts that are more different from previous high scorers get higher
+        novelty scores, with a continuous gradient.
         """
         for candidate in candidates:
             if not self.high_scorer_structures:
                 # No high scorers yet, all novel
                 candidate.novelty_score = 1.0
             else:
-                # Calculate novelty as inverse of similarity to high scorers
-                if candidate.structural_hash in self.high_scorer_structures:
-                    # Same structure as a high scorer
-                    candidate.novelty_score = 0.0
-                else:
-                    # Different structure - full novelty
-                    candidate.novelty_score = 1.0
+                # Calculate minimum distance to any high scorer
+                min_distance = float('inf')
+                
+                for high_scorer_hash in self.high_scorer_structures:
+                    distance = self._hash_distance(candidate.structural_hash, high_scorer_hash)
+                    min_distance = min(min_distance, distance)
+                
+                # Normalize distance to 0-1 range
+                # Max distance between 16-char hex hashes is 16 (all chars different)
+                max_possible_distance = 16
+                normalized_distance = min(min_distance / max_possible_distance, 1.0)
+                
+                # Use sigmoid-like curve for smoother gradient
+                # Maps [0, 1] to [0, 1] with smooth transition
+                candidate.novelty_score = normalized_distance
 
         return candidates
+    
+    def _hash_distance(self, hash1: str, hash2: str) -> float:
+        """
+        Calculate distance between two hashes.
+        
+        Uses Hamming distance on hex strings to measure structural difference.
+        Returns a value between 0 (identical) and len(hash) (completely different).
+        """
+        if len(hash1) != len(hash2):
+            return max(len(hash1), len(hash2))
+        
+        # Hamming distance - count differing characters
+        distance = sum(c1 != c2 for c1, c2 in zip(hash1, hash2))
+        return float(distance)
 
     def _update_diversity_scores(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
@@ -281,14 +435,19 @@ class SelectionEngine:
         Penalize patterns that have been used too frequently.
 
         This prevents overfitting to a single exploit style.
+        Now tracks both structural and semantic patterns to catch clever rewordings.
         """
         # Modify scores in-place to preserve object identity
         for candidate in candidates:
-            usage = self.pattern_usage[candidate.structural_hash]
+            structural_usage = self.pattern_usage[candidate.structural_hash]
+            semantic_usage = self.semantic_pattern_usage[candidate.semantic_hash]
+            
+            # Use the maximum usage count (most restrictive)
+            max_usage = max(structural_usage, semantic_usage)
 
-            if usage >= self.overfitting_threshold:
+            if max_usage >= self.overfitting_threshold:
                 # Apply penalty that increases with usage
-                penalty_factor = 0.5 ** (usage - self.overfitting_threshold + 1)
+                penalty_factor = 0.5 ** (max_usage - self.overfitting_threshold + 1)
                 candidate.score = candidate.score * penalty_factor
 
         return candidates
@@ -378,8 +537,21 @@ class SelectionEngine:
         and diversity preservation.
         """
         if num_select == 1:
-            # For single selection, use weighted combination
-            return self._novelty_select(candidates, 1)
+            # For single selection, use configurable strategy to avoid drift
+            if self.single_select_strategy == "balanced":
+                # Balanced: combine elite fitness with novelty
+                scored = [
+                    (c, c.score * 0.7 + c.novelty_score * self.novelty_weight)
+                    for c in candidates
+                ]
+                scored.sort(key=lambda x: x[1], reverse=True)
+                return [scored[0][0]]
+            elif self.single_select_strategy == "elite":
+                # Pure elitism for single selection
+                return self._elitism_select(candidates, 1)
+            else:  # "novelty"
+                # Pure novelty for single selection
+                return self._novelty_select(candidates, 1)
 
         # Allocate selections across strategies
         num_elite = max(1, int(num_select * self.elite_fraction))
@@ -421,13 +593,18 @@ class SelectionEngine:
         return {
             'high_scorer_count': len(self.high_scorer_structures),
             'pattern_usage_count': len(self.pattern_usage),
+            'semantic_pattern_usage_count': len(self.semantic_pattern_usage),
             'most_used_pattern_count': max(self.pattern_usage.values()) if self.pattern_usage else 0,
+            'most_used_semantic_pattern_count': max(self.semantic_pattern_usage.values()) if self.semantic_pattern_usage else 0,
             'decay_rate': self.decay_rate,
             'novelty_weight': self.novelty_weight,
-            'diversity_weight': self.diversity_weight
+            'diversity_weight': self.diversity_weight,
+            'performance_decay_weight': self.performance_decay_weight,
+            'single_select_strategy': self.single_select_strategy
         }
 
     def reset_pattern_tracking(self):
         """Reset pattern usage tracking (e.g., for new session)."""
         self.pattern_usage.clear()
+        self.semantic_pattern_usage.clear()
         self.high_scorer_structures.clear()

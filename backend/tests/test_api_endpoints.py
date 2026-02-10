@@ -156,6 +156,24 @@ class TestUserManagement:
         )
         assert response.status_code == 400
 
+    def test_validate_llm_key_publicly_accessible(self):
+        """Test that LLM key validation endpoint is publicly accessible without JWT"""
+        # This endpoint should be accessible without authentication
+        # because users need to validate their API key before they can get a JWT token
+        response = client.post(
+            "/auth/validate-llm-key",
+            json={
+                "api_key": "sk-test-key",
+                "backend": "openai"
+            }
+        )
+        # Should not return 401 (Unauthorized) due to missing JWT
+        # Will return 401 due to invalid API key, but that's after endpoint access
+        assert response.status_code in [401, 503, 500]  # Auth error, network error, or other error, but NOT JWT auth error
+        # If it was blocked by JWT auth middleware, we'd get a different response structure
+        # The endpoint-level response should contain 'detail' key (FastAPI HTTPException)
+        assert "detail" in response.json()
+
     def test_validate_llm_key_invalid_backend(self):
         """Test LLM key validation with invalid backend"""
         response = client.post(

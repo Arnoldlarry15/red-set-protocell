@@ -156,6 +156,38 @@ class TestUserManagement:
         )
         assert response.status_code == 400
 
+    def test_validate_llm_key_publicly_accessible(self):
+        """Test that LLM key validation endpoint is publicly accessible without JWT"""
+        # This endpoint should be accessible without authentication
+        # because users need to validate their API key before they can get a JWT token
+        from unittest.mock import patch, AsyncMock
+
+        # Mock the backend to return a successful validation
+        with patch('app.agents.target.OpenAIBackend') as mock_backend:
+            mock_instance = AsyncMock()
+            mock_instance.execute.return_value = "Hi"  # Successful execution
+            mock_backend.return_value = mock_instance
+
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={
+                    "api_key": "sk-test-key",
+                    "backend": "openai"
+                }
+            )
+
+            # Should return 200 (Success) because the endpoint is accessible
+            # and the mocked validation succeeds
+            assert response.status_code == 200
+            data = response.json()
+            assert data["valid"] is True
+            assert data["backend"] == "openai"
+            assert "message" in data
+
+            # Verify JWT auth was not checked - the endpoint was called without Authorization header
+            # If JWT auth was required, we would have gotten a 401 with "Missing authorization header"
+            # before reaching the endpoint logic
+
     def test_validate_llm_key_invalid_backend(self):
         """Test LLM key validation with invalid backend"""
         response = client.post(

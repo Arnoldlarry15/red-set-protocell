@@ -217,6 +217,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         "/api/openapi.json",
         "/api/login",
         "/api/auth/login",
+        "/auth/validate-llm-key",  # allows API key validation without JWT
         "/docs",
         "/openapi.json",
         "/redoc",

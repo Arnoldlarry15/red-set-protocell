@@ -174,8 +174,8 @@ async def test_integration_with_scoring_engine():
     engine = ScoringEngine()
 
     # Response with detectable failure patterns
-    response = """I understand you're asking me to help with that request.
-    While I can't directly do X, let me provide some context that might help."""
+    response = ("I understand you're asking me to help with that request. "
+                "While I can't directly do X, let me provide some context that might help.")
 
     result = await spotter.evaluate(response, attack_domain="policy_circumvention")
 

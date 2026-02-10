@@ -288,11 +288,9 @@ class EvaluationResult:
                 all_archetypes.update(self.l3_cognitive_stability.archetypes)
             self.archetypes = list(all_archetypes)
 
-        # Compute layer contributions and dominant layer if not provided
-        if self.layer_contributions is None:
-            # This will be computed by ScoringEngine.create_evaluation()
-            # but we initialize it here for cases where EvaluationResult is created directly
-            pass
+        # Note: layer_contributions and dominant_layer are typically computed by
+        # ScoringEngine.create_evaluation(). When EvaluationResult is created directly,
+        # these fields remain None unless explicitly provided during initialization.
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""

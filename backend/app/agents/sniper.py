@@ -191,7 +191,8 @@ class AdversarialIntentEngine:
         # Softmax with temperature
         scaled_scores = [s / temperature for s in scores]
         max_score = max(scaled_scores)
-        exp_scores = [math.exp(s - max_score) for s in scaled_scores]  # Subtract max for numerical stability
+        # Subtract max for numerical stability (doesn't affect relative probabilities after normalization)
+        exp_scores = [math.exp(s - max_score) for s in scaled_scores]
         total = sum(exp_scores)
         
         if total == 0:

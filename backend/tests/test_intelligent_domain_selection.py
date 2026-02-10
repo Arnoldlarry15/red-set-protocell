@@ -314,8 +314,10 @@ async def test_recent_scores_windowing():
     )
     
     # Manually add many old low scores and few recent high scores
+    # Total 20 scores: 15 old (0.1) + 5 recent (0.9)
+    # Last 10 will be: 5 old (0.1) + 5 recent (0.9) = average 0.5
     test_domain = AttackDomain.JAILBREAK
-    sniper.domain_scores[test_domain] = [0.1] * 15 + [0.9] * 5  # 15 old low, 5 recent high
+    sniper.domain_scores[test_domain] = [0.1] * 15 + [0.9] * 5
     
     # Compute success rates
     rates = sniper._compute_domain_success_rates()

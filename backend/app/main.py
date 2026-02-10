@@ -163,6 +163,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         creativity_temperature=config.sniper.creativity_temperature,
         selection_engine=selection_engine,
         selection_strategy=selection_strategy_enum,
+        domain_selection_temperature=config.sniper.domain_selection_temperature,
         api_key=config.sniper.api_key
     )
     logger.info("✓ Sniper Agent initialized")

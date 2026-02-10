@@ -66,6 +66,7 @@ class SniperConfig:
     mutation_rate: float = 0.7
     evolution_pool_size: int = 10
     creativity_temperature: float = 0.9
+    domain_selection_temperature: float = 1.0  # Controls exploration vs exploitation in domain selection
     api_key: Optional[str] = None  # Sniper-specific API key
 
     # Selection engine parameters

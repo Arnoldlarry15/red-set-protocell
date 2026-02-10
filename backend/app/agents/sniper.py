@@ -77,8 +77,10 @@ This is production-ready because:
 import logging
 import random
 import asyncio
+import math
 from typing import List, Dict, Any, Optional, Tuple
 from enum import Enum
+from collections import defaultdict
 
 from app.engines.selection import SelectionEngine, SelectionStrategy, PromptCandidate
 
@@ -147,21 +149,68 @@ class AdversarialIntentEngine:
         ],
     }
 
-    def select_domain(self, prior_scores: Optional[List[float]] = None) -> AttackDomain:
+    def select_domain(
+        self,
+        domain_success_rates: Optional[Dict[AttackDomain, float]] = None,
+        temperature: float = 1.0
+    ) -> AttackDomain:
         """
-        Select an attack domain.
+        Select an attack domain with intelligence.
 
-        If prior scores are provided, bias selection toward successful domains.
+        Uses weighted selection based on historical success rates when available.
+        Temperature parameter controls exploration vs exploitation tradeoff:
+        - temperature = 0: Pure exploitation (always pick best domain)
+        - temperature = 1: Balanced (softmax-based selection)
+        - temperature > 1: More exploration (flatter distribution)
 
         Args:
-            prior_scores: Optional list of prior scores by domain
+            domain_success_rates: Dict mapping AttackDomain to average success rate (0.0-1.0)
+            temperature: Controls exploration vs exploitation (default: 1.0)
 
         Returns:
             Selected AttackDomain
         """
-        # Simple random selection for now
-        # In production, this would be weighted by prior success
-        return random.choice(list(AttackDomain))
+        domains = list(AttackDomain)
+
+        # If no success history, use uniform random selection
+        if not domain_success_rates or not any(domain_success_rates.values()):
+            return random.choice(domains)
+
+        # Compute softmax weights based on success rates
+        scores = []
+        for domain in domains:
+            score = domain_success_rates.get(domain, 0.0)
+            scores.append(score)
+
+        # Apply temperature scaling and compute softmax
+        if temperature <= 0.0:
+            # Pure exploitation: pick the best
+            best_idx = scores.index(max(scores))
+            return domains[best_idx]
+
+        # Softmax with temperature
+        scaled_scores = [s / temperature for s in scores]
+        max_score = max(scaled_scores)
+        # Subtract max for numerical stability (doesn't affect relative probabilities after normalization)
+        exp_scores = [math.exp(s - max_score) for s in scaled_scores]
+        total = sum(exp_scores)
+
+        if total == 0:
+            # Fallback to uniform if all scores are zero
+            return random.choice(domains)
+
+        probabilities = [e / total for e in exp_scores]
+
+        # Weighted random selection
+        rand = random.random()
+        cumulative = 0.0
+        for domain, prob in zip(domains, probabilities):
+            cumulative += prob
+            if rand <= cumulative:
+                return domain
+
+        # Fallback (shouldn't reach here)
+        return domains[-1]
 
     def generate_base_prompt(self, domain: AttackDomain) -> str:
         """
@@ -189,6 +238,7 @@ class Sniper:
                  creativity_temperature: float = 0.9,
                  selection_engine: Optional[SelectionEngine] = None,
                  selection_strategy: SelectionStrategy = SelectionStrategy.HYBRID,
+                 domain_selection_temperature: float = 1.0,
                  api_key: Optional[str] = None):
         """
         Initialize Sniper agent.
@@ -199,11 +249,13 @@ class Sniper:
             creativity_temperature: Temperature for creative variations
             selection_engine: Optional SelectionEngine for advanced evolution
             selection_strategy: Strategy for selecting prompts from pool
+            domain_selection_temperature: Temperature for domain selection (0=exploit, 1=balanced, >1=explore)
             api_key: Optional API key for Sniper-specific operations
         """
         self.mutation_engine = mutation_engine
         self.evolution_pool_size = evolution_pool_size
         self.creativity_temperature = creativity_temperature
+        self.domain_selection_temperature = domain_selection_temperature
         self.api_key = api_key
 
         # Initialize selection engine
@@ -218,6 +270,9 @@ class Sniper:
 
         # Track last mutation strategy used for each prompt
         self.prompt_strategies: Dict[str, str] = {}
+
+        # Track domain success rates: domain -> list of scores
+        self.domain_scores: Dict[AttackDomain, List[float]] = defaultdict(list)
 
     async def generate_prompt(
         self,
@@ -258,8 +313,14 @@ class Sniper:
         if prior_metadata:
             prior_scores = [m.get('global_score', 0.0) for m in prior_metadata]
 
-        # Select attack domain
-        domain = self.intent_engine.select_domain(prior_scores)
+        # Compute domain success rates for intelligent selection
+        domain_success_rates = self._compute_domain_success_rates()
+
+        # Select attack domain with intelligence
+        domain = self.intent_engine.select_domain(
+            domain_success_rates=domain_success_rates,
+            temperature=self.domain_selection_temperature
+        )
 
         # Generate or evolve prompt
         strategy_used = None
@@ -399,6 +460,13 @@ class Sniper:
                 # Update score
                 self.evolution_pool[i].score = score
 
+                # Update domain success tracking
+                try:
+                    domain_enum = AttackDomain(candidate.domain)
+                    self.domain_scores[domain_enum].append(score)
+                except (ValueError, KeyError):
+                    pass
+
                 # Update mutation engine performance tracking if strategy is known
                 if candidate.strategy and hasattr(self.mutation_engine, 'update_strategy_performance'):
                     from app.engines.mutation import MutationStrategy
@@ -408,6 +476,24 @@ class Sniper:
                     except (ValueError, AttributeError):
                         pass
                 break
+
+    def _compute_domain_success_rates(self) -> Dict[AttackDomain, float]:
+        """
+        Compute average success rate for each attack domain.
+
+        Returns:
+            Dictionary mapping AttackDomain to average score (0.0-1.0)
+        """
+        domain_success_rates = {}
+        for domain in AttackDomain:
+            scores = self.domain_scores.get(domain, [])
+            if scores:
+                # Use average of recent scores (last 10)
+                recent_scores = scores[-10:]
+                domain_success_rates[domain] = sum(recent_scores) / len(recent_scores)
+            else:
+                domain_success_rates[domain] = 0.0
+        return domain_success_rates
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get generation statistics."""
@@ -419,10 +505,16 @@ class Sniper:
         # Get selection engine statistics
         selection_stats = self.selection_engine.get_statistics()
 
+        # Compute domain success rates
+        domain_success_rates = self._compute_domain_success_rates()
+        domain_success_dict = {domain.value: rate for domain, rate in domain_success_rates.items()}
+
         return {
             'total_generated': self.generation_count,
             'evolution_pool_size': len(self.evolution_pool),
             'domain_distribution': domain_counts,
+            'domain_success_rates': domain_success_dict,
+            'domain_selection_temperature': self.domain_selection_temperature,
             'creativity_temperature': self.creativity_temperature,
             'selection_strategy': self.selection_strategy.value,
             'selection_stats': selection_stats

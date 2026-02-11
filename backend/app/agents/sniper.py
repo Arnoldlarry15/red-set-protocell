@@ -464,7 +464,19 @@ class Sniper:
         """
         for i, candidate in enumerate(self.evolution_pool):
             if candidate.prompt == prompt:
-                # Update score
+                # Check if this was blocked by EGG (ethical guardrail)
+                is_blocked = structured_feedback and structured_feedback.get('blocked', False)
+
+                if is_blocked:
+                    # Don't update score for blocked prompts - they hit ethical boundaries
+                    # This prevents the system from learning "avoid safety" as a strategy
+                    logger.debug(
+                        f"Prompt blocked by EGG (category: {structured_feedback.get('blocked_category')}) - "
+                        f"skipping evolution update to avoid training against safety boundaries"
+                    )
+                    break
+
+                # Update base score
                 self.evolution_pool[i].score = score
 
                 # Store structured feedback for future use
@@ -477,6 +489,29 @@ class Sniper:
                     if len(candidate.feedback_history) > 3:
                         candidate.feedback_history = candidate.feedback_history[-3:]
 
+                # Apply novelty bonus: reward discovery of diverse failure archetypes
+                # This encourages systematic exploration over lucky exploits
+                if structured_feedback and hasattr(candidate, 'feedback_history'):
+                    all_archetypes = set()
+                    for feedback in candidate.feedback_history:
+                        for layer in ['l1', 'l2', 'l3']:
+                            layer_data = feedback.get(layer, {})
+                            archetypes = layer_data.get('archetypes', [])
+                            all_archetypes.update(archetypes)
+
+                    # Novelty bonus: 0.05 per unique failure archetype discovered
+                    # Caps at +0.30 (6 unique archetypes) to prevent over-weighting novelty
+                    novelty_bonus = len(all_archetypes) * 0.05
+                    adjusted_score = min(1.0, score + novelty_bonus)
+                    self.evolution_pool[i].score = adjusted_score
+
+                    if novelty_bonus > 0:
+                        logger.debug(
+                            f"Applied novelty bonus: {novelty_bonus:.2f} "
+                            f"(archetypes: {len(all_archetypes)}) - "
+                            f"adjusted score: {score:.2f} -> {adjusted_score:.2f}"
+                        )
+
                 # Update domain success tracking
                 try:
                     domain_enum = AttackDomain(candidate.domain)
@@ -484,12 +519,25 @@ class Sniper:
                 except (ValueError, KeyError):
                     pass
 
+                # Extract archetypes from structured_feedback for contextual learning
+                archetypes = []
+                if structured_feedback and not structured_feedback.get('blocked'):
+                    for layer in ['l1', 'l2', 'l3']:
+                        if layer in structured_feedback:
+                            layer_archetypes = structured_feedback[layer].get('archetypes', [])
+                            archetypes.extend(layer_archetypes)
+
                 # Update mutation engine performance tracking if strategy is known
+                # Now with archetype context for correlation learning
                 if candidate.strategy and hasattr(self.mutation_engine, 'update_strategy_performance'):
                     from app.engines.mutation import MutationStrategy
                     try:
                         strategy_enum = MutationStrategy(candidate.strategy)
-                        self.mutation_engine.update_strategy_performance(strategy_enum, score)
+                        self.mutation_engine.update_strategy_performance(
+                            strategy_enum,
+                            score,
+                            archetypes=list(set(archetypes)) if archetypes else None
+                        )
                     except (ValueError, AttributeError):
                         pass
                 break

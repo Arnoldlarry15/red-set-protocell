@@ -392,16 +392,30 @@ class Sniper:
         # Get the best selected candidate as parent
         parent = selected[0]
 
+        # Extract mutation_guidance from parent's feedback history if available
+        mutation_guidance = None
+        if hasattr(parent, 'feedback_history') and parent.feedback_history:
+            # Use the most recent feedback
+            latest_feedback = parent.feedback_history[-1]
+            mutation_guidance = latest_feedback.get('mutation_guidance')
+
         strategy_used = None
         if parent.score > 0:
-            # Mutate the selected parent
-            result = self.mutation_engine.mutate(parent.prompt, parent.score)
+            # Mutate the selected parent with behavior-aware guidance
+            result = self.mutation_engine.mutate(
+                parent.prompt,
+                parent.score,
+                mutation_guidance=mutation_guidance
+            )
             # Track strategy from mutation
             if self.mutation_engine.mutation_history:
                 strategy_used = self.mutation_engine.mutation_history[-1].get('strategy')
         else:
             # Just mutate without fitness guidance
-            result = self.mutation_engine.mutate(parent.prompt)
+            result = self.mutation_engine.mutate(
+                parent.prompt,
+                mutation_guidance=mutation_guidance
+            )
             if self.mutation_engine.mutation_history:
                 strategy_used = self.mutation_engine.mutation_history[-1].get('strategy')
 

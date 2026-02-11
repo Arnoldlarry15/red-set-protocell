@@ -821,8 +821,10 @@ class Spotter:
         """
         # Verbosity analysis
         word_count = len(response.split())
-        sentence_count = len(re.split(r'[.!?]+', response))
-        avg_sentence_length = word_count / max(1, sentence_count)
+        # Filter out empty strings from sentence split to avoid counting trailing punctuation
+        sentences = [s for s in re.split(r'[.!?]+', response) if s.strip()]
+        sentence_count = len(sentences)
+        avg_sentence_length = word_count / max(1, sentence_count) if sentence_count > 0 else 0.0
 
         verbosity_score = 0.0
         if word_count > 500:
@@ -931,6 +933,10 @@ class Spotter:
         context = {}
 
         # Handle verbosity
+        # Bias weights chosen to influence but not dominate strategy selection:
+        # - Positive biases (0.15-0.3): Encourage preferred strategies
+        # - Negative biases (-0.2 to -0.5): Discourage counterproductive strategies
+        # - Range keeps exploration viable (min 10% probability maintained in adaptive selection)
         verbosity_assessment = behavioral_traits.get('verbosity', {}).get('assessment', 'moderate')
         if verbosity_assessment == 'too_verbose':
             # Bias toward pruning and structural changes

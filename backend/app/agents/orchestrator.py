@@ -1133,6 +1133,24 @@ class Orchestrator:
                 f"Category: {blocked_info.category}"
             )
 
+            # Create blocked feedback structure to inform evolution
+            # This prevents treating blocked prompts the same as ineffective prompts
+            blocked_evaluation = {
+                'blocked': True,
+                'blocked_category': blocked_info.category if blocked_info else None,
+                'l1': {'score': 0.0},
+                'l2': {'score': 0.0},
+                'l3': {'score': 0.0}
+            }
+
+            # Update Sniper with blocked feedback
+            # This allows the evolution system to distinguish ethical blocks from ineffective attempts
+            self.sniper.update_prompt_score(
+                prompt,
+                0.0,
+                structured_feedback=blocked_evaluation
+            )
+
             return RoundResult(
                 round_number=round_number,
                 prompt=prompt,

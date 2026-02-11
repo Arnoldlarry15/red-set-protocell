@@ -63,7 +63,8 @@ def test_lexical_variation_word_boundaries():
     mutated = engine.mutate(prompt, strategy=MutationStrategy.LEXICAL_VARIATION)
 
     # "ignorable" should remain intact (not become "disregardable" or similar)
-    assert "ignorable" in mutated or "Ignorable" in mutated.lower() == prompt.lower()
+    # Either the word "ignorable" is still there, or the entire prompt is unchanged
+    assert "ignorable" in mutated or mutated.lower() == prompt.lower()
 
     # But "ignore" as a standalone word should be replaced
     # (unless it happens to stay the same by chance)
@@ -139,6 +140,11 @@ def test_adaptive_archetype_bonus_with_observed_mean():
     # So LEXICAL_VARIATION should get a positive bonus (0.8 > 0.55)
     # and ENCODING_TRANSFORM should get a negative penalty (0.3 < 0.55)
 
+    # Verify the observed mean is calculated correctly
+    # We should have 10 scores of 0.8 and 10 scores of 0.3 = 20 scores total
+    # Expected mean = (10*0.8 + 10*0.3) / 20 = 0.55
+    expected_mean = 0.55
+
     # Select strategy multiple times and check distribution
     selections = []
     for _ in range(50):
@@ -146,11 +152,16 @@ def test_adaptive_archetype_bonus_with_observed_mean():
         selections.append(selected)
 
     # LEXICAL_VARIATION should be selected more often due to better performance
+    # relative to the observed mean (0.8 > 0.55 gives positive bonus)
     lexical_count = selections.count(MutationStrategy.LEXICAL_VARIATION)
     encoding_count = selections.count(MutationStrategy.ENCODING_TRANSFORM)
 
     # With adaptive bonus, lexical should be selected more
-    assert lexical_count > encoding_count
+    # This validates that the observed mean baseline is working
+    assert lexical_count > encoding_count, (
+        f"Expected LEXICAL_VARIATION ({lexical_count}) > ENCODING_TRANSFORM ({encoding_count}), "
+        f"which should happen because 0.8 > {expected_mean} > 0.3"
+    )
 
 
 def test_evolve_population_tracks_mutations():

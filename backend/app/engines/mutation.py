@@ -380,7 +380,8 @@ class MutationEngine:
             for match in reversed(matches):
                 original_word = match.group(0)
                 # Preserve case: if original is capitalized, capitalize substitute
-                if original_word[0].isupper():
+                # Guard against empty strings (though regex should not produce them)
+                if original_word and original_word[0].isupper():
                     replacement = substitute.capitalize()
                 else:
                     replacement = substitute

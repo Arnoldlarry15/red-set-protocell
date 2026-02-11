@@ -193,7 +193,7 @@ class MutationEngine:
             strategy: Specific strategy to use, or None for random selection
             archetypes: List of failure archetypes detected (for correlation tracking)
             mutation_guidance: Optional structured guidance from Spotter
-                              (includes behavioral traits, strategy biases, recommendations)
+                              (includes behavioral traits, strategy biases, hypotheses about effective strategies)
 
         Returns:
             Mutated prompt string
@@ -338,7 +338,7 @@ class MutationEngine:
             behavior_bias = 0.0
             if mutation_guidance and 'strategy_biases' in mutation_guidance:
                 strategy_biases = mutation_guidance['strategy_biases']
-                # Apply bias if this strategy has a recommendation
+                # Apply bias if this strategy has a hypothesis/bias
                 if s in strategy_biases:
                     behavior_bias = strategy_biases[s]
 

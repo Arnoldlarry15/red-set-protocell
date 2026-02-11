@@ -187,6 +187,8 @@ class MutationEngine:
         Args:
             prompt: The base prompt to mutate
             fitness_score: Prior fitness score (0.0 to 1.0) to guide mutation
+                          NOTE: This is the parent's past score, not the child's future score.
+                          Real learning signals arrive later via update_strategy_performance.
             strategy: Specific strategy to use, or None for random selection
             archetypes: List of failure archetypes detected (for correlation tracking)
 
@@ -195,6 +197,15 @@ class MutationEngine:
         """
         # Randomly decide whether to mutate based on mutation_rate
         if random.random() > self.mutation_rate:
+            # Log no-op mutation for analysis (immune system traceability)
+            no_op_record = {
+                "original_length": len(prompt),
+                "mutated_length": len(prompt),
+                "strategy": "no-op",
+                "fitness_score": fitness_score,
+                "archetypes": archetypes if archetypes else [],
+            }
+            self.mutation_history.append(no_op_record)
             return prompt
 
         # Select strategy (adaptive or random)
@@ -296,7 +307,20 @@ class MutationEngine:
                 if archetype_scores:
                     # Boost strategies that have historically performed well with these archetypes
                     avg_archetype_score = sum(archetype_scores) / len(archetype_scores)
-                    archetype_bonus = (avg_archetype_score - 0.5) * 0.4  # Scale to ±0.2 bonus
+
+                    # Calculate observed mean across all strategies for this archetype
+                    # This makes the baseline adaptive to actual score distribution
+                    observed_means = []
+                    for strat_name in self.strategy_archetype_performance:
+                        for archetype in archetypes:
+                            if archetype in self.strategy_archetype_performance[strat_name]:
+                                perf = self.strategy_archetype_performance[strat_name][archetype]
+                                if perf:
+                                    observed_means.append(sum(perf) / len(perf))
+
+                    # Use observed mean as baseline, fall back to 0.5 if no data
+                    baseline = sum(observed_means) / len(observed_means) if observed_means else 0.5
+                    archetype_bonus = (avg_archetype_score - baseline) * 0.4  # Scale to ±0.2 bonus
 
             # Ensure minimum exploration (10% chance even for poor performers)
             final_weight = max(0.1, base_weight + novelty_bonus + archetype_bonus)
@@ -334,26 +358,47 @@ class MutationEngine:
         self.adaptive_mode = False
 
     def _lexical_variation(self, prompt: str) -> str:
-        """Apply lexical substitutions to vary vocabulary."""
+        """Apply lexical substitutions to vary vocabulary using word boundaries."""
+        import re
+
         mutated = prompt
 
-        # Apply 1-3 random substitutions
+        # Apply 1-3 random substitutions with word boundary matching
         for _ in range(random.randint(1, 3)):
             word, substitutes = random.choice(list(self.LEXICAL_SUBSTITUTIONS.items()))
-            if word in mutated.lower():
-                substitute = random.choice(substitutes)
-                # Case-sensitive replacement
-                mutated = mutated.replace(word, substitute)
-                mutated = mutated.replace(word.capitalize(), substitute.capitalize())
+            substitute = random.choice(substitutes)
+
+            # Use word boundaries to avoid replacing substrings within words
+            # e.g., "ignore" won't match within "ignorable"
+            # Match case-insensitively and preserve original case
+            pattern = r'\b' + re.escape(word) + r'\b'
+
+            # Find all matches to preserve case
+            matches = list(re.finditer(pattern, mutated, re.IGNORECASE))
+
+            # Replace from end to start to maintain positions
+            for match in reversed(matches):
+                original_word = match.group(0)
+                # Preserve case: if original is capitalized, capitalize substitute
+                # Guard against empty strings (though regex should not produce them)
+                if original_word and original_word[0].isupper():
+                    replacement = substitute.capitalize()
+                else:
+                    replacement = substitute
+                mutated = mutated[:match.start()] + replacement + mutated[match.end():]
 
         return mutated
 
     def _encoding_transform(self, prompt: str) -> str:
-        """Apply encoding transformations (base64, etc)."""
+        """
+        Apply encoding transformations (base64, JSON).
+
+        Note: Hex encoding removed to avoid testing model parsing rather than safety.
+        Hex representations can nudge models into strange decoding behavior.
+        """
         transformations = [
             lambda p: f"Encoded representation: {base64.b64encode(p.encode()).decode()}",
             lambda p: f"Process this: {json.dumps(p)}",
-            lambda p: f"Input: {' '.join([hex(ord(c)) for c in p[:50]])}...",  # Hex encoding (limited)
         ]
 
         transform = random.choice(transformations)
@@ -424,6 +469,10 @@ class MutationEngine:
         """
         Evolve a population of prompts based on fitness scores.
 
+        Note: This method generates children but doesn't evaluate them yet.
+        Strategy performance updates should happen after children are evaluated
+        and their actual fitness is known (not the parent's fitness).
+
         Args:
             base_prompts: List of base prompts
             fitness_scores: Corresponding fitness scores
@@ -443,6 +492,9 @@ class MutationEngine:
         elite_count = max(1, int(population_size * 0.3))
         new_population = [p for p, _ in scored_prompts[:elite_count]]
 
+        # Track mutations for potential learning
+        mutations_applied = []
+
         # Generate mutations for the rest
         while len(new_population) < population_size:
             # Select a parent (weighted by fitness)
@@ -450,8 +502,24 @@ class MutationEngine:
             parent = base_prompts[parent_idx]
             parent_fitness = fitness_scores[parent_idx]
 
+            # Capture strategy used for this mutation
+            # Store the mutation record index before mutation
+            history_len_before = len(self.mutation_history)
+
             # Mutate using parent's actual fitness score
             child = self.mutate(parent, fitness_score=parent_fitness)
+
+            # Track which strategy was used (if any mutation happened)
+            if len(self.mutation_history) > history_len_before:
+                last_mutation = self.mutation_history[-1]
+                if last_mutation["strategy"] != "no-op":
+                    # Record that this strategy was used in population evolution
+                    # We'll update performance later when child is actually evaluated
+                    mutations_applied.append({
+                        "strategy": last_mutation["strategy"],
+                        "parent_fitness": parent_fitness,
+                    })
+
             new_population.append(child)
 
         return new_population[:population_size]

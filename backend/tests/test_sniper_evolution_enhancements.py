@@ -2,9 +2,13 @@
 Tests for enhanced evolutionary feedback loop in Sniper.
 
 Tests the three key enhancements to update_prompt_score():
-1. Archetype extraction and passing to mutation engine
-2. Blocked prompt handling (skip strategy updates)
-3. Novelty bonus for diverse failure discovery
+1. Archetype extraction and passing to mutation engine - enables contextual learning
+2. Blocked prompt handling (skip strategy updates) - prevents training against safety
+3. Novelty bonus for diverse failure discovery - rewards systematic exploration
+
+These enhancements transform the system from adaptive fuzzing to a learning immune system
+that learns strategy-archetype correlations, distinguishes ethical blocks from ineffective
+attempts, and rewards breadth of exploration over depth of exploitation.
 """
 
 from app.agents.sniper import Sniper, AttackDomain

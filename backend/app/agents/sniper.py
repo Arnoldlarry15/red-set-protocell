@@ -500,7 +500,7 @@ class Sniper:
                             all_archetypes.update(archetypes)
 
                     # Novelty bonus: 0.05 per unique failure archetype discovered
-                    # Caps at +0.30 (6 unique archetypes) to prevent over-weighting novelty
+                    # Bonus is unbounded but final score is capped at 1.0 to prevent exceeding valid range
                     novelty_bonus = len(all_archetypes) * 0.05
                     adjusted_score = min(1.0, score + novelty_bonus)
                     self.evolution_pool[i].score = adjusted_score

@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Behavior-Aware Mutation System**: Spotter now analyzes behavioral traits (verbosity, complexity, directness) in target responses and provides behavior-aware mutation guidance to the mutation engine
+  - Added `_analyze_behavioral_traits()` method to Spotter to detect verbosity, complexity, and directness patterns
+  - Added `_get_behavior_aware_recommendations()` to map behavioral traits to optimal mutation strategies
+  - Extended mutation_guidance to include `behavioral_traits`, `strategy_biases`, and `behavior_context` fields
+  - Modified `MutationEngine.mutate()` to accept and use `mutation_guidance` parameter for behavior-aware strategy selection
+  - Updated `_select_strategy_adaptive()` to apply behavior biases alongside performance, novelty, and archetype biases
+  - Integrated mutation_guidance flow through Sniper's evolution loop (stored in candidate feedback_history, extracted and passed to mutate)
+  - Added 16 comprehensive tests for behavioral trait analysis, recommendations, and end-to-end behavior-aware evolution
+  - Example: If Spotter detects "too verbose" response, it biases toward `structural_recombination` (+0.3) and away from `context_injection` (-0.2)
+
+### Changed
+- **Evolution Philosophy**: Moved from statistical adaptation (score-based only) to behavior-aware adaptation (score + behavioral traits)
+- **Mutation Strategy Selection**: Now considers four factors: performance history, novelty bonus, archetype correlations, and behavioral traits
+
+### Technical Details
+- Behavioral trait analysis uses pattern matching and statistical measures (word count, sentence complexity, hedging detection)
+- Strategy biases range from -0.5 to +0.8, applied additively to strategy weights in adaptive selection
+- Backward compatible: mutation_guidance is optional, existing code continues to work unchanged
+- All existing tests pass (97 tests in mutation/spotter modules)
+
 ## [1.0.0] - 2026-01-22
 
 ### Added

@@ -164,7 +164,7 @@ def test_adaptive_selection_with_decay():
     """Test that adaptive selection applies decay to declining strategies."""
     import random
     random.seed(42)  # Set seed for reproducibility
-    
+
     engine = MutationEngine(mutation_rate=1.0)
     engine.enable_adaptive_mode()
 

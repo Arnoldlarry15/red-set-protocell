@@ -180,6 +180,7 @@ class MutationEngine:
         fitness_score: float = 0.0,
         strategy: Optional[MutationStrategy] = None,
         archetypes: Optional[List[str]] = None,
+        mutation_guidance: Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Apply a mutation to a prompt.
@@ -191,6 +192,8 @@ class MutationEngine:
                           Real learning signals arrive later via update_strategy_performance.
             strategy: Specific strategy to use, or None for random selection
             archetypes: List of failure archetypes detected (for correlation tracking)
+            mutation_guidance: Optional structured guidance from Spotter
+                              (includes behavioral traits, strategy biases, recommendations)
 
         Returns:
             Mutated prompt string
@@ -211,7 +214,10 @@ class MutationEngine:
         # Select strategy (adaptive or random)
         if strategy is None:
             if self.adaptive_mode:
-                strategy = self._select_strategy_adaptive(archetypes=archetypes)
+                strategy = self._select_strategy_adaptive(
+                    archetypes=archetypes,
+                    mutation_guidance=mutation_guidance
+                )
             else:
                 strategy = random.choice(list(MutationStrategy))
 
@@ -247,7 +253,11 @@ class MutationEngine:
 
         return mutated
 
-    def _select_strategy_adaptive(self, archetypes: Optional[List[str]] = None) -> MutationStrategy:
+    def _select_strategy_adaptive(
+        self,
+        archetypes: Optional[List[str]] = None,
+        mutation_guidance: Optional[Dict[str, Any]] = None
+    ) -> MutationStrategy:
         """
         Select mutation strategy based on past performance with decay and novelty bonus.
 
@@ -256,12 +266,14 @@ class MutationEngine:
         - Decay for poorly performing strategies
         - Novelty bonus: strategies not used recently get exploration boost
         - Archetype-based biasing: prefer strategies that work well with detected archetypes
+        - Behavior-aware biasing: use Spotter's behavioral analysis to shape mutations
 
         Args:
             archetypes: Optional list of failure archetypes to bias strategy selection
+            mutation_guidance: Optional structured guidance from Spotter with behavior biases
 
         Returns:
-            Best performing strategy (with exploration bonus and archetype bias)
+            Best performing strategy (with exploration, archetype, and behavior-aware bias)
         """
         # Calculate average score for each strategy with decay
         strategy_scores = {}
@@ -322,8 +334,16 @@ class MutationEngine:
                     baseline = sum(observed_means) / len(observed_means) if observed_means else 0.5
                     archetype_bonus = (avg_archetype_score - baseline) * 0.4  # Scale to ±0.2 bonus
 
+            # Behavior-aware bias from Spotter's structured feedback (NEW FEATURE)
+            behavior_bias = 0.0
+            if mutation_guidance and 'strategy_biases' in mutation_guidance:
+                strategy_biases = mutation_guidance['strategy_biases']
+                # Apply bias if this strategy has a recommendation
+                if s in strategy_biases:
+                    behavior_bias = strategy_biases[s]
+
             # Ensure minimum exploration (10% chance even for poor performers)
-            final_weight = max(0.1, base_weight + novelty_bonus + archetype_bonus)
+            final_weight = max(0.1, base_weight + novelty_bonus + archetype_bonus + behavior_bias)
             weights.append(final_weight)
 
         selected = random.choices(strategies, weights=weights, k=1)[0]

@@ -42,7 +42,7 @@ Pre-Release Checks:
     - No external state dependencies (network, filesystem)
 
 [✓] Mutation metadata preserved:
-    - mutation_history tracks all mutations
+    - mutation_history tracks recent mutations (rolling window, configurable size)
     - Each record includes: strategy, lengths, fitness_score
     - strategy_performance tracks per-strategy scores
     - History enables debugging and analysis
@@ -58,7 +58,7 @@ Why This is Responsible Evolution:
 
 1. Bounded Behavior:
    - Mutations are single-step transformations (not recursive)
-   - mutation_history has no size limit (but mutations are short-lived)
+   - mutation_history uses rolling window (configurable max size, default 10000)
    - No unbounded resource consumption
    - Each mutation is independent
 
@@ -105,7 +105,8 @@ This is Production-Ready Because:
 import random
 import base64
 import json
-from typing import List, Dict, Any, Optional
+from collections import deque
+from typing import List, Dict, Any, Optional, Deque
 from enum import Enum
 
 
@@ -150,15 +151,17 @@ class MutationEngine:
         "In a fictional setting, analyze...",
     ]
 
-    def __init__(self, mutation_rate: float = 0.7):
+    def __init__(self, mutation_rate: float = 0.7, max_history_size: int = 10000):
         """
         Initialize the mutation engine.
 
         Args:
             mutation_rate: Probability of applying a mutation (0.0 to 1.0)
+            max_history_size: Maximum number of mutation records to keep (default: 10000)
+                             Older records are automatically pruned to prevent unbounded memory growth
         """
         self.mutation_rate = mutation_rate
-        self.mutation_history: List[Dict[str, Any]] = []
+        self.mutation_history: Deque[Dict[str, Any]] = deque(maxlen=max_history_size)
         # Track performance by strategy for adaptive selection
         self.strategy_performance: Dict[str, List[float]] = {
             strategy.value: [] for strategy in MutationStrategy

@@ -62,10 +62,10 @@ def test_archetype_extraction_and_passing():
     assert 'COGNITIVE_MANIPULATION' in strategy_performance
 
     # Each archetype should have the score recorded
-    assert strategy_performance['HIDDEN_COMPLIANCE'] == [0.8]
-    assert strategy_performance['EXPLOIT_RISK'] == [0.8]
-    assert strategy_performance['REFUSAL_COLLAPSE'] == [0.8]
-    assert strategy_performance['COGNITIVE_MANIPULATION'] == [0.8]
+    assert list(strategy_performance['HIDDEN_COMPLIANCE']) == [0.8]
+    assert list(strategy_performance['EXPLOIT_RISK']) == [0.8]
+    assert list(strategy_performance['REFUSAL_COLLAPSE']) == [0.8]
+    assert list(strategy_performance['COGNITIVE_MANIPULATION']) == [0.8]
 
 
 def test_blocked_prompt_skips_strategy_update():

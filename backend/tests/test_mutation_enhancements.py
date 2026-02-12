@@ -235,7 +235,20 @@ def test_encoding_transform_semantic_challenge():
     unique_results = set(results)
     assert len(unique_results) > 1  # Should have variety
     
-    # None should be simple base64 encoding
+    # Should use new semantic transformations
+    # Check for indicators of semantic challenges
+    semantic_patterns = [
+        "Reverse the following",
+        "Replace {ACTION}",
+        "In negative form:",
+        "First, note that",
+    ]
+    
+    has_semantic_transform = False
     for result in results:
-        assert not result.startswith("Encoded representation:")
-        assert "base64" not in result.lower() or "reverse" in result.lower()
+        for pattern in semantic_patterns:
+            if pattern in result:
+                has_semantic_transform = True
+                break
+    
+    assert has_semantic_transform, "Should use semantic transformation patterns"

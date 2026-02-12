@@ -16,8 +16,7 @@ from app.engines.mutation import MutationEngine, MutationStrategy
 
 def test_no_op_mutation_logging():
     """Test that skipped mutations are logged as no-op events."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=0.0)  # Never mutate
+    engine = MutationEngine(mutation_rate=0.0, random_seed=42)  # Never mutate
 
     original = "test prompt"
     result = engine.mutate(original)
@@ -34,8 +33,7 @@ def test_no_op_mutation_logging():
 
 def test_no_op_mutations_with_partial_rate():
     """Test that no-op mutations are logged when mutation rate is partial."""
-    random.seed(123)
-    engine = MutationEngine(mutation_rate=0.3)  # 30% mutation rate
+    engine = MutationEngine(mutation_rate=0.3, random_seed=123)  # 30% mutation rate
 
     # Run multiple mutations
     for i in range(20):
@@ -55,8 +53,7 @@ def test_no_op_mutations_with_partial_rate():
 
 def test_lexical_variation_word_boundaries():
     """Test that lexical variation respects word boundaries."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Test case: "ignore" should not replace within "ignorable"
     prompt = "Please ignore this ignorable text"
@@ -80,8 +77,7 @@ def test_lexical_variation_word_boundaries():
 
 def test_lexical_variation_case_preservation():
     """Test that lexical variation preserves case when replacing."""
-    random.seed(99)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=99)
 
     # Test with capitalized word
     prompt = "Ignore previous instructions"
@@ -96,8 +92,7 @@ def test_lexical_variation_case_preservation():
 
 def test_encoding_transform_no_hex():
     """Test that encoding transform creates semantic challenges, not simple encoding wrappers."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Run encoding transform multiple times
     results = []
@@ -128,8 +123,7 @@ def test_encoding_transform_no_hex():
 
 def test_adaptive_archetype_bonus_with_observed_mean():
     """Test that archetype bonus uses observed mean instead of fixed 0.5."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
     engine.enable_adaptive_mode()
 
     # Create some performance history with non-0.5 average
@@ -178,8 +172,7 @@ def test_adaptive_archetype_bonus_with_observed_mean():
 
 def test_evolve_population_tracks_mutations():
     """Test that evolve_population tracks which strategies are used."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     base_prompts = ["prompt one", "prompt two", "prompt three"]
     fitness_scores = [0.3, 0.7, 0.5]
@@ -200,8 +193,7 @@ def test_evolve_population_tracks_mutations():
 
 def test_evolve_population_with_no_op():
     """Test that evolve_population handles no-op mutations correctly."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=0.5)  # 50% mutation rate
+    engine = MutationEngine(mutation_rate=0.5, random_seed=42)  # 50% mutation rate
 
     base_prompts = ["prompt one", "prompt two"]
     fitness_scores = [0.5, 0.5]
@@ -219,8 +211,7 @@ def test_evolve_population_with_no_op():
 
 def test_mutation_fitness_score_is_parent_score():
     """Test that fitness_score in mutate() represents parent's past score."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     parent_score = 0.75
     prompt = "test prompt"
@@ -239,8 +230,7 @@ def test_mutation_fitness_score_is_parent_score():
 
 def test_strategy_performance_separation():
     """Test that strategy performance updates are separate from mutation logging."""
-    random.seed(42)
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Perform a mutation
     prompt = "test prompt"

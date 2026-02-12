@@ -7,8 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Behavior-Aware Mutation System**: Spotter now analyzes behavioral traits (verbosity, complexity, directness) in target responses and provides behavior-aware mutation guidance to the mutation engine
+### Added (v1.1.0)
+- **Semantic Intensity Control**: Encoding transform now supports configurable drift control
+  - Three intensity levels: low (conservative), medium (balanced), high (exploratory)
+  - Low intensity uses simple, predictable transforms with minimal semantic drift
+  - High intensity uses philosophical/metaphorical transforms for maximum exploration
+  - UI configuration via dropdown in AttackConfig component
+  - Backend API accepts `semantic_intensity` parameter in SessionConfig and ExperimentConfig
+  - Default: medium (balanced semantic challenges)
+  - Tests: 4 comprehensive tests covering all intensity levels
+
+- **Early-Stage Adaptive Selector**: Handles sparse data gracefully with automatic fallback
+  - Detects early-stage scenarios (< 20 samples) and uses simplified selection logic
+  - Simplified uniform selection with novelty bonus during early stage
+  - Automatic transition to sophisticated multi-dimensional weighting with sufficient data
+  - Prevents "rocket engine on bicycle" state from causing issues
+  - Tests: 3 tests for early/mature stage behavior
+
+- **Multi-Dimensional Fitness**: Richer feedback signals beyond scalar scores
+  - New `MultidimensionalFitness` class with three dimensions: effectiveness, consistency, novelty
+  - Weighted aggregation with customizable weights (default: 60% effectiveness, 20% consistency, 20% novelty)
+  - Full backward compatibility with scalar fitness scores
+  - Prepares infrastructure for richer feedback from Spotter and EGG
+  - Tests: 9 comprehensive tests including bounds checking, aggregation, and mixed types
+
+- **Production Audit Documentation**: Comprehensive production readiness assessment (PRODUCTION_AUDIT.md)
+- **Validation Scripts**: Automated production validation (validate_production.py) and cleanup audit (audit_cleanup.py)
+
+- **Behavior-Aware Mutation System** (from previous release): Spotter now analyzes behavioral traits (verbosity, complexity, directness) in target responses and provides behavior-aware mutation guidance to the mutation engine
   - Added `_analyze_behavioral_traits()` method to Spotter to detect verbosity, complexity, and directness patterns
   - Added `_get_behavior_aware_recommendations()` to map behavioral traits to optimal mutation strategies
   - Extended mutation_guidance to include `behavioral_traits`, `strategy_biases`, and `behavior_context` fields
@@ -19,6 +45,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Example: If Spotter detects "too verbose" response, it biases toward `structural_recombination` (+0.3) and away from `context_injection` (-0.2)
 
 ### Changed
+- **Mutation Engine Architecture**: Addressed design tensions with code improvements
+  - Encoding transforms now configurable to control semantic drift
+  - Adaptive selector handles early-stage data sparsity gracefully
+  - Fitness signals enhanced with multi-dimensional scoring infrastructure
+  - All improvements include UI configuration, tests, and backward compatibility
+  
 - **Evolution Philosophy**: Moved from statistical adaptation (score-based only) to behavior-aware adaptation (score + behavioral traits)
 - **Mutation Strategy Selection**: Now considers four factors: performance history, novelty bonus, archetype correlations, and behavioral traits
 

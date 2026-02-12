@@ -181,7 +181,7 @@ def test_evolve_population_tracks_mutations():
     assert len(engine.mutation_history) > history_len_before
 
     # Check that mutations were tracked
-    new_mutations = engine.mutation_history[history_len_before:]
+    new_mutations = list(engine.mutation_history)[history_len_before:]
     # Should have mutations (not all will be mutations, some might be no-ops)
     assert len(new_mutations) > 0
 

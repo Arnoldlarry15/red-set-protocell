@@ -66,6 +66,7 @@ export interface SessionConfig {
   backend: 'openai' | 'anthropic';
   model: string;
   mutationRate: number;
+  semanticIntensity: 'low' | 'medium' | 'high'; // NEW: Control encoding transform drift
   selectedDomains: string[];
   selectedStrategies: string[];
   mutationWeights?: Record<string, number>;
@@ -101,6 +102,7 @@ export interface ExperimentConfig {
   model?: string;
   max_rounds: number;
   mutation_rate: number;
+  semantic_intensity?: 'low' | 'medium' | 'high'; // NEW: Control encoding transform drift
   selected_domains: string[];
   selected_strategies: string[];
   mutation_weights?: Record<string, number>;

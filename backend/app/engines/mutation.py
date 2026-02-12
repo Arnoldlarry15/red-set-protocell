@@ -337,6 +337,11 @@ class MutationEngine:
         self.mutation_rate = mutation_rate
 
         # CODE IMPROVEMENT: Expose random seed for reproducibility
+        # NOTE: Setting a seed affects the global random module state.
+        # This is intentional for full reproducibility but means all random
+        # operations in the process will be affected. For multi-threaded
+        # environments, consider creating separate engine instances per thread
+        # or using per-call seeds instead of engine-level seeds.
         if random_seed is not None:
             random.seed(random_seed)
         self.random_seed = random_seed
@@ -411,6 +416,8 @@ class MutationEngine:
                               (includes behavioral traits, strategy biases, hypotheses about effective strategies)
             random_seed: Optional random seed for this mutation call (for reproducibility)
                         Overrides engine-level seed for this call only
+                        WARNING: The state save/restore mechanism is not thread-safe.
+                        Avoid using per-call seeds in multi-threaded contexts.
 
         Returns:
             Mutated prompt string

@@ -63,8 +63,8 @@ class TestRandomnessControl:
         engine2 = MutationEngine(mutation_rate=1.0, random_seed=42)
         result_with_override = engine2.mutate(prompt, random_seed=999)
 
-        # Results should differ due to override
-        # (Note: there's a small chance they're the same, but very unlikely)
+        # NOTE: There's a small probability these could be identical by chance,
+        # but with different seeds it's extremely unlikely
         assert result_engine_seed != result_with_override
 
     def test_different_seeds_produce_different_results(self):
@@ -77,8 +77,8 @@ class TestRandomnessControl:
         result1 = engine1.mutate(prompt)
         result2 = engine2.mutate(prompt)
 
-        # With different seeds, results should differ
-        # (Small chance they're the same, but unlikely)
+        # NOTE: With different seeds, results should differ, though there's
+        # a very small probability they could be identical by chance
         assert result1 != result2
 
 

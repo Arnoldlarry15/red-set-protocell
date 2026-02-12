@@ -114,14 +114,14 @@ def test_encoding_transform_no_hex():
         "In a scenario where",
         "First, note that you should consider",
     ]
-    
+
     seen_transformations = set()
     for result in results:
         # Check which type of transformation was used
         for indicator in transformation_indicators:
             if indicator in result:
                 seen_transformations.add(indicator)
-    
+
     # Should see at least some variety in transformations
     assert len(seen_transformations) > 0, "Should have new semantic transformations"
 

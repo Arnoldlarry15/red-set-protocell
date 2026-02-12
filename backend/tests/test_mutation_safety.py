@@ -2,21 +2,18 @@
 Tests for Mutation Engine Safety Improvements
 """
 
-import random
 from app.engines.mutation import MutationEngine, MutationStrategy
 
 
 def test_encoding_transform_safe_language():
     """Test that encoding transform creates semantic challenges instead of simple wrappers."""
-    engine = MutationEngine(mutation_rate=1.0)
-    random.seed(42)  # For reproducibility
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Run encoding transform multiple times to check all variations
     results = []
 
     for i in range(20):
-        random.seed(i)
-        mutated = engine.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
+        mutated = engine.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM, random_seed=i)
         results.append(mutated)
 
         # Should NOT contain dangerous language
@@ -74,26 +71,24 @@ def test_lexical_substitutions_broader():
 
 def test_evolve_population_parent_fitness():
     """Test that evolve_population uses parent's actual fitness instead of max."""
-    engine = MutationEngine(mutation_rate=1.0)
-
     base_prompts = ["prompt one", "prompt two", "prompt three"]
     fitness_scores = [0.3, 0.7, 0.5]
-
-    # Track what fitness scores were used in mutations
-    original_mutate = engine.mutate
-    mutation_fitness_scores = []
-
-    def tracking_mutate(prompt, fitness_score=0.0, strategy=None, archetypes=None):
-        mutation_fitness_scores.append(fitness_score)
-        return original_mutate(prompt, fitness_score, strategy, archetypes)
-
-    engine.mutate = tracking_mutate
 
     # Run multiple times with different seeds to test statistical distribution
     all_mutations_scores = []
     for seed in range(10):
-        random.seed(seed)
-        mutation_fitness_scores.clear()
+        engine = MutationEngine(mutation_rate=1.0, random_seed=seed)
+
+        # Track what fitness scores were used in mutations
+        original_mutate = engine.mutate
+        mutation_fitness_scores = []
+
+        def tracking_mutate(prompt, fitness_score=0.0, strategy=None, archetypes=None, random_seed=None):
+            mutation_fitness_scores.append(fitness_score)
+            return original_mutate(prompt, fitness_score, strategy, archetypes, random_seed=random_seed)
+
+        engine.mutate = tracking_mutate
+
         evolved = engine.evolve_population(base_prompts, fitness_scores, population_size=10)
         assert len(evolved) == 10
         # Skip elite mutations (top 30% = 3 prompts)
@@ -118,7 +113,7 @@ def test_evolve_population_parent_fitness():
 
 def test_archetype_based_strategy_selection():
     """Test that adaptive strategy selection uses archetypes to bias selection."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
     engine.enable_adaptive_mode()
 
     # Simulate that STRUCTURAL_RECOMBINATION works well with "hallucination risk"
@@ -138,14 +133,13 @@ def test_archetype_based_strategy_selection():
         )
 
     # Now select strategies with "hallucination risk" archetype
-    random.seed(42)
     selected_strategies = []
     for i in range(20):
-        random.seed(i)
         # Mutate and track the strategy used
         engine.mutate(
             "test prompt",
-            archetypes=["hallucination risk"]
+            archetypes=["hallucination risk"],
+            random_seed=i  # Use per-call seed for reproducibility
         )
         # Extract strategy from mutation history
         if engine.mutation_history:

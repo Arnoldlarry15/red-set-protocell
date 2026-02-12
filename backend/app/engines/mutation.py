@@ -711,14 +711,14 @@ class MutationEngine:
             total_uses = len(self.strategy_performance[strategy.value]) + self.strategy_egg_blocks[strategy.value]
             if total_uses > 0:
                 self.strategy_egg_block_rate[strategy.value] = self.strategy_egg_blocks[strategy.value] / total_uses
-            
+
             # Log EGG block for observability
             logging.info(
                 f"EGG blocked mutation from strategy {strategy.value} "
                 f"(category: {egg_category}, total blocks: {self.strategy_egg_blocks[strategy.value]}, "
                 f"block rate: {self.strategy_egg_block_rate[strategy.value]:.2%})"
             )
-            
+
             # Don't append to performance history for blocked mutations
             # (they never reach the target, so no real fitness signal)
             return
@@ -1241,7 +1241,7 @@ class MutationEngine:
             successes = len(self.strategy_performance[strategy_key])
             blocks = self.strategy_egg_blocks.get(strategy_key, 0)
             total_attempts = successes + blocks
-            
+
             if total_attempts > 0:
                 strategy_success_rates[strategy_key] = successes / total_attempts
             else:

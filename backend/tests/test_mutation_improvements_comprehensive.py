@@ -460,7 +460,7 @@ class TestThreadSafety:
         engine = MutationEngine(random_seed=42)
         # Should have _random attribute
         assert hasattr(engine, '_random')
-        
+
         # Should be a Random instance, not using global random
         import random
         assert isinstance(engine._random, random.Random)
@@ -468,24 +468,24 @@ class TestThreadSafety:
     def test_multiple_engines_dont_interfere(self):
         """Test that multiple engines with different seeds don't interfere."""
         prompt = "test prompt for isolation"
-        
+
         # Create two engines with different seeds
         engine1 = MutationEngine(mutation_rate=1.0, random_seed=100)
         engine2 = MutationEngine(mutation_rate=1.0, random_seed=200)
         # Each should produce consistent results independently
         result1a = engine1.mutate(prompt)
         result2a = engine2.mutate(prompt)
-        
+
         # Reset and verify consistency
         engine1_reset = MutationEngine(mutation_rate=1.0, random_seed=100)
         engine2_reset = MutationEngine(mutation_rate=1.0, random_seed=200)
         result1b = engine1_reset.mutate(prompt)
         result2b = engine2_reset.mutate(prompt)
-        
+
         # Each engine should produce same results with same seed
         assert result1a == result1b
         assert result2a == result2b
-        
+
         # Different seeds should produce different results
         assert result1a != result2a
 
@@ -493,14 +493,14 @@ class TestThreadSafety:
         """Test that per-call seed uses isolated instance state."""
         engine = MutationEngine(mutation_rate=1.0, random_seed=42)
         prompt = "test for per-call seed thread safety"
-        
+
         # Per-call seed should override engine seed
         result1 = engine.mutate(prompt, random_seed=999)
-        
+
         # Create new engine with the per-call seed
         engine_with_percall_seed = MutationEngine(mutation_rate=1.0, random_seed=999)
         result2 = engine_with_percall_seed.mutate(prompt)
-        
+
         # Should produce same result
         assert result1 == result2
 
@@ -514,7 +514,7 @@ class TestEGGFeedbackIntegration:
         # Should have EGG tracking attributes
         assert hasattr(engine, 'strategy_egg_blocks')
         assert hasattr(engine, 'strategy_egg_block_rate')
-        
+
         # All strategies should be initialized to 0
         for strategy in MutationStrategy:
             assert engine.strategy_egg_blocks[strategy.value] == 0
@@ -524,19 +524,19 @@ class TestEGGFeedbackIntegration:
         """Test that update_strategy_performance tracks EGG blocks."""
         engine = MutationEngine()
         strategy = MutationStrategy.LEXICAL_VARIATION
-        
+
         # Update with normal score (not blocked)
         engine.update_strategy_performance(strategy, 0.8)
         assert len(engine.strategy_performance[strategy.value]) == 1
         assert engine.strategy_egg_blocks[strategy.value] == 0
-        
+
         # Update with EGG blocked (should not add to performance history)
         engine.update_strategy_performance(
-            strategy, 0.0, 
-            egg_blocked=True, 
+            strategy, 0.0,
+            egg_blocked=True,
             egg_category="test_category"
         )
-        
+
         # Performance history should not increase (blocked mutations don't get scored)
         assert len(engine.strategy_performance[strategy.value]) == 1
         # Block count should increase
@@ -548,11 +548,11 @@ class TestEGGFeedbackIntegration:
         """Test that EGG block rate is calculated correctly."""
         engine = MutationEngine()
         strategy = MutationStrategy.ENCODING_TRANSFORM
-        
+
         # Add some successful evaluations
         for _ in range(7):
             engine.update_strategy_performance(strategy, 0.7)
-        
+
         # Add some blocked mutations
         for _ in range(3):
             engine.update_strategy_performance(
@@ -560,7 +560,7 @@ class TestEGGFeedbackIntegration:
                 egg_blocked=True,
                 egg_category="test"
             )
-        
+
         # Block rate should be 3 / (7 + 3) = 0.3
         assert engine.strategy_egg_block_rate[strategy.value] == 0.3
         assert engine.strategy_egg_blocks[strategy.value] == 3
@@ -569,16 +569,16 @@ class TestEGGFeedbackIntegration:
         """Test that adaptive selector applies negative bias for high-blocking strategies."""
         engine = MutationEngine(random_seed=42)
         engine.enable_adaptive_mode()  # Enable adaptive mode after creation
-        
+
         # Create scenario with one high-blocking strategy
         safe_strategy = MutationStrategy.LEXICAL_VARIATION
         risky_strategy = MutationStrategy.OBFUSCATION
-        
+
         # Give both strategies some performance data (20+ samples for mature mode)
         for _ in range(25):
             engine.update_strategy_performance(safe_strategy, 0.7)
             engine.update_strategy_performance(risky_strategy, 0.7)
-        
+
         # Add high block rate to risky strategy (50% blocked)
         for _ in range(25):
             engine.update_strategy_performance(
@@ -586,20 +586,20 @@ class TestEGGFeedbackIntegration:
                 egg_blocked=True,
                 egg_category="test"
             )
-        
+
         # Block rate for risky strategy should be 25 / (25 + 25) = 0.5
         assert engine.strategy_egg_block_rate[risky_strategy.value] == 0.5
-        
+
         # Select strategies many times and verify safe strategy is preferred
         selections = []
         for _ in range(100):
             selected = engine._select_strategy_adaptive()
             selections.append(selected.value)
-        
+
         # Safe strategy should be selected more often due to EGG penalty on risky
         safe_count = selections.count(safe_strategy.value)
         risky_count = selections.count(risky_strategy.value)
-        
+
         # Safe should be selected more (with some tolerance for randomness)
         assert safe_count > risky_count
 
@@ -611,7 +611,7 @@ class TestObservabilityMetrics:
         """Test that get_observability_metrics returns expected structure."""
         engine = MutationEngine()
         metrics = engine.get_observability_metrics()
-        
+
         # Should have all expected keys
         assert 'timestamp' in metrics
         assert 'mutation_counts' in metrics
@@ -628,10 +628,10 @@ class TestObservabilityMetrics:
         engine.mutate("test 1", strategy=MutationStrategy.LEXICAL_VARIATION)
         engine.mutate("test 2", strategy=MutationStrategy.LEXICAL_VARIATION)
         engine.mutate("test 3", strategy=MutationStrategy.ENCODING_TRANSFORM)
-        
+
         metrics = engine.get_observability_metrics()
         mutation_counts = metrics['mutation_counts']
-        
+
         # Should have counts for each strategy used
         assert mutation_counts.get('lexical_variation', 0) == 2
         assert mutation_counts.get('encoding_transform', 0) == 1
@@ -640,21 +640,21 @@ class TestObservabilityMetrics:
         """Test that success rates are calculated correctly."""
         engine = MutationEngine()
         strategy = MutationStrategy.CONTEXT_INJECTION
-        
+
         # Add 8 successful evaluations
         for _ in range(8):
             engine.update_strategy_performance(strategy, 0.6)
-        
+
         # Add 2 blocked mutations
         for _ in range(2):
             engine.update_strategy_performance(
                 strategy, 0.0,
                 egg_blocked=True
             )
-        
+
         metrics = engine.get_observability_metrics()
         success_rate = metrics['strategy_success_rates'][strategy.value]
-        
+
         # Success rate should be 8 / (8 + 2) = 0.8
         assert success_rate == 0.8
 
@@ -670,13 +670,13 @@ class TestObservabilityMetrics:
             MutationStrategy.COMPETING_GOALS, 0.0,
             egg_blocked=True, egg_category="csam"
         )
-        
+
         metrics = engine.get_observability_metrics()
         egg_metrics = metrics['egg_block_metrics']
-        
+
         # Should report total blocks
         assert egg_metrics['total_blocks'] == 2
-        
+
         # Should report blocks by strategy
         assert egg_metrics['blocks_by_strategy']['assumption_flip'] == 1
         assert egg_metrics['blocks_by_strategy']['competing_goals'] == 1
@@ -686,27 +686,27 @@ class TestObservabilityMetrics:
         engine = MutationEngine(
             min_samples_for_adaptive=20
         )
-        
+
         # Initial state: not enough samples, adaptive mode disabled
         metrics = engine.get_observability_metrics()
         status = metrics['adaptive_mode_status']
-        
+
         assert status['enabled'] is False
         assert status['total_samples'] == 0
         assert status['min_samples_threshold'] == 20
         assert status['ready_for_sophisticated_selection'] is False
-        
+
         # Add samples
         for _ in range(25):
             engine.update_strategy_performance(
                 MutationStrategy.LEXICAL_VARIATION, 0.7
             )
-        
+
         engine.enable_adaptive_mode()
-        
+
         metrics = engine.get_observability_metrics()
         status = metrics['adaptive_mode_status']
-        
+
         assert status['enabled'] is True
         assert status['total_samples'] == 25
         assert status['ready_for_sophisticated_selection'] is True
@@ -720,20 +720,20 @@ class TestObservabilityMetrics:
             engine.update_strategy_performance(
                 MutationStrategy.LEXICAL_VARIATION, 0.9
             )
-        
+
         # Poor performer
         for _ in range(10):
             engine.update_strategy_performance(
                 MutationStrategy.OBFUSCATION, 0.2
             )
-        
+
         metrics = engine.get_observability_metrics()
         summary = metrics['performance_summary']
-        
+
         # Should identify best and worst
         assert summary['best_performer']['strategy'] == 'lexical_variation'
         assert summary['best_performer']['avg_score'] == 0.9
-        
+
         assert summary['worst_performer']['strategy'] == 'obfuscation'
         assert summary['worst_performer']['avg_score'] == 0.2
 
@@ -748,7 +748,7 @@ class TestAdaptiveSelectorStability:
             random_seed=42
         )
         engine.enable_adaptive_mode()
-        
+
         # With no samples, should use early-stage logic
         # We can verify this by checking the strategy is selected
         # (early stage uses uniform + novelty, mature uses complex weighting)
@@ -762,20 +762,20 @@ class TestAdaptiveSelectorStability:
             random_seed=42
         )
         engine.enable_adaptive_mode()
-        
+
         # Add just a few samples (less than threshold)
         for _ in range(5):
             engine.update_strategy_performance(
                 MutationStrategy.LEXICAL_VARIATION, 0.9
             )
-        
+
         # Should still use early-stage logic
         # Select many times to verify uniform-ish distribution
         selections = []
         for _ in range(100):
             strategy = engine._select_strategy_adaptive()
             selections.append(strategy.value)
-        
+
         # Should have reasonable diversity (not dominated by one strategy)
         unique_strategies = len(set(selections))
         assert unique_strategies >= 3  # At least 3 different strategies selected
@@ -787,7 +787,7 @@ class TestAdaptiveSelectorStability:
             random_seed=42
         )
         engine.enable_adaptive_mode()
-        
+
         # Add samples above threshold
         for _ in range(25):
             engine.update_strategy_performance(
@@ -796,23 +796,23 @@ class TestAdaptiveSelectorStability:
             engine.update_strategy_performance(
                 MutationStrategy.OBFUSCATION, 0.1
             )
-        
+
         # Should now use mature logic (performance-based)
         selections = []
         for _ in range(100):
             strategy = engine._select_strategy_adaptive()
             selections.append(strategy.value)
-        
+
         # High-performing strategy should be selected more often
         lexical_count = selections.count('lexical_variation')
         obfuscation_count = selections.count('obfuscation')
-        
+
         # LEXICAL_VARIATION (0.95 avg) should be selected more than OBFUSCATION (0.1 avg)
         assert lexical_count > obfuscation_count
 
     def test_adaptive_selector_handles_no_data(self):
         """Test that adaptive selector works with zero performance data."""
-        engine = MutationEngine( random_seed=42)
+        engine = MutationEngine(random_seed=42)
         # Should work even with no data (early stage)
         strategy = engine._select_strategy_adaptive()
         assert isinstance(strategy, MutationStrategy)
@@ -824,12 +824,12 @@ class TestAdaptiveSelectorStability:
             random_seed=42
         )
         engine.enable_adaptive_mode()
-        
+
         # Add just 1 sample
         engine.update_strategy_performance(
             MutationStrategy.LEXICAL_VARIATION, 0.8
         )
-        
+
         # Should still work (early stage)
         strategy = engine._select_strategy_adaptive()
         assert isinstance(strategy, MutationStrategy)
@@ -842,40 +842,40 @@ class TestAdaptiveSelectorStability:
             random_seed=42
         )
         engine_low.enable_adaptive_mode()
-        
+
         # Add 6 samples to one strategy
         for _ in range(6):
             engine_low.update_strategy_performance(
                 MutationStrategy.LEXICAL_VARIATION, 0.95
             )
-        
+
         # High threshold
         engine_high = MutationEngine(
             min_samples_for_adaptive=50,
             random_seed=42
         )
         engine_high.enable_adaptive_mode()
-        
+
         # Add same 6 samples
         for _ in range(6):
             engine_high.update_strategy_performance(
                 MutationStrategy.LEXICAL_VARIATION, 0.95
             )
-        
+
         # Low threshold engine should be in mature mode
         # High threshold engine should still be in early mode
         # We can verify by checking if high-performing strategy dominates
         selections_low = []
         selections_high = []
-        
+
         for _ in range(50):
             selections_low.append(engine_low._select_strategy_adaptive().value)
             selections_high.append(engine_high._select_strategy_adaptive().value)
-        
+
         # Low threshold (mature) should favor high performer more strongly
         low_lexical_ratio = selections_low.count('lexical_variation') / len(selections_low)
         high_lexical_ratio = selections_high.count('lexical_variation') / len(selections_high)
-        
+
         # Mature mode should have higher concentration on good performer
         # (though this could be flaky due to randomness)
         assert low_lexical_ratio >= high_lexical_ratio or abs(low_lexical_ratio - high_lexical_ratio) < 0.1

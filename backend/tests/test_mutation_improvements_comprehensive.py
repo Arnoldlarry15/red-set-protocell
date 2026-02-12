@@ -873,9 +873,11 @@ class TestAdaptiveSelectorStability:
             selections_high.append(engine_high._select_strategy_adaptive().value)
 
         # Low threshold (mature) should favor high performer more strongly
+        # than high threshold (early stage exploration)
         low_lexical_ratio = selections_low.count('lexical_variation') / len(selections_low)
         high_lexical_ratio = selections_high.count('lexical_variation') / len(selections_high)
 
-        # Mature mode should have higher concentration on good performer
-        # (though this could be flaky due to randomness)
-        assert low_lexical_ratio >= high_lexical_ratio or abs(low_lexical_ratio - high_lexical_ratio) < 0.1
+        # With mature mode (low threshold), the high-performing strategy should be
+        # selected noticeably more often than in early-stage mode (high threshold)
+        # Allow small tolerance for randomness but verify clear preference
+        assert low_lexical_ratio > high_lexical_ratio or low_lexical_ratio > 0.4

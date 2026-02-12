@@ -339,7 +339,10 @@ class MutationEngine:
         # CODE IMPROVEMENT: Use isolated Random instance for thread safety
         # Each engine instance has its own Random object, preventing
         # interference between threads or other parts of the system.
-        # This is safe for multi-threaded environments.
+        # Thread Safety Note: While each engine has an isolated Random instance,
+        # the instance itself is not thread-safe for concurrent access.
+        # For multi-threaded environments, use separate MutationEngine instances
+        # per thread (i.e., one engine per thread, not shared across threads).
         self._random = random.Random(random_seed)
         self.random_seed = random_seed
 
@@ -667,7 +670,8 @@ class MutationEngine:
             egg_penalty = 0.0
             if s in self.strategy_egg_block_rate:
                 # Strategies with high block rates get penalized
-                # Block rate is in [0.0, 1.0], so penalty is in [0.0, -0.3]
+                # Block rate is in [0.0, 1.0], so penalty is in [-0.3, 0.0]
+                # (maximum penalty of -0.3 for 100% block rate, no penalty for 0% block rate)
                 egg_penalty = -0.3 * self.strategy_egg_block_rate[s]
 
             # Ensure minimum exploration (10% chance even for poor performers)

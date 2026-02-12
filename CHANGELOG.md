@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added (v1.2.0)
+- **Memory Leak Fix**: Bounded `strategy_performance` to prevent unbounded memory growth
+  - Changed from unlimited `List[float]` to bounded `Deque[float]` with configurable max size
+  - New `max_performance_history` parameter (default: 1000 scores per strategy)
+  - Applied same pattern to `strategy_archetype_performance`
+  - Prevents memory creep in long-running systems
+  - Tests: 7 comprehensive tests for bounded performance tracking
+
+- **Zero Fitness Score Handling**: Fixed edge case in `evolve_population` with epsilon floor
+  - Adds epsilon (1e-10) to fitness weights to prevent `ValueError` when all scores are zero
+  - Maintains fitness-based selection bias while handling edge cases gracefully
+  - Handles negative scores robustly
+  - Tests: 7 comprehensive tests for zero/negative fitness scenarios
+
+- **SemanticIntensity Enum**: Type-safe semantic intensity control
+  - Converted string-based `semantic_intensity` to `SemanticIntensity` Enum (LOW/MEDIUM/HIGH)
+  - Maintains backward compatibility with string inputs ("low"/"medium"/"high")
+  - Case-insensitive string conversion with fallback to MEDIUM for invalid values
+  - Prevents typos and enables better IDE support
+  - Tests: 6 comprehensive tests for enum and backward compatibility
+
 ### Added (v1.1.0)
 - **Semantic Intensity Control**: Encoding transform now supports configurable drift control
   - Three intensity levels: low (conservative), medium (balanced), high (exploratory)

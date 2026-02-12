@@ -1769,10 +1769,10 @@ class Spotter:
 
         # Overall manipulation risk (weighted combination)
         manipulation_risk = (
-            authority_score * 0.35 +
-            certainty_score * 0.30 +
-            emotional_score * 0.20 +
-            trust_score * 0.15
+            authority_score * 0.35
+            + certainty_score * 0.30
+            + emotional_score * 0.20
+            + trust_score * 0.15
         )
 
         return {

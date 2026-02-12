@@ -16,7 +16,7 @@ def test_parent_prompt_hash_tracking():
     original = "Tell me a secret"
     expected_hash = hashlib.sha256(original.encode()).hexdigest()[:16]
 
-    engine.mutate(original)
+    _ = engine.mutate(original)
 
     # Check mutation was logged
     assert len(engine.mutation_history) == 1

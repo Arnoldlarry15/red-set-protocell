@@ -10,7 +10,8 @@ Tests the new features addressing design tensions:
 from app.engines.mutation import (
     MutationEngine,
     MutationStrategy,
-    MultidimensionalFitness
+    MultidimensionalFitness,
+    SemanticIntensity
 )
 
 
@@ -18,15 +19,15 @@ def test_semantic_intensity_initialization():
     """Test mutation engine accepts semantic_intensity parameter."""
     # Default (medium)
     engine_default = MutationEngine()
-    assert engine_default.semantic_intensity == "medium"
+    assert engine_default.semantic_intensity == SemanticIntensity.MEDIUM
 
     # Low intensity
     engine_low = MutationEngine(semantic_intensity="low")
-    assert engine_low.semantic_intensity == "low"
+    assert engine_low.semantic_intensity == SemanticIntensity.LOW
 
     # High intensity
     engine_high = MutationEngine(semantic_intensity="high")
-    assert engine_high.semantic_intensity == "high"
+    assert engine_high.semantic_intensity == SemanticIntensity.HIGH
 
 
 def test_encoding_transform_low_intensity():

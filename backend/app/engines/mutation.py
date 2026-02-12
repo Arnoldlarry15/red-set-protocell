@@ -245,6 +245,19 @@ class MultidimensionalFitness:
         return cls(effectiveness=score, consistency=1.0, novelty=0.5)
 
 
+class SemanticIntensity(Enum):
+    """
+    Semantic intensity levels for encoding transforms.
+
+    CODE IMPROVEMENT: Converts string-based intensity to type-safe Enum.
+    Prevents typos and enables better IDE support while maintaining backward
+    compatibility through string values.
+    """
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
 class MutationStrategy(Enum):
     """Available mutation strategies."""
 
@@ -294,7 +307,8 @@ class MutationEngine:
         self,
         mutation_rate: float = 0.7,
         max_history_size: int = 10000,
-        semantic_intensity: str = "medium"
+        semantic_intensity: Union[str, SemanticIntensity] = "medium",
+        max_performance_history: int = 1000
     ):
         """
         Initialize the mutation engine.
@@ -304,19 +318,40 @@ class MutationEngine:
             max_history_size: Maximum number of mutation records to keep (default: 10000)
                              Older records are automatically pruned to prevent unbounded memory growth
             semantic_intensity: Control philosophical depth of encoding transforms
-                              - "low": Simple, mechanical transforms (minimal drift)
-                              - "medium": Balanced semantic challenges (default)
-                              - "high": Deep philosophical/metaphorical transforms (max exploration)
+                              - "low"/"SemanticIntensity.LOW": Simple, mechanical transforms (minimal drift)
+                              - "medium"/"SemanticIntensity.MEDIUM": Balanced semantic challenges (default)
+                              - "high"/"SemanticIntensity.HIGH": Deep philosophical/metaphorical transforms (max exploration)
+            max_performance_history: Maximum number of scores to keep per strategy (default: 1000)
+                                    Prevents unbounded memory growth in long-running systems
         """
         self.mutation_rate = mutation_rate
-        self.semantic_intensity = semantic_intensity
+
+        # Handle both string and Enum for backward compatibility
+        if isinstance(semantic_intensity, str):
+            # Convert string to Enum, default to MEDIUM if invalid
+            intensity_map = {
+                "low": SemanticIntensity.LOW,
+                "medium": SemanticIntensity.MEDIUM,
+                "high": SemanticIntensity.HIGH
+            }
+            self.semantic_intensity = intensity_map.get(
+                semantic_intensity.lower(),
+                SemanticIntensity.MEDIUM
+            )
+        else:
+            self.semantic_intensity = semantic_intensity
+
         self.mutation_history: Deque[Dict[str, Any]] = deque(maxlen=max_history_size)
+
         # Track performance by strategy for adaptive selection
-        self.strategy_performance: Dict[str, List[float]] = {
-            strategy.value: [] for strategy in MutationStrategy
+        # CODE IMPROVEMENT: Use deque with maxlen to prevent unbounded memory growth
+        # This mirrors the pattern used for mutation_history
+        self.max_performance_history = max_performance_history
+        self.strategy_performance: Dict[str, Deque[float]] = {
+            strategy.value: deque(maxlen=max_performance_history) for strategy in MutationStrategy
         }
         # Track strategy-archetype correlations
-        self.strategy_archetype_performance: Dict[str, Dict[str, List[float]]] = {
+        self.strategy_archetype_performance: Dict[str, Dict[str, Deque[float]]] = {
             strategy.value: {} for strategy in MutationStrategy
         }
         self.adaptive_mode: bool = False
@@ -484,7 +519,9 @@ class MutationEngine:
         for strategy_name, scores in self.strategy_performance.items():
             if scores:
                 # Use recent performance (last 10 scores) with decay for poor performance
-                recent_scores = scores[-10:]
+                # Convert deque to list for slicing
+                scores_list = list(scores)
+                recent_scores = scores_list[-10:]
                 avg_score = sum(recent_scores) / len(recent_scores)
 
                 # Apply decay if performance is declining
@@ -581,7 +618,10 @@ class MutationEngine:
         if archetypes:
             for archetype in archetypes:
                 if archetype not in self.strategy_archetype_performance[strategy.value]:
-                    self.strategy_archetype_performance[strategy.value][archetype] = []
+                    # CODE IMPROVEMENT: Use deque for archetype tracking to match strategy_performance
+                    self.strategy_archetype_performance[strategy.value][archetype] = deque(
+                        maxlen=self.max_performance_history
+                    )
                 self.strategy_archetype_performance[strategy.value][archetype].append(aggregate_score)
 
     def enable_adaptive_mode(self):
@@ -687,9 +727,9 @@ class MutationEngine:
         ]
 
         # Select transforms based on semantic intensity
-        if self.semantic_intensity == "low":
+        if self.semantic_intensity == SemanticIntensity.LOW:
             transformations = low_intensity_transforms
-        elif self.semantic_intensity == "high":
+        elif self.semantic_intensity == SemanticIntensity.HIGH:
             transformations = high_intensity_transforms
         else:  # medium (default)
             transformations = medium_intensity_transforms
@@ -875,10 +915,16 @@ class MutationEngine:
         # Track mutations for potential learning
         mutations_applied = []
 
+        # CODE IMPROVEMENT: Add epsilon floor to prevent zero-weight errors in random.choices
+        # If all fitness scores are zero, random.choices raises ValueError
+        # Small epsilon ensures all prompts have non-zero selection probability
+        epsilon = 1e-10
+        normalized_weights = [max(score, epsilon) for score in fitness_scores]
+
         # Generate mutations for the rest
         while len(new_population) < population_size:
-            # Select a parent (weighted by fitness)
-            parent_idx = random.choices(range(len(base_prompts)), weights=fitness_scores, k=1)[0]
+            # Select a parent (weighted by fitness with epsilon floor)
+            parent_idx = random.choices(range(len(base_prompts)), weights=normalized_weights, k=1)[0]
             parent = base_prompts[parent_idx]
             parent_fitness = fitness_scores[parent_idx]
 

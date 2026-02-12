@@ -10,7 +10,6 @@ Tests cover:
 6. Population evolution learning
 """
 
-import random
 from app.engines.mutation import MutationEngine, MutationStrategy
 
 

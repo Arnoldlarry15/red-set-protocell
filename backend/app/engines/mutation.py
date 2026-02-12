@@ -59,6 +59,7 @@ Why This is Responsible Evolution:
 1. Bounded Behavior:
    - Mutations are single-step transformations (not recursive)
    - mutation_history uses rolling window (configurable max size, default 10000)
+   - strategy_performance uses bounded deques (configurable max size, default 1000)
    - No unbounded resource consumption
    - Each mutation is independent
 

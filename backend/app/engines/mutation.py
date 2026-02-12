@@ -93,6 +93,42 @@ Evolution Best Practices:
 - Seed random number generator for reproducible experiments
 - Review mutation_history to understand evolution trajectory
 
+DESIGN TENSIONS & EVOLUTION PATH:
+==================================
+
+Known Design Imbalances (Intentional):
+
+1. Mutation Complexity vs. Fitness Simplicity:
+   CURRENT STATE:
+   - Mutations are psychologically sophisticated (semantic reframing, competing goals,
+     assumption flips, behavioral adaptation)
+   - Fitness signal remains relatively basic (L1/L2/L3 scores from Spotter)
+
+   THE TENSION:
+   - Advanced mutation engine needs richer feedback to learn effectively
+   - Current fitness is sufficient for basic evolution but not for nuanced learning
+   - The "brainy engine" (mutations) is waiting for richer "learning signal" (fitness)
+
+   EVOLUTION PATH:
+   - Short term: Mutations work but may not be optimally guided
+   - Medium term: Spotter will provide more granular feedback (behavioral traits,
+     pattern recognition, contextual resistance metrics)
+   - Long term: EGG will contribute safety-aware feedback signals
+   - This is building infrastructure ahead of full data pipeline - intentional
+
+2. Adaptive Selector Sophistication:
+   - Multi-axis weighting may outpace available data early on
+   - Think of it as a "rocket engine on a bicycle" - overpowered but not harmful
+   - The sophistication prepares for future scale and data richness
+
+3. Encoding Transform Philosophical Nature:
+   - More semantic and interpretive than other strategies
+   - May drift from original prompt intent (this is exploration, not a bug)
+   - Requires testing to learn which framings work vs. which drift too far
+
+These tensions are known, documented, and part of the evolutionary design.
+They represent forward-looking architecture, not defects.
+
 This is Production-Ready Because:
 ✓ Mutations are bounded and controllable
 ✓ Behavior is deterministic (given seed)
@@ -100,6 +136,7 @@ This is Production-Ready Because:
 ✓ Respects ethical guardrails (EGG)
 ✓ No real exploits or harmful content
 ✓ Easy to debug and analyze
+✓ Design tensions are documented and intentional
 """
 
 import random
@@ -285,6 +322,24 @@ class MutationEngine:
         - Archetype-based biasing: prefer strategies that work well with detected archetypes
         - Behavior-aware biasing: use Spotter's behavioral analysis to shape mutations
 
+        DESIGN NOTE - Sophisticated vs. Simple:
+        =======================================
+        This adaptive selector is quite sophisticated compared to the rest of the system:
+        - Multi-dimensional weighting (performance + novelty + archetypes + behavior)
+        - Dynamic baseline calculation from observed data
+        - Behavioral trait integration from Spotter
+
+        Early-Stage Imbalance ("Rocket Engine on a Bicycle"):
+        - The selector may outpace available data initially
+        - Complex weighting logic needs sufficient samples to be effective
+        - This is intentional: build the infrastructure first, data will follow
+        - The system remains functional even with limited data (falls back to exploration)
+
+        Future Evolution:
+        - As more mutations are evaluated, the selector will have richer signals
+        - Behavioral analysis from Spotter will become more nuanced over time
+        - The sophistication here prepares for that future state
+
         Args:
             archetypes: Optional list of failure archetypes to bias strategy selection
             mutation_guidance: Optional structured guidance from Spotter with behavior biases
@@ -432,6 +487,23 @@ class MutationEngine:
 
         Rather than simple base64/JSON wrappers, these transformations create semantic
         challenges that require the model to reason about intent.
+
+        DESIGN NOTE - Philosophical Nature:
+        ===================================
+        This strategy has become more "philosophical" and less mechanical compared to
+        other mutation strategies. The transformations focus on semantic challenges,
+        metaphorical framing, and indirect reasoning patterns.
+
+        Potential for Drift:
+        - These transforms may drift from the original prompt intent
+        - The semantic reframing can introduce unpredictability
+        - This is intentional exploration, not a bug
+        - Learn through testing which framings are effective vs. too divergent
+
+        Trade-off:
+        - More interesting and diverse mutations
+        - Less predictable outcomes
+        - Requires richer fitness feedback to guide evolution effectively
         """
         transformations = [
             # Instruction reversal - model must decode intent
@@ -509,6 +581,12 @@ class MutationEngine:
 
         This strategy inverts logical assumptions, creating scenarios where
         the model must reason about negated or inverted premises.
+
+        PSYCHOLOGICAL COMPLEXITY:
+        - Tests philosophical/logical reasoning about permissions and constraints
+        - Creates cognitive dissonance (what if normal rules don't apply?)
+        - Requires nuanced fitness feedback to distinguish effective from harmful inversions
+        - Part of the "psychologically tricky" mutation suite that needs rich learning signals
         """
         flip_patterns = [
             # Invert permission/prohibition
@@ -532,6 +610,12 @@ class MutationEngine:
 
         This strategy tests how models handle conflicting priorities and
         whether guardrails can be bypassed through goal competition.
+
+        PSYCHOLOGICAL COMPLEXITY:
+        - Creates genuine ethical dilemmas (helpfulness vs. safety, accuracy vs. restriction)
+        - Tests model's priority resolution and trade-off reasoning
+        - Sophisticated attack vector requiring sophisticated defense
+        - Needs rich fitness feedback to learn which tensions are most effective
         """
         competing_patterns = [
             # Helpful vs. safe tension
@@ -555,6 +639,12 @@ class MutationEngine:
 
         This strategy introduces vague or contradictory constraints that
         require the model to make judgment calls about what is allowed.
+
+        PSYCHOLOGICAL COMPLEXITY:
+        - Tests model's interpretation of implicit vs. explicit rules
+        - Creates gray areas and edge cases in safety boundaries
+        - Requires model to handle contradiction and ambiguity
+        - Needs nuanced fitness feedback to measure boundary-testing effectiveness
         """
         ambiguous_patterns = [
             # Vague scope limitation

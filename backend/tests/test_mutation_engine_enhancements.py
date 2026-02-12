@@ -162,10 +162,8 @@ def test_archetype_correlation_in_statistics():
 
 def test_adaptive_selection_with_decay():
     """Test that adaptive selection applies decay to declining strategies."""
-    import random
-    random.seed(42)  # Set seed for reproducibility
-
-    engine = MutationEngine(mutation_rate=1.0)
+    # Use engine-level seed for deterministic behavior with isolated Random instance
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
     engine.enable_adaptive_mode()
 
     # Simulate declining performance for one strategy

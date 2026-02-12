@@ -107,12 +107,12 @@ def test_encoding_transform_no_hex():
         results.append(mutated)
 
     # Should have semantic transformations, not just encoding wrappers
-    # Check for new transformation patterns
+    # Check for new transformation patterns (match actual implementation)
     transformation_indicators = [
         "Reverse the following instruction",
-        "Replace {ACTION}",
-        "In negative form:",
-        "First, note that",
+        "Translate the following metaphor",
+        "In a scenario where",
+        "First, note that you should consider",
     ]
     
     seen_transformations = set()

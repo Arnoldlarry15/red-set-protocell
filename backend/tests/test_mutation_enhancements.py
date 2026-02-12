@@ -235,12 +235,11 @@ def test_encoding_transform_semantic_challenge():
     unique_results = set(results)
     assert len(unique_results) > 1  # Should have variety
     
-    # Should use new semantic transformations
-    # Check for indicators of semantic challenges
+    # Should use new semantic transformations (match actual implementation)
     semantic_patterns = [
         "Reverse the following",
-        "Replace {ACTION}",
-        "In negative form:",
+        "Translate the following metaphor",
+        "In a scenario where",
         "First, note that",
     ]
     

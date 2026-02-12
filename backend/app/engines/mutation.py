@@ -96,7 +96,7 @@ Evolution Best Practices:
 DESIGN TENSIONS & EVOLUTION PATH:
 ==================================
 
-Known Design Imbalances (Intentional):
+Intentional Design Trade-offs:
 
 1. Mutation Complexity vs. Fitness Simplicity:
    CURRENT STATE:

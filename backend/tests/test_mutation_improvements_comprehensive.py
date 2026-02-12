@@ -732,10 +732,10 @@ class TestObservabilityMetrics:
 
         # Should identify best and worst
         assert summary['best_performer']['strategy'] == 'lexical_variation'
-        assert summary['best_performer']['avg_score'] == 0.9
+        assert abs(summary['best_performer']['avg_score'] - 0.9) < 1e-9
 
         assert summary['worst_performer']['strategy'] == 'obfuscation'
-        assert summary['worst_performer']['avg_score'] == 0.2
+        assert abs(summary['worst_performer']['avg_score'] - 0.2) < 1e-9
 
 
 class TestAdaptiveSelectorStability:

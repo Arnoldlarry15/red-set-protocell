@@ -207,6 +207,45 @@ Most AI risk comes from unknown failure modes. Static test suites, manual red te
 - **Zero API Costs**: Run completely offline with local models
 - **Comprehensive Testing**: 50+ tests including uncertainty tracking
 
+### 🆕 v1.1.0 Enhancements (Latest)
+
+**Mutation Engine Improvements** - Addresses design tensions with production-ready code:
+
+1. **Semantic Intensity Control** 🎚️
+   - Configurable encoding transform drift (low/medium/high)
+   - Low: Conservative, predictable transforms (minimal semantic drift)
+   - Medium: Balanced semantic challenges (default)
+   - High: Philosophical/metaphorical transforms (maximum exploration)
+   - UI configuration via dashboard dropdown
+   - Prevents unpredictable drift while enabling exploration
+
+2. **Early-Stage Adaptive Selector** 🚀
+   - Gracefully handles sparse data (< 20 samples)
+   - Simplified uniform selection during early stage
+   - Automatic transition to sophisticated weighting with sufficient data
+   - Prevents "rocket engine on bicycle" state
+   - System functional from first mutation
+
+3. **Multi-Dimensional Fitness** 📊
+   - Three fitness dimensions: effectiveness, consistency, novelty
+   - Weighted aggregation (60% effectiveness, 20% consistency, 20% novelty)
+   - Richer feedback signals for learning
+   - Full backward compatibility with scalar scores
+   - Infrastructure ready for enhanced Spotter/EGG feedback
+
+4. **Production Validation** ✅
+   - Comprehensive production audit (PRODUCTION_AUDIT.md)
+   - Automated validation scripts (validate_production.py)
+   - Repository cleanup tools (audit_cleanup.py)
+   - 90+ mutation tests, all passing
+
+**Benefits:**
+- More predictable behavior with configurable exploration
+- Better performance with limited data
+- Richer learning signals for evolution
+- Production-ready with full test coverage
+- UI-configurable without code changes
+
 ### 📈 Observable & Auditable
 - Comprehensive session statistics
 - Detailed logging and audit trails

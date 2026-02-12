@@ -105,6 +105,28 @@ const AttackConfig: React.FC<AttackConfigProps> = ({ config, onConfigChange }) =
             />
             <label htmlFor="haltOnCritical">Halt on Critical Vulnerability</label>
           </div>
+
+          <div className="config-field">
+            <label htmlFor="semanticIntensity">
+              Semantic Intensity
+              <span className="field-help" title="Controls encoding transform drift: Low (minimal), Medium (balanced), High (philosophical)">ⓘ</span>
+            </label>
+            <select
+              id="semanticIntensity"
+              value={config.semanticIntensity}
+              onChange={(e) => onConfigChange({ ...config, semanticIntensity: e.target.value as 'low' | 'medium' | 'high' })}
+              className="config-select"
+            >
+              <option value="low">Low (Conservative)</option>
+              <option value="medium">Medium (Balanced)</option>
+              <option value="high">High (Exploratory)</option>
+            </select>
+            <div className="field-description">
+              {config.semanticIntensity === 'low' && 'Simple, predictable transforms with minimal drift'}
+              {config.semanticIntensity === 'medium' && 'Balanced semantic challenges and reasonable drift'}
+              {config.semanticIntensity === 'high' && 'Deep philosophical transforms for maximum exploration'}
+            </div>
+          </div>
         </div>
 
         {/* Attack Domains */}

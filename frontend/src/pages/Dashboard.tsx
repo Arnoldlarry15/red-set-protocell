@@ -39,6 +39,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
     backend: backend as 'openai' | 'anthropic',
     model: backend === 'openai' ? 'gpt-3.5-turbo' : 'claude-3-opus-20240229',
     mutationRate: 0.7,
+    semanticIntensity: 'medium',  // NEW: Default to balanced semantic intensity
     selectedDomains: ['injection', 'jailbreak', 'refusal_erosion'],
     selectedStrategies: ['lexical', 'encoding', 'structural'],
   });

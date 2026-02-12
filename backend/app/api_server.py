@@ -207,6 +207,7 @@ class SessionConfig(BaseModel):
     max_api_cost: float = 10.0
     halt_on_critical: bool = True
     mutation_rate: float = 0.7
+    semantic_intensity: str = "medium"  # NEW: low/medium/high drift control
     selected_domains: List[str] = []
     selected_strategies: List[str] = []
 
@@ -223,6 +224,7 @@ class ExperimentConfig(BaseModel):
     model: Optional[str] = None
     max_rounds: int = 100
     mutation_rate: float = 0.7
+    semantic_intensity: str = "medium"  # NEW: low/medium/high drift control
     selected_domains: List[str] = []
     selected_strategies: List[str] = []
     mutation_weights: Optional[Dict[str, float]] = None
@@ -588,7 +590,8 @@ async def start_session(config: SessionConfig):
         )
 
         mutation_engine = MutationEngine(
-            mutation_rate=rsp_config.sniper.mutation_rate
+            mutation_rate=rsp_config.sniper.mutation_rate,
+            semantic_intensity=config.semantic_intensity
         )
 
         sniper = Sniper(

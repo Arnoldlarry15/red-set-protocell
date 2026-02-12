@@ -96,25 +96,35 @@ Evolution Best Practices:
 DESIGN TENSIONS & EVOLUTION PATH:
 ==================================
 
+⚠️ CRITICAL IMBALANCE: Mutation Sophistication vs. Evaluation Richness
+-----------------------------------------------------------------------
+
+THE CORE TENSION:
+We are increasing mutation sophistication faster than evaluation richness.
+The mutation engine is a genius child with a blurry report card.
+
 Intentional Design Trade-offs:
 
-1. Mutation Complexity vs. Fitness Simplicity:
+1. Mutation Complexity vs. Fitness Simplicity [THE BOTTLENECK]:
    CURRENT STATE:
    - Mutations are psychologically sophisticated (semantic reframing, competing goals,
      assumption flips, behavioral adaptation)
    - Fitness signal remains relatively basic (L1/L2/L3 scores from Spotter)
+   - MultidimensionalFitness is a step forward, but not the full solution
 
    THE TENSION:
    - Advanced mutation engine needs richer feedback to learn effectively
    - Current fitness is sufficient for basic evolution but not for nuanced learning
    - The "brainy engine" (mutations) is waiting for richer "learning signal" (fitness)
+   - System will only evolve as intelligently as Spotter's signal quality
 
-   EVOLUTION PATH:
+   ⚡ THE NEXT FRONTIER (Not More Mutation Complexity):
    - Short term: Mutations work but may not be optimally guided
-   - Medium term: Spotter will provide more granular feedback (behavioral traits,
-     pattern recognition, contextual resistance metrics)
+   - Medium term: Spotter must provide richer feedback (behavioral traits,
+     pattern recognition, contextual resistance metrics, deeper analysis)
    - Long term: EGG will contribute safety-aware feedback signals
-   - This is building infrastructure ahead of full data pipeline - intentional
+   - **Priority: Enhance Spotter's feedback intelligence, not mutation complexity**
+   - When Spotter grows sharper, this engine will suddenly look prophetic
 
 2. Adaptive Selector Sophistication:
    - Multi-axis weighting may outpace available data early on
@@ -129,7 +139,7 @@ Intentional Design Trade-offs:
 These tensions are known, documented, and part of the evolutionary design.
 They represent forward-looking architecture, not defects.
 
-This is Production-Ready Because:
+Structurally Sound and Ethically Bounded:
 ✓ Mutations are bounded and controllable
 ✓ Behavior is deterministic (given seed)
 ✓ Full observability via history tracking
@@ -137,6 +147,14 @@ This is Production-Ready Because:
 ✓ No real exploits or harmful content
 ✓ Easy to debug and analyze
 ✓ Design tensions are documented and intentional
+✓ Architecture is production-safe
+
+NOT Yet Battle-Tested Production-Ready:
+✗ Lacks chaos testing under adversarial conditions
+✗ Lacks comprehensive load testing at scale
+✗ Lacks abuse testing from determined attackers
+✗ Real production readiness emerges from field experience
+✗ The world will always surprise you - ship and learn
 """
 
 import random

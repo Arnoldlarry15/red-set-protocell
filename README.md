@@ -243,8 +243,13 @@ Most AI risk comes from unknown failure modes. Static test suites, manual red te
 - More predictable behavior with configurable exploration
 - Better performance with limited data
 - Richer learning signals for evolution
-- Production-ready with full test coverage
+- Structurally sound architecture with full test coverage (70%+)
 - UI-configurable without code changes
+
+**Known Limitation:**
+- Mutation sophistication is ahead of evaluation richness
+- Next frontier: Enhance Spotter's feedback intelligence, not mutation complexity
+- System evolves as intelligently as Spotter's signal quality
 
 ### 📈 Observable & Auditable
 - Comprehensive session statistics

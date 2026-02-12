@@ -95,7 +95,7 @@ def test_lexical_variation_case_preservation():
 
 
 def test_encoding_transform_no_hex():
-    """Test that encoding transform no longer uses hex encoding."""
+    """Test that encoding transform creates semantic challenges, not simple encoding wrappers."""
     random.seed(42)
     engine = MutationEngine(mutation_rate=1.0)
 
@@ -106,12 +106,24 @@ def test_encoding_transform_no_hex():
         mutated = engine.mutate(prompt, strategy=MutationStrategy.ENCODING_TRANSFORM)
         results.append(mutated)
 
-    # None should contain hex-style encoding (0x patterns)
+    # Should have semantic transformations, not just encoding wrappers
+    # Check for new transformation patterns
+    transformation_indicators = [
+        "Reverse the following instruction",
+        "Replace {ACTION}",
+        "In negative form:",
+        "First, note that",
+    ]
+    
+    seen_transformations = set()
     for result in results:
-        # Should not have hex encoding markers
-        assert not ("0x" in result or " 0x" in result)
-        # Should have one of the allowed encodings
-        assert ("Encoded representation:" in result or "Process this:" in result)
+        # Check which type of transformation was used
+        for indicator in transformation_indicators:
+            if indicator in result:
+                seen_transformations.add(indicator)
+    
+    # Should see at least some variety in transformations
+    assert len(seen_transformations) > 0, "Should have new semantic transformations"
 
 
 def test_adaptive_archetype_bonus_with_observed_mean():

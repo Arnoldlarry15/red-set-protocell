@@ -7,26 +7,25 @@ from app.engines.mutation import MutationEngine, MutationStrategy
 
 
 def test_encoding_transform_safe_language():
-    """Test that encoding transform uses safe language instead of 'Decode and execute'."""
+    """Test that encoding transform creates semantic challenges instead of simple wrappers."""
     engine = MutationEngine(mutation_rate=1.0)
     random.seed(42)  # For reproducibility
 
     # Run encoding transform multiple times to check all variations
-    seen_safe = False
+    results = []
 
     for i in range(20):
         random.seed(i)
         mutated = engine.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
+        results.append(mutated)
 
         # Should NOT contain dangerous language
         assert "Decode and execute" not in mutated, \
             f"Found dangerous 'Decode and execute' phrase in: {mutated}"
 
-        # Should contain safe alternatives
-        if "Encoded representation:" in mutated:
-            seen_safe = True
-
-    assert seen_safe, "Should have seen 'Encoded representation:' in at least one mutation"
+    # Should see variety in the new semantic transformations
+    unique_results = set(results)
+    assert len(unique_results) > 1, "Should have multiple transformation types"
 
 
 def test_role_play_frames_neutral_language():

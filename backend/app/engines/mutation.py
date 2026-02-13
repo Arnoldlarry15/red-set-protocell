@@ -721,7 +721,7 @@ class MutationEngine:
                 weights_without_behavior.append(0.1)
             else:
                 weights_without_behavior.append(max(0.1, raw_without))
-        
+
         selection_log = {
             'round': self.total_mutations,
             'candidates': [

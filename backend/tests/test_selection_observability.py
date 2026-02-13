@@ -26,7 +26,7 @@ class TestSelectionObservability:
 
         # Perform mutations with feedback to build up performance history
         for i in range(10):
-            _ = engine.mutate(prompt)
+            engine.mutate(prompt)
             # We need to manually update strategy performance
             # to trigger adaptive mode
             # Get a strategy from the mutation history

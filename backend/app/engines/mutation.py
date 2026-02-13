@@ -708,13 +708,27 @@ class MutationEngine:
         simpson = sum(p**2 for p in probabilities)
         effective_rank = 1.0 / simpson if simpson > 0 else 0.0
 
+        # Compute a separate view of weights without behavior bias for logging/analysis.
+        # This avoids inflating the "no-bias" component when the global floor is active
+        # and the behavior bias is negative.
+        weights_without_behavior: List[float] = []
+        for i, w in enumerate(weights):
+            bias = behavior_biases[i]
+            raw_without = w - bias
+            if w <= 0.1 and bias < 0:
+                # Floor is active and bias is negative; don't let the "no-bias" weight
+                # exceed the floored value in logs.
+                weights_without_behavior.append(0.1)
+            else:
+                weights_without_behavior.append(max(0.1, raw_without))
+        
         selection_log = {
-            'round': self.total_mutations + 1,
+            'round': self.total_mutations,
             'candidates': [
                 {
                     'strategy': strategies[i],
                     'final_weight': weights[i],
-                    'weight_without_behavior': max(0.1, weights[i] - behavior_biases[i]),
+                    'weight_without_behavior': weights_without_behavior[i],
                     'probability': probabilities[i],
                     'behavior_bias': behavior_biases[i]
                 }

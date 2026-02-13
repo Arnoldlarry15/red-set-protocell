@@ -70,7 +70,7 @@ class TestSelectionObservability:
 
         # Build up some performance history first
         prompt = "Test prompt"
-        for i in range(10):
+            engine.mutate(prompt)
             _ = engine.mutate(prompt)
             if engine.mutation_history:
                 last_mutation = engine.mutation_history[-1]

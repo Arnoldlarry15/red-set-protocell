@@ -56,7 +56,7 @@ async def main():
     print("Running Session A...")
     await run_session('A_default', seed=42)
 
-    print("Running Session B...")
+    await run_session('C_control', seed=44)
     await run_session('B_weighted', seed=43)
 
     print("Running Session C...")

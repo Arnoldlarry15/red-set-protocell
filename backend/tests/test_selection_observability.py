@@ -129,7 +129,7 @@ class TestSelectionObservability:
             },
             'behavioral_traits': {}
         }
-
+        engine.mutate(prompt, mutation_guidance=mutation_guidance)
         # Run mutation
         _ = engine.mutate(prompt, mutation_guidance=mutation_guidance)
 

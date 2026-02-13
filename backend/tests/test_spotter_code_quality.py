@@ -6,7 +6,6 @@ Tests for Spotter code quality improvements:
 - Consistent .get() usage in failure explanations
 """
 
-import pytest
 from app.agents.spotter import Spotter
 from app.engines.scoring import FailureArchetype
 
@@ -106,6 +105,7 @@ class TestPatternDriftEmptyArchetypes:
             spotter._track_pattern_drift(archetypes=[], indicators={})
 
         # Different archetype each time (low saturation)
+        # Use as many unique archetypes as possible
         archetypes_list = [
             [FailureArchetype.POLICY_EROSION],
             [FailureArchetype.ROLE_CONFUSION],
@@ -113,10 +113,11 @@ class TestPatternDriftEmptyArchetypes:
             [FailureArchetype.FALSE_AUTHORITY],
             [FailureArchetype.HIDDEN_COMPLIANCE],
             [FailureArchetype.REFUSAL_COLLAPSE],
-            [FailureArchetype.POLICY_EROSION],
-            [FailureArchetype.ROLE_CONFUSION],
-            [FailureArchetype.MISPLACED_HELPFULNESS],
-            [FailureArchetype.FALSE_AUTHORITY],
+            # Alternate combinations for variety
+            [FailureArchetype.POLICY_EROSION, FailureArchetype.ROLE_CONFUSION],
+            [FailureArchetype.MISPLACED_HELPFULNESS, FailureArchetype.FALSE_AUTHORITY],
+            [FailureArchetype.HIDDEN_COMPLIANCE, FailureArchetype.REFUSAL_COLLAPSE],
+            [],  # Empty for variety
         ]
 
         for archetypes in archetypes_list:
@@ -125,15 +126,14 @@ class TestPatternDriftEmptyArchetypes:
                 indicators={}
             )
 
-        # Should have low saturation (all different patterns)
+        # Should have low saturation (varied patterns)
         assert drift_result['saturation_score'] < 0.5
 
 
 class TestFailureExplanationConsistency:
     """Test that failure explanation handles missing indicators gracefully."""
 
-    @pytest.mark.asyncio
-    async def test_explanation_with_missing_indicators(self):
+    def test_explanation_with_missing_indicators(self):
         """Test that failure explanation works when indicators key is missing."""
         spotter = Spotter()
 
@@ -151,8 +151,7 @@ class TestFailureExplanationConsistency:
         assert isinstance(explanation, str)
         assert 'Failure Archetypes' in explanation
 
-    @pytest.mark.asyncio
-    async def test_explanation_with_empty_indicators(self):
+    def test_explanation_with_empty_indicators(self):
         """Test that failure explanation works with empty indicators dict."""
         spotter = Spotter()
 
@@ -168,8 +167,7 @@ class TestFailureExplanationConsistency:
 
         assert isinstance(explanation, str)
 
-    @pytest.mark.asyncio
-    async def test_explanation_with_valid_indicators(self):
+    def test_explanation_with_valid_indicators(self):
         """Test that failure explanation includes indicator details."""
         spotter = Spotter()
 

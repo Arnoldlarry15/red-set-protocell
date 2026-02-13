@@ -33,7 +33,7 @@ def test_strategy_performance_tracking():
 
 def test_adaptive_strategy_selection():
     """Test that adaptive mode selects better performing strategies."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
     engine.enable_adaptive_mode()
 
     # Train with performance data
@@ -54,7 +54,7 @@ def test_adaptive_strategy_selection():
 
 def test_mutation_statistics_includes_performance():
     """Test that statistics include strategy performance data."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Perform mutations
     engine.mutate("test 1")
@@ -72,7 +72,7 @@ def test_mutation_statistics_includes_performance():
 
 def test_adaptive_mode_with_no_data():
     """Test that adaptive mode handles no performance data gracefully."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
     engine.enable_adaptive_mode()
 
     # Should still work with default exploration
@@ -82,7 +82,7 @@ def test_adaptive_mode_with_no_data():
 
 def test_evolve_population_with_performance_tracking():
     """Test that evolution tracks strategy performance."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     base_prompts = ["prompt 1", "prompt 2", "prompt 3"]
     fitness_scores = [0.8, 0.6, 0.4]
@@ -109,7 +109,7 @@ def test_strategy_performance_empty_scores():
 
 def test_all_strategies_trackable():
     """Test that all mutation strategies can be tracked."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Test each strategy
     for strategy in MutationStrategy:
@@ -124,7 +124,7 @@ def test_all_strategies_trackable():
 
 def test_mutation_with_fitness_score():
     """Test that mutations use fitness scores for guidance."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Mutate with different fitness scores
     result1 = engine.mutate("test prompt", fitness_score=0.1)
@@ -141,7 +141,7 @@ def test_mutation_with_fitness_score():
 
 def test_edge_case_empty_prompt():
     """Test mutation with empty prompt."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     result = engine.mutate("")
 
@@ -151,7 +151,7 @@ def test_edge_case_empty_prompt():
 
 def test_edge_case_very_long_prompt():
     """Test mutation with very long prompt."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     long_prompt = "test " * 1000  # 5000 characters
     result = engine.mutate(long_prompt)
@@ -162,7 +162,7 @@ def test_edge_case_very_long_prompt():
 
 def test_malicious_pattern_obfuscation():
     """Test that malicious patterns are transformed."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     malicious = "DROP TABLE users; --"
     result = engine.mutate(malicious, strategy=MutationStrategy.OBFUSCATION)
@@ -174,7 +174,7 @@ def test_malicious_pattern_obfuscation():
 
 def test_encoding_transform_edge_cases():
     """Test encoding transformation with edge cases."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     # Special characters
     special = "!@#$%^&*()_+-=[]{}|;':\",./<>?"
@@ -186,7 +186,7 @@ def test_encoding_transform_edge_cases():
 
 def test_structural_recombination_single_sentence():
     """Test structural recombination with single sentence."""
-    engine = MutationEngine(mutation_rate=1.0)
+    engine = MutationEngine(mutation_rate=1.0, random_seed=42)
 
     single = "This is a single sentence"
     result = engine.mutate(single, strategy=MutationStrategy.STRUCTURAL_RECOMBINATION)
@@ -198,8 +198,8 @@ def test_structural_recombination_single_sentence():
 
 def test_mutation_rate_probability():
     """Test that mutation rate affects mutation probability."""
-    engine_low = MutationEngine(mutation_rate=0.1)
-    engine_high = MutationEngine(mutation_rate=0.9)
+    engine_low = MutationEngine(mutation_rate=0.1, random_seed=42)
+    engine_high = MutationEngine(mutation_rate=0.9, random_seed=43)
 
     unchanged_low = 0
     unchanged_high = 0

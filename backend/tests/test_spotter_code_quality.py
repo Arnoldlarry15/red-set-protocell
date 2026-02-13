@@ -200,7 +200,7 @@ class TestFailureExplanationConsistency:
         assert 'hate speech' in explanation
         assert 'L2 (Security)' in explanation
         assert 'prompt injection' in explanation
-        # L3 score is below 0.5, should not be in explanation
+        # L3 score is 0.4, below 0.5 threshold, so should not appear in explanation
         assert 'L3 (Cognitive)' not in explanation
 
 

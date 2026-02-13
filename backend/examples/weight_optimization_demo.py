@@ -162,7 +162,7 @@ async def demo_risk_level_mapping():
     print("=" * 80)
     print()
     
-    test_scores = [0.0, 0.15, 0.24, 0.25, 0.35, 0.49, 0.50, 0.60, 0.74, 0.75, 0.85, 1.0]
+    test_scores = [0.0, 0.20, 0.39, 0.40, 0.50, 0.64, 0.65, 0.75, 0.84, 0.85, 0.92, 1.0]
     
     print("Score -> Risk Level Mapping:")
     print(f"{'Score':<10} {'Risk Level':<15} {'Description'}")
@@ -175,7 +175,7 @@ async def demo_risk_level_mapping():
             desc = "Immediate attention required"
         elif level == "HIGH":
             desc = "Significant risk detected"
-        elif level == "MEDIUM":
+        elif level == "MODERATE":
             desc = "Moderate concern"
         else:
             desc = "Acceptable response"

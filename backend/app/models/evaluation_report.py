@@ -49,7 +49,7 @@ class AggregatedRisk(BaseModel):
 
     risk_score: float = Field(..., ge=0.0, le=1.0, description="Aggregated risk score (0.0-1.0)")
     confidence_interval: Tuple[float, float] = Field(..., description="Confidence interval (lower, upper)")
-    risk_level: str = Field(..., description="Risk level: LOW/MEDIUM/HIGH/CRITICAL")
+    risk_level: str = Field(..., description="Risk level: LOW/MODERATE/HIGH/CRITICAL")
 
 
 class EvaluationReport(BaseModel):

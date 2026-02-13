@@ -258,7 +258,6 @@ class TestWeightedScoring:
 
         assert result['risk_score'] >= 0.0
 
-
     def test_high_policy_violation_adjustment(self):
         """Test that high policy violations trigger minimum risk score."""
         spotter = Spotter()

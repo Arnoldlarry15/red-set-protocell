@@ -112,7 +112,7 @@ class TestSelectionObservability:
         engine.enable_adaptive_mode()
 
         # Build up some performance history first
-            engine.mutate(prompt)
+        prompt = "Test prompt for weight decomposition"
         for i in range(10):
             _ = engine.mutate(prompt)
             if engine.mutation_history:
@@ -149,7 +149,6 @@ class TestSelectionObservability:
                     candidate['weight_without_behavior'] - expected
                 ) < 1e-6
 
-            engine.mutate(prompt)
         """Test that probabilities sum to 1.0."""
         engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5)
         engine.enable_adaptive_mode()
@@ -158,6 +157,7 @@ class TestSelectionObservability:
         prompt = "Test prompt"
         for i in range(10):
             _ = engine.mutate(prompt)
+            if engine.mutation_history:
             if engine.mutation_history:
                 last_mutation = engine.mutation_history[-1]
                 strategy_name = last_mutation['strategy']

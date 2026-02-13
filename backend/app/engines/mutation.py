@@ -709,7 +709,7 @@ class MutationEngine:
         effective_rank = 1.0 / simpson if simpson > 0 else 0.0
 
         selection_log = {
-            'round': self.total_mutations,
+            'round': self.total_mutations + 1,
             'candidates': [
                 {
                     'strategy': strategies[i],

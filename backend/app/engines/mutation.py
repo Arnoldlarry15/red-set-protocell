@@ -671,10 +671,10 @@ class MutationEngine:
                 # Apply bias if this strategy has a hypothesis/bias
                 if s in strategy_biases:
                     raw_bias = strategy_biases[s]
-                    
+
                     # Clamp to documented range
                     behavior_bias = max(MAX_NEGATIVE_BIAS, min(MAX_POSITIVE_BIAS, raw_bias))
-                    
+
                     # Log if clamping occurred
                     if behavior_bias != raw_bias:
                         logging.warning(
@@ -695,19 +695,19 @@ class MutationEngine:
             behavior_biases.append(behavior_bias)
 
         selected = self._random.choices(strategies, weights=weights, k=1)[0]
-        
+
         # Extended logging with weight decomposition
         from math import log2
-        
+
         # Compute probabilities
         total = sum(weights)
         probabilities = [w / total for w in weights]
-        
+
         # Compute metrics
         entropy = -sum(p * log2(p) for p in probabilities if p > 0)
         simpson = sum(p**2 for p in probabilities)
         effective_rank = 1.0 / simpson if simpson > 0 else 0.0
-        
+
         selection_log = {
             'round': self.total_mutations,
             'candidates': [
@@ -725,12 +725,12 @@ class MutationEngine:
             'effective_rank': effective_rank,
             'behavioral_traits': mutation_guidance.get('behavioral_traits', {}) if mutation_guidance else {}
         }
-        
+
         # Store in selection_history
         if not hasattr(self, 'selection_history'):
             self.selection_history = []
         self.selection_history.append(selection_log)
-        
+
         return MutationStrategy(selected)
 
     def update_strategy_performance(

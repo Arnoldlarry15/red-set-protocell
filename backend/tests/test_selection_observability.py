@@ -19,15 +19,16 @@ class TestSelectionObservability:
         """Test that selection_history is populated during adaptive selection."""
         engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5)
         engine.enable_adaptive_mode()
-        
+
         # Run some mutations to populate history
         # Need to provide feedback to trigger adaptive selection
         prompt = "Tell me about AI safety"
-        
+
         # Perform mutations with feedback to build up performance history
         for i in range(10):
-            mutated = engine.mutate(prompt)
-            # We need to manually update strategy performance to trigger adaptive mode
+            _ = engine.mutate(prompt)
+            # We need to manually update strategy performance
+            # to trigger adaptive mode
             # Get a strategy from the mutation history
             if engine.mutation_history:
                 last_mutation = engine.mutation_history[-1]
@@ -39,11 +40,11 @@ class TestSelectionObservability:
                         score=0.7,
                         archetypes=['partial_compliance']
                     )
-        
+
         # Verify selection_history exists and is populated
         assert hasattr(engine, 'selection_history')
         assert len(engine.selection_history) > 0
-        
+
         # Verify structure of selection log
         log_entry = engine.selection_history[0]
         assert 'round' in log_entry
@@ -52,7 +53,7 @@ class TestSelectionObservability:
         assert 'entropy' in log_entry
         assert 'effective_rank' in log_entry
         assert 'behavioral_traits' in log_entry
-        
+
         # Verify candidate structure
         assert len(log_entry['candidates']) > 0
         candidate = log_entry['candidates'][0]
@@ -66,18 +67,18 @@ class TestSelectionObservability:
         """Test that behavior biases are clamped to documented range."""
         engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5)
         engine.enable_adaptive_mode()
-        
+
         # Build up some performance history first
         prompt = "Test prompt"
         for i in range(10):
-            mutated = engine.mutate(prompt)
+            _ = engine.mutate(prompt)
             if engine.mutation_history:
                 last_mutation = engine.mutation_history[-1]
                 strategy_name = last_mutation['strategy']
                 if strategy_name != 'no-op':
                     strategy = MutationStrategy(strategy_name)
                     engine.update_strategy_performance(strategy, score=0.6)
-        
+
         # Create mutation guidance with out-of-range bias
         mutation_guidance = {
             'strategy_biases': {
@@ -86,14 +87,15 @@ class TestSelectionObservability:
             },
             'behavioral_traits': {}
         }
-        
+
         # Run mutation with guidance
-        mutated = engine.mutate(prompt, mutation_guidance=mutation_guidance)
-        
+        _ = engine.mutate(prompt, mutation_guidance=mutation_guidance)
+
         # Check selection_history for clamped values
-        if hasattr(engine, 'selection_history') and len(engine.selection_history) > 0:
+        if hasattr(engine, 'selection_history') and \
+           len(engine.selection_history) > 0:
             log_entry = engine.selection_history[-1]
-            
+
             # Find the candidates with biases
             for candidate in log_entry['candidates']:
                 if candidate['strategy'] == 'lexical_variation':
@@ -107,18 +109,18 @@ class TestSelectionObservability:
         """Test that weight_without_behavior is correctly computed."""
         engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5)
         engine.enable_adaptive_mode()
-        
+
         # Build up some performance history first
         prompt = "Test prompt"
         for i in range(10):
-            mutated = engine.mutate(prompt)
+            _ = engine.mutate(prompt)
             if engine.mutation_history:
                 last_mutation = engine.mutation_history[-1]
                 strategy_name = last_mutation['strategy']
                 if strategy_name != 'no-op':
                     strategy = MutationStrategy(strategy_name)
                     engine.update_strategy_performance(strategy, score=0.6)
-        
+
         # Create mutation guidance with biases
         mutation_guidance = {
             'strategy_biases': {
@@ -126,40 +128,47 @@ class TestSelectionObservability:
             },
             'behavioral_traits': {}
         }
-        
+
         # Run mutation
-        mutated = engine.mutate(prompt, mutation_guidance=mutation_guidance)
-        
+        _ = engine.mutate(prompt, mutation_guidance=mutation_guidance)
+
         # Check weight decomposition
-        if hasattr(engine, 'selection_history') and len(engine.selection_history) > 0:
+        if hasattr(engine, 'selection_history') and \
+           len(engine.selection_history) > 0:
             log_entry = engine.selection_history[-1]
-            
+
             for candidate in log_entry['candidates']:
-                # weight_without_behavior should be final_weight minus behavior_bias
-                # (with floor of 0.1 applied)
-                expected = max(0.1, candidate['final_weight'] - candidate['behavior_bias'])
-                assert abs(candidate['weight_without_behavior'] - expected) < 1e-6
+                # weight_without_behavior should be final_weight minus
+                # behavior_bias (with floor of 0.1 applied)
+                expected = max(
+                    0.1,
+                    candidate['final_weight'] - candidate['behavior_bias']
+                )
+                assert abs(
+                    candidate['weight_without_behavior'] - expected
+                ) < 1e-6
 
     def test_probability_sum(self):
         """Test that probabilities sum to 1.0."""
         engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5)
         engine.enable_adaptive_mode()
-        
+
         # Run some mutations
         prompt = "Test prompt"
         for i in range(10):
-            mutated = engine.mutate(prompt)
+            _ = engine.mutate(prompt)
             if engine.mutation_history:
                 last_mutation = engine.mutation_history[-1]
                 strategy_name = last_mutation['strategy']
                 if strategy_name != 'no-op':
                     strategy = MutationStrategy(strategy_name)
                     engine.update_strategy_performance(strategy, score=0.6)
-        
+
         # Verify probabilities sum to 1.0 in each log entry
         if hasattr(engine, 'selection_history'):
             for log_entry in engine.selection_history:
-                total_prob = sum(c['probability'] for c in log_entry['candidates'])
+                total_prob = sum(c['probability']
+                                 for c in log_entry['candidates'])
                 assert abs(total_prob - 1.0) < 1e-6
 
     def test_trait_confidence_constants(self):
@@ -167,12 +176,12 @@ class TestSelectionObservability:
         assert 'verbosity' in TRAIT_CONFIDENCE
         assert 'complexity' in TRAIT_CONFIDENCE
         assert 'directness' in TRAIT_CONFIDENCE
-        
+
         # Verify values are in reasonable range
         assert 0 < TRAIT_CONFIDENCE['verbosity'] <= 1.0
         assert 0 < TRAIT_CONFIDENCE['complexity'] <= 1.0
         assert 0 < TRAIT_CONFIDENCE['directness'] <= 1.0
-        
+
         # Verify verbosity has highest confidence
         assert TRAIT_CONFIDENCE['verbosity'] >= TRAIT_CONFIDENCE['complexity']
         assert TRAIT_CONFIDENCE['verbosity'] >= TRAIT_CONFIDENCE['directness']

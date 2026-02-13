@@ -29,8 +29,20 @@ async def run_session(session_name: str, seed: int):
     # Configure system
     config = get_default_config()
     config.orchestrator.max_rounds = 100
+    # Initialize system
+    orchestrator = setup_system(config)
 
-    # Initialize and run
+    # Lock MutationEngine's internal RNG for reproducible strategy selection
+    try:
+        mutation_engine = orchestrator.sniper.mutation_engine
+        rng = getattr(mutation_engine, "_random", None)
+        if rng is not None:
+            rng.seed(seed)
+    except AttributeError:
+        # If expected attributes are not present, continue without failing
+        pass
+
+    # Run session
     orchestrator = setup_system(config)
     stats = await orchestrator.run_session()
 

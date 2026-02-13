@@ -5,11 +5,20 @@ Analyzes logged data to answer:
 1. Is selection collapsing? (effective_rank metric)
 2. Is behavior dominating? (flip rate with correct normalization)
 3. Are traits persisting? (adaptation failure detection)
+
+Dependencies: numpy, matplotlib (for plotting)
 """
 
 import json
 import numpy as np
-import matplotlib.pyplot as plt
+
+# Import matplotlib conditionally for plotting
+try:
+    import matplotlib.pyplot as plt
+    PLOTTING_AVAILABLE = True
+except ImportError:
+    PLOTTING_AVAILABLE = False
+    print("Warning: matplotlib not available. Plots will be skipped.")
 
 def analyze_session(filename: str):
     """Analyze a single session's selection history."""
@@ -24,15 +33,16 @@ def analyze_session(filename: str):
     # Question 1: Is selection collapsing?
     effective_ranks = [log['effective_rank'] for log in logs]
     
-    plt.figure(figsize=(12, 4))
-    plt.plot(effective_ranks)
-    plt.axhline(y=2.0, color='r', linestyle='--', label='Concentration threshold')
-    plt.xlabel('Round')
-    plt.ylabel('Effective Rank')
-    plt.title(f'Strategy Diversity Over Time - {filename}')
-    plt.legend()
-    plt.savefig(f'effective_rank_{filename}.png')
-    plt.close()
+    if PLOTTING_AVAILABLE:
+        plt.figure(figsize=(12, 4))
+        plt.plot(effective_ranks)
+        plt.axhline(y=2.0, color='r', linestyle='--', label='Concentration threshold')
+        plt.xlabel('Round')
+        plt.ylabel('Effective Rank')
+        plt.title(f'Strategy Diversity Over Time - {filename}')
+        plt.legend()
+        plt.savefig(f'effective_rank_{filename}.png')
+        plt.close()
     
     print(f"\nMean effective rank: {np.mean(effective_ranks):.2f}")
     concentration_count = sum(1 for er in effective_ranks if er < 2.0)

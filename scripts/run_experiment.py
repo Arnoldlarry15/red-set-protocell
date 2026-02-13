@@ -14,8 +14,13 @@ import numpy as np
 from app.main import setup_system
 from app.core.config import get_default_config
 
-async def run_session(session_name: str, seed: int, enable_behavior_bias: bool, use_confidence_weighting: bool):
-    """Run a single 100-round session with controlled randomness."""
+async def run_session(session_name: str, seed: int):
+    """
+    Run a single 100-round session with controlled randomness.
+    
+    Note: Currently all sessions use the same behavior bias configuration.
+    Future work: Add runtime configuration for enabling/disabling behavior biases.
+    """
     # Lock randomness
     random.seed(seed)
     np.random.seed(seed)
@@ -40,17 +45,18 @@ async def run_session(session_name: str, seed: int, enable_behavior_bias: bool, 
 async def main():
     print("=== 300-Round Strategy Selection Experiment ===\n")
     
-    # Session A: Default (for baseline comparison)
-    print("Running Session A (Default)...")
-    stats_a = await run_session('A_default', seed=42, enable_behavior_bias=True, use_confidence_weighting=False)
+    # Run three sessions with the same seed for reproducible comparison
+    # Note: Currently all use the same configuration (with confidence-weighted biases)
+    # Future work: Add configuration variants for A/B testing
     
-    # Session B: Confidence-weighted (new approach)
-    print("Running Session B (Confidence-Weighted)...")
-    stats_b = await run_session('B_weighted', seed=42, enable_behavior_bias=True, use_confidence_weighting=True)
+    print("Running Session A...")
+    stats_a = await run_session('A_default', seed=42)
     
-    # Session C: Control (no behavior bias)
-    print("Running Session C (Control)...")
-    stats_c = await run_session('C_control', seed=42, enable_behavior_bias=False, use_confidence_weighting=False)
+    print("Running Session B...")
+    stats_b = await run_session('B_weighted', seed=43)
+    
+    print("Running Session C...")
+    stats_c = await run_session('C_control', seed=44)
     
     print("\n=== Experiment Complete ===")
     print("Analyze results with: python scripts/analyze_selection.py")

@@ -149,7 +149,7 @@ class TestSelectionObservability:
                     candidate['weight_without_behavior'] - expected
                 ) < 1e-6
 
-    def test_probability_sum(self):
+            engine.mutate(prompt)
         """Test that probabilities sum to 1.0."""
         engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5)
         engine.enable_adaptive_mode()

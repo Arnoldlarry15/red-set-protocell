@@ -111,7 +111,7 @@ class TestSelectionObservability:
         engine.enable_adaptive_mode()
 
         # Build up some performance history first
-        prompt = "Test prompt"
+            engine.mutate(prompt)
         for i in range(10):
             _ = engine.mutate(prompt)
             if engine.mutation_history:

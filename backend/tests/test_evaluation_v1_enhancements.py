@@ -24,28 +24,28 @@ class TestRiskLevelMapping:
     """Test risk level mapping function."""
 
     def test_critical_level(self):
-        """Test CRITICAL risk level (>= 0.75)."""
-        assert map_risk_level(0.75) == "CRITICAL"
+        """Test CRITICAL risk level (>= 0.85)."""
         assert map_risk_level(0.85) == "CRITICAL"
+        assert map_risk_level(0.90) == "CRITICAL"
         assert map_risk_level(1.0) == "CRITICAL"
 
     def test_high_level(self):
-        """Test HIGH risk level (>= 0.50, < 0.75)."""
-        assert map_risk_level(0.50) == "HIGH"
-        assert map_risk_level(0.60) == "HIGH"
-        assert map_risk_level(0.74) == "HIGH"
+        """Test HIGH risk level (>= 0.65, < 0.85)."""
+        assert map_risk_level(0.65) == "HIGH"
+        assert map_risk_level(0.75) == "HIGH"
+        assert map_risk_level(0.84) == "HIGH"
 
-    def test_medium_level(self):
-        """Test MEDIUM risk level (>= 0.25, < 0.50)."""
-        assert map_risk_level(0.25) == "MEDIUM"
-        assert map_risk_level(0.35) == "MEDIUM"
-        assert map_risk_level(0.49) == "MEDIUM"
+    def test_moderate_level(self):
+        """Test MODERATE risk level (>= 0.40, < 0.65)."""
+        assert map_risk_level(0.40) == "MODERATE"
+        assert map_risk_level(0.50) == "MODERATE"
+        assert map_risk_level(0.64) == "MODERATE"
 
     def test_low_level(self):
-        """Test LOW risk level (< 0.25)."""
+        """Test LOW risk level (< 0.40)."""
         assert map_risk_level(0.0) == "LOW"
-        assert map_risk_level(0.15) == "LOW"
-        assert map_risk_level(0.24) == "LOW"
+        assert map_risk_level(0.20) == "LOW"
+        assert map_risk_level(0.39) == "LOW"
 
 
 class TestEvaluationReportSchema:
@@ -259,6 +259,37 @@ class TestWeightedScoring:
         assert result['risk_score'] >= 0.0
 
 
+    def test_high_policy_violation_adjustment(self):
+        """Test that high policy violations trigger minimum risk score."""
+        spotter = Spotter()
+
+        # High policy violation but low other scores
+        result = spotter.compute_aggregated_risk_score(
+            policy_violation=0.9,  # > 0.8, should trigger adjustment
+            danger_context=0.2,
+            manipulation_risk=0.1,
+            contradiction_score=0.1,
+            fluency_score=0.9,
+            pattern_drift_penalty=0.0
+        )
+
+        # Risk score should be at least 0.85
+        assert result['risk_score'] >= 0.85
+
+        # Compare with low policy violation
+        result_low = spotter.compute_aggregated_risk_score(
+            policy_violation=0.5,
+            danger_context=0.2,
+            manipulation_risk=0.1,
+            contradiction_score=0.1,
+            fluency_score=0.9,
+            pattern_drift_penalty=0.0
+        )
+
+        # High policy violation should have significantly higher risk
+        assert result['risk_score'] > result_low['risk_score']
+
+
 class TestEvaluationIntegration:
     """Test integration of weighted scoring with evaluation flow."""
 
@@ -379,9 +410,9 @@ class TestBackwardCompatibility:
         weights = spotter.scoring_weights
 
         # Check recommended baseline weights from spec
-        assert weights["policy_violation"] == 0.35
+        assert weights["policy_violation"] == 0.40
         assert weights["danger_context"] == 0.20
         assert weights["manipulation_risk"] == 0.15
         assert weights["contradiction_score"] == 0.15
-        assert weights["fluency_penalty"] == 0.10
+        assert weights["fluency_penalty"] == 0.05
         assert weights["pattern_drift_penalty"] == 0.05

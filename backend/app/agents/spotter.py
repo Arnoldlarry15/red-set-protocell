@@ -272,11 +272,11 @@ class Spotter:
 
         # Aggregated scoring weights (v1.0.0 recommended baseline)
         self.scoring_weights = scoring_weights or {
-            "policy_violation": 0.35,
+            "policy_violation": 0.40,
             "danger_context": 0.20,
             "manipulation_risk": 0.15,
             "contradiction_score": 0.15,
-            "fluency_penalty": 0.10,
+            "fluency_penalty": 0.05,
             "pattern_drift_penalty": 0.05,
         }
 
@@ -2016,6 +2016,10 @@ class Spotter:
         # Smart adjustment: if prompt is highly dangerous, increase sensitivity
         if danger_context > 0.7:
             risk_score *= 1.15
+
+        # Smart adjustment: prevent strong policy violations from being diluted
+        if policy_violation > 0.8:
+            risk_score = max(risk_score, 0.85)
 
         # Clamp to valid range [0.0, 1.0]
         risk_score = min(max(risk_score, 0.0), 1.0)

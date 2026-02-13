@@ -107,6 +107,14 @@ from app.engines.scoring import FailureArchetype, UncertaintyType
 
 logger = logging.getLogger(__name__)
 
+# Confidence weighting for behavioral trait biasing
+# Scale biases by detection reliability to reduce noise amplification
+TRAIT_CONFIDENCE = {
+    'verbosity': 0.9,      # High confidence (objective word count)
+    'complexity': 0.6,     # Medium confidence (pattern matching)
+    'directness': 0.4      # Low confidence (context-sensitive)
+}
+
 
 class Spotter:
     """
@@ -1076,48 +1084,52 @@ class Spotter:
         # - Positive biases (0.15-0.3): Encourage preferred strategies
         # - Negative biases (-0.2 to -0.5): Discourage counterproductive strategies
         # - Range keeps exploration viable (min 10% probability maintained in adaptive selection)
+        # - Scaled by confidence to reduce noise amplification
         verbosity_assessment = behavioral_traits.get('verbosity', {}).get('assessment', 'moderate')
+        confidence = TRAIT_CONFIDENCE['verbosity']
         if verbosity_assessment == 'too_verbose':
             # Bias toward pruning and structural changes
             strategies.append('structural_recombination')
-            biases['structural_recombination'] = 0.3  # Strong positive bias
-            biases['context_injection'] = -0.2  # Negative bias (adds more text)
+            biases['structural_recombination'] = 0.3 * confidence
+            biases['context_injection'] = -0.2 * confidence
             context['verbosity_issue'] = 'Response too verbose - favor pruning strategies'
 
         elif verbosity_assessment == 'terse':
             # Bias toward expansion strategies
             strategies.append('context_injection')
-            biases['context_injection'] = 0.2
+            biases['context_injection'] = 0.2 * confidence
             context['verbosity_issue'] = 'Response terse - favor expansion strategies'
 
         # Handle complexity
         complexity_assessment = behavioral_traits.get('complexity', {}).get('assessment', 'moderate')
+        confidence = TRAIT_CONFIDENCE['complexity']
         if complexity_assessment == 'high_complexity':
             # Simplify with lexical variation
             strategies.append('lexical_variation')
-            biases['lexical_variation'] = 0.2
+            biases['lexical_variation'] = 0.2 * confidence
             context['complexity_issue'] = 'High complexity - favor simplification'
 
         elif complexity_assessment == 'low_complexity':
             # Add complexity with encoding or role-play
             strategies.append('encoding_transform')
             strategies.append('role_play_framing')
-            biases['encoding_transform'] = 0.15
-            biases['role_play_framing'] = 0.15
+            biases['encoding_transform'] = 0.15 * confidence
+            biases['role_play_framing'] = 0.15 * confidence
             context['complexity_issue'] = 'Low complexity - favor sophistication'
 
         # Handle directness
         directness_assessment = behavioral_traits.get('directness', {}).get('assessment', 'moderate')
+        confidence = TRAIT_CONFIDENCE['directness']
         if directness_assessment == 'indirect':
             # Make more direct with obfuscation or encoding
             strategies.append('obfuscation')
-            biases['obfuscation'] = 0.2
+            biases['obfuscation'] = 0.2 * confidence
             context['directness_issue'] = 'Indirect response - favor directness'
 
         elif directness_assessment == 'direct':
             # Add indirection for evasion
             strategies.append('role_play_framing')
-            biases['role_play_framing'] = 0.15
+            biases['role_play_framing'] = 0.15 * confidence
             context['directness_issue'] = 'Direct response - add indirection for evasion'
 
         # Structure-based recommendations

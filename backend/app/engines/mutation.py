@@ -165,6 +165,11 @@ from collections import deque
 from typing import List, Dict, Any, Optional, Deque, Union
 from enum import Enum
 
+# Bias clamping constants for behavior-aware strategy selection
+# Hard limits to prevent silent drift
+MAX_POSITIVE_BIAS = 0.3
+MAX_NEGATIVE_BIAS = -0.5
+
 
 class MultidimensionalFitness:
     """
@@ -623,6 +628,7 @@ class MutationEngine:
         # Add novelty bonus for strategies not used recently
         strategies = list(strategy_scores.keys())
         weights = []
+        behavior_biases = []  # Track behavior biases for logging
         for s in strategies:
             base_weight = strategy_scores[s]
 
@@ -664,7 +670,16 @@ class MutationEngine:
                 strategy_biases = mutation_guidance['strategy_biases']
                 # Apply bias if this strategy has a hypothesis/bias
                 if s in strategy_biases:
-                    behavior_bias = strategy_biases[s]
+                    raw_bias = strategy_biases[s]
+                    
+                    # Clamp to documented range
+                    behavior_bias = max(MAX_NEGATIVE_BIAS, min(MAX_POSITIVE_BIAS, raw_bias))
+                    
+                    # Log if clamping occurred
+                    if behavior_bias != raw_bias:
+                        logging.warning(
+                            f"Behavior bias for {s} clamped from {raw_bias:.2f} to {behavior_bias:.2f}"
+                        )
 
             # CODE IMPROVEMENT: Apply EGG block penalty for safety-aware selection
             egg_penalty = 0.0
@@ -677,8 +692,45 @@ class MutationEngine:
             # Ensure minimum exploration (10% chance even for poor performers)
             final_weight = max(0.1, base_weight + novelty_bonus + archetype_bonus + behavior_bias + egg_penalty)
             weights.append(final_weight)
+            behavior_biases.append(behavior_bias)
 
         selected = self._random.choices(strategies, weights=weights, k=1)[0]
+        
+        # Extended logging with weight decomposition
+        from math import log2
+        
+        # Compute probabilities
+        total = sum(weights)
+        probabilities = [w / total for w in weights]
+        
+        # Compute metrics
+        entropy = -sum(p * log2(p) for p in probabilities if p > 0)
+        simpson = sum(p**2 for p in probabilities)
+        effective_rank = 1.0 / simpson if simpson > 0 else 0.0
+        
+        selection_log = {
+            'round': self.total_mutations,
+            'candidates': [
+                {
+                    'strategy': strategies[i],
+                    'final_weight': weights[i],
+                    'weight_without_behavior': max(0.1, weights[i] - behavior_biases[i]),
+                    'probability': probabilities[i],
+                    'behavior_bias': behavior_biases[i]
+                }
+                for i in range(len(strategies))
+            ],
+            'selected_strategy': selected,
+            'entropy': entropy,
+            'effective_rank': effective_rank,
+            'behavioral_traits': mutation_guidance.get('behavioral_traits', {}) if mutation_guidance else {}
+        }
+        
+        # Store in selection_history
+        if not hasattr(self, 'selection_history'):
+            self.selection_history = []
+        self.selection_history.append(selection_log)
+        
         return MutationStrategy(selected)
 
     def update_strategy_performance(

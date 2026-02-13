@@ -97,6 +97,7 @@ Structurally Sound and Ethically Bounded:
 """
 
 import logging
+import math
 import re
 import asyncio
 from typing import Dict, Any, Optional, List
@@ -1541,8 +1542,15 @@ class Spotter:
         ]
         unique_combinations = len(set(recent_archetype_sets))
 
+        # Check if all archetypes are empty - this could skew saturation score
+        all_empty = all(len(archetype_set) == 0 for archetype_set in recent_archetype_sets)
+
         # Saturation score: high when seeing same patterns repeatedly
-        saturation_score = 1.0 - (unique_combinations / len(recent_window))
+        # If all sets are empty, set saturation to 0.0 (no patterns to saturate on)
+        if all_empty:
+            saturation_score = 0.0
+        else:
+            saturation_score = 1.0 - (unique_combinations / len(recent_window))
 
         # Diversity score: based on distribution of archetypes
         if self._archetype_frequency:
@@ -1550,7 +1558,6 @@ class Spotter:
             frequencies = [count / total_detections for count in self._archetype_frequency.values()]
 
             # Shannon entropy as diversity measure
-            import math
             if len(frequencies) > 1:
                 entropy = -sum(f * math.log2(f) if f > 0 else 0 for f in frequencies)
                 max_entropy = math.log2(len(frequencies))

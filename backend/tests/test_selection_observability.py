@@ -88,7 +88,8 @@ class TestSelectionObservability:
             'behavioral_traits': {}
         }
 
-        # Run mutation with guidance
+        mutated = engine.mutate(prompt, mutation_guidance=mutation_guidance)
+        assert mutated is not None
         _ = engine.mutate(prompt, mutation_guidance=mutation_guidance)
 
         # Check selection_history for clamped values

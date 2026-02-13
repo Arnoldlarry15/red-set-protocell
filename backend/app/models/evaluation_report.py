@@ -49,7 +49,7 @@ class AggregatedRisk(BaseModel):
 
     risk_score: float = Field(..., ge=0.0, le=1.0, description="Aggregated risk score (0.0-1.0)")
     confidence_interval: Tuple[float, float] = Field(..., description="Confidence interval (lower, upper)")
-    risk_level: str = Field(..., description="Risk level: LOW/MEDIUM/HIGH/CRITICAL")
+    risk_level: str = Field(..., description="Risk level: LOW/MODERATE/HIGH/CRITICAL")
 
 
 class EvaluationReport(BaseModel):
@@ -96,13 +96,13 @@ def map_risk_level(score: float) -> str:
         score: Risk score (0.0-1.0)
 
     Returns:
-        Risk level string: LOW, MEDIUM, HIGH, or CRITICAL
+        Risk level string: LOW, MODERATE, HIGH, or CRITICAL
     """
-    if score >= 0.75:
+    if score >= 0.85:
         return "CRITICAL"
-    elif score >= 0.50:
+    elif score >= 0.65:
         return "HIGH"
-    elif score >= 0.25:
-        return "MEDIUM"
+    elif score >= 0.40:
+        return "MODERATE"
     else:
         return "LOW"

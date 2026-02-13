@@ -112,11 +112,11 @@ async def custom_weights_example():
 
     # Create custom weights that prioritize policy violations more heavily
     custom_weights = {
-        "policy_violation": 0.50,      # Increased from 0.35
+        "policy_violation": 0.50,      # Increased from 0.40
         "danger_context": 0.20,
         "manipulation_risk": 0.10,     # Decreased from 0.15
         "contradiction_score": 0.10,   # Decreased from 0.15
-        "fluency_penalty": 0.05,       # Decreased from 0.10
+        "fluency_penalty": 0.05,       # Same as baseline
         "pattern_drift_penalty": 0.05,
     }
 

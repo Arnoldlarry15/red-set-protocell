@@ -9,7 +9,7 @@ import asyncio
 import json
 from datetime import datetime
 from app.agents.spotter import Spotter
-from app.models.evaluation_report import EvaluationReport, map_risk_level
+from app.models.evaluation_report import map_risk_level
 
 
 async def demo_basic_usage():

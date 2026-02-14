@@ -198,17 +198,21 @@ def load_config_from_env() -> RSPConfig:
     config = get_default_config()
 
     # Load backend type from environment
-    backend_type = os.getenv('BACKEND_TYPE', 'openai').lower()
-    if backend_type == 'openai':
-        config.target.backend = ModelBackend.OPENAI
-    elif backend_type == 'anthropic':
-        config.target.backend = ModelBackend.ANTHROPIC
-    elif backend_type == 'openrouter':
-        config.target.backend = ModelBackend.OPENROUTER
-    elif backend_type == 'llama_cpp':
-        config.target.backend = ModelBackend.LLAMA_CPP
-    elif backend_type == 'custom_http':
-        config.target.backend = ModelBackend.CUSTOM_HTTP
+    backend_type_env = os.getenv('BACKEND_TYPE', '').lower()
+    
+    # If BACKEND_TYPE is explicitly set, use it
+    if backend_type_env:
+        if backend_type_env == 'openai':
+            config.target.backend = ModelBackend.OPENAI
+        elif backend_type_env == 'anthropic':
+            config.target.backend = ModelBackend.ANTHROPIC
+        elif backend_type_env == 'openrouter':
+            config.target.backend = ModelBackend.OPENROUTER
+        elif backend_type_env == 'llama_cpp':
+            config.target.backend = ModelBackend.LLAMA_CPP
+        elif backend_type_env == 'custom_http':
+            config.target.backend = ModelBackend.CUSTOM_HTTP
+    # Otherwise, keep the default (OpenAI)
 
     # Load Target API key based on backend type
     if config.target.backend == ModelBackend.OPENROUTER:
@@ -220,6 +224,9 @@ def load_config_from_env() -> RSPConfig:
         config.target.api_key = os.getenv('ANTHROPIC_API_KEY')
     elif config.target.backend == ModelBackend.OPENAI:
         config.target.api_key = os.getenv('OPENAI_API_KEY')
+        # Backward compatibility: fall back to ANTHROPIC_API_KEY if OPENAI_API_KEY not set
+        if not config.target.api_key:
+            config.target.api_key = os.getenv('ANTHROPIC_API_KEY')
     else:
         # Fallback logic for other backends
         if os.getenv('ANTHROPIC_API_KEY'):

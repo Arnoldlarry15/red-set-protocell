@@ -423,6 +423,60 @@ class AnthropicBackend(TargetBackend):
                 "Anthropic package not installed. Install with: pip install anthropic"
             )
 
+    async def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using Anthropic API (async)."""
+        try:
+            # Prepare messages
+            messages = [{"role": "user", "content": prompt}]
+
+            # Apply perturbations
+            modified_prompt, modified_temperature, modified_messages = (
+                self._apply_perturbations(prompt, self.temperature, messages)
+            )
+
+            # Extract system prompt if present
+            system_prompt = None
+            user_messages = []
+            for msg in modified_messages:
+                if msg.get("role") == "system":
+                    system_prompt = msg["content"]
+                else:
+                    user_messages.append(msg)
+
+            # Build API call parameters
+            api_params = {
+                "model": self.model_name,
+                "max_tokens": self.max_tokens,
+                "temperature": modified_temperature,
+                "messages": user_messages,
+            }
+            if system_prompt:
+                api_params["system"] = system_prompt
+
+            response = await self.client.messages.create(**api_params)
+
+            result = response.content[0].text
+
+            # Apply post-execution perturbations
+            result = self._apply_post_perturbations(result)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"Anthropic API call failed: {e}")
+            raise
+
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get Anthropic backend information."""
+        info = super().get_backend_info()
+        info.update({
+            "backend_type": "anthropic",
+            "model_name": self.model_name,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+        })
+        return info
+
 
 class OpenRouterBackend(TargetBackend):
     """OpenRouter API backend - Provides access to multiple LLM providers through a unified API."""

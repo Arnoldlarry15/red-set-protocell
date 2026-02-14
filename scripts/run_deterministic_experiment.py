@@ -16,7 +16,7 @@ import argparse
 from datetime import datetime
 import numpy as np
 from app.main import setup_system
-from app.core.config import get_default_config
+from app.core.config import load_config_from_env
 
 
 def set_seed(seed: int):
@@ -55,8 +55,8 @@ async def run_session(session_name: str, seed: int, max_rounds: int = 100):
     # Lock randomness at session start
     set_seed(seed)
     
-    # Configure system
-    config = get_default_config()
+    # Configure system - load from environment to respect BACKEND_TYPE and API keys
+    config = load_config_from_env()
     config.orchestrator.max_rounds = max_rounds
     
     # Initialize system (ONCE - fixes bug in original)
@@ -118,7 +118,7 @@ async def verify_determinism(seed: int, rounds: int = 10):
     # Run 1
     print("Run 1...")
     set_seed(seed)
-    config = get_default_config()
+    config = load_config_from_env()
     config.orchestrator.max_rounds = rounds
     orchestrator1 = setup_system(config)
     
@@ -136,7 +136,7 @@ async def verify_determinism(seed: int, rounds: int = 10):
     # Run 2
     print("Run 2...")
     set_seed(seed)
-    config = get_default_config()
+    config = load_config_from_env()
     config.orchestrator.max_rounds = rounds
     orchestrator2 = setup_system(config)
     

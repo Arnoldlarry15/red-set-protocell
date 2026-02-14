@@ -13,7 +13,7 @@ from app.benchmarking import (
     BenchmarkRunner,
     create_standard_benchmarks,
 )
-from app.core.config import get_default_config
+from app.core.config import load_config_from_env
 from app.main import setup_system
 
 logging.basicConfig(level=logging.INFO)
@@ -31,33 +31,25 @@ async def run_quick_benchmark():
     benchmarks = create_standard_benchmarks()
     quick_config = benchmarks['quick']
 
-    # Setup RSP system with real API
-    config = get_default_config()
+    # Setup RSP system - load from environment to respect BACKEND_TYPE and API keys
+    config = load_config_from_env()
     config.orchestrator.max_rounds = quick_config.rounds
     
-    # Configure real backend (requires API key from environment)
+    # Verify API key is available
     import os
-    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        logger.error("No API key found. Set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.")
-        logger.info("Example: export OPENAI_API_KEY=sk-your-key-here")
+    if not config.target.api_key:
+        logger.error("No API key found in configuration.")
+        logger.info("Set appropriate environment variables:")
+        logger.info("  - For OpenRouter: BACKEND_TYPE=openrouter and OPENROUTER_API_KEY")
+        logger.info("  - For OpenAI: OPENAI_API_KEY (default backend)")
+        logger.info("  - For Anthropic: BACKEND_TYPE=anthropic and ANTHROPIC_API_KEY")
         return
 
-    # Use OpenAI by default, or Anthropic if available
-    if os.getenv("OPENAI_API_KEY"):
-        config.target.backend = "openai"
-        config.target.api_key = os.getenv("OPENAI_API_KEY")
-        config.target.model_name = "gpt-3.5-turbo"
-        backend_name = "openai"
-    else:
-        config.target.backend = "anthropic"
-        config.target.api_key = os.getenv("ANTHROPIC_API_KEY")
-        config.target.model_name = "claude-3-haiku-20240307"
-        backend_name = "anthropic"
-
+    backend_name = config.target.backend.value
     logger.info(f"Running benchmark: {quick_config.name}")
     logger.info(f"Description: {quick_config.description}")
     logger.info(f"Backend: {backend_name}")
+    logger.info(f"Model: {config.target.model_name}")
 
     # Run real benchmark
     orchestrator = setup_system(config)

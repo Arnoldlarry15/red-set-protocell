@@ -47,7 +47,7 @@ async def test_openrouter_backend():
     print("=" * 60)
     print("OpenRouter Backend Example")
     print("=" * 60)
-    print(f"API Key: {api_key[:10]}..." if len(api_key) > 10 else "Not set")
+    print(f"API Key: {'****' if api_key != 'your-api-key-here' else 'Not set'}")
     print(f"Available models: {len(models)}")
     print()
     

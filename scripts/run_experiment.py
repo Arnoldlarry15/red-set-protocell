@@ -12,7 +12,7 @@ import json
 import random
 import numpy as np
 from app.main import setup_system
-from app.core.config import get_default_config
+from app.core.config import load_config_from_env
 
 
 async def run_session(session_name: str, seed: int):
@@ -26,8 +26,8 @@ async def run_session(session_name: str, seed: int):
     random.seed(seed)
     np.random.seed(seed)
 
-    # Configure system
-    config = get_default_config()
+    # Configure system - load from environment to respect BACKEND_TYPE and API keys
+    config = load_config_from_env()
     config.orchestrator.max_rounds = 100
     # Initialize system
     orchestrator = setup_system(config)

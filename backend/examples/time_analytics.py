@@ -18,7 +18,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.core.config import RSPConfig, get_default_config
+from app.core.config import RSPConfig, load_config_from_env
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.scoring import ScoringEngine
 from app.engines.mutation import MutationEngine
@@ -48,11 +48,23 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
     print(f"Running session with {model_version}")
     print(f"{'='*60}")
 
-    # Create configuration
-    config = get_default_config()
+    # Create configuration - load from environment to respect BACKEND_TYPE and API keys
+    config = load_config_from_env()
     config.orchestrator.max_rounds = rounds
     config.storage.zero_retention = False  # Keep data for analysis
     config.storage.database_path = "time_analytics_example.db"
+
+    # Verify API key is available
+    import os
+    if not config.target.api_key:
+        print("ERROR: No API key found in configuration.")
+        print("Set appropriate environment variables:")
+        print("  - For OpenRouter: BACKEND_TYPE=openrouter and OPENROUTER_API_KEY")
+        print("  - For OpenAI: OPENAI_API_KEY (default backend)")
+        print("  - For Anthropic: BACKEND_TYPE=anthropic and ANTHROPIC_API_KEY")
+        raise ValueError("API key required for live execution")
+
+    print(f"Using {config.target.backend.value} backend: {config.target.model_name}")
 
     # Initialize components
     egg = EthicalGuardrailGovernor()
@@ -65,34 +77,15 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
         creativity_temperature=0.8
     )
 
-    # Create real target with API
-    import os
+    # Create target using config loaded from environment
     from app.factories import TargetFactory
     
-    api_key = os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
-    if not api_key:
-        print("ERROR: No API key found.")
-        print("Set OPENAI_API_KEY or ANTHROPIC_API_KEY environment variable.")
-        print("Example: export OPENAI_API_KEY=sk-your-key-here")
-        raise ValueError("API key required for live execution")
-
-    # Use OpenAI by default, or Anthropic if available
-    if os.getenv("OPENAI_API_KEY"):
-        target = TargetFactory.create(
-            "openai",
-            api_key=os.getenv("OPENAI_API_KEY"),
-            model_name="gpt-3.5-turbo",
-            max_tokens=500
-        )
-        print(f"Using OpenAI backend: gpt-3.5-turbo")
-    else:
-        target = TargetFactory.create(
-            "anthropic",
-            api_key=os.getenv("ANTHROPIC_API_KEY"),
-            model_name="claude-3-haiku-20240307",
-            max_tokens=500
-        )
-        print(f"Using Anthropic backend: claude-3-haiku-20240307")
+    target = TargetFactory.create(
+        backend_type=config.target.backend.value,
+        api_key=config.target.api_key,
+        model_name=config.target.model_name,
+        max_tokens=500
+    )
 
     spotter = Spotter()
 

@@ -16,7 +16,7 @@ from app.agents.target import (
     OpenRouterBackend,
     TargetBackend,
     Target,
-    PerturbationConfig
+    PerturbationConfig,
 )
 
 
@@ -60,10 +60,7 @@ class BackendFactory(ABC):
 
         if backend_type_lower not in cls._registry:
             available = ", ".join(cls._registry.keys())
-            raise ValueError(
-                f"Unknown backend type: {backend_type}. "
-                f"Available backends: {available}"
-            )
+            raise ValueError(f"Unknown backend type: {backend_type}. " f"Available backends: {available}")
 
         backend_class = cls._registry[backend_type_lower]
 
@@ -152,11 +149,7 @@ class TargetFactory:
     """
 
     @staticmethod
-    def create(
-        backend_type: str,
-        perturbation_config: Optional[PerturbationConfig] = None,
-        **config
-    ) -> Target:
+    def create(backend_type: str, perturbation_config: Optional[PerturbationConfig] = None, **config) -> Target:
         """
         Create a Target agent with specified backend.
 

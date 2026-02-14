@@ -128,7 +128,7 @@ def test_load_config_from_env(monkeypatch):
     # Clear any existing API keys that might interfere
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("BACKEND_TYPE", raising=False)
-    
+
     # Set environment variables
     monkeypatch.setenv("SNIPER_ANTHROPIC_API_KEY", "sniper-env-key")
     monkeypatch.setenv("SPOTTER_ANTHROPIC_API_KEY", "spotter-env-key")
@@ -148,7 +148,7 @@ def test_load_openrouter_config_from_env(monkeypatch):
     # Clear any existing API keys that might interfere
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    
+
     # Set environment variables for OpenRouter
     monkeypatch.setenv("BACKEND_TYPE", "openrouter")
     monkeypatch.setenv("OPENROUTER_API_KEY", "openrouter-test-key")
@@ -167,7 +167,7 @@ def test_load_openrouter_custom_base_url(monkeypatch):
     # Clear any existing API keys that might interfere
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    
+
     # Set environment variables
     monkeypatch.setenv("BACKEND_TYPE", "openrouter")
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
@@ -187,7 +187,7 @@ def test_backend_type_env_defaults_to_openai(monkeypatch):
     monkeypatch.delenv("BACKEND_TYPE", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-    
+
     # Don't set BACKEND_TYPE, should default to OpenAI
     monkeypatch.setenv("OPENAI_API_KEY", "openai-test-key")
 
@@ -204,7 +204,7 @@ def test_backend_type_case_insensitive(monkeypatch):
     # Clear any existing API keys that might interfere
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    
+
     # Set uppercase backend type
     monkeypatch.setenv("BACKEND_TYPE", "OPENROUTER")
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")

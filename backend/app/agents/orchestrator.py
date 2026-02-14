@@ -711,22 +711,22 @@ class Orchestrator:
     - It does NOT interpret scores or adjust strategies
 
     Critical Pre-Release Checks:
-    [✓] No hidden shared state between rounds:
+    [OK] No hidden shared state between rounds:
         - Each round is independent (no mutable shared state)
         - Prior rounds accessed via StateManager (read-only)
         - Agents are stateless or manage their own state
 
-    [✓] No blocking calls in async paths:
+    [OK] No blocking calls in async paths:
         - All I/O operations are async (Target.execute, etc.)
         - Database operations are synchronous but fast (SQLite)
         - Timeouts enforced via asyncio.wait_for
 
-    [✓] Backpressure handling:
+    [OK] Backpressure handling:
         - Sequential mode: Natural backpressure (one round at a time)
         - Parallel mode: Batch size limited by concurrent_rounds
         - No unbounded queues or task creation
 
-    [✓] Round IDs unique and traceable:
+    [OK] Round IDs unique and traceable:
         - Round numbers are sequential integers (1-based)
         - Session ID is globally unique (CSPRNG-generated)
         - Timestamps recorded per round
@@ -739,11 +739,11 @@ class Orchestrator:
     - No conditional logic based on agent outputs (except EGG blocks)
 
     This is production-ready because:
-    ✓ Execution is deterministic (given same agent behavior)
-    ✓ No race conditions or shared mutable state
-    ✓ Errors are logged and handled gracefully
-    ✓ Timeouts prevent hung rounds
-    ✓ Resource cleanup is explicit (terminate_session, cleanup)
+    [OK] Execution is deterministic (given same agent behavior)
+    [OK] No race conditions or shared mutable state
+    [OK] Errors are logged and handled gracefully
+    [OK] Timeouts prevent hung rounds
+    [OK] Resource cleanup is explicit (terminate_session, cleanup)
     """
 
     def __init__(
@@ -936,7 +936,7 @@ class Orchestrator:
         manifest_path = os.path.join(run_dir, "manifest.json")
         self.current_manifest.save(manifest_path)
 
-        logger.info(f"✓ Attack Manifest generated and persisted: {manifest_path}")
+        logger.info(f"[OK] Attack Manifest generated and persisted: {manifest_path}")
         logger.info(f"  Manifest ID: {self.current_manifest.manifest_id}")
         logger.info(f"  Policy Version: {self.current_manifest.policy_version}")
         logger.info(f"  Seed: {self.current_manifest.determinism.seed}")
@@ -961,7 +961,7 @@ class Orchestrator:
             # Log final specimen count
             if self.failure_specimens:
                 logger.info(
-                    f"✓ Generated {len(self.failure_specimens)} Failure Specimens in {self.specimens_dir}"
+                    f"[OK] Generated {len(self.failure_specimens)} Failure Specimens in {self.specimens_dir}"
                 )
 
         # Get final statistics
@@ -1236,7 +1236,7 @@ class Orchestrator:
             self.failure_specimens.append(specimen)
 
             logger.info(
-                f"  ✓ Failure Specimen created: {specimen.specimen_id} "
+                f"  [OK] Failure Specimen created: {specimen.specimen_id} "
                 f"(severity={specimen.evaluation.severity}, score={global_score:.3f})"
             )
 

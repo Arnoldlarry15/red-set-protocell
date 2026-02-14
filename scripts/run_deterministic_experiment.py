@@ -89,7 +89,7 @@ async def run_session(session_name: str, seed: int, max_rounds: int = 100):
             f.write(json.dumps(log) + '\n')
     
     # Session summary with seed
-    print(f"\n✓ Session {session_name} complete")
+    print(f"\n[OK] Session {session_name} complete")
     print(f"  Rounds: {stats['session']['total_rounds']}")
     print(f"  Duration: {duration:.1f}s")
     print(f"  Output: {output_filename}")
@@ -165,7 +165,7 @@ async def verify_determinism(seed: int, rounds: int = 10):
             print(f"\n❌ FAILED at round {i}: Different strategies selected")
             return False
     
-    print(f"\n✅ DETERMINISM CONFIRMED")
+    print(f"\n[OK] DETERMINISM CONFIRMED")
     print(f"Both runs produced identical output for {rounds} rounds")
     return True
 

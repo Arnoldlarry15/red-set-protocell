@@ -27,12 +27,12 @@ Sacred Ground Rules:
 4. ONLY initialization, coordination, and cleanup
 
 What Lives Here:
-✓ System component initialization
-✓ Dependency injection and wiring
-✓ Configuration loading and validation
-✓ Lifecycle management (startup/shutdown)
-✓ High-level coordination (orchestrator.run_session)
-✓ Logging and monitoring setup
+[OK] System component initialization
+[OK] Dependency injection and wiring
+[OK] Configuration loading and validation
+[OK] Lifecycle management (startup/shutdown)
+[OK] High-level coordination (orchestrator.run_session)
+[OK] Logging and monitoring setup
 
 What Does NOT Live Here:
 ✗ Scoring algorithms
@@ -43,12 +43,12 @@ What Does NOT Live Here:
 ✗ Business rules or policies
 
 Pre-Release Verification:
-[✓] No business logic present
-[✓] Only wiring and initialization
-[✓] Startup/shutdown hooks properly manage resources
-[✓] Configuration loaded from config.py
-[✓] Logging configured but no debug data leaked
-[✓] Error handling delegates to appropriate modules
+[OK] No business logic present
+[OK] Only wiring and initialization
+[OK] Startup/shutdown hooks properly manage resources
+[OK] Configuration loaded from config.py
+[OK] Logging configured but no debug data leaked
+[OK] Error handling delegates to appropriate modules
 
 Post-Release Maintenance:
 - Update dependencies and versions
@@ -108,7 +108,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         block_real_exploits=config.egg.block_real_exploits,
         block_real_hacking=config.egg.block_real_hacking
     )
-    logger.info("✓ EGG initialized")
+    logger.info("[OK] EGG initialized")
 
     # Initialize Scoring Engine
     scoring_engine = ScoringEngine(
@@ -116,13 +116,13 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         l2_weight=config.scoring.l2_weight,
         l3_weight=config.scoring.l3_weight
     )
-    logger.info("✓ Scoring Engine initialized")
+    logger.info("[OK] Scoring Engine initialized")
 
     # Initialize Mutation Engine
     mutation_engine = MutationEngine(
         mutation_rate=config.sniper.mutation_rate
     )
-    logger.info("✓ Mutation Engine initialized")
+    logger.info("[OK] Mutation Engine initialized")
 
     # Initialize Selection Engine if enabled
     selection_engine = None
@@ -152,7 +152,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             config.sniper.selection_strategy.lower(),
             SelectionStrategy.HYBRID
         )
-        logger.info(f"✓ Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
+        logger.info(f"[OK] Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
     else:
         selection_strategy_enum = SelectionStrategy.HYBRID
 
@@ -166,7 +166,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         domain_selection_temperature=config.sniper.domain_selection_temperature,
         api_key=config.sniper.api_key
     )
-    logger.info("✓ Sniper Agent initialized")
+    logger.info("[OK] Sniper Agent initialized")
 
     # Initialize Target Agent
     backend_value = config.target.backend.value if hasattr(config.target.backend, 'value') else config.target.backend
@@ -178,7 +178,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         temperature=config.target.temperature,
         fresh_context=config.target.fresh_context
     )
-    logger.info(f"✓ Target Agent initialized ({backend_value})")
+    logger.info(f"[OK] Target Agent initialized ({backend_value})")
 
     # Initialize Spotter Agent
     spotter = Spotter(
@@ -186,7 +186,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers,
         api_key=config.spotter.api_key
     )
-    logger.info("✓ Spotter Agent initialized")
+    logger.info("[OK] Spotter Agent initialized")
 
     # Initialize State Manager
     model_version = model_version_override or config.target.model_name
@@ -195,7 +195,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         zero_retention=config.storage.zero_retention,
         model_version=model_version
     )
-    logger.info(f"✓ State Manager initialized (zero_retention={config.storage.zero_retention})")
+    logger.info(f"[OK] State Manager initialized (zero_retention={config.storage.zero_retention})")
 
     # Initialize Orchestrator
     orchestrator = Orchestrator(
@@ -211,7 +211,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         config=config,
         artifacts_dir="runs"
     )
-    logger.info("✓ Orchestrator initialized")
+    logger.info("[OK] Orchestrator initialized")
 
     logger.info("=" * 60)
     logger.info("Red Set ProtoCell system ready")
@@ -284,7 +284,7 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
         if config.storage.zero_retention:
             logger.info("Executing Zero-Retention cleanup...")
             orchestrator.cleanup()
-            logger.info("✓ All session data destroyed")
+            logger.info("[OK] All session data destroyed")
 
 
 def parse_arguments():

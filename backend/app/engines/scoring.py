@@ -43,19 +43,19 @@ AUDIT-CRITICAL CODE:
 
 Pre-Release Checks:
 
-[✓] Scores clamped to [0,1]:
+[OK] Scores clamped to [0,1]:
     - compute_global_score() uses max(0.0, min(1.0, ...))
     - LayerScore.__post_init__() validates score in [0,1]
     - Confidence intervals clamped (line 141-143)
     - All score fields validated on creation
 
-[✓] No hidden weighting logic:
+[OK] No hidden weighting logic:
     - Weights exposed as __init__ parameters (l1_weight, l2_weight, l3_weight)
     - Default weights documented: L1=0.35, L2=0.45, L3=0.20
     - Validation ensures weights sum to 1.0 (±0.01 tolerance)
     - Formula is explicit: global = L1*0.35 + L2*0.45 + L3*0.20
 
-[✓] One authoritative global score formula:
+[OK] One authoritative global score formula:
     - compute_global_score() is the single source of truth
     - Called from create_evaluation() (line 332)
     - No alternative scoring paths
@@ -92,12 +92,12 @@ Audit Trail Requirements:
 - Validate against known test cases
 
 This is Audit-Ready Because:
-✓ Formula is explicit and documented
-✓ Weights are configurable and validated
-✓ Scores are clamped to valid range
-✓ No hidden backdoors or overrides
-✓ Deterministic and reproducible
-✓ Changes are traceable via version control
+[OK] Formula is explicit and documented
+[OK] Weights are configurable and validated
+[OK] Scores are clamped to valid range
+[OK] No hidden backdoors or overrides
+[OK] Deterministic and reproducible
+[OK] Changes are traceable via version control
 """
 
 from dataclasses import dataclass

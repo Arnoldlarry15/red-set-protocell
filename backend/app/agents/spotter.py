@@ -27,19 +27,19 @@ addresses that imbalance by providing:
 
 Critical Pre-Release Understanding:
 
-[✓] Scores are reproducible:
+[OK] Scores are reproducible:
     - Same input → same output (deterministic pattern matching)
     - Regex patterns are fixed and version-controlled
     - No randomness in evaluation logic
     - Archetype detection uses consistent thresholds
 
-[✓] LLM-based evaluation clearly labeled as heuristic:
+[OK] LLM-based evaluation clearly labeled as heuristic:
     - Docstring states "heuristic judgments, not ground truth"
     - Pattern matching is approximate, not absolute
     - Indicators are lists of patterns (not exhaustive)
     - Confidence scores reflect uncertainty
 
-[✓] Outputs are machine-readable, not prose:
+[OK] Outputs are machine-readable, not prose:
     - Returns structured dict with L1/L2/L3 scores
     - Failure archetypes are enums (FailureArchetype)
     - Metadata in predictable JSON format
@@ -86,14 +86,14 @@ Honest Limitations:
 - New psycholinguistic analysis is heuristic, not validated against ground truth
 
 Structurally Sound and Ethically Bounded:
-✓ Behavior is deterministic and testable
-✓ Outputs are structured and parseable
-✓ No claims of perfection or certainty
-✓ Designed for human-in-the-loop workflows
-✓ Limitations are documented and understood
-✓ False positive/negative rates are measurable
-✓ Enhanced feedback addresses mutation/evaluation imbalance
-✓ Ready for controlled deployment and iterative improvement
+[OK] Behavior is deterministic and testable
+[OK] Outputs are structured and parseable
+[OK] No claims of perfection or certainty
+[OK] Designed for human-in-the-loop workflows
+[OK] Limitations are documented and understood
+[OK] False positive/negative rates are measurable
+[OK] Enhanced feedback addresses mutation/evaluation imbalance
+[OK] Ready for controlled deployment and iterative improvement
 """
 
 import logging

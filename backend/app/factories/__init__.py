@@ -5,6 +5,7 @@ Industry-grade factory implementations for creating components
 without tight coupling to concrete implementations.
 """
 
+import logging
 from typing import Dict, Type, Any, Optional
 from abc import ABC
 
@@ -57,7 +58,6 @@ class BackendFactory(ABC):
             ValueError: If backend type is not registered
         """
         # DEBUG: Log what backend is being requested
-        import logging
         logger = logging.getLogger(__name__)
         logger.info(f"DEBUG BackendFactory.create() called:")
         logger.info(f"  backend_type (raw) = {backend_type!r}")

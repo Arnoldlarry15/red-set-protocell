@@ -19,20 +19,20 @@ It systematically explores the space of adversarial prompts to discover failure 
 
 Pre-Release Checks:
 
-[✓] Strategy selection is explicit and logged:
+[OK] Strategy selection is explicit and logged:
     - Attack domain logged per generation (logger.info)
     - Strategy used tracked in prompt_strategies dict
     - Mutation strategies recorded in mutation_history
     - Selection engine strategy configurable and documented
 
-[✓] Mutation is bounded (no runaway transformations):
+[OK] Mutation is bounded (no runaway transformations):
     - Evolution pool size capped at evolution_pool_size
     - Mutation rate controlled (0.0-1.0, configurable)
     - No recursive or unbounded mutations
     - Each mutation is a single transformation step
     - Pool updated with fixed-size constraint
 
-[✓] Prompts tagged with lineage metadata:
+[OK] Prompts tagged with lineage metadata:
     - PromptCandidate objects track domain, fitness, score
     - Generation count tracked (self.generation_count)
     - Strategy used stored in prompt_strategies
@@ -67,11 +67,11 @@ Why This is "Adversarial Intelligence with Boundaries":
    - Safety is enforced, not optional
 
 This is production-ready because:
-✓ Behavior is bounded and predictable
-✓ No runaway resource consumption
-✓ Full observability via logging
-✓ Respects ethical guardrails (EGG)
-✓ Lineage enables debugging and analysis
+[OK] Behavior is bounded and predictable
+[OK] No runaway resource consumption
+[OK] Full observability via logging
+[OK] Respects ethical guardrails (EGG)
+[OK] Lineage enables debugging and analysis
 """
 
 import logging

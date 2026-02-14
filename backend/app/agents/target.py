@@ -43,19 +43,19 @@ CLEAN ADAPTER PATTERN:
 
 Pre-Release Checks:
 
-[✓] Timeouts enforced:
+[OK] Timeouts enforced:
     - HTTP requests have 60s timeout (CustomHTTPBackend)
     - OpenAI/Anthropic clients have built-in timeouts
     - Orchestrator enforces round-level timeout
     - No unbounded waits anywhere
 
-[✓] Provider errors normalized:
+[OK] Provider errors normalized:
     - All backends raise exceptions on failure
     - Errors logged with context (logger.error)
     - No provider-specific error codes exposed to Orchestrator
     - Orchestrator handles all exceptions uniformly
 
-[✓] No provider-specific logic leaks upward:
+[OK] No provider-specific logic leaks upward:
     - Abstract TargetBackend base class defines contract
     - Concrete backends (OpenAI, Anthropic, etc.) are isolated
     - create_target() factory hides backend instantiation
@@ -89,11 +89,11 @@ Why This is a Clean Adapter Pattern:
    - Stateless design prevents state leakage
 
 This Will Age Well Because:
-✓ Adding new LLM providers requires no Orchestrator changes
-✓ Provider API changes are isolated to one backend class
-✓ Testing is straightforward (mock TargetBackend)
-✓ No tight coupling to specific provider APIs
-✓ Clear separation of concerns
+[OK] Adding new LLM providers requires no Orchestrator changes
+[OK] Provider API changes are isolated to one backend class
+[OK] Testing is straightforward (mock TargetBackend)
+[OK] No tight coupling to specific provider APIs
+[OK] Clear separation of concerns
 """
 
 import logging

@@ -13,6 +13,7 @@ from app.agents.target import (
     AnthropicBackend,
     LlamaCppBackend,
     CustomHTTPBackend,
+    OpenRouterBackend,
     TargetBackend,
     Target,
     PerturbationConfig
@@ -89,6 +90,14 @@ class BackendFactory(ABC):
                 max_tokens=config.get("max_tokens", 1000),
                 temperature=config.get("temperature", 0.7),
             )
+        elif backend_class == OpenRouterBackend:
+            return OpenRouterBackend(
+                api_key=config.get("api_key", ""),
+                model_name=config.get("model_name", "openai/gpt-3.5-turbo"),
+                max_tokens=config.get("max_tokens", 1000),
+                temperature=config.get("temperature", 0.7),
+                base_url=config.get("base_url", "https://openrouter.ai/api/v1"),
+            )
         elif backend_class == AnthropicBackend:
             return AnthropicBackend(
                 api_key=config.get("api_key", ""),
@@ -131,6 +140,7 @@ class BackendFactory(ABC):
 
 # Register built-in backends
 BackendFactory.register("openai", OpenAIBackend)
+BackendFactory.register("openrouter", OpenRouterBackend)
 BackendFactory.register("anthropic", AnthropicBackend)
 BackendFactory.register("llama_cpp", LlamaCppBackend)
 BackendFactory.register("custom_http", CustomHTTPBackend)

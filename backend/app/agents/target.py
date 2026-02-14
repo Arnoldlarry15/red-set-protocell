@@ -423,8 +423,54 @@ class AnthropicBackend(TargetBackend):
                 "Anthropic package not installed. Install with: pip install anthropic"
             )
 
+
+class OpenRouterBackend(TargetBackend):
+    """OpenRouter API backend - Provides access to multiple LLM providers through a unified API."""
+
+    def __init__(
+        self,
+        api_key: str,
+        model_name: str = "openai/gpt-3.5-turbo",
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+        base_url: str = "https://openrouter.ai/api/v1",
+    ):
+        """
+        Initialize OpenRouter backend.
+
+        Args:
+            api_key: OpenRouter API key
+            model_name: Model identifier (e.g., "openai/gpt-3.5-turbo", "anthropic/claude-3-opus")
+            max_tokens: Maximum response tokens
+            temperature: Sampling temperature
+            base_url: OpenRouter API base URL
+        """
+        super().__init__()
+        if not api_key:
+            raise ValueError("OpenRouter API key is required")
+
+        self.api_key = api_key
+        self.model_name = model_name
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.base_url = base_url
+
+        # Initialize OpenAI client with OpenRouter base URL
+        # OpenRouter uses OpenAI-compatible API
+        try:
+            from openai import AsyncOpenAI
+
+            self.client = AsyncOpenAI(
+                api_key=self.api_key,
+                base_url=self.base_url
+            )
+        except ImportError:
+            raise ImportError(
+                "OpenAI package not installed. Install with: pip install openai"
+            )
+
     async def execute(self, prompt: str, **kwargs) -> str:
-        """Execute prompt using Anthropic API (async)."""
+        """Execute prompt using OpenRouter API (async)."""
         try:
             # Prepare messages
             messages = [{"role": "user", "content": prompt}]
@@ -434,28 +480,14 @@ class AnthropicBackend(TargetBackend):
                 self._apply_perturbations(prompt, self.temperature, messages)
             )
 
-            # Extract system prompt if present
-            system_prompt = None
-            user_messages = []
-            for msg in modified_messages:
-                if msg.get("role") == "system":
-                    system_prompt = msg["content"]
-                else:
-                    user_messages.append(msg)
+            response = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=modified_messages,
+                max_tokens=self.max_tokens,
+                temperature=modified_temperature,
+            )
 
-            # Build API call parameters
-            api_params = {
-                "model": self.model_name,
-                "max_tokens": self.max_tokens,
-                "temperature": modified_temperature,
-                "messages": user_messages,
-            }
-            if system_prompt:
-                api_params["system"] = system_prompt
-
-            response = await self.client.messages.create(**api_params)
-
-            result = response.content[0].text
+            result = response.choices[0].message.content
 
             # Apply post-execution perturbations
             result = self._apply_post_perturbations(result)
@@ -463,19 +495,19 @@ class AnthropicBackend(TargetBackend):
             return result
 
         except Exception as e:
-            logger.error(f"Anthropic API call failed: {e}")
+            logger.error(f"OpenRouter API call failed: {e}")
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
-        """Get Anthropic backend information."""
-        info = super().get_backend_info()
-        info.update({
-            "backend_type": "anthropic",
+        """Get OpenRouter backend information."""
+        return {
+            "backend_type": "openrouter",
             "model_name": self.model_name,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
-        })
-        return info
+            "base_url": self.base_url,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
 
 class LlamaCppBackend(TargetBackend):

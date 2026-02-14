@@ -4,7 +4,7 @@ Tests for factory pattern implementation.
 
 import pytest
 from app.factories import BackendFactory, TargetFactory, create_target
-from app.agents.target import OpenAIBackend, AnthropicBackend, TargetBackend, Target
+from app.agents.target import OpenAIBackend, OpenRouterBackend, AnthropicBackend, TargetBackend, Target
 
 
 def test_backend_factory_registration():
@@ -13,6 +13,7 @@ def test_backend_factory_registration():
     available = BackendFactory.list_available()
 
     assert "openai" in available
+    assert "openrouter" in available
     assert "anthropic" in available
     assert "llama_cpp" in available
     assert "custom_http" in available
@@ -47,6 +48,41 @@ def test_backend_factory_create_anthropic():
 
     info = backend.get_backend_info()
     assert info["backend_type"] == "anthropic"
+
+
+def test_backend_factory_create_openrouter():
+    """Test creating OpenRouter backend via factory."""
+    backend = BackendFactory.create(
+        "openrouter",
+        api_key="test-key",
+        model_name="anthropic/claude-3-opus"
+    )
+
+    assert isinstance(backend, OpenRouterBackend)
+    assert backend.model_name == "anthropic/claude-3-opus"
+    assert backend.base_url == "https://openrouter.ai/api/v1"
+
+    info = backend.get_backend_info()
+    assert info["backend_type"] == "openrouter"
+    assert info["model_name"] == "anthropic/claude-3-opus"
+    assert info["base_url"] == "https://openrouter.ai/api/v1"
+
+
+def test_backend_factory_create_openrouter_custom_url():
+    """Test creating OpenRouter backend with custom base URL."""
+    custom_url = "https://custom.openrouter.ai/api/v1"
+    backend = BackendFactory.create(
+        "openrouter",
+        api_key="test-key",
+        model_name="openai/gpt-4",
+        base_url=custom_url
+    )
+
+    assert isinstance(backend, OpenRouterBackend)
+    assert backend.base_url == custom_url
+
+    info = backend.get_backend_info()
+    assert info["base_url"] == custom_url
 
 
 def test_backend_factory_unknown_type():

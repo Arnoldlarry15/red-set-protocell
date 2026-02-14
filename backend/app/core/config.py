@@ -49,6 +49,7 @@ class ModelBackend(Enum):
     ANTHROPIC = "anthropic"
     LLAMA_CPP = "llama_cpp"  # Local GGUF models via llama-cpp-python
     CUSTOM_HTTP = "custom_http"  # Generic HTTP API endpoint
+    OPENROUTER = "openrouter"  # OpenRouter API for multiple model access
 
 
 @dataclass
@@ -110,6 +111,9 @@ class TargetConfig:
     api_url: Optional[str] = None  # Custom API endpoint URL
     request_format: str = "openai"  # Request format for custom HTTP
     headers: Optional[Dict[str, str]] = None  # Additional HTTP headers
+    # For openrouter backend
+    openrouter_api_key: Optional[str] = None  # OpenRouter-specific API key
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"  # OpenRouter API base URL
     # Perturbation settings
     enable_perturbations: bool = False  # Enable perturbation modes
     perturbation_modes: Optional[List[str]] = None  # Specific modes to enable (None = all)
@@ -193,11 +197,43 @@ def load_config_from_env() -> RSPConfig:
     """
     config = get_default_config()
 
-    # Load Target API key
-    if os.getenv('ANTHROPIC_API_KEY'):
+    # Load backend type from environment
+    backend_type = os.getenv('BACKEND_TYPE', 'openai').lower()
+    if backend_type == 'openai':
+        config.target.backend = ModelBackend.OPENAI
+    elif backend_type == 'anthropic':
+        config.target.backend = ModelBackend.ANTHROPIC
+    elif backend_type == 'openrouter':
+        config.target.backend = ModelBackend.OPENROUTER
+    elif backend_type == 'llama_cpp':
+        config.target.backend = ModelBackend.LLAMA_CPP
+    elif backend_type == 'custom_http':
+        config.target.backend = ModelBackend.CUSTOM_HTTP
+
+    # Load Target API key based on backend type
+    if config.target.backend == ModelBackend.OPENROUTER:
+        config.target.openrouter_api_key = os.getenv('OPENROUTER_API_KEY')
+        # Use openrouter_api_key as the primary api_key for backward compatibility
+        if config.target.openrouter_api_key:
+            config.target.api_key = config.target.openrouter_api_key
+    elif config.target.backend == ModelBackend.ANTHROPIC:
         config.target.api_key = os.getenv('ANTHROPIC_API_KEY')
-    elif os.getenv('OPENAI_API_KEY'):
+    elif config.target.backend == ModelBackend.OPENAI:
         config.target.api_key = os.getenv('OPENAI_API_KEY')
+    else:
+        # Fallback logic for other backends
+        if os.getenv('ANTHROPIC_API_KEY'):
+            config.target.api_key = os.getenv('ANTHROPIC_API_KEY')
+        elif os.getenv('OPENAI_API_KEY'):
+            config.target.api_key = os.getenv('OPENAI_API_KEY')
+
+    # Load OpenRouter base URL if provided
+    if os.getenv('OPENROUTER_BASE_URL'):
+        config.target.openrouter_base_url = os.getenv('OPENROUTER_BASE_URL')
+
+    # Load OpenAI base URL if provided
+    if os.getenv('OPENAI_API_BASE'):
+        config.target.api_base = os.getenv('OPENAI_API_BASE')
 
     # Load Sniper API key
     if os.getenv('SNIPER_ANTHROPIC_API_KEY'):

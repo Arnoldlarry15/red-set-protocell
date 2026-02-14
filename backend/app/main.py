@@ -170,6 +170,13 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
 
     # Initialize Target Agent
     backend_value = config.target.backend.value if hasattr(config.target.backend, 'value') else config.target.backend
+    
+    # DEBUG: Log backend selection details
+    logger.info(f"DEBUG: Backend configuration:")
+    logger.info(f"  config.target.backend = {config.target.backend}")
+    logger.info(f"  backend_value = {backend_value}")
+    logger.info(f"  type = {type(backend_value)}")
+    
     target = create_target(
         backend_type=backend_value,
         api_key=config.target.api_key,

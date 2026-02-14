@@ -303,9 +303,9 @@ def parse_arguments():
     parser.add_argument(
         '--backend',
         type=str,
-        choices=['openai', 'anthropic'],
+        choices=['openai', 'anthropic', 'openrouter', 'llama_cpp', 'custom_http'],
         required=True,
-        help='Target backend to use (required: openai or anthropic)'
+        help='Target backend to use (required: openai, anthropic, openrouter, llama_cpp, or custom_http)'
     )
 
     parser.add_argument(

@@ -265,9 +265,7 @@ class TargetBackend(BaseTarget):
                 self.perturbation_config.temperature_jitter_range,
             )
             modified_temperature = max(0.0, min(2.0, modified_temperature + jitter))
-            logger.debug(
-                f"Temperature jitter applied: {temperature} -> {modified_temperature}"
-            )
+            logger.debug(f"Temperature jitter applied: {temperature} -> {modified_temperature}")
 
         return modified_prompt, modified_temperature, modified_messages
 
@@ -300,9 +298,7 @@ class TargetBackend(BaseTarget):
                 truncate_at = int(len(modified_response) * ratio)
                 if truncate_at > 0:
                     modified_response = modified_response[:truncate_at]
-                    logger.debug(
-                        f"Response truncated at {ratio:.2%} ({truncate_at} chars)"
-                    )
+                    logger.debug(f"Response truncated at {ratio:.2%} ({truncate_at} chars)")
 
         return modified_response
 
@@ -341,9 +337,7 @@ class OpenAIBackend(TargetBackend):
 
             self.client = AsyncOpenAI(api_key=self.api_key)
         except ImportError:
-            raise ImportError(
-                "OpenAI package not installed. Install with: pip install openai"
-            )
+            raise ImportError("OpenAI package not installed. Install with: pip install openai")
 
     async def execute(self, prompt: str, **kwargs) -> str:
         """Execute prompt using OpenAI API (async)."""
@@ -352,8 +346,8 @@ class OpenAIBackend(TargetBackend):
             messages = [{"role": "user", "content": prompt}]
 
             # Apply perturbations
-            modified_prompt, modified_temperature, modified_messages = (
-                self._apply_perturbations(prompt, self.temperature, messages)
+            modified_prompt, modified_temperature, modified_messages = self._apply_perturbations(
+                prompt, self.temperature, messages
             )
 
             response = await self.client.chat.completions.create(
@@ -419,9 +413,7 @@ class AnthropicBackend(TargetBackend):
 
             self.client = AsyncAnthropic(api_key=self.api_key)
         except ImportError:
-            raise ImportError(
-                "Anthropic package not installed. Install with: pip install anthropic"
-            )
+            raise ImportError("Anthropic package not installed. Install with: pip install anthropic")
 
     async def execute(self, prompt: str, **kwargs) -> str:
         """Execute prompt using Anthropic API (async)."""
@@ -430,8 +422,8 @@ class AnthropicBackend(TargetBackend):
             messages = [{"role": "user", "content": prompt}]
 
             # Apply perturbations
-            modified_prompt, modified_temperature, modified_messages = (
-                self._apply_perturbations(prompt, self.temperature, messages)
+            modified_prompt, modified_temperature, modified_messages = self._apply_perturbations(
+                prompt, self.temperature, messages
             )
 
             # Extract system prompt if present
@@ -469,13 +461,96 @@ class AnthropicBackend(TargetBackend):
     def get_backend_info(self) -> Dict[str, Any]:
         """Get Anthropic backend information."""
         info = super().get_backend_info()
-        info.update({
-            "backend_type": "anthropic",
+        info.update(
+            {
+                "backend_type": "anthropic",
+                "model_name": self.model_name,
+                "max_tokens": self.max_tokens,
+                "temperature": self.temperature,
+            }
+        )
+        return info
+
+
+class OpenRouterBackend(TargetBackend):
+    """OpenRouter API backend - Provides access to multiple LLM providers through a unified API."""
+
+    def __init__(
+        self,
+        api_key: str,
+        model_name: str = "openai/gpt-3.5-turbo",
+        max_tokens: int = 1000,
+        temperature: float = 0.7,
+        base_url: str = "https://openrouter.ai/api/v1",
+    ):
+        """
+        Initialize OpenRouter backend.
+
+        Args:
+            api_key: OpenRouter API key
+            model_name: Model identifier (e.g., "openai/gpt-3.5-turbo", "anthropic/claude-3-opus")
+            max_tokens: Maximum response tokens
+            temperature: Sampling temperature
+            base_url: OpenRouter API base URL
+        """
+        super().__init__()
+        if not api_key:
+            raise ValueError("OpenRouter API key is required")
+
+        self.api_key = api_key
+        self.model_name = model_name
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.base_url = base_url
+
+        # Initialize OpenAI client with OpenRouter base URL
+        # OpenRouter uses OpenAI-compatible API
+        try:
+            from openai import AsyncOpenAI
+
+            self.client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+        except ImportError:
+            raise ImportError("OpenAI package not installed. Install with: pip install openai")
+
+    async def execute(self, prompt: str, **kwargs) -> str:
+        """Execute prompt using OpenRouter API (async)."""
+        try:
+            # Prepare messages
+            messages = [{"role": "user", "content": prompt}]
+
+            # Apply perturbations
+            modified_prompt, modified_temperature, modified_messages = self._apply_perturbations(
+                prompt, self.temperature, messages
+            )
+
+            response = await self.client.chat.completions.create(
+                model=self.model_name,
+                messages=modified_messages,
+                max_tokens=self.max_tokens,
+                temperature=modified_temperature,
+            )
+
+            result = response.choices[0].message.content
+
+            # Apply post-execution perturbations
+            result = self._apply_post_perturbations(result)
+
+            return result
+
+        except Exception as e:
+            logger.error(f"OpenRouter API call failed: {e}")
+            raise
+
+    def get_backend_info(self) -> Dict[str, Any]:
+        """Get OpenRouter backend information."""
+        return {
+            "backend_type": "openrouter",
             "model_name": self.model_name,
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
-        })
-        return info
+            "base_url": self.base_url,
+            "perturbations_enabled": self.perturbation_config.enabled,
+        }
 
 
 class LlamaCppBackend(TargetBackend):
@@ -519,9 +594,7 @@ class LlamaCppBackend(TargetBackend):
                 n_gpu_layers=self.n_gpu_layers,
             )
         except ImportError:
-            raise ImportError(
-                "llama-cpp-python not installed. Install with: pip install llama-cpp-python"
-            )
+            raise ImportError("llama-cpp-python not installed. Install with: pip install llama-cpp-python")
         except Exception as e:
             raise RuntimeError(f"Failed to load GGUF model from {model_path}: {e}")
 
@@ -529,9 +602,7 @@ class LlamaCppBackend(TargetBackend):
         """Execute prompt using local GGUF model (async wrapper for sync call)."""
         try:
             # Apply perturbations
-            modified_prompt, modified_temperature, _ = self._apply_perturbations(
-                prompt, self.temperature, None
-            )
+            modified_prompt, modified_temperature, _ = self._apply_perturbations(prompt, self.temperature, None)
 
             # llama-cpp-python is synchronous, so we run it in executor
             loop = asyncio.get_event_loop()
@@ -542,7 +613,7 @@ class LlamaCppBackend(TargetBackend):
                     max_tokens=self.max_tokens,
                     temperature=modified_temperature,
                     echo=False,
-                )
+                ),
             )
 
             result = response["choices"][0]["text"]
@@ -559,12 +630,14 @@ class LlamaCppBackend(TargetBackend):
     def get_backend_info(self) -> Dict[str, Any]:
         """Get LlamaCpp backend information."""
         info = super().get_backend_info()
-        info.update({
-            "backend_type": "llama_cpp",
-            "model_path": self.model_path,
-            "n_ctx": self.n_ctx,
-            "n_gpu_layers": self.n_gpu_layers,
-        })
+        info.update(
+            {
+                "backend_type": "llama_cpp",
+                "model_path": self.model_path,
+                "n_ctx": self.n_ctx,
+                "n_gpu_layers": self.n_gpu_layers,
+            }
+        )
         return info
 
 
@@ -606,18 +679,14 @@ class CustomHTTPBackend(TargetBackend):
             self.headers["Authorization"] = f"Bearer {self.api_key}"
 
         if requests is None:
-            raise ImportError(
-                "requests package not installed. Install with: pip install requests"
-            )
+            raise ImportError("requests package not installed. Install with: pip install requests")
 
     async def execute(self, prompt: str, **kwargs) -> str:
         """Execute prompt using custom HTTP API (async)."""
         try:
             # Apply perturbations
-            modified_prompt, modified_temperature, modified_messages = (
-                self._apply_perturbations(
-                    prompt, self.temperature, [{"role": "user", "content": prompt}]
-                )
+            modified_prompt, modified_temperature, modified_messages = self._apply_perturbations(
+                prompt, self.temperature, [{"role": "user", "content": prompt}]
             )
 
             # Build request based on format
@@ -644,10 +713,7 @@ class CustomHTTPBackend(TargetBackend):
             # Use asyncio to run requests in executor (requests is sync)
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
-                None,
-                lambda: requests.post(
-                    self.api_url, json=payload, headers=self.headers, timeout=60
-                )
+                None, lambda: requests.post(self.api_url, json=payload, headers=self.headers, timeout=60)
             )
             response.raise_for_status()
 
@@ -655,9 +721,7 @@ class CustomHTTPBackend(TargetBackend):
 
             # Extract response based on format
             if self.request_format == "openai":
-                result = (
-                    data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                )
+                result = data.get("choices", [{}])[0].get("message", {}).get("content", "")
             elif self.request_format == "anthropic":
                 result = data.get("content", [{}])[0].get("text", "")
             else:
@@ -676,11 +740,13 @@ class CustomHTTPBackend(TargetBackend):
     def get_backend_info(self) -> Dict[str, Any]:
         """Get CustomHTTP backend information."""
         info = super().get_backend_info()
-        info.update({
-            "backend_type": "custom_http",
-            "api_url": self.api_url,
-            "request_format": self.request_format,
-        })
+        info.update(
+            {
+                "backend_type": "custom_http",
+                "api_url": self.api_url,
+                "request_format": self.request_format,
+            }
+        )
         return info
 
 

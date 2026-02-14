@@ -64,6 +64,7 @@ def test_model_backends():
     """Test model backend enum."""
     assert ModelBackend.OPENAI.value == "openai"
     assert ModelBackend.ANTHROPIC.value == "anthropic"
+    assert ModelBackend.OPENROUTER.value == "openrouter"
 
 
 def test_config_customization():
@@ -124,6 +125,10 @@ def test_agent_initialization_with_api_keys():
 
 def test_load_config_from_env(monkeypatch):
     """Test loading config from environment variables."""
+    # Clear any existing API keys that might interfere
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("BACKEND_TYPE", raising=False)
+
     # Set environment variables
     monkeypatch.setenv("SNIPER_ANTHROPIC_API_KEY", "sniper-env-key")
     monkeypatch.setenv("SPOTTER_ANTHROPIC_API_KEY", "spotter-env-key")
@@ -136,3 +141,76 @@ def test_load_config_from_env(monkeypatch):
     assert config.sniper.api_key == "sniper-env-key"
     assert config.spotter.api_key == "spotter-env-key"
     assert config.target.api_key == "target-env-key"
+
+
+def test_load_openrouter_config_from_env(monkeypatch):
+    """Test loading OpenRouter config from environment variables."""
+    # Clear any existing API keys that might interfere
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    # Set environment variables for OpenRouter
+    monkeypatch.setenv("BACKEND_TYPE", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "openrouter-test-key")
+
+    # Load config from environment
+    config = load_config_from_env()
+
+    # Verify backend type and API key were loaded
+    assert config.target.backend == ModelBackend.OPENROUTER
+    assert config.target.api_key == "openrouter-test-key"
+    assert config.target.openrouter_api_key == "openrouter-test-key"
+
+
+def test_load_openrouter_custom_base_url(monkeypatch):
+    """Test loading OpenRouter with custom base URL."""
+    # Clear any existing API keys that might interfere
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    # Set environment variables
+    monkeypatch.setenv("BACKEND_TYPE", "openrouter")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+    monkeypatch.setenv("OPENROUTER_BASE_URL", "https://custom.openrouter.ai/api/v1")
+
+    # Load config from environment
+    config = load_config_from_env()
+
+    # Verify custom base URL was loaded
+    assert config.target.backend == ModelBackend.OPENROUTER
+    assert config.target.openrouter_base_url == "https://custom.openrouter.ai/api/v1"
+
+
+def test_backend_type_env_defaults_to_openai(monkeypatch):
+    """Test that backend type defaults to OpenAI when not specified."""
+    # Clear BACKEND_TYPE and other keys that might interfere
+    monkeypatch.delenv("BACKEND_TYPE", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+
+    # Don't set BACKEND_TYPE, should default to OpenAI
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-test-key")
+
+    # Load config from environment
+    config = load_config_from_env()
+
+    # Verify default backend is OpenAI
+    assert config.target.backend == ModelBackend.OPENAI
+    assert config.target.api_key == "openai-test-key"
+
+
+def test_backend_type_case_insensitive(monkeypatch):
+    """Test that backend type is case-insensitive."""
+    # Clear any existing API keys that might interfere
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    # Set uppercase backend type
+    monkeypatch.setenv("BACKEND_TYPE", "OPENROUTER")
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
+
+    # Load config from environment
+    config = load_config_from_env()
+
+    # Verify backend was set correctly
+    assert config.target.backend == ModelBackend.OPENROUTER

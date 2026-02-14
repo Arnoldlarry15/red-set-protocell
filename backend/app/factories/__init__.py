@@ -13,9 +13,10 @@ from app.agents.target import (
     AnthropicBackend,
     LlamaCppBackend,
     CustomHTTPBackend,
+    OpenRouterBackend,
     TargetBackend,
     Target,
-    PerturbationConfig
+    PerturbationConfig,
 )
 
 
@@ -59,10 +60,7 @@ class BackendFactory(ABC):
 
         if backend_type_lower not in cls._registry:
             available = ", ".join(cls._registry.keys())
-            raise ValueError(
-                f"Unknown backend type: {backend_type}. "
-                f"Available backends: {available}"
-            )
+            raise ValueError(f"Unknown backend type: {backend_type}. " f"Available backends: {available}")
 
         backend_class = cls._registry[backend_type_lower]
 
@@ -88,6 +86,14 @@ class BackendFactory(ABC):
                 model_name=config.get("model_name", "gpt-3.5-turbo"),
                 max_tokens=config.get("max_tokens", 1000),
                 temperature=config.get("temperature", 0.7),
+            )
+        elif backend_class == OpenRouterBackend:
+            return OpenRouterBackend(
+                api_key=config.get("api_key", ""),
+                model_name=config.get("model_name", "openai/gpt-3.5-turbo"),
+                max_tokens=config.get("max_tokens", 1000),
+                temperature=config.get("temperature", 0.7),
+                base_url=config.get("base_url", "https://openrouter.ai/api/v1"),
             )
         elif backend_class == AnthropicBackend:
             return AnthropicBackend(
@@ -131,6 +137,7 @@ class BackendFactory(ABC):
 
 # Register built-in backends
 BackendFactory.register("openai", OpenAIBackend)
+BackendFactory.register("openrouter", OpenRouterBackend)
 BackendFactory.register("anthropic", AnthropicBackend)
 BackendFactory.register("llama_cpp", LlamaCppBackend)
 BackendFactory.register("custom_http", CustomHTTPBackend)
@@ -142,11 +149,7 @@ class TargetFactory:
     """
 
     @staticmethod
-    def create(
-        backend_type: str,
-        perturbation_config: Optional[PerturbationConfig] = None,
-        **config
-    ) -> Target:
+    def create(backend_type: str, perturbation_config: Optional[PerturbationConfig] = None, **config) -> Target:
         """
         Create a Target agent with specified backend.
 

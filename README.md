@@ -584,19 +584,48 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 ```
 
+#### OpenRouter Backend
+
+```bash
+cd backend
+export OPENROUTER_API_KEY="sk-or-v1-..."
+python -m app.main --backend openrouter --api-key $OPENROUTER_API_KEY --rounds 10
+```
+
+**Using Environment Variables:**
+
+OpenRouter can also be configured via environment variables for easier setup:
+
+```bash
+cd backend
+export BACKEND_TYPE=openrouter
+export OPENROUTER_API_KEY="sk-or-v1-..."
+python -m app.main --rounds 10
+```
+
+**Available OpenRouter Models:**
+
+OpenRouter provides access to multiple LLM providers through a unified API. Example models:
+- `openai/gpt-3.5-turbo` - OpenAI GPT-3.5
+- `openai/gpt-4` - OpenAI GPT-4
+- `anthropic/claude-3-opus` - Anthropic Claude 3 Opus
+- `anthropic/claude-3-sonnet` - Anthropic Claude 3 Sonnet
+- `meta-llama/llama-3-70b` - Meta Llama 3
+- And many more - see [OpenRouter Models](https://openrouter.ai/models)
+
 ### Command-Line Options
 
 ```
 usage: python -m app.main [options]
 
 Required Arguments:
-  --backend {openai,anthropic}
+  --backend {openai,anthropic,openrouter}
                         Target LLM backend to test
   --api-key KEY        API key for the selected backend
 
 Optional Arguments:
   --rounds N           Maximum rounds to execute (default: 100)
-  --model NAME         Specific model name (e.g., gpt-4, claude-3-opus-20240229)
+  --model NAME         Specific model name (e.g., gpt-4, claude-3-opus-20240229, openai/gpt-4)
   --no-zero-retention  Disable zero-retention (keep session data)
   --db-path PATH       Database file path (default: rsp_session.db)
   -h, --help          Show help message
@@ -845,13 +874,16 @@ creativity_temperature: float = 0.9  # Randomness in generation
 #### Target Configuration
 
 ```python
-backend: ModelBackend = OPENAI       # LLM backend (openai/anthropic/llama_cpp/custom_http)
+backend: ModelBackend = OPENAI       # LLM backend (openai/anthropic/openrouter/llama_cpp/custom_http)
 model_name: str = "gpt-3.5-turbo"   # Model identifier
 api_key: Optional[str] = None        # API key
 api_base: Optional[str] = None       # Custom API endpoint
 max_tokens: int = 1000               # Max response tokens
 temperature: float = 0.7             # Model temperature
 fresh_context: bool = True           # Reset context each round
+# For OpenRouter backend
+openrouter_api_key: Optional[str] = None  # OpenRouter-specific API key
+openrouter_base_url: str = "https://openrouter.ai/api/v1"  # OpenRouter API base URL
 # For local models (llama_cpp backend)
 model_path: Optional[str] = None     # Path to GGUF model file
 n_ctx: int = 2048                    # Context window size

@@ -228,7 +228,11 @@ def load_config_from_env() -> RSPConfig:
         config.target.api_key = os.getenv("ANTHROPIC_API_KEY")
     elif config.target.backend == ModelBackend.OPENAI:
         config.target.api_key = os.getenv("OPENAI_API_KEY")
-        # Backward compatibility: fall back to ANTHROPIC_API_KEY if OPENAI_API_KEY not set
+        # Backward compatibility: Original behavior prioritized ANTHROPIC_API_KEY, then OPENAI_API_KEY
+        # This fallback maintains compatibility with existing configurations where users may have
+        # only set ANTHROPIC_API_KEY and relied on it working with OpenAI backend
+        # Note: This may cause auth failures if Anthropic key is used with OpenAI API
+        # TODO: Consider removing this fallback in a future major version
         if not config.target.api_key:
             config.target.api_key = os.getenv("ANTHROPIC_API_KEY")
     else:

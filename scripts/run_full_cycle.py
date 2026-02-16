@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Red Set ProtoCell - Full Cycle Test Harness
 

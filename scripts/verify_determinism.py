@@ -24,7 +24,6 @@ Usage:
 import asyncio
 import argparse
 import sys
-import os
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any

@@ -1,0 +1,20 @@
+# Copilot Autofix Configuration
+# 
+# Disable automated code scanning fixes for this repository
+# The automated fixes have repeatedly broken code by incorrectly modifying
+# try-except blocks, causing IndentationErrors and syntax errors.
+#
+# History of issues:
+# - Commit 2164a87: Removed try statement, left except block
+# - Commit 45bacaf: Created duplicate try statements, removed except block
+#
+# To re-enable automated fixes in the future, delete this file or change
+# the configuration below.
+
+enabled: false
+
+# Alternative: Enable but exclude specific file patterns
+# enabled: true
+# exclude:
+#   - scripts/run_full_cycle.py
+#   - scripts/verify_determinism.py

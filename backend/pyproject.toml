@@ -105,6 +105,7 @@ classifiers = [
 ]
 dependencies = [
     "python-dateutil>=2.8.2",
+    "numpy>=1.24.0",
     "asyncio>=3.4.3",
     "openai>=1.0.0",
     "anthropic>=0.7.0",

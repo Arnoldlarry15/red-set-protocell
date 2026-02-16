@@ -2,6 +2,7 @@
 
 # Core dependencies
 python-dateutil>=2.8.2
+numpy>=1.24.0
 
 # Async support
 asyncio>=3.4.3

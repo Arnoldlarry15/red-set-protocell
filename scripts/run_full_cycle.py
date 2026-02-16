@@ -215,7 +215,7 @@ class FullCycleRunner:
                     round_detail = {
                         "round": round_num,
                         "timestamp": datetime.utcnow().isoformat(),
-                        "sniper_prompt": prompt[:100] + "..." if len(prompt) > 100 else prompt,
+                        "sniper_prompt": prompt[:200] + "..." if len(prompt) > 200 else prompt,
                         "attack_domain": attack_domain.value,
                         "egg_blocked": True,
                         "blocked_category": blocked_info.category if blocked_info else None,

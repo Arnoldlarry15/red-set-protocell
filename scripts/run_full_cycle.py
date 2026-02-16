@@ -170,21 +170,22 @@ class FullCycleRunner:
         # Step 3: Initialize system
         print("[1/5] Initializing system...")
         orchestrator = setup_system(config)
-        
+
         # Lock MutationEngine's internal RNG
         # Lock MutationEngine's internal RNG. This is best-effort: older or alternative
         # implementations may not expose a `_random` attribute; in that case we continue
         # without failing but record that deterministic seeding was skipped.
+        try:
             mutation_engine = orchestrator.sniper.mutation_engine
             rng = getattr(mutation_engine, "_random", None)
             if rng is not None:
                 rng.seed(self.seed)
         except AttributeError:
-            pass
             print(
                 "[warn] Could not lock MutationEngine RNG deterministically "
                 "(missing expected attributes); continuing without internal RNG seeding."
             )
+
         print("[2/5] Running attack session...")
         
         # Step 4: Run session and capture detailed round information

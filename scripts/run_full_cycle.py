@@ -34,7 +34,7 @@ import sys
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any
 import numpy as np
 
 # Add backend directory to path if not already there

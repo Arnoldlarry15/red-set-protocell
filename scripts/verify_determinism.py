@@ -41,7 +41,7 @@ scripts_dir = script_dir
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-from run_full_cycle import FullCycleRunner, compute_interaction_hash
+from run_full_cycle import FullCycleRunner
 
 
 class DeterminismVerifier:

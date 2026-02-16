@@ -176,11 +176,11 @@ class FullCycleRunner:
         # implementations may not expose a `_random` attribute; in that case we continue
         # without failing but record that deterministic seeding was skipped.
         try:
-        try:
             mutation_engine = orchestrator.sniper.mutation_engine
             rng = getattr(mutation_engine, "_random", None)
             if rng is not None:
                 rng.seed(self.seed)
+        except AttributeError:
             print(
                 "[warn] Could not lock MutationEngine RNG deterministically "
                 "(missing expected attributes); continuing without internal RNG seeding."

@@ -15,13 +15,14 @@ This script provides infrastructure-grade deterministic behavior:
 
 Usage:
     # Run full cycle with default settings (10 rounds)
-    python scripts/run_full_cycle.py
+    cd backend
+    python ../scripts/run_full_cycle.py
     
     # Run with custom settings
-    python scripts/run_full_cycle.py --seed 42 --rounds 20
+    python ../scripts/run_full_cycle.py --seed 42 --rounds 20
     
     # Verify determinism (runs twice and compares)
-    python scripts/run_full_cycle.py --verify
+    python ../scripts/run_full_cycle.py --verify
 """
 
 import asyncio
@@ -30,10 +31,17 @@ import hashlib
 import random
 import argparse
 import sys
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List
 import numpy as np
+
+# Add backend directory to path if not already there
+script_dir = Path(__file__).parent.absolute()
+backend_dir = script_dir.parent / "backend"
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
 from app.main import setup_system
 from app.core.config import load_config_from_env

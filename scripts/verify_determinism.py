@@ -24,15 +24,24 @@ Usage:
 import asyncio
 import argparse
 import sys
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Any
 
-# Import the FullCycleRunner from run_full_cycle
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
+# Add backend directory to path if not already there
+script_dir = Path(__file__).parent.absolute()
+backend_dir = script_dir.parent / "backend"
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
-from scripts.run_full_cycle import FullCycleRunner, compute_interaction_hash
+# Import the FullCycleRunner from run_full_cycle
+# First import run_full_cycle to make sure it's available
+scripts_dir = script_dir
+if str(scripts_dir) not in sys.path:
+    sys.path.insert(0, str(scripts_dir))
+
+from run_full_cycle import FullCycleRunner, compute_interaction_hash
 
 
 class DeterminismVerifier:

@@ -19,7 +19,7 @@ def test_deterministic_script_imports_load_config_from_env():
     script_path = repo_root / "scripts" / "run_deterministic_experiment.py"
 
     # Read the script content
-    with open(script_path, 'r') as f:
+    with open(script_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
     # Verify it imports load_config_from_env
@@ -39,7 +39,7 @@ def test_deterministic_script_uses_load_config_from_env():
     script_path = repo_root / "scripts" / "run_deterministic_experiment.py"
 
     # Read the script content
-    with open(script_path, 'r') as f:
+    with open(script_path, 'r', encoding='utf-8') as f:
         content = f.read()
 
     # Verify it calls load_config_from_env()

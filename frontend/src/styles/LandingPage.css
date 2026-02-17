@@ -446,6 +446,33 @@
   line-height: 1.6;
 }
 
+/* Section Images */
+.section-image {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin: 40px auto;
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  transition: all 0.3s ease;
+}
+
+.section-image:hover {
+  box-shadow: 0 30px 80px rgba(239, 68, 68, 0.3);
+  transform: translateY(-4px);
+}
+
+.problem-image {
+  margin-top: 50px;
+  margin-bottom: 60px;
+}
+
+.solution-image {
+  margin: 50px auto 60px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hero-title {

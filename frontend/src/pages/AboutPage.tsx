@@ -80,6 +80,13 @@ const AboutPage: React.FC = () => {
             </motion.div>
           </motion.div>
 
+          <motion.img
+            src="https://cdn.builder.io/api/v1/image/assets%2Fa5bd7a5a13174e4caedb216ad01c7f84%2F117778ad8d2544ef935db9d28ae6d429?format=webp&width=800&height=1200"
+            alt="Red Set ProtoCell system architecture and components"
+            className="section-image about-image"
+            variants={fadeInUp}
+          />
+
           <motion.div className="rsp-details" variants={fadeInUp}>
             <h2>How Red Set Works</h2>
             <div className="details-content">

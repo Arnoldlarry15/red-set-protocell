@@ -80,6 +80,24 @@
   flex-grow: 1;
 }
 
+/* Section Images */
+.about-image {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  margin: 50px auto 60px;
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  transition: all 0.3s ease;
+}
+
+.about-image:hover {
+  box-shadow: 0 30px 80px rgba(239, 68, 68, 0.3);
+  transform: translateY(-4px);
+}
+
 /* RSP Details */
 .rsp-details {
   margin-bottom: 60px;

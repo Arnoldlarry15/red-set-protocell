@@ -99,6 +99,13 @@ const LandingPage: React.FC = () => {
             </p>
           </motion.div>
 
+          <motion.img
+            src="https://cdn.builder.io/api/v1/image/assets%2Fa5bd7a5a13174e4caedb216ad01c7f84%2F6d81d08ff4eb41b38b1b417cb5b6a021?format=webp&width=800&height=1200"
+            alt="AI threat and vulnerability visualization"
+            className="section-image problem-image"
+            variants={fadeInUp}
+          />
+
           <motion.div
             className="problem-grid"
             variants={staggerContainer}
@@ -139,6 +146,13 @@ const LandingPage: React.FC = () => {
               Autonomous agents that think like attackers, reason like researchers.
             </p>
           </motion.div>
+
+          <motion.img
+            src="https://cdn.builder.io/api/v1/image/assets%2Fa5bd7a5a13174e4caedb216ad01c7f84%2F644f7a3fbdfb4c10bce5a85866e36e75?format=webp&width=800&height=1200"
+            alt="Sniper Spotter dual agent red teaming architecture"
+            className="section-image solution-image"
+            variants={fadeInUp}
+          />
 
           <ArchitectureVisualization />
 

@@ -193,7 +193,10 @@ class TestMutationEngineBehaviorAwareness:
 
     def test_behavior_bias_influences_selection(self):
         """Test that behavior biases influence strategy selection."""
-        engine = MutationEngine(mutation_rate=1.0)
+        import random
+        random.seed(42)  # Set seed for deterministic test
+        
+        engine = MutationEngine(mutation_rate=1.0, random_seed=42)
         engine.adaptive_mode = True
 
         # Initialize some performance history
@@ -229,7 +232,7 @@ class TestMutationEngineBehaviorAwareness:
         # Using 5/50 (10%) as minimum threshold to avoid flaky tests
         # This is very conservative - in practice expect 60-80% lexical_variation
         lexical_count = strategies_used.count('lexical_variation')
-        assert lexical_count > 5  # Should appear multiple times due to bias
+        assert lexical_count > 5, f"Expected > 5 lexical_variation selections, got {lexical_count}"  # Should appear multiple times due to bias
 
     def test_no_guidance_fallback(self):
         """Test that mutation works without guidance (backward compatibility)."""

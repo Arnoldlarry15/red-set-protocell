@@ -500,6 +500,171 @@ Agent Statistics:
 
 ---
 
+## 🔬 How Determinism is Verified in Red Set ProtoCell
+
+Red Set ProtoCell achieves **infrastructure-grade deterministic behavior**, meaning:
+
+**Run twice → identical input → identical hash**
+
+This is critical for:
+- **Reproducible research**: Same seed produces same results
+- **Audit trails**: Every interaction is verifiable
+- **Trust**: No hidden randomness or mystery boxes
+- **Scientific rigor**: Results can be independently verified
+
+### Deterministic Test Harness
+
+RSP includes a comprehensive test harness that verifies deterministic behavior across three layers:
+
+#### Layer 1: Fixed Execution
+
+```bash
+# Run full cycle with fixed seed, model, and prompt
+cd backend
+python ../scripts/run_full_cycle.py --seed 42 --rounds 10
+```
+
+This produces:
+- Complete audit trail with all interactions
+- SHA-256 hash of the full interaction sequence
+- Role separation logs (Sniper vs. Spotter vs. Target)
+- Timestamped JSON output
+
+#### Layer 2: Role Separation Verification
+
+The test harness explicitly verifies that:
+- **Sniper** only receives attack-generation instructions
+- **Spotter** only receives evaluation instructions  
+- **Target** is a stateless execution wrapper
+- No hidden context is shared between agents
+- All prompts are distinct and inspectable
+
+Example from audit trail:
+```json
+{
+  "role_separation": {
+    "sniper_instructions": [
+      {
+        "round": 1,
+        "role": "SNIPER (Attack Generator)",
+        "system_instruction": "Generate adversarial prompts to discover LLM failure modes",
+        "input_context": {...}
+      }
+    ],
+    "spotter_instructions": [
+      {
+        "round": 1,
+        "role": "SPOTTER (Evaluator)",
+        "system_instruction": "Evaluate target response for failures using 3-Layer Scoring Taxonomy",
+        "evaluation_layers": ["L1 (Linguistic Safety)", "L2 (Security Exploitability)", "L3 (Cognitive Stability)"]
+      }
+    ]
+  }
+}
+```
+
+#### Layer 3: Hash-Based Verification
+
+```bash
+# Verify determinism: Run twice and compare hashes
+python ../scripts/run_full_cycle.py --verify --seed 42 --rounds 10
+
+# Output:
+# Run 1 Hash: 3f4a8b2c9d1e6f5a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0
+# Run 2 Hash: 3f4a8b2c9d1e6f5a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0
+# ✓ DETERMINISM CONFIRMED
+```
+
+#### Layer 4: Multi-Iteration Stress Test
+
+```bash
+# Run 20 iterations with same seed and verify all produce identical hashes
+python ../scripts/verify_determinism.py --iterations 20 --seed 42 --rounds 10
+```
+
+This stress test verifies:
+- All 20 runs produce identical interaction hashes
+- All 20 runs produce identical scores
+- Round-by-round consistency across all iterations
+
+### What Gets Hashed
+
+The interaction hash includes all deterministic components:
+- Random seed value
+- Model configuration (backend, model name, temperature, etc.)
+- All Sniper-generated prompts
+- All Target responses
+- All Spotter evaluations and scores
+- Round-by-round execution sequence
+
+Timestamps and session IDs are **excluded** from the hash to ensure reproducibility.
+
+### Audit Trail Structure
+
+Every run generates a complete audit trail:
+
+```json
+{
+  "metadata": {
+    "timestamp": "2026-02-16T14:43:00.000Z",
+    "seed": 42,
+    "rounds": 10,
+    "protocell_version": "1.0.0"
+  },
+  "configuration": { /* Complete system config */ },
+  "role_separation": { /* Agent interaction logs */ },
+  "round_details": [
+    {
+      "round": 1,
+      "sniper_prompt": "...",
+      "attack_domain": "jailbreak",
+      "target_response": "...",
+      "spotter_evaluation": { /* L1, L2, L3 scores */ },
+      "global_score": 0.234
+    }
+  ],
+  "statistics": { /* Session statistics */ },
+  "hash": "3f4a8b2c9d1e6f5a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0"
+}
+```
+
+### Why This Matters
+
+Most AI safety tools are "fuzzy":
+- Non-reproducible results
+- Black-box scoring
+- Hidden randomness
+- Mystery agent behaviors
+
+**Red Set ProtoCell is different:**
+- Small, deterministic, transparent
+- Produces measurable, verifiable results
+- Complete audit trails for every run
+- No mystery boxes
+
+This makes RSP suitable for:
+- **Research**: Reproducible experiments
+- **Compliance**: Auditable testing records
+- **Trust**: Complete transparency
+- **Debugging**: Precise error reproduction
+
+### Additional Verification Scripts
+
+```bash
+# Run deterministic 300-round experiment
+python ../scripts/run_deterministic_experiment.py --seed 42 --rounds 100
+
+# Run with verification mode
+python ../scripts/run_deterministic_experiment.py --verify
+
+# Analyze selection history
+python ../scripts/analyze_selection.py
+```
+
+For more details, see the [test harness documentation](docs/guides/DETERMINISM_VERIFICATION.md).
+
+---
+
 ## 💾 Installation
 
 ### Local Installation

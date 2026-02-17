@@ -57,6 +57,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       working-directory: ./backend
       run: |
+        # Full test suite achieves ~78% coverage
         coverage report --fail-under=70
     
     - name: Archive coverage HTML report

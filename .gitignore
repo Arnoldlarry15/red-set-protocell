@@ -62,6 +62,8 @@ demo_exports/
 demo_benchmarks/
 benchmark_results/
 telemetry_exports/
+full_cycle_logs/
+selection_history_*.jsonl
 
 # Docker
 .dockerignore

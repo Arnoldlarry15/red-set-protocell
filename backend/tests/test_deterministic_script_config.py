@@ -5,12 +5,18 @@ This test ensures that the script respects environment variables for
 backend selection and API keys.
 """
 
+import os
+from pathlib import Path
+
 from app.core.config import ModelBackend
 
 
 def test_deterministic_script_imports_load_config_from_env():
     """Verify the script imports load_config_from_env, not get_default_config."""
-    script_path = "/home/runner/work/red-set-protocell/red-set-protocell/scripts/run_deterministic_experiment.py"
+    # Get script path relative to this test file (platform-independent)
+    test_dir = Path(__file__).parent
+    repo_root = test_dir.parent.parent
+    script_path = repo_root / "scripts" / "run_deterministic_experiment.py"
 
     # Read the script content
     with open(script_path, 'r') as f:
@@ -27,7 +33,10 @@ def test_deterministic_script_imports_load_config_from_env():
 
 def test_deterministic_script_uses_load_config_from_env():
     """Verify the script calls load_config_from_env() to get config."""
-    script_path = "/home/runner/work/red-set-protocell/red-set-protocell/scripts/run_deterministic_experiment.py"
+    # Get script path relative to this test file (platform-independent)
+    test_dir = Path(__file__).parent
+    repo_root = test_dir.parent.parent
+    script_path = repo_root / "scripts" / "run_deterministic_experiment.py"
 
     # Read the script content
     with open(script_path, 'r') as f:

@@ -340,3 +340,128 @@ input::placeholder, textarea::placeholder {
 .empty-state {
   color: var(--color-gray);
 }
+
+/* Architecture Visualization Component */
+.architecture-container {
+  width: 100%;
+}
+
+.architecture-flow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 40px 0;
+}
+
+.arch-step {
+  flex: 0 1 auto;
+}
+
+.arch-box {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 24px;
+  min-width: 140px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.arch-box:hover {
+  background: rgba(26, 26, 26, 0.9);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-2px);
+}
+
+.arch-box.sniper-box,
+.arch-box.spotter-box {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.arch-box.target-box {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.arch-box.report-box {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.arch-icon {
+  color: var(--color-red);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.arch-icon-text {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--color-red);
+}
+
+.arch-box h3 {
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+  color: var(--color-white);
+}
+
+.arch-box p {
+  font-size: 0.85rem;
+  color: var(--color-gray);
+}
+
+.arch-detail {
+  font-size: 0.75rem;
+  color: var(--color-gray);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.arch-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-red);
+  margin: 0 8px;
+}
+
+.feedback-loop {
+  position: relative;
+  height: 100px;
+  margin-top: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.loop-label {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+  color: var(--color-gray);
+  white-space: nowrap;
+  z-index: 5;
+}
+
+.loop-svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 768px) {
+  .architecture-flow {
+    flex-direction: column;
+  }
+
+  .arch-arrow {
+    transform: rotate(90deg);
+    margin: 8px 0;
+  }
+}

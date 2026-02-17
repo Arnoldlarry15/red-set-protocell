@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Play, Pause, Square } from 'lucide-react';
+import { Play, Pause, Square, Shield, Zap } from 'lucide-react';
 import axios from 'axios';
 import LiveFeed from '../components/LiveFeed';
 import MetricsPanel from '../components/MetricsPanel';
@@ -7,6 +7,7 @@ import AttackConfig from '../components/AttackConfig';
 import UserInput from '../components/UserInput';
 import CostTracker from '../components/CostTracker';
 import { useSessionStream } from '../hooks/useSessionStream';
+import { imageAssets } from '../config/imageAssets';
 import '../styles/Dashboard.css';
 import { Attack, SessionStats, SessionConfig, WebSocketMessage, OutgoingWebSocketMessage } from '../types';
 
@@ -306,6 +307,40 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
 
   return (
     <div className="dashboard">
+      {/* Hero Banner Section */}
+      <div className="dashboard-hero">
+        <div className="hero-background">
+          <img
+            src={imageAssets.heroes.redSetProtocol}
+            alt="Red Set ProtoCell System Overview"
+            className="hero-bg-image"
+            loading="lazy"
+          />
+          <div className="hero-overlay"></div>
+        </div>
+        <div className="hero-content">
+          <div className="hero-header-section">
+            <div className="hero-branding">
+              <Shield className="hero-icon" size={40} />
+              <h1 className="hero-title">Red Set ProtoCell</h1>
+            </div>
+            <p className="hero-description">
+              Autonomous AI Red Teaming with Ethical Guardrails
+            </p>
+          </div>
+          <div className="hero-stats">
+            <div className="stat-badge">
+              <Zap size={16} />
+              <span>Active Session</span>
+            </div>
+            <div className="stat-badge">
+              <Shield size={16} />
+              <span>Ethical Oversight</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Error Display */}
       {error && (
         <div className="error-banner" style={{
@@ -317,7 +352,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
           borderRadius: '8px',
         }}>
           <strong>Error:</strong> {error}
-          <button 
+          <button
             onClick={() => setError(null)}
             style={{ float: 'right', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px' }}
           >

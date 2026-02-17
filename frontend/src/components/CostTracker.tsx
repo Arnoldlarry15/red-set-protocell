@@ -1,5 +1,6 @@
 import React from 'react';
 import { DollarSign, AlertCircle } from 'lucide-react';
+import { imageAssets } from '../config/imageAssets';
 import '../styles/Components.css';
 
 interface CostTrackerProps {

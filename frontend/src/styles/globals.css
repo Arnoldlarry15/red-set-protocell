@@ -1,18 +1,124 @@
 :root {
+  /* ========== COLORS ========== */
+  /* Primary Colors */
   --color-black: #0a0a0a;
   --color-dark: #1a1a1a;
+  --color-darker: #0f0f0f;
+
+  /* Red Spectrum - Red Set ProtoCell Theme */
   --color-red: #ef4444;
   --color-red-dark: #dc2626;
   --color-red-light: #f87171;
+  --color-red-lighter: #fca5a5;
+  --color-red-accent: #991b1b;
+
+  /* Neutral Colors */
   --color-white: #ffffff;
   --color-gray: #9ca3af;
   --color-gray-light: #e5e7eb;
-  
+  --color-gray-lighter: #f3f4f6;
+  --color-gray-dark: #6b7280;
+  --color-gray-darker: #4b5563;
+
+  /* Status Colors */
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-info: #0077bb;
+  --color-critical: #dc2626;
+
+  /* ========== GLASS & EFFECTS ========== */
   --glass-bg: rgba(26, 26, 26, 0.7);
+  --glass-bg-dark: rgba(10, 10, 10, 0.85);
   --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border-accent: rgba(239, 68, 68, 0.2);
   --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --glass-shadow-lg: 0 16px 48px 0 rgba(0, 0, 0, 0.5);
+
+  /* ========== TYPOGRAPHY ========== */
+  --font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Courier New', 'Courier', monospace;
+
+  /* Font Weights */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+  --font-black: 900;
+
+  /* Font Sizes */
+  --font-xs: 0.75rem;    /* 12px */
+  --font-sm: 0.875rem;   /* 14px */
+  --font-base: 1rem;     /* 16px */
+  --font-lg: 1.125rem;   /* 18px */
+  --font-xl: 1.25rem;    /* 20px */
+  --font-2xl: 1.5rem;    /* 24px */
+  --font-3xl: 1.875rem;  /* 30px */
+  --font-4xl: 2.25rem;   /* 36px */
+  --font-5xl: 3rem;      /* 48px */
+
+  /* ========== SPACING ========== */
+  --space-xs: 0.25rem;   /* 4px */
+  --space-sm: 0.5rem;    /* 8px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 2.5rem;   /* 40px */
+  --space-3xl: 3rem;     /* 48px */
+  --space-4xl: 4rem;     /* 64px */
+
+  /* ========== BORDER RADIUS ========== */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ========== TRANSITIONS & ANIMATIONS ========== */
+  --transition-fast: 0.15s ease-out;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease-in-out;
+  --transition-slower: 0.8s ease-in-out;
+
+  /* Easing functions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ========== SHADOWS ========== */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 12px -2px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 12px 24px -4px rgba(0, 0, 0, 0.3);
+
+  /* Red glow effects */
+  --shadow-red-sm: 0 0 8px rgba(239, 68, 68, 0.2);
+  --shadow-red-md: 0 0 16px rgba(239, 68, 68, 0.3);
+  --shadow-red-lg: 0 0 24px rgba(239, 68, 68, 0.4);
+
+  /* ========== Z-INDEX ========== */
+  --z-hide: -1;
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-bg: 400;
+  --z-modal: 500;
+  --z-tooltip: 600;
+  --z-notification: 700;
+
+  /* ========== RESPONSIVE BREAKPOINTS ========== */
+  --bp-xs: 0;
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 1024px;
+  --bp-xl: 1280px;
+  --bp-2xl: 1536px;
+
+  font-family: var(--font-family);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -135,7 +241,9 @@ input::placeholder, textarea::placeholder {
   background: var(--color-red-dark);
 }
 
-/* Animation keyframes */
+/* ========== ANIMATION KEYFRAMES ========== */
+
+/* Pulse animations */
 @keyframes pulse-red {
   0%, 100% {
     opacity: 1;
@@ -145,6 +253,16 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Slide animations */
 @keyframes slide-in-up {
   from {
     opacity: 0;
@@ -156,6 +274,40 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+@keyframes slide-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Glow animations */
 @keyframes glow {
   0%, 100% {
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
@@ -165,16 +317,175 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(239, 68, 68, 0.6);
+    opacity: 0.9;
+  }
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Bounce animation */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Spin animation */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fade animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Scale animations */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Shake animation */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Blink animation */
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* ========== ANIMATION UTILITY CLASSES ========== */
+
 .animate-pulse-red {
   animation: pulse-red 2s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
 }
 
 .animate-slide-in {
   animation: slide-in-up 0.5s ease-out;
 }
 
+.animate-slide-in-down {
+  animation: slide-in-down 0.5s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.5s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.5s ease-out;
+}
+
 .animate-glow {
   animation: glow 2s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-bounce {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-fade-out {
+  animation: fade-out 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease;
+}
+
+.animate-blink {
+  animation: blink 1.4s ease-in-out infinite;
 }
 
 /* Severity badges */

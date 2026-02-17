@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Target, Shield, AlertTriangle, Info } from 'lucide-react';
 import { Attack, SessionStats } from '../types';
+import { imageAssets } from '../config/imageAssets';
 import '../styles/Components.css';
 
 interface MetricsPanelProps {
@@ -252,6 +253,28 @@ const MetricsPanel: React.FC<MetricsPanelProps> = ({ sessionStats, attacks }) =>
                 <Bar dataKey="value" fill="#0077BB" />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Architecture Visualization */}
+      <div className="architecture-visualization glass-panel">
+        <div className="viz-header">
+          <h3>System Architecture Overview</h3>
+          <p className="viz-subtitle">Feedback Loop & Continuous Evolution</p>
+        </div>
+        <div className="viz-image-container">
+          <img
+            src={imageAssets.heroes.feedbackLoop}
+            alt="Evolving Feedback Loop - System Architecture"
+            className="architecture-image"
+            loading="lazy"
+          />
+          <div className="viz-overlay">
+            <div className="overlay-badge">
+              <span className="badge-icon">⚙️</span>
+              <span className="badge-text">Adaptive System</span>
+            </div>
           </div>
         </div>
       </div>

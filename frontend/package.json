@@ -21,12 +21,12 @@
     "react-router-dom": "^6.20.0",
     "react-window": "^2.2.5",
     "recharts": "^3.7.0",
-    "three": "^r128"
+    "three": "^0.160.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
-    "@types/three": "^r128",
+    "@types/three": "^0.160.0",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "@vitejs/plugin-react": "^4.2.1",

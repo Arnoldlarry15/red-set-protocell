@@ -131,3 +131,70 @@ export interface HistoricalSession {
   blocked_count: number;
   model_version: string;
 }
+
+// ============================================================================
+// ADAPTIVE LOOP STATE TYPES (Eight-State Specification)
+// ============================================================================
+// Re-exports from adaptiveLoopStates.ts for centralized type access
+// See frontend/src/config/adaptiveLoopStates.ts for full specification
+
+export type {
+  // Core state definitions
+  InputNormalizationState,
+  TargetInvocationState,
+  AdversarialGenerationState,
+  ExecutionState,
+  EvaluationState,
+  MutationState,
+  IterationControlState,
+  ReportingState,
+
+  // Supporting types
+  NormalizedPrompt,
+  ProbeVariant,
+  ExecutionResult,
+  ScoreResult,
+  MutationLogEntry,
+  RiskGradient,
+  MutationConfig,
+  TerminationCriteria,
+  SessionMetadata,
+  ScoringRubric,
+  VulnerabilityRecord,
+  AuditTrailEntry,
+  StructuredRiskReport,
+
+  // Constraint and enforcement types
+  MutabilityBoundary,
+  DeterminismConstraint,
+  LoggingRequirement,
+
+  // State machine types
+  AdaptiveLoopStateDefinition,
+  LoopControlFlow,
+
+  // Union and utility types
+  AdaptiveLoopState,
+  AdaptiveLoopSnapshot,
+  StateTransition,
+  IterationDecision,
+  MutabilityLevel,
+  AdaptiveLoopStateName,
+} from '../config/adaptiveLoopStates';
+
+export {
+  // State definitions and constants
+  ADAPTIVE_LOOP_STATES,
+  MUTABILITY_BOUNDARIES,
+
+  // State machine utilities
+  getAdaptiveLoopState,
+  isValidTransition,
+  getValidNextStates,
+  isStateMutable,
+  isStateImmutable,
+
+  // Determinism utilities
+  verifyDeterminism,
+  generateDeterminismChecksum,
+} from '../config/adaptiveLoopStates';

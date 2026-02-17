@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
-import AuthPage from './pages/AuthPage';
+import LandingPage from './pages/LandingPage';
+import EarlyAccessPage from './pages/EarlyAccessPage';
+import AboutPage from './pages/AboutPage';
+import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Navigation from './components/Navigation';
@@ -34,20 +37,39 @@ function App() {
     <Router>
       {authenticated && <Navigation user={user} onLogout={handleLogout} />}
       <Routes>
+        {/* Public Routes */}
         <Route 
           path="/" 
           element={
             authenticated ? 
               <Navigate to="/dashboard" replace /> : 
-              <AuthPage onAuth={handleAuth} />
+              <LandingPage />
           } 
         />
+        <Route 
+          path="/early-access" 
+          element={<EarlyAccessPage />}
+        />
+        <Route 
+          path="/about" 
+          element={<AboutPage />}
+        />
+        <Route 
+          path="/login" 
+          element={
+            authenticated ? 
+              <Navigate to="/dashboard" replace /> : 
+              <LoginPage onAuth={handleAuth} />
+          } 
+        />
+
+        {/* Protected Routes */}
         <Route 
           path="/dashboard" 
           element={
             authenticated ? 
               <Dashboard apiKey={apiKey} backend={backend} /> : 
-              <Navigate to="/" replace />
+              <Navigate to="/login" replace />
           } 
         />
         <Route 
@@ -55,9 +77,12 @@ function App() {
           element={
             authenticated && user ? 
               <AdminDashboard user={user} apiKey={apiKey} /> : 
-              <Navigate to="/" replace />
+              <Navigate to="/login" replace />
           } 
         />
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Analytics />
     </Router>

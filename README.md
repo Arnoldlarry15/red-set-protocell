@@ -667,7 +667,9 @@ For more details, see the [test harness documentation](docs/guides/DETERMINISM_V
 
 ## 💾 Installation
 
-### Local Installation
+> **📖 For complete installation instructions, runtime dependencies, and troubleshooting, see [INSTALL.md](INSTALL.md)**
+
+### Quick Install
 
 #### Option 1: pip (Recommended)
 
@@ -702,30 +704,48 @@ export OPENAI_API_KEY="sk-..."
 docker-compose run rsp-backend python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
+#### Option 3: One-Click Web UI
+
+```bash
+# Clone, install, and start both backend and frontend
+git clone https://github.com/Arnoldlarry15/red-set-protocell.git
+cd red-set-protocell
+./start-ui.sh
+```
+
 ### System Requirements
 
 - **OS**: Linux, macOS, Windows (with WSL recommended)
 - **Python**: 3.8 or higher
+- **Node.js**: 16 or higher (for Web UI)
 - **RAM**: 2GB minimum, 4GB recommended
 - **Disk**: 500MB for code, variable for session data
 - **Network**: Internet connection for API calls
+- **API Key**: OpenAI, Anthropic, or OpenRouter
 
-### Dependencies
+### Runtime Dependencies
 
-**Core:**
+**Backend (Python):**
+- `python-dateutil>=2.8.2` - Date utilities
+- `numpy>=1.20.0,<2.0.0` - Numerical operations
 - `openai>=1.0.0` - OpenAI API client
 - `anthropic>=0.7.0` - Anthropic API client
-- `python-dateutil>=2.8.2` - Date utilities
+- `fastapi>=0.104.0` - Web framework
+- `uvicorn>=0.24.0` - ASGI server
+- And more (see [INSTALL.md](INSTALL.md) for complete list)
 
-**Testing:**
-- `pytest>=7.4.0` - Test framework
-- `pytest-asyncio>=0.21.0` - Async test support
-- `pytest-cov>=4.1.0` - Coverage reporting
+**Frontend (Node.js):**
+- `react>=18.2.0` - UI framework
+- `axios>=1.13.5` - HTTP client
+- `recharts>=3.7.0` - Charts and visualizations
+- And more (see [INSTALL.md](INSTALL.md) for complete list)
 
-**Development:**
-- `black>=23.7.0` - Code formatter
-- `flake8>=6.1.0` - Linter
-- `mypy>=1.5.0` - Type checker
+**Development (Optional):**
+- `pytest>=7.4.0` - Testing
+- `black>=23.7.0` - Code formatting
+- `flake8>=6.1.0` - Linting
+
+> **📖 For detailed dependency information and installation scripts for different platforms, see [INSTALL.md](INSTALL.md)**
 
 ---
 

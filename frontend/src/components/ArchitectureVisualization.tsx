@@ -21,7 +21,6 @@ const ArchitectureVisualization: React.FC = () => {
       y: 0,
       transition: {
         duration: 0.6,
-        ease: 'easeOut',
       },
     },
   };
@@ -33,7 +32,6 @@ const ArchitectureVisualization: React.FC = () => {
       scaleX: 1,
       transition: {
         duration: 0.5,
-        ease: 'easeOut',
       },
     },
   };

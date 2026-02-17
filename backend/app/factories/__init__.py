@@ -59,10 +59,10 @@ class BackendFactory(ABC):
         """
         # DEBUG: Log what backend is being requested
         logger = logging.getLogger(__name__)
-        logger.info(f"DEBUG BackendFactory.create() called:")
+        logger.info("DEBUG BackendFactory.create() called:")
         logger.info(f"  backend_type (raw) = {backend_type!r}")
         logger.info(f"  type = {type(backend_type)}")
-        
+
         backend_type_lower = backend_type.lower()
         logger.info(f"  backend_type_lower = {backend_type_lower!r}")
         logger.info(f"  Registered backends = {list(cls._registry.keys())}")

@@ -18,7 +18,6 @@ Usage:
 
 import asyncio
 import json
-import hashlib
 import argparse
 import sys
 from pathlib import Path

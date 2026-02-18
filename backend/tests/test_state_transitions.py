@@ -18,7 +18,7 @@ flows correctly between states.
 import pytest
 import tempfile
 import os
-from app.agents.orchestrator import Orchestrator, StateManager, RoundResult
+from app.agents.orchestrator import Orchestrator, StateManager
 from app.engines.scoring import ScoringEngine
 from app.agents.sniper import AttackDomain
 

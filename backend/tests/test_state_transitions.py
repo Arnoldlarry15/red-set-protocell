@@ -152,7 +152,7 @@ async def test_state_1_init(temp_db):
     scoring_engine = ScoringEngine()
     state_manager = StateManager(database_path=temp_db, zero_retention=False)
 
-    orchestrator = Orchestrator(
+    Orchestrator(
         sniper=sniper,
         target=target,
         spotter=spotter,

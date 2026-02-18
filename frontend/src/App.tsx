@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
-import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
@@ -37,10 +36,6 @@ function App() {
       <Routes>
         <Route 
           path="/" 
-          element={<LandingPage />} 
-        />
-        <Route 
-          path="/auth" 
           element={
             authenticated ? 
               <Navigate to="/dashboard" replace /> : 
@@ -52,7 +47,7 @@ function App() {
           element={
             authenticated ? 
               <Dashboard apiKey={apiKey} backend={backend} /> : 
-              <Navigate to="/auth" replace />
+              <Navigate to="/" replace />
           } 
         />
         <Route 
@@ -60,7 +55,7 @@ function App() {
           element={
             authenticated && user ? 
               <AdminDashboard user={user} apiKey={apiKey} /> : 
-              <Navigate to="/auth" replace />
+              <Navigate to="/" replace />
           } 
         />
       </Routes>

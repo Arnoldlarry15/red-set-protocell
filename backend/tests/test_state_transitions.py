@@ -33,6 +33,7 @@ def temp_db():
     try:
         os.unlink(path)
     except Exception:
+        # Best-effort cleanup: ignore errors removing temp DB, since it does not affect test behavior.
         pass
 
 

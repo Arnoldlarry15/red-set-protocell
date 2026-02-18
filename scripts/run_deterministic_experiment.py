@@ -13,7 +13,7 @@ import asyncio
 import json
 import random
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 from app.main import setup_system
 from app.core.config import load_config_from_env
@@ -72,9 +72,9 @@ async def run_session(session_name: str, seed: int, max_rounds: int = 100):
         pass  # Gracefully handle if mutation engine structure changes
     
     # Run session
-    start_time = datetime.utcnow()
+    start_time = datetime.now(timezone.utc)
     stats = await orchestrator.run_session()
-    end_time = datetime.utcnow()
+    end_time = datetime.now(timezone.utc)
     duration = (end_time - start_time).total_seconds()
     
     # Export logs with seed in EVERY line

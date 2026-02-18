@@ -6,6 +6,12 @@ A comprehensive systems audit of the Red Set ProtoCell codebase has been complet
 
 **Status: ✅ ALL REQUIREMENTS MET**
 
+### 📝 Key Clarification: 8 States vs 12 Tests
+To avoid confusion:
+- **Architecture**: The system has exactly **8 sequential state transitions** (INIT→GENERATE→INSPECT→SUBMIT→EXECUTE→EVALUATE→COMPUTE→PERSIST)
+- **Test Coverage**: There are **12 test functions** to verify these 8 states
+- **Why the difference?** State 3 (INSPECT) has 2 test cases (allow + block), plus 3 integration tests
+
 ---
 
 ## Requirements Verification
@@ -18,7 +24,7 @@ A comprehensive systems audit of the Red Set ProtoCell codebase has been complet
 - **Environment Variables**: Configuration loading validated with proper fallbacks.
 
 ### ✅ Eight State Transitions
-All state transitions are functional and tested:
+The system has **8 sequential state transitions** in its architecture:
 1. **INIT**: Orchestrator prepares round, retrieves prior history ✅
 2. **GENERATE**: Sniper creates adversarial prompt ✅
 3. **INSPECT**: EGG validates prompt safety ✅
@@ -28,7 +34,11 @@ All state transitions are functional and tested:
 7. **COMPUTE**: ScoringEngine calculates global_score [0.0, 1.0] ✅
 8. **PERSIST**: StateManager stores result ✅
 
-**Tests**: 12 comprehensive unit tests (all passing)
+**Test Coverage**: 12 test functions verify these 8 states (all passing)
+- 8 individual state tests (one per state)
+- 2 tests for State 3 INSPECT (allow + block cases)
+- 3 integration tests (sequential flow, EGG blocking, multi-round)
+
 **Location**: `backend/tests/test_state_transitions.py`
 
 ### ✅ Deterministic Mode
@@ -85,15 +95,28 @@ All state transitions are functional and tested:
 
 ### 1. State Transition Tests
 **File**: `backend/tests/test_state_transitions.py`  
-**Tests**: 12 comprehensive tests  
-**Coverage**: All 8 state transitions + integration scenarios
+**Architecture**: 8 sequential state transitions  
+**Test Functions**: 12 test cases
 
-**Test Coverage:**
-- Individual state transitions (8 tests)
-- EGG blocking short-circuit (1 test)
-- All states sequential integration (1 test)
-- EGG block flow verification (1 test)
-- Multi-round state management (1 test)
+**Test Mapping (8 states → 12 tests):**
+```
+State 1: INIT        → test_state_1_init
+State 2: GENERATE    → test_state_2_generate
+State 3: INSPECT     → test_state_3_inspect_allow (allow path)
+State 3: INSPECT     → test_state_3_inspect_block (block path)
+State 4: SUBMIT      → test_state_4_submit
+State 5: EXECUTE     → test_state_5_execute
+State 6: EVALUATE    → test_state_6_evaluate
+State 7: COMPUTE     → test_state_7_compute
+State 8: PERSIST     → test_state_8_persist
+
+Integration Tests (3):
+- test_all_eight_states_sequential
+- test_state_flow_with_egg_block
+- test_state_transitions_multiple_rounds
+```
+
+**Total: 8 states + 1 extra test for State 3 + 3 integration = 12 tests**
 
 **Status**: ✅ All 12 tests passing
 

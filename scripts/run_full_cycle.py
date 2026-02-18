@@ -32,7 +32,7 @@ import hashlib
 import random
 import argparse
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any
 import numpy as np
@@ -102,12 +102,12 @@ class FullCycleRunner:
         self.seed = seed
         self.rounds = rounds
         self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         
         # Audit trail components
         self.audit_trail: Dict[str, Any] = {
             "metadata": {
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "seed": seed,
                 "rounds": rounds,
                 "protocell_version": "1.0.0",
@@ -220,7 +220,7 @@ class FullCycleRunner:
                     print(" [BLOCKED]")
                     round_detail = {
                         "round": round_num,
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "sniper_prompt": prompt[:200] + "..." if len(prompt) > 200 else prompt,
                         "attack_domain": attack_domain.value,
                         "egg_blocked": True,
@@ -293,7 +293,7 @@ class FullCycleRunner:
                 # LAYER 3: Capture complete round details in audit trail
                 round_detail = {
                     "round": round_num,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "sniper_prompt": prompt,
                     "attack_domain": attack_domain.value,
                     "egg_blocked": False,
@@ -319,7 +319,7 @@ class FullCycleRunner:
                     evaluation=evaluation,
                     global_score=global_score,
                     blocked_by_egg=False,
-                    timestamp=datetime.utcnow().isoformat(),
+                    timestamp=datetime.now(timezone.utc).isoformat(),
                     model_version=orchestrator.state_manager.model_version,
                     session_start_time=orchestrator.state_manager.session_start_time,
                 )
@@ -331,7 +331,7 @@ class FullCycleRunner:
                 print(f" [ERROR]: {e}")
                 round_detail = {
                     "round": round_num,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "error": str(e),
                     "global_score": 0.0,
                 }
@@ -376,8 +376,8 @@ class FullCycleRunner:
         
         # Step 7: Save audit trail
         print("[5/5] Saving audit trail...")
-        output_file = self.output_dir / f"full_cycle_seed_{self.seed}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(output_file, 'w') as f:
+        output_file = self.output_dir / f"full_cycle_seed_{self.seed}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+        with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(self.audit_trail, f, indent=2)
         
         print(f"\n{'='*70}")

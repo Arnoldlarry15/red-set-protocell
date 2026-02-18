@@ -25,7 +25,7 @@ import asyncio
 import argparse
 import sys
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 
 # Add backend directory to path if not already there
@@ -75,7 +75,7 @@ class DeterminismVerifier:
         print(f"Seed: {self.seed}")
         print(f"Rounds per iteration: {self.rounds}")
         print(f"Total iterations: {self.iterations}")
-        print(f"Started: {datetime.utcnow().isoformat()}")
+        print(f"Started: {datetime.now(timezone.utc).isoformat()}")
         print(f"{'='*70}\n")
         
         print(f"Running {self.iterations} iterations...\n")

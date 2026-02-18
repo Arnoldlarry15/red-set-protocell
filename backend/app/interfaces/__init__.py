@@ -11,8 +11,8 @@ Industry-grade practices:
 - Extensibility through polymorphism
 """
 
-from app.interfaces.target import BaseTarget
 from app.interfaces.mutation import BaseMutationStrategy
 from app.interfaces.scoring import BaseScoringStrategy, ScoreResult
+from app.interfaces.target import BaseTarget
 
 __all__ = ["BaseTarget", "BaseMutationStrategy", "BaseScoringStrategy", "ScoreResult"]

@@ -5,10 +5,12 @@ These tests verify that the invariant checks properly enforce
 system contracts and prevent invalid states.
 """
 
-import pytest
-import tempfile
 import os
-from app.agents.orchestrator import Orchestrator, StateManager, RoundResult
+import tempfile
+
+import pytest
+
+from app.agents.orchestrator import Orchestrator, RoundResult, StateManager
 from app.engines.scoring import ScoringEngine
 
 

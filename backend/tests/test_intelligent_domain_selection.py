@@ -5,9 +5,11 @@ This tests the success-rate based domain selection that makes Sniper
 "hunt" intelligently rather than "wander" randomly.
 """
 
-import pytest
 from collections import Counter
-from app.agents.sniper import Sniper, AttackDomain, AdversarialIntentEngine
+
+import pytest
+
+from app.agents.sniper import AdversarialIntentEngine, AttackDomain, Sniper
 from app.engines.mutation import MutationEngine
 
 
@@ -15,11 +17,7 @@ from app.engines.mutation import MutationEngine
 async def test_domain_success_tracking():
     """Test that Sniper tracks domain success rates correctly."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=10,
-        domain_selection_temperature=1.0
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=10, domain_selection_temperature=1.0)
 
     # Generate prompts and update scores for specific domains
     # Simulate PROMPT_INJECTION being more successful
@@ -32,9 +30,9 @@ async def test_domain_success_tracking():
 
     # Check domain success rates
     stats = sniper.get_statistics()
-    assert 'domain_success_rates' in stats
+    assert "domain_success_rates" in stats
 
-    domain_rates = stats['domain_success_rates']
+    domain_rates = stats["domain_success_rates"]
     if AttackDomain.PROMPT_INJECTION.value in domain_rates:
         # If we have data for prompt injection, it should be higher
         injection_rate = domain_rates[AttackDomain.PROMPT_INJECTION.value]
@@ -49,13 +47,13 @@ async def test_intelligent_domain_selection_bias():
     sniper = Sniper(
         mutation_engine=mutation_engine,
         evolution_pool_size=20,
-        domain_selection_temperature=0.5  # Lower temp = more exploitation
+        domain_selection_temperature=0.5,  # Lower temp = more exploitation
     )
 
     # First phase: Generate some prompts and heavily bias one domain
     # Force domain tracking by manually updating domain scores
     sniper.domain_scores[AttackDomain.JAILBREAK] = [0.9, 0.85, 0.88, 0.92]  # High success
-    sniper.domain_scores[AttackDomain.PII_EXTRACTION] = [0.2, 0.15, 0.18]   # Low success
+    sniper.domain_scores[AttackDomain.PII_EXTRACTION] = [0.2, 0.15, 0.18]  # Low success
     sniper.domain_scores[AttackDomain.REFUSAL_EROSION] = [0.3, 0.25, 0.28]  # Medium success
 
     # Second phase: Generate many prompts and count domain distribution
@@ -83,11 +81,7 @@ async def test_temperature_controls_exploration():
 
     # Setup: Pre-populate domain scores with clear winner
     def setup_sniper(temp):
-        s = Sniper(
-            mutation_engine=mutation_engine,
-            evolution_pool_size=10,
-            domain_selection_temperature=temp
-        )
+        s = Sniper(mutation_engine=mutation_engine, evolution_pool_size=10, domain_selection_temperature=temp)
         # Make CONTEXT_CONFUSION clearly the best
         s.domain_scores[AttackDomain.CONTEXT_CONFUSION] = [0.95, 0.92, 0.94, 0.93]
         s.domain_scores[AttackDomain.PROMPT_INJECTION] = [0.1, 0.15, 0.12]
@@ -122,11 +116,7 @@ async def test_temperature_controls_exploration():
 async def test_fallback_to_random_without_history():
     """Test that domain selection falls back to random when no history exists."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=10,
-        domain_selection_temperature=1.0
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=10, domain_selection_temperature=1.0)
 
     # Generate prompts without updating scores (no history)
     domains = []
@@ -145,11 +135,7 @@ async def test_fallback_to_random_without_history():
 async def test_domain_tracking_in_evolution_pool():
     """Test that domain is properly tracked in evolution pool candidates."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=10,
-        domain_selection_temperature=1.0
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=10, domain_selection_temperature=1.0)
 
     # Generate prompts
     for _ in range(5):
@@ -165,11 +151,7 @@ async def test_domain_tracking_in_evolution_pool():
 async def test_statistics_include_domain_success_rates():
     """Test that get_statistics returns domain success rates."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=10,
-        domain_selection_temperature=0.8
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=10, domain_selection_temperature=0.8)
 
     # Generate and score some prompts
     for i in range(5):
@@ -179,12 +161,12 @@ async def test_statistics_include_domain_success_rates():
     stats = sniper.get_statistics()
 
     # Check that new statistics fields are present
-    assert 'domain_success_rates' in stats
-    assert 'domain_selection_temperature' in stats
-    assert stats['domain_selection_temperature'] == 0.8
+    assert "domain_success_rates" in stats
+    assert "domain_selection_temperature" in stats
+    assert stats["domain_selection_temperature"] == 0.8
 
     # domain_success_rates should be a dict
-    assert isinstance(stats['domain_success_rates'], dict)
+    assert isinstance(stats["domain_success_rates"], dict)
 
 
 def test_adversarial_intent_engine_weighted_selection():
@@ -282,11 +264,7 @@ def test_adversarial_intent_engine_pure_exploitation():
 async def test_domain_scores_updated_on_prompt_score_update():
     """Test that domain_scores are updated when prompt scores are updated."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=10,
-        domain_selection_temperature=1.0
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=10, domain_selection_temperature=1.0)
 
     # Generate a prompt
     prompt, domain = await sniper.generate_prompt()
@@ -306,11 +284,7 @@ async def test_domain_scores_updated_on_prompt_score_update():
 async def test_recent_scores_windowing():
     """Test that _compute_domain_success_rates uses recent scores (last 10)."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=20,
-        domain_selection_temperature=1.0
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=20, domain_selection_temperature=1.0)
 
     # Manually add many old low scores and few recent high scores
     # Total 20 scores: 15 old (0.1) + 5 recent (0.9)

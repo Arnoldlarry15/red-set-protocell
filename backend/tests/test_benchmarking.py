@@ -82,9 +82,9 @@ def test_benchmark_result_to_dict():
     )
 
     data = result.to_dict()
-    assert data['average_score'] == 0.35
-    assert data['status'] == 'completed'
-    assert 'config' in data
+    assert data["average_score"] == 0.35
+    assert data["status"] == "completed"
+    assert "config" in data
 
 
 def test_benchmark_suite_save_and_load(tmp_path):

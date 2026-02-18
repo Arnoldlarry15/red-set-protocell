@@ -57,30 +57,26 @@ Post-Release Maintenance:
 - DO NOT add conditional logic or business rules
 """
 
-import asyncio
 import argparse
+import asyncio
 import logging
 import sys
 from typing import Optional
 
+from app.agents.orchestrator import Orchestrator, StateManager
+from app.agents.sniper import Sniper
+from app.agents.spotter import Spotter
+from app.agents.target import create_target
 from app.core.config import RSPConfig, get_default_config
 from app.core.egg import EthicalGuardrailGovernor
-from app.engines.scoring import ScoringEngine
 from app.engines.mutation import MutationEngine
-from app.agents.sniper import Sniper
-from app.agents.target import create_target
-from app.agents.spotter import Spotter
-from app.agents.orchestrator import Orchestrator, StateManager
-
+from app.engines.scoring import ScoringEngine
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('rsp.log')
-    ]
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("rsp.log")],
 )
 
 logger = logging.getLogger(__name__)
@@ -106,22 +102,18 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         block_csam=config.egg.block_csam,
         block_bioweapons=config.egg.block_bioweapons,
         block_real_exploits=config.egg.block_real_exploits,
-        block_real_hacking=config.egg.block_real_hacking
+        block_real_hacking=config.egg.block_real_hacking,
     )
     logger.info("[OK] EGG initialized")
 
     # Initialize Scoring Engine
     scoring_engine = ScoringEngine(
-        l1_weight=config.scoring.l1_weight,
-        l2_weight=config.scoring.l2_weight,
-        l3_weight=config.scoring.l3_weight
+        l1_weight=config.scoring.l1_weight, l2_weight=config.scoring.l2_weight, l3_weight=config.scoring.l3_weight
     )
     logger.info("[OK] Scoring Engine initialized")
 
     # Initialize Mutation Engine
-    mutation_engine = MutationEngine(
-        mutation_rate=config.sniper.mutation_rate
-    )
+    mutation_engine = MutationEngine(mutation_rate=config.sniper.mutation_rate)
     logger.info("[OK] Mutation Engine initialized")
 
     # Initialize Selection Engine if enabled
@@ -137,7 +129,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             diversity_weight=config.sniper.diversity_weight,
             overfitting_threshold=config.sniper.overfitting_threshold,
             tournament_size=config.sniper.tournament_size,
-            elite_fraction=config.sniper.elite_fraction
+            elite_fraction=config.sniper.elite_fraction,
         )
 
         # Map string to enum
@@ -146,12 +138,9 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             "tournament": SelectionStrategy.TOURNAMENT,
             "diversity_preservation": SelectionStrategy.DIVERSITY_PRESERVATION,
             "novelty_search": SelectionStrategy.NOVELTY_SEARCH,
-            "hybrid": SelectionStrategy.HYBRID
+            "hybrid": SelectionStrategy.HYBRID,
         }
-        selection_strategy_enum = strategy_map.get(
-            config.sniper.selection_strategy.lower(),
-            SelectionStrategy.HYBRID
-        )
+        selection_strategy_enum = strategy_map.get(config.sniper.selection_strategy.lower(), SelectionStrategy.HYBRID)
         logger.info(f"[OK] Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
     else:
         selection_strategy_enum = SelectionStrategy.HYBRID
@@ -164,12 +153,12 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         selection_engine=selection_engine,
         selection_strategy=selection_strategy_enum,
         domain_selection_temperature=config.sniper.domain_selection_temperature,
-        api_key=config.sniper.api_key
+        api_key=config.sniper.api_key,
     )
     logger.info("[OK] Sniper Agent initialized")
 
     # Initialize Target Agent
-    backend_value = config.target.backend.value if hasattr(config.target.backend, 'value') else config.target.backend
+    backend_value = config.target.backend.value if hasattr(config.target.backend, "value") else config.target.backend
 
     # DEBUG: Log backend selection details
     logger.info("DEBUG: Backend configuration:")
@@ -183,7 +172,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         model_name=config.target.model_name,
         max_tokens=config.target.max_tokens,
         temperature=config.target.temperature,
-        fresh_context=config.target.fresh_context
+        fresh_context=config.target.fresh_context,
     )
     logger.info(f"[OK] Target Agent initialized ({backend_value})")
 
@@ -191,16 +180,14 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     spotter = Spotter(
         confidence_threshold=config.spotter.confidence_threshold,
         use_auxiliary_classifiers=config.spotter.use_auxiliary_classifiers,
-        api_key=config.spotter.api_key
+        api_key=config.spotter.api_key,
     )
     logger.info("[OK] Spotter Agent initialized")
 
     # Initialize State Manager
     model_version = model_version_override or config.target.model_name
     state_manager = StateManager(
-        database_path=config.storage.database_path,
-        zero_retention=config.storage.zero_retention,
-        model_version=model_version
+        database_path=config.storage.database_path, zero_retention=config.storage.zero_retention, model_version=model_version
     )
     logger.info(f"[OK] State Manager initialized (zero_retention={config.storage.zero_retention})")
 
@@ -216,7 +203,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
         round_timeout=config.orchestrator.round_timeout_seconds,
         concurrent_rounds=config.orchestrator.concurrent_rounds,
         config=config,
-        artifacts_dir="runs"
+        artifacts_dir="runs",
     )
     logger.info("[OK] Orchestrator initialized")
 
@@ -258,13 +245,13 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
         logger.info(f"Blocked by EGG: {stats['scores']['total_blocked']}")
 
         # Display time analytics if available
-        if 'time_analytics' in stats:
+        if "time_analytics" in stats:
             logger.info("")
             logger.info("Time Analytics:")
-            fatigue = stats['time_analytics']['fatigue']
-            drift = stats['time_analytics']['drift']
+            fatigue = stats["time_analytics"]["fatigue"]
+            drift = stats["time_analytics"]["drift"]
             logger.info(f"  Fatigue Detected: {fatigue['is_fatigued']}")
-            if fatigue['is_fatigued']:
+            if fatigue["is_fatigued"]:
                 logger.info(f"  Fatigue Score: {fatigue['fatigue_score']:.3f}")
                 logger.info(f"  Degradation Rate: {fatigue['degradation_rate']:.4f} per round")
             logger.info(f"  Score Drift: {drift['drift_direction']}")
@@ -296,55 +283,28 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
 
 def parse_arguments():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(
-        description="Red Set ProtoCell - AI Red Teaming System"
-    )
+    parser = argparse.ArgumentParser(description="Red Set ProtoCell - AI Red Teaming System")
+
+    parser.add_argument("--rounds", type=int, default=100, help="Maximum number of rounds to execute (default: 100)")
 
     parser.add_argument(
-        '--rounds',
-        type=int,
-        default=100,
-        help='Maximum number of rounds to execute (default: 100)'
-    )
-
-    parser.add_argument(
-        '--backend',
+        "--backend",
         type=str,
-        choices=['openai', 'anthropic', 'openrouter', 'llama_cpp', 'custom_http'],
+        choices=["openai", "anthropic", "openrouter", "llama_cpp", "custom_http"],
         required=True,
-        help='Target backend to use (required: openai, anthropic, openrouter, llama_cpp, or custom_http)'
+        help="Target backend to use (required: openai, anthropic, openrouter, llama_cpp, or custom_http)",
     )
 
-    parser.add_argument(
-        '--api-key',
-        type=str,
-        required=True,
-        help='API key for target backend (required)'
-    )
+    parser.add_argument("--api-key", type=str, required=True, help="API key for target backend (required)")
+
+    parser.add_argument("--model", type=str, help="Model name for target backend")
+
+    parser.add_argument("--no-zero-retention", action="store_true", help="Disable zero-retention policy (keep session data)")
+
+    parser.add_argument("--db-path", type=str, default="rsp_session.db", help="Database path (default: rsp_session.db)")
 
     parser.add_argument(
-        '--model',
-        type=str,
-        help='Model name for target backend'
-    )
-
-    parser.add_argument(
-        '--no-zero-retention',
-        action='store_true',
-        help='Disable zero-retention policy (keep session data)'
-    )
-
-    parser.add_argument(
-        '--db-path',
-        type=str,
-        default='rsp_session.db',
-        help='Database path (default: rsp_session.db)'
-    )
-
-    parser.add_argument(
-        '--model-version',
-        type=str,
-        help='Model version identifier for tracking (optional, defaults to model name)'
+        "--model-version", type=str, help="Model version identifier for tracking (optional, defaults to model name)"
     )
 
     return parser.parse_args()

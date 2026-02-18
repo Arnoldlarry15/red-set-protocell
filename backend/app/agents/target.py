@@ -96,13 +96,13 @@ This Will Age Well Because:
 [OK] Clear separation of concerns
 """
 
+import asyncio
 import logging
 import random
 import time
-import asyncio
-from typing import Optional, Dict, Any, List
 from abc import abstractmethod
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from app.interfaces.target import BaseTarget
 

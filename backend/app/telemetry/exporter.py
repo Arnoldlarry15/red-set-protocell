@@ -5,20 +5,21 @@ Export telemetry data in multiple formats (CSV, JSON, etc.).
 """
 
 import csv
+import io
 import json
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
-import io
+from typing import Any, Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
 
 class ExportFormat(Enum):
     """Supported export formats."""
+
     CSV = "csv"
     JSON = "json"
     JSON_LINES = "jsonl"
@@ -31,6 +32,7 @@ class MetricsSnapshot:
 
     Provides a standardized structure for metric data.
     """
+
     timestamp: str
     session_id: str
     metrics: Dict[str, Any]
@@ -96,7 +98,7 @@ class TelemetryExporter:
         fieldnames = sorted(fieldnames)
 
         # Write CSV
-        with open(filepath, 'w', newline='') as f:
+        with open(filepath, "w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(data)
@@ -123,7 +125,7 @@ class TelemetryExporter:
         """
         filepath = self.output_dir / filename
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             if pretty:
                 json.dump(data, f, indent=2)
             else:
@@ -149,9 +151,9 @@ class TelemetryExporter:
         """
         filepath = self.output_dir / filename
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             for item in data:
-                f.write(json.dumps(item) + '\n')
+                f.write(json.dumps(item) + "\n")
 
         logger.info(f"Exported {len(data)} records to JSON Lines: {filepath}")
         return filepath
@@ -220,7 +222,7 @@ class TelemetryExporter:
                 data = [data]
 
             # Flatten if requested
-            if kwargs.get('flatten', True):
+            if kwargs.get("flatten", True):
                 data = [self._flatten_dict(item) for item in data]
 
             # Get fieldnames
@@ -237,7 +239,7 @@ class TelemetryExporter:
             return output.getvalue()
 
         elif format == ExportFormat.JSON:
-            pretty = kwargs.get('pretty', True)
+            pretty = kwargs.get("pretty", True)
             if pretty:
                 return json.dumps(data, indent=2)
             else:
@@ -246,7 +248,7 @@ class TelemetryExporter:
         elif format == ExportFormat.JSON_LINES:
             if isinstance(data, dict):
                 data = [data]
-            return '\n'.join(json.dumps(item) for item in data)
+            return "\n".join(json.dumps(item) for item in data)
 
         else:
             raise ValueError(f"Unsupported export format: {format}")
@@ -254,8 +256,8 @@ class TelemetryExporter:
     def _flatten_dict(
         self,
         d: Dict[str, Any],
-        parent_key: str = '',
-        sep: str = '.',
+        parent_key: str = "",
+        sep: str = ".",
     ) -> Dict[str, Any]:
         """
         Flatten a nested dictionary.

@@ -6,8 +6,8 @@ Establishes the contract for evaluation and scoring methods.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Tuple
 from dataclasses import dataclass
+from typing import Any, Dict, Tuple
 
 
 @dataclass
@@ -22,6 +22,7 @@ class ScoreResult:
         indicators: Supporting evidence for the score
         metadata: Additional scoring metadata
     """
+
     score: float
     confidence: float
     uncertainty: float = 0.0
@@ -91,9 +92,7 @@ class BaseScoringStrategy(ABC):
             known_samples: List of (response, expected_score) tuples
         """
 
-    def get_confidence_interval(
-        self, score: float, uncertainty: float
-    ) -> Tuple[float, float]:
+    def get_confidence_interval(self, score: float, uncertainty: float) -> Tuple[float, float]:
         """
         Calculate confidence interval for a score.
 

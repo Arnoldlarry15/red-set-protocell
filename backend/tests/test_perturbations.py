@@ -2,13 +2,18 @@
 Tests for Target perturbation modes
 """
 
-import pytest
 import time
-from unittest.mock import Mock, patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+
 from app.agents.target import (
-    PerturbationMode, PerturbationConfig,
-    OpenAIBackend, AnthropicBackend, CustomHTTPBackend,
-    create_target
+    AnthropicBackend,
+    CustomHTTPBackend,
+    OpenAIBackend,
+    PerturbationConfig,
+    PerturbationMode,
+    create_target,
 )
 
 
@@ -32,12 +37,7 @@ def test_perturbation_config_custom():
     custom_prompts = ["Custom prompt 1", "Custom prompt 2"]
     custom_modes = [PerturbationMode.TEMPERATURE_JITTER]
 
-    config = PerturbationConfig(
-        enabled=True,
-        modes=custom_modes,
-        system_prompts=custom_prompts,
-        temperature_jitter_range=0.2
-    )
+    config = PerturbationConfig(enabled=True, modes=custom_modes, system_prompts=custom_prompts, temperature_jitter_range=0.2)
 
     assert config.enabled is True
     assert config.modes == custom_modes
@@ -47,15 +47,15 @@ def test_perturbation_config_custom():
 
 def test_perturbation_disabled_by_default():
     """Test that perturbations are disabled by default."""
-    with patch('openai.AsyncOpenAI'):
-        backend = OpenAIBackend(api_key='test-key')
+    with patch("openai.AsyncOpenAI"):
+        backend = OpenAIBackend(api_key="test-key")
         assert backend.perturbation_config.enabled is False
 
 
 def test_set_perturbation_config():
     """Test setting perturbation configuration on backend."""
-    with patch('openai.AsyncOpenAI'):
-        backend = OpenAIBackend(api_key='test-key')
+    with patch("openai.AsyncOpenAI"):
+        backend = OpenAIBackend(api_key="test-key")
         config = PerturbationConfig(enabled=True)
 
         backend.set_perturbation_config(config)
@@ -64,7 +64,7 @@ def test_set_perturbation_config():
 
 
 @pytest.mark.asyncio
-@patch('openai.AsyncOpenAI')
+@patch("openai.AsyncOpenAI")
 async def test_system_prompt_perturbation(mock_openai):
     """Test system prompt perturbation."""
     mock_client = AsyncMock()
@@ -74,11 +74,8 @@ async def test_system_prompt_perturbation(mock_openai):
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
 
-    backend = OpenAIBackend(api_key='test-key')
-    config = PerturbationConfig(
-        enabled=True,
-        modes=[PerturbationMode.SYSTEM_PROMPT]
-    )
+    backend = OpenAIBackend(api_key="test-key")
+    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.SYSTEM_PROMPT])
     backend.set_perturbation_config(config)
 
     result = await backend.execute("Test prompt")
@@ -86,12 +83,12 @@ async def test_system_prompt_perturbation(mock_openai):
     assert result == "Response"
     # Verify system message was added
     call_args = mock_client.chat.completions.create.call_args
-    messages = call_args.kwargs['messages']
-    assert any(msg.get('role') == 'system' for msg in messages)
+    messages = call_args.kwargs["messages"]
+    assert any(msg.get("role") == "system" for msg in messages)
 
 
 @pytest.mark.asyncio
-@patch('openai.AsyncOpenAI')
+@patch("openai.AsyncOpenAI")
 async def test_policy_rewording_perturbation(mock_openai):
     """Test policy rewording perturbation."""
     mock_client = AsyncMock()
@@ -101,11 +98,11 @@ async def test_policy_rewording_perturbation(mock_openai):
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
 
-    backend = OpenAIBackend(api_key='test-key')
+    backend = OpenAIBackend(api_key="test-key")
     config = PerturbationConfig(
         enabled=True,
         modes=[PerturbationMode.POLICY_REWORDING],
-        policy_rewordings=["Policy note"]  # Non-empty to ensure it's added
+        policy_rewordings=["Policy note"],  # Non-empty to ensure it's added
     )
     backend.set_perturbation_config(config)
 
@@ -114,13 +111,13 @@ async def test_policy_rewording_perturbation(mock_openai):
     assert result == "Response"
     # Verify policy note was added to user message
     call_args = mock_client.chat.completions.create.call_args
-    messages = call_args.kwargs['messages']
-    user_messages = [m for m in messages if m.get('role') == 'user']
+    messages = call_args.kwargs["messages"]
+    user_messages = [m for m in messages if m.get("role") == "user"]
     assert len(user_messages) > 0
 
 
 @pytest.mark.asyncio
-@patch('openai.AsyncOpenAI')
+@patch("openai.AsyncOpenAI")
 async def test_temperature_jitter_perturbation(mock_openai):
     """Test temperature jitter perturbation."""
     mock_client = AsyncMock()
@@ -130,12 +127,8 @@ async def test_temperature_jitter_perturbation(mock_openai):
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
 
-    backend = OpenAIBackend(api_key='test-key', temperature=0.7)
-    config = PerturbationConfig(
-        enabled=True,
-        modes=[PerturbationMode.TEMPERATURE_JITTER],
-        temperature_jitter_range=0.1
-    )
+    backend = OpenAIBackend(api_key="test-key", temperature=0.7)
+    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER], temperature_jitter_range=0.1)
     backend.set_perturbation_config(config)
 
     # Run multiple times to check variation
@@ -143,7 +136,7 @@ async def test_temperature_jitter_perturbation(mock_openai):
     for _ in range(10):
         await backend.execute("Test prompt")
         call_args = mock_client.chat.completions.create.call_args
-        temperatures.append(call_args.kwargs['temperature'])
+        temperatures.append(call_args.kwargs["temperature"])
 
     # Temperature should vary
     assert len(set(temperatures)) > 1
@@ -152,7 +145,7 @@ async def test_temperature_jitter_perturbation(mock_openai):
 
 
 @pytest.mark.asyncio
-@patch('openai.AsyncOpenAI')
+@patch("openai.AsyncOpenAI")
 async def test_simulated_latency_perturbation(mock_openai):
     """Test simulated latency perturbation."""
     mock_client = AsyncMock()
@@ -162,12 +155,8 @@ async def test_simulated_latency_perturbation(mock_openai):
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
 
-    backend = OpenAIBackend(api_key='test-key')
-    config = PerturbationConfig(
-        enabled=True,
-        modes=[PerturbationMode.SIMULATED_LATENCY],
-        latency_range_ms=(100, 150)
-    )
+    backend = OpenAIBackend(api_key="test-key")
+    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.SIMULATED_LATENCY], latency_range_ms=(100, 150))
     backend.set_perturbation_config(config)
 
     start_time = time.time()
@@ -180,7 +169,7 @@ async def test_simulated_latency_perturbation(mock_openai):
 
 
 @pytest.mark.asyncio
-@patch('openai.AsyncOpenAI')
+@patch("openai.AsyncOpenAI")
 async def test_response_truncation_perturbation(mock_openai):
     """Test response truncation perturbation."""
     mock_client = AsyncMock()
@@ -191,12 +180,12 @@ async def test_response_truncation_perturbation(mock_openai):
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
 
-    backend = OpenAIBackend(api_key='test-key')
+    backend = OpenAIBackend(api_key="test-key")
     config = PerturbationConfig(
         enabled=True,
         modes=[PerturbationMode.RESPONSE_TRUNCATION],
         truncation_probability=1.0,  # Always truncate for testing
-        truncation_ratio_range=(0.5, 0.6)
+        truncation_ratio_range=(0.5, 0.6),
     )
     backend.set_perturbation_config(config)
 
@@ -210,7 +199,7 @@ async def test_response_truncation_perturbation(mock_openai):
 
 
 @pytest.mark.asyncio
-@patch('openai.AsyncOpenAI')
+@patch("openai.AsyncOpenAI")
 async def test_multiple_perturbations_combined(mock_openai):
     """Test multiple perturbations applied together."""
     mock_client = AsyncMock()
@@ -220,15 +209,11 @@ async def test_multiple_perturbations_combined(mock_openai):
     mock_client.chat.completions.create.return_value = mock_response
     mock_openai.return_value = mock_client
 
-    backend = OpenAIBackend(api_key='test-key', temperature=0.7)
+    backend = OpenAIBackend(api_key="test-key", temperature=0.7)
     config = PerturbationConfig(
         enabled=True,
-        modes=[
-            PerturbationMode.SYSTEM_PROMPT,
-            PerturbationMode.TEMPERATURE_JITTER,
-            PerturbationMode.RESPONSE_TRUNCATION
-        ],
-        truncation_probability=0.0  # Disable truncation for easier assertion
+        modes=[PerturbationMode.SYSTEM_PROMPT, PerturbationMode.TEMPERATURE_JITTER, PerturbationMode.RESPONSE_TRUNCATION],
+        truncation_probability=0.0,  # Disable truncation for easier assertion
     )
     backend.set_perturbation_config(config)
 
@@ -237,12 +222,12 @@ async def test_multiple_perturbations_combined(mock_openai):
     assert result == "Response from model"
     # Verify system message was added
     call_args = mock_client.chat.completions.create.call_args
-    messages = call_args.kwargs['messages']
-    assert any(msg.get('role') == 'system' for msg in messages)
+    messages = call_args.kwargs["messages"]
+    assert any(msg.get("role") == "system" for msg in messages)
 
 
 @pytest.mark.asyncio
-@patch('anthropic.AsyncAnthropic')
+@patch("anthropic.AsyncAnthropic")
 async def test_anthropic_backend_perturbations(mock_anthropic):
     """Test perturbations work with Anthropic backend."""
     mock_client = AsyncMock()
@@ -252,11 +237,8 @@ async def test_anthropic_backend_perturbations(mock_anthropic):
     mock_client.messages.create.return_value = mock_response
     mock_anthropic.return_value = mock_client
 
-    backend = AnthropicBackend(api_key='test-key')
-    config = PerturbationConfig(
-        enabled=True,
-        modes=[PerturbationMode.SYSTEM_PROMPT, PerturbationMode.TEMPERATURE_JITTER]
-    )
+    backend = AnthropicBackend(api_key="test-key")
+    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.SYSTEM_PROMPT, PerturbationMode.TEMPERATURE_JITTER])
     backend.set_perturbation_config(config)
 
     result = await backend.execute("Test prompt")
@@ -264,27 +246,19 @@ async def test_anthropic_backend_perturbations(mock_anthropic):
     assert result == "Anthropic response"
     # Verify system prompt was passed
     call_args = mock_client.messages.create.call_args
-    assert 'system' in call_args.kwargs or len(call_args.kwargs['messages']) > 0
+    assert "system" in call_args.kwargs or len(call_args.kwargs["messages"]) > 0
 
 
 @pytest.mark.asyncio
-@patch('app.agents.target.requests')
+@patch("app.agents.target.requests")
 async def test_custom_http_backend_perturbations(mock_requests):
     """Test perturbations work with CustomHTTPBackend."""
     mock_response = Mock()
-    mock_response.json.return_value = {
-        'choices': [{'message': {'content': 'HTTP response'}}]
-    }
+    mock_response.json.return_value = {"choices": [{"message": {"content": "HTTP response"}}]}
     mock_requests.post.return_value = mock_response
 
-    backend = CustomHTTPBackend(
-        api_url='http://localhost:8000/api',
-        request_format='openai'
-    )
-    config = PerturbationConfig(
-        enabled=True,
-        modes=[PerturbationMode.TEMPERATURE_JITTER]
-    )
+    backend = CustomHTTPBackend(api_url="http://localhost:8000/api", request_format="openai")
+    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER])
     backend.set_perturbation_config(config)
 
     result = await backend.execute("Test prompt")
@@ -295,7 +269,7 @@ async def test_custom_http_backend_perturbations(mock_requests):
 @pytest.mark.asyncio
 async def test_target_with_perturbations():
     """Test Target agent with perturbation configuration."""
-    with patch('openai.AsyncOpenAI') as mock_openai:
+    with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = AsyncMock()
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
@@ -310,14 +284,10 @@ async def test_target_with_perturbations():
                 PerturbationMode.SYSTEM_PROMPT,
                 PerturbationMode.POLICY_REWORDING,
                 PerturbationMode.TEMPERATURE_JITTER,
-                PerturbationMode.SIMULATED_LATENCY
-            ]
+                PerturbationMode.SIMULATED_LATENCY,
+            ],
         )
-        target = create_target(
-            'openai',
-            api_key='test-key',
-            perturbation_config=config
-        )
+        target = create_target("openai", api_key="test-key", perturbation_config=config)
 
         result = await target.execute("Test prompt")
 
@@ -327,32 +297,25 @@ async def test_target_with_perturbations():
 
 def test_target_statistics_with_perturbations():
     """Test Target statistics include perturbation info."""
-    with patch('openai.AsyncOpenAI') as mock_openai:
+    with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
 
-        config = PerturbationConfig(
-            enabled=True,
-            modes=[PerturbationMode.TEMPERATURE_JITTER]
-        )
-        target = create_target(
-            'openai',
-            api_key='test-key',
-            perturbation_config=config
-        )
+        config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER])
+        target = create_target("openai", api_key="test-key", perturbation_config=config)
 
         stats = target.get_statistics()
 
-        assert 'perturbations_enabled' in stats
-        assert stats['perturbations_enabled'] is True
-        assert 'perturbation_modes' in stats
-        assert 'temperature_jitter' in stats['perturbation_modes']
+        assert "perturbations_enabled" in stats
+        assert stats["perturbations_enabled"] is True
+        assert "perturbation_modes" in stats
+        assert "temperature_jitter" in stats["perturbation_modes"]
 
 
 @pytest.mark.asyncio
 async def test_perturbations_dont_break_statelessness():
     """Test that perturbations maintain stateless execution."""
-    with patch('openai.AsyncOpenAI') as mock_openai:
+    with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = AsyncMock()
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
@@ -361,7 +324,7 @@ async def test_perturbations_dont_break_statelessness():
         mock_openai.return_value = mock_client
 
         config = PerturbationConfig(enabled=True, truncation_probability=0.0)
-        backend = OpenAIBackend(api_key='test-key')
+        backend = OpenAIBackend(api_key="test-key")
         backend.set_perturbation_config(config)
 
         # Execute multiple times
@@ -378,7 +341,7 @@ async def test_perturbations_dont_break_statelessness():
 @pytest.mark.asyncio
 async def test_no_perturbations_when_disabled():
     """Test that no perturbations are applied when disabled."""
-    with patch('openai.AsyncOpenAI') as mock_openai:
+    with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = AsyncMock()
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
@@ -386,7 +349,7 @@ async def test_no_perturbations_when_disabled():
         mock_client.chat.completions.create.return_value = mock_response
         mock_openai.return_value = mock_client
 
-        backend = OpenAIBackend(api_key='test-key', temperature=0.7)
+        backend = OpenAIBackend(api_key="test-key", temperature=0.7)
         # Default config with enabled=False
 
         result = await backend.execute("Test prompt")
@@ -394,17 +357,17 @@ async def test_no_perturbations_when_disabled():
         assert result == "Response"
         call_args = mock_client.chat.completions.create.call_args
         # Should use original temperature
-        assert call_args.kwargs['temperature'] == 0.7
+        assert call_args.kwargs["temperature"] == 0.7
         # Should have only user message
-        messages = call_args.kwargs['messages']
+        messages = call_args.kwargs["messages"]
         assert len(messages) == 1
-        assert messages[0]['role'] == 'user'
+        assert messages[0]["role"] == "user"
 
 
 @pytest.mark.asyncio
 async def test_temperature_bounds_respected():
     """Test that temperature jitter respects 0.0-2.0 bounds."""
-    with patch('openai.AsyncOpenAI') as mock_openai:
+    with patch("openai.AsyncOpenAI") as mock_openai:
         mock_client = AsyncMock()
         mock_response = MagicMock()
         mock_response.choices = [MagicMock()]
@@ -413,26 +376,22 @@ async def test_temperature_bounds_respected():
         mock_openai.return_value = mock_client
 
         # Test lower bound
-        backend = OpenAIBackend(api_key='test-key', temperature=0.0)
-        config = PerturbationConfig(
-            enabled=True,
-            modes=[PerturbationMode.TEMPERATURE_JITTER],
-            temperature_jitter_range=0.5
-        )
+        backend = OpenAIBackend(api_key="test-key", temperature=0.0)
+        config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER], temperature_jitter_range=0.5)
         backend.set_perturbation_config(config)
 
         for _ in range(10):
             await backend.execute("Test prompt")
             call_args = mock_client.chat.completions.create.call_args
-            temp = call_args.kwargs['temperature']
+            temp = call_args.kwargs["temperature"]
             assert 0.0 <= temp <= 2.0
 
         # Test upper bound
-        backend2 = OpenAIBackend(api_key='test-key', temperature=2.0)
+        backend2 = OpenAIBackend(api_key="test-key", temperature=2.0)
         backend2.set_perturbation_config(config)
 
         for _ in range(10):
             await backend2.execute("Test prompt")
             call_args = mock_client.chat.completions.create.call_args
-            temp = call_args.kwargs['temperature']
+            temp = call_args.kwargs["temperature"]
             assert 0.0 <= temp <= 2.0

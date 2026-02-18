@@ -5,8 +5,9 @@ Tests for mutation engine enhancements:
 - Improved encoding transformations
 """
 
-from app.engines.mutation import MutationEngine, MutationStrategy
 import hashlib
+
+from app.engines.mutation import MutationEngine, MutationStrategy
 
 
 def test_parent_prompt_hash_tracking():

@@ -3,16 +3,10 @@ Tests for configuration module
 """
 
 import pytest
-from app.core.config import (
-    RSPConfig,
-    get_default_config,
-    load_config_from_env,
-    ScoringConfig,
-    StorageMode,
-    ModelBackend
-)
+
 from app.agents.sniper import Sniper
 from app.agents.spotter import Spotter
+from app.core.config import ModelBackend, RSPConfig, ScoringConfig, StorageMode, get_default_config, load_config_from_env
 from app.engines.mutation import MutationEngine
 
 
@@ -36,9 +30,7 @@ def test_scoring_weights_validation():
 
     # Invalid weights
     with pytest.raises(ValueError):
-        config = RSPConfig(
-            scoring=ScoringConfig(l1_weight=0.5, l2_weight=0.5, l3_weight=0.5)
-        )
+        config = RSPConfig(scoring=ScoringConfig(l1_weight=0.5, l2_weight=0.5, l3_weight=0.5))
 
 
 def test_mutation_rate_validation():
@@ -105,18 +97,12 @@ def test_agent_initialization_with_api_keys():
 
     # Initialize Sniper with API key
     sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=10,
-        creativity_temperature=0.9,
-        api_key="sniper-test-key"
+        mutation_engine=mutation_engine, evolution_pool_size=10, creativity_temperature=0.9, api_key="sniper-test-key"
     )
     assert sniper.api_key == "sniper-test-key"
 
     # Initialize Spotter with API key
-    spotter = Spotter(
-        confidence_threshold=0.6,
-        api_key="spotter-test-key"
-    )
+    spotter = Spotter(confidence_threshold=0.6, api_key="spotter-test-key")
     assert spotter.api_key == "spotter-test-key"
 
     # Verify they have different API keys

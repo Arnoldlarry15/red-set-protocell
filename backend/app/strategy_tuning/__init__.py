@@ -6,12 +6,12 @@ Automatic strategy weighting and optimization based on feedback.
 
 from app.strategy_tuning.advisor import (
     MutationStrategyAdvisor,
-    StrategyRecommendation,
     StrategyPerformance,
+    StrategyRecommendation,
 )
 from app.strategy_tuning.optimizer import (
-    StrategyOptimizer,
     OptimizationConfig,
+    StrategyOptimizer,
 )
 
 __all__ = [

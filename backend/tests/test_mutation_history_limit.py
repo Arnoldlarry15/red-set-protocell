@@ -6,6 +6,7 @@ unbounded memory growth in long-running systems.
 """
 
 import random
+
 from app.engines.mutation import MutationEngine, MutationStrategy
 
 
@@ -76,10 +77,7 @@ def test_statistics_work_with_limited_history():
         engine.mutate(f"test prompt {i}", fitness_score=0.5)
         # Update strategy performance
         if i % 10 == 0:
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION,
-                0.8
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8)
 
     stats = engine.get_statistics()
 

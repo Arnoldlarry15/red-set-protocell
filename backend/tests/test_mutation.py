@@ -75,11 +75,7 @@ def test_evolve_population():
     """Test population evolution."""
     engine = MutationEngine(mutation_rate=1.0)
 
-    base_prompts = [
-        "prompt one",
-        "prompt two",
-        "prompt three"
-    ]
+    base_prompts = ["prompt one", "prompt two", "prompt three"]
     fitness_scores = [0.3, 0.7, 0.5]
 
     evolved = engine.evolve_population(base_prompts, fitness_scores, population_size=5)
@@ -108,6 +104,6 @@ def test_mutation_statistics():
 
     stats = engine.get_statistics()
 
-    assert stats['total_mutations'] == 3
-    assert 'strategy_distribution' in stats
-    assert 'avg_length_change' in stats
+    assert stats["total_mutations"] == 3
+    assert "strategy_distribution" in stats
+    assert "avg_length_change" in stats

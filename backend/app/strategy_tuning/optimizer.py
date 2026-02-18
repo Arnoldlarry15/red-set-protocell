@@ -5,9 +5,9 @@ Automatic optimization of mutation strategy weights.
 """
 
 import logging
-from dataclasses import dataclass
-from typing import Dict, List, Any
 import random
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 from app.engines.mutation import MutationStrategy
 from app.strategy_tuning.advisor import MutationStrategyAdvisor
@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class OptimizationConfig:
     """Configuration for strategy optimization."""
+
     exploration_rate: float = 0.1  # Probability of trying non-optimal strategies
     learning_rate: float = 0.05  # Rate of weight adjustment
     min_weight: float = 0.05  # Minimum weight for any strategy
@@ -57,9 +58,7 @@ class StrategyOptimizer:
         # Initialize weights uniformly
         all_strategies = list(MutationStrategy)
         initial_weight = 1.0 / len(all_strategies)
-        self.current_weights: Dict[MutationStrategy, float] = {
-            s: initial_weight for s in all_strategies
-        }
+        self.current_weights: Dict[MutationStrategy, float] = {s: initial_weight for s in all_strategies}
 
         logger.info("Strategy optimizer initialized")
 
@@ -150,11 +149,11 @@ class StrategyOptimizer:
         priority_strategies = self.suggest_priority_strategies()
 
         return {
-            'current_weights': self.get_current_weights(),
-            'priority_strategies': [s.value for s in priority_strategies],
-            'recommendation': recommendation.to_dict(),
-            'config': {
-                'exploration_rate': self.config.exploration_rate,
-                'learning_rate': self.config.learning_rate,
+            "current_weights": self.get_current_weights(),
+            "priority_strategies": [s.value for s in priority_strategies],
+            "recommendation": recommendation.to_dict(),
+            "config": {
+                "exploration_rate": self.config.exploration_rate,
+                "learning_rate": self.config.learning_rate,
             },
         }

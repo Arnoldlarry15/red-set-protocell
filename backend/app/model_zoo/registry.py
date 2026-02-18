@@ -6,17 +6,18 @@ Registry of reference models for benchmarking.
 
 import json
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class ModelProvider(Enum):
     """Supported model providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     LOCAL = "local"
@@ -26,6 +27,7 @@ class ModelProvider(Enum):
 @dataclass
 class ModelVersion:
     """Version information for a model."""
+
     version_id: str
     release_date: str
     description: str
@@ -40,6 +42,7 @@ class ModelVersion:
 @dataclass
 class ModelInfo:
     """Information about a reference model."""
+
     model_id: str
     display_name: str
     provider: ModelProvider
@@ -56,7 +59,7 @@ class ModelInfo:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         data = asdict(self)
-        data['provider'] = self.provider.value
+        data["provider"] = self.provider.value
         return data
 
     def get_version(self, version_id: str) -> Optional[ModelVersion]:
@@ -169,11 +172,11 @@ class ModelRegistry:
         model.get_version(version)
 
         config = {
-            'backend': model.backend_type,
-            'model_name': model.model_name,
-            'model_version': version,
-            'provider': model.provider.value,
-            'context_window': model.context_window,
+            "backend": model.backend_type,
+            "model_name": model.model_name,
+            "model_version": version,
+            "provider": model.provider.value,
+            "context_window": model.context_window,
         }
 
         return config
@@ -186,11 +189,11 @@ class ModelRegistry:
             filepath: Path to save file
         """
         data = {
-            'timestamp': datetime.now().isoformat(),
-            'models': [model.to_dict() for model in self.models.values()],
+            "timestamp": datetime.now().isoformat(),
+            "models": [model.to_dict() for model in self.models.values()],
         }
 
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(data, f, indent=2)
 
         logger.info(f"Saved model registry to {filepath}")
@@ -202,30 +205,28 @@ class ModelRegistry:
         Args:
             filepath: Path to registry file
         """
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             data = json.load(f)
 
-        for model_data in data.get('models', []):
+        for model_data in data.get("models", []):
             # Reconstruct ModelInfo
-            provider = ModelProvider(model_data['provider'])
+            provider = ModelProvider(model_data["provider"])
 
-            versions = [
-                ModelVersion(**v) for v in model_data.get('versions', [])
-            ]
+            versions = [ModelVersion(**v) for v in model_data.get("versions", [])]
 
             model = ModelInfo(
-                model_id=model_data['model_id'],
-                display_name=model_data['display_name'],
+                model_id=model_data["model_id"],
+                display_name=model_data["display_name"],
                 provider=provider,
-                backend_type=model_data['backend_type'],
-                model_name=model_data['model_name'],
+                backend_type=model_data["backend_type"],
+                model_name=model_data["model_name"],
                 versions=versions,
-                default_version=model_data['default_version'],
-                capabilities=model_data['capabilities'],
-                context_window=model_data['context_window'],
-                description=model_data['description'],
-                recommended_for=model_data['recommended_for'],
-                benchmark_baseline=model_data.get('benchmark_baseline'),
+                default_version=model_data["default_version"],
+                capabilities=model_data["capabilities"],
+                context_window=model_data["context_window"],
+                description=model_data["description"],
+                recommended_for=model_data["recommended_for"],
+                benchmark_baseline=model_data.get("benchmark_baseline"),
             )
 
             self.register_model(model)
@@ -249,19 +250,14 @@ class ModelRegistry:
         models = [m for m in models if m is not None]
 
         if not models:
-            return {'error': 'No valid models to compare'}
+            return {"error": "No valid models to compare"}
 
         comparison = {
-            'models': [m.model_id for m in models],
-            'providers': [m.provider.value for m in models],
-            'context_windows': [m.context_window for m in models],
-            'capabilities': {
-                m.model_id: m.capabilities for m in models
-            },
-            'baselines': {
-                m.model_id: m.benchmark_baseline for m in models
-                if m.benchmark_baseline
-            },
+            "models": [m.model_id for m in models],
+            "providers": [m.provider.value for m in models],
+            "context_windows": [m.context_window for m in models],
+            "capabilities": {m.model_id: m.capabilities for m in models},
+            "baselines": {m.model_id: m.benchmark_baseline for m in models if m.benchmark_baseline},
         }
 
         return comparison

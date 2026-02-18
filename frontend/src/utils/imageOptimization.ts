@@ -3,12 +3,6 @@
  * Handles lazy loading, blur-up effects, and responsive images
  */
 
-interface ImageState {
-  isLoading: boolean;
-  isLoaded: boolean;
-  hasError: boolean;
-}
-
 /**
  * Preload an image and return a promise
  * Useful for ensuring images are loaded before rendering
@@ -207,17 +201,6 @@ export function createLazyLoadObserver(
   };
 
   return new IntersectionObserver(callback, options);
-}
-
-/**
- * Utility to track image load state
- */
-export function useImageLoadState(src: string): ImageState {
-  return {
-    isLoading: true,
-    isLoaded: false,
-    hasError: false,
-  };
 }
 
 /**

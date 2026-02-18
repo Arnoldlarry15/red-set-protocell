@@ -241,14 +241,6 @@ All changes adhere to the requirement for **minimal, surgical modifications**:
     python -m pytest tests/test_state_transitions.py -v
 ```
 
-### 3. Run Mutation Loop Tests
-```yaml
-- name: Test Mutation Loop
-  run: |
-    cd backend
-    python -m pytest tests/test_mutation_loop_integration.py -v
-```
-
 ---
 
 ## Documentation Updates

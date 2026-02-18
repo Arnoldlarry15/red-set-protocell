@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Activity, AlertTriangle, Shield, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { Attack } from '../types';
-import { imageAssets } from '../config/imageAssets';
 import '../styles/Components.css';
 
 interface LiveFeedProps {

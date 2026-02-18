@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Send, Zap } from 'lucide-react';
-import { imageAssets } from '../config/imageAssets';
 import '../styles/Components.css';
 
 interface UserInputProps {

@@ -212,7 +212,7 @@ export function createLazyLoadObserver(
 /**
  * Utility to track image load state
  */
-export function useImageLoadState(src: string): ImageState {
+export function useImageLoadState(_src: string): ImageState {
   return {
     isLoading: true,
     isLoaded: false,

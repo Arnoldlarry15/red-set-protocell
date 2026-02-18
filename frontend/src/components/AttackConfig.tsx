@@ -1,7 +1,6 @@
 import React from 'react';
 import { Settings, Check } from 'lucide-react';
 import { SessionConfig } from '../types';
-import { imageAssets } from '../config/imageAssets';
 import '../styles/Components.css';
 
 interface AttackConfigProps {

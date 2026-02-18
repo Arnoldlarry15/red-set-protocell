@@ -289,7 +289,7 @@ async def test_state_4_submit(temp_db):
         max_rounds=1,
     )
 
-    result = await orchestrator._execute_round(round_number=1)
+    await orchestrator._execute_round(round_number=1)
 
     # Verify State 4 executed (prompt was submitted to target)
     assert target.last_prompt == "test adversarial prompt"

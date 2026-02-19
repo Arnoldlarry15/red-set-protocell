@@ -387,8 +387,8 @@ Planned improvements:
 ## Related Documentation
 
 - [README.md](../README.md) - Main documentation
-- [IMPROVEMENTS.md](../IMPROVEMENTS.md) - Other enhancements
-- [examples/time_analytics.py](../rsp-core/backend/examples/time_analytics.py) - Example script
+- `IMPROVEMENTS.md` (archived reference: ../IMPROVEMENTS.md) - Other enhancements
+- `examples/time_analytics.py` (archived reference: ../rsp-core/backend/examples/time_analytics.py) - Example script
 
 ## Questions Answered
 

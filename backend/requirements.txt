@@ -27,14 +27,3 @@ pydantic>=2.0.0
 
 # Security and authentication
 PyJWT>=2.8.0  # JWT token generation and validation
-
-# Development dependencies
-pytest>=7.4.0
-pytest-asyncio>=0.21.0
-pytest-cov>=4.1.0
-
-# Code quality
-black>=23.7.0
-isort>=5.13.2
-flake8>=6.1.0
-mypy>=1.5.0

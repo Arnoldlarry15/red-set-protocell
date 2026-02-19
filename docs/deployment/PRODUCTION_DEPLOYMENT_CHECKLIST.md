@@ -114,12 +114,12 @@ Use this checklist before deploying Red Set ProtoCell to production.
   - [ ] Runbook updated
 
 - [ ] **Monitoring Docs**
-  - [ ] [MONITORING_GUIDE.md](MONITORING_GUIDE.md) reviewed
+  - [ ] [MONITORING_GUIDE.md](../guides/MONITORING_GUIDE.md) reviewed
   - [ ] Alert thresholds documented
   - [ ] Dashboard URLs documented
 
 - [ ] **Incident Response**
-  - [ ] [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) reviewed
+  - [ ] [INCIDENT_RESPONSE.md](../guides/INCIDENT_RESPONSE.md) reviewed
   - [ ] On-call schedule created
   - [ ] Emergency contacts updated
 
@@ -287,12 +287,12 @@ Calculate your score:
 Before deploying, review:
 
 1. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deployment procedures
-2. [MONITORING_GUIDE.md](MONITORING_GUIDE.md) - Monitoring setup
-3. [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) - Incident procedures
-4. [SECURITY.md](SECURITY.md) - Security practices
-5. [SLO_DOCUMENTATION.md](SLO_DOCUMENTATION.md) - SLO framework
-6. [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - API reference
-7. [COMPLIANCE_GUIDE.md](COMPLIANCE_GUIDE.md) - Privacy & compliance
+2. [MONITORING_GUIDE.md](../guides/MONITORING_GUIDE.md) - Monitoring setup
+3. [INCIDENT_RESPONSE.md](../guides/INCIDENT_RESPONSE.md) - Incident procedures
+4. [SECURITY.md](../../SECURITY.md) - Security practices
+5. [SLO_DOCUMENTATION.md](../archive/SLO_DOCUMENTATION.md) - SLO framework
+6. [API_DOCUMENTATION.md](../guides/API_DOCUMENTATION.md) - API reference
+7. [COMPLIANCE_GUIDE.md](../guides/COMPLIANCE_GUIDE.md) - Privacy & compliance
 
 ## 🆘 Emergency Contacts
 

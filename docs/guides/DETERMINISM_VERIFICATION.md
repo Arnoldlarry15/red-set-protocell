@@ -503,8 +503,8 @@ jobs:
 ## Additional Resources
 
 - **Main README**: [../README.md](../README.md) - Overall system documentation
-- **Existing deterministic script**: [run_deterministic_experiment.py](run_deterministic_experiment.py) - 300-round experiments
-- **Analysis script**: [analyze_selection.py](analyze_selection.py) - Selection history analysis
+- **Existing deterministic script**: [run_full_cycle.py](../../scripts/run_full_cycle.py) - 300-round experiments
+- **Analysis script**: [Selection Engine docs](../../backend/docs/SELECTION_ENGINE_IMPROVEMENTS.md) - Selection history analysis
 
 ---
 

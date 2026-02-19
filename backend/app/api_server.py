@@ -921,6 +921,18 @@ async def validate_llm_key(validation: LLMKeyValidation):
     Returns success if the key is valid, error otherwise.
     """
     try:
+        # Fast-fail only obviously invalid key structures before network calls.
+        # Keep this intentionally minimal so new provider key formats are not
+        # accidentally blocked by overly strict local validation rules.
+        key = validation.api_key.strip()
+        if validation.backend.lower() == "openai" and not key.startswith("sk-"):
+            raise HTTPException(
+                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
+        if validation.backend.lower() == "anthropic" and not key.startswith("sk-ant-"):
+            raise HTTPException(
+                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
         # Create a minimal test backend instance
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend

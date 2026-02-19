@@ -39,9 +39,9 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
-    # Coverage threshold set to 10% to account for individual test files
+        # Keep local and CI coverage thresholds aligned
     # Full test suite achieves ~78% coverage
-    "--cov-fail-under=10",
+    "--cov-fail-under=70",
 ]
 markers = [
     "asyncio: mark test as async",

@@ -12,9 +12,6 @@ This directory contains all project documentation organized by category.
 - [CHANGELOG.md](../CHANGELOG.md) - Version history
 
 ### Deployment Guides
-- [deployment/VERCEL_SERVERLESS_GUIDE.md](deployment/VERCEL_SERVERLESS_GUIDE.md) - Complete Vercel serverless deployment guide
-- [deployment/vercel.md](deployment/vercel.md) - Quick Vercel deployment reference
-- [deployment/netlify.md](deployment/netlify.md) - Quick Netlify deployment reference
 - [deployment/DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md) - General deployment guide (Docker, cloud platforms)
 - [deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md](deployment/PRODUCTION_DEPLOYMENT_CHECKLIST.md) - Pre-deployment checklist
 
@@ -35,9 +32,7 @@ This directory contains all project documentation organized by category.
 
 ### Getting Started
 1. Read [README.md](../README.md)
-2. Choose your deployment platform:
-   - [Vercel Guide](deployment/vercel.md) - Fast, seamless GitHub integration
-   - [Netlify Guide](deployment/netlify.md) - Clear function boundaries, easier debugging
+2. Choose your deployment platform via [deployment/DEPLOYMENT_GUIDE.md](deployment/DEPLOYMENT_GUIDE.md).
 3. Check [QUICKSTART_DASHBOARD.md](guides/QUICKSTART_DASHBOARD.md) for usage
 
 ### For Contributors

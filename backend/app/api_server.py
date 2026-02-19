@@ -8,6 +8,8 @@ Integrates with the existing RSP core system.
 import asyncio
 import logging
 import os
+import traceback
+import threading
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -39,12 +41,40 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def redact_sensitive_text(text: str) -> str:
+    """Redact sensitive credential-like tokens from logs and error messages."""
+    import re
+
+    redacted = re.sub(r"sk-[A-Za-z0-9_-]{8,}", "sk-***REDACTED***", text)
+    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***REDACTED***", redacted, flags=re.IGNORECASE)
+    return redacted
+
+
+def log_exception_safely(context: str, exc: Exception) -> None:
+    """Log redacted exception details and traceback for internal debugging."""
+    redacted_message = redact_sensitive_text(str(exc))
+    redacted_traceback = redact_sensitive_text(traceback.format_exc())
+    logger.error(f"{context}: {type(exc).__name__} - {redacted_message}")
+    logger.error(redacted_traceback)
+
+
 def track_background_task(task: asyncio.Task, context: str) -> asyncio.Task:
-    """Backward-compatible wrapper around lifecycle task tracking."""
-    return _track_background_task(task, context, log_exception_safely)
+    """Track background tasks and surface exceptions deterministically."""
+    with background_tasks_lock:
+        background_tasks.add(task)
 
+    def _on_done(done_task: asyncio.Task) -> None:
+        with background_tasks_lock:
+            background_tasks.discard(done_task)
+        if done_task.cancelled():
+            return
+        try:
+            done_task.result()
+        except Exception as exc:  # pragma: no cover - callback guard path
+            log_exception_safely(f"Background task failed ({context})", exc)
 
-background_tasks = _background_tasks
+    task.add_done_callback(_on_done)
+    return task
 
 
 # Environment-aware CORS configuration
@@ -243,6 +273,12 @@ class LLMKeyValidation(BaseModel):
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
+background_tasks: Set[asyncio.Task] = set()
+# Asyncio is single-threaded by default, but callbacks/executors may evolve over time.
+# Guard registry mutations with a lock for future thread-safety hardening.
+background_tasks_lock = threading.Lock()
+
+
 # Utility functions
 
 # Token estimation constants
@@ -395,6 +431,77 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 # Startup and shutdown hooks for proper async resource management
+
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Initialize async resources on startup.
+    Defensive initialization with explicit logging.
+    """
+    logger.info("=" * 60)
+    logger.info("RSP API Server - Startup")
+    logger.info("=" * 60)
+    logger.info(f"Environment: {RSP_ENVIRONMENT}")
+    logger.info(f"CORS Origins: {len(ALLOWED_ORIGINS)} configured")
+    logger.info(f"Max WebSocket Connections: {ConnectionManager.MAX_CONNECTIONS}")
+
+    # Create sessions directory if it doesn't exist
+    sessions_dir = Path("sessions")
+    sessions_dir.mkdir(exist_ok=True)
+    logger.info(f"Sessions directory: {sessions_dir.absolute()}")
+
+    logger.info("Startup complete - Server ready")
+    logger.info("=" * 60)
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """
+    Cleanup async resources on shutdown.
+    Ensures graceful teardown of all connections and sessions.
+    """
+    logger.info("=" * 60)
+    logger.info("RSP API Server - Shutdown")
+    logger.info("=" * 60)
+
+    # Close all active WebSocket connections
+    if manager.active_connections:
+        logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
+        for ws in list(manager.active_connections):
+            try:
+                await ws.close(code=1001, reason="Server shutting down")
+            except Exception as e:
+                log_exception_safely("Error closing WebSocket", e)
+            finally:
+                manager.disconnect(ws)
+
+    # Terminate all active sessions
+    if active_sessions:
+        logger.info(f"Terminating {len(active_sessions)} active sessions")
+        for session_id, session_data in list(active_sessions.items()):
+            try:
+                orchestrator = session_data.get("orchestrator")
+                if orchestrator:
+                    orchestrator.terminate_session()
+            except Exception as e:
+                log_exception_safely(f"Error terminating session {session_id}", e)
+
+    # Cancel and await tracked background tasks to avoid orphaned coroutines
+    with background_tasks_lock:
+        tasks_snapshot = list(background_tasks)
+
+    if tasks_snapshot:
+        logger.info(f"Cancelling {len(tasks_snapshot)} tracked background task(s)")
+        for task in tasks_snapshot:
+            task.cancel()
+        await asyncio.gather(*tasks_snapshot, return_exceptions=True)
+        with background_tasks_lock:
+            for task in tasks_snapshot:
+                background_tasks.discard(task)
+
+    logger.info("Shutdown complete")
+    logger.info("=" * 60)
 
 
 # API endpoints

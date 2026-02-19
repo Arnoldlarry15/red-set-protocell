@@ -1,6 +1,6 @@
 # System Reliability & Security Audit (Production SRE Framing)
 
-Date: 2026-02-19 (updated)
+Date: 2026-02-19
 Scope: `backend/app`, `backend/tests`, `frontend/src`, dependency manifests, route contract surfaces.
 
 ## 1) Threat Modeling Pass
@@ -100,9 +100,3 @@ Scope: `backend/app`, `backend/tests`, `frontend/src`, dependency manifests, rou
 - API-key validation logs redact credential-like values when provider errors include key fragments.
 - Registration path failure injection verifies no internal exception detail leakage in client 500 responses.
 
-
-
-## Update Notes
-- Lifecycle hooks and route registration are now split into `backend/app/lifecycle.py` and `backend/app/routes.py` with `api_server.py` as wiring.
-- Background task registry is lock-protected and assumes single-process semantics; multi-worker deployments require centralized shared state.
-- Runtime and development dependencies are split (`requirements.txt`, `dev-requirements.txt`).

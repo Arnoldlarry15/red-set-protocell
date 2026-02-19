@@ -86,7 +86,7 @@ const NeuralBackground: React.FC = () => {
     scene.add(lines);
 
     // Animation loop - store frame ID for cleanup
-    let animationFrameId: number;
+    let animationFrameId: number | undefined;
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
 
@@ -126,7 +126,9 @@ const NeuralBackground: React.FC = () => {
 
     return () => {
       // Cancel animation frame to prevent memory leaks
-      cancelAnimationFrame(animationFrameId);
+      if (animationFrameId !== undefined) {
+        cancelAnimationFrame(animationFrameId);
+      }
       
       // Remove event listener
       window.removeEventListener('resize', handleResize);

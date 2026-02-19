@@ -515,9 +515,9 @@ After resolving an incident, verify:
 - Status Page: https://status.example.com
 
 ### Documentation
-- Deployment Guide: [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- Deployment Guide: [DEPLOYMENT_GUIDE.md](../deployment/DEPLOYMENT_GUIDE.md)
 - Monitoring Guide: [MONITORING_GUIDE.md](MONITORING_GUIDE.md)
-- Architecture Docs: [README.md](README.md)
+- Architecture Docs: [Project README](../../README.md)
 
 ### Communication
 - Incident Channel: #incident-response

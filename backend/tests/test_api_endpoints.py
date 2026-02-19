@@ -6,6 +6,7 @@ Tests for the new API endpoints:
 """
 
 import os
+import logging
 
 import pytest
 from fastapi.testclient import TestClient
@@ -217,6 +218,37 @@ class TestUserManagement:
             # NOT 503 (Network error) even though message contains "connection"
             assert response.status_code == 401
             assert "Invalid API key" in response.json()["detail"]
+
+    def test_validate_llm_key_error_logging_redacts_api_keys(self, caplog):
+        """Failure injection: provider errors containing keys must be redacted in logs."""
+        from unittest.mock import AsyncMock, patch
+
+        caplog.set_level(logging.WARNING)
+
+        with patch("app.agents.target.OpenAIBackend") as mock_backend:
+            mock_instance = AsyncMock()
+            mock_instance.execute.side_effect = Exception("Error 401 for sk-super-secret-key-value")
+            mock_backend.return_value = mock_instance
+
+            response = client.post("/auth/validate-llm-key", json={"api_key": "sk-test-key", "backend": "openai"})
+
+            assert response.status_code == 401
+            joined_logs = "\n".join(r.message for r in caplog.records)
+            assert "sk-super-secret-key-value" not in joined_logs
+            assert "sk-***REDACTED***" in joined_logs
+
+    def test_register_internal_error_does_not_leak_exception_details(self):
+        """Failure injection: unexpected register exceptions should return generic 500 detail."""
+        from unittest.mock import patch
+
+        with patch("app.api_server.password_hasher.hash_password", side_effect=Exception("db exploded sk-top-secret")):
+            response = client.post(
+                "/auth/register",
+                json={"username": "err_user", "email": "err@example.com", "role": "observer", "password": "test123"},
+            )
+
+            assert response.status_code == 500
+            assert response.json()["detail"] == "Internal server error"
 
 
 class TestRemoteControl:

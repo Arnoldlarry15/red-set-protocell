@@ -28,7 +28,7 @@ from app.engines.scoring import ScoringEngine
 from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
 from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
 from app.auth import log_exception_safely, redact_sensitive_text
-from app.lifecycle import background_tasks as _background_tasks, bind_lifecycle_handlers, track_background_task as _track_background_task
+from app.lifecycle import bind_lifecycle_handlers
 from app.routes import register_routes
 
 # Import production-ready middleware

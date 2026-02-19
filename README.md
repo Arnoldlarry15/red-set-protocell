@@ -1381,17 +1381,16 @@ tests/
 ```bash
 cd backend
 
-# Run all unit tests
-pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_scoring.py -v
+# Local development (no coverage gate)
+make test
 
-# Run specific test file
+# Fast local runs when iterating on one file
+make test-no-cov
 pytest tests/test_egg.py -v
-
-# Run specific test function
 pytest tests/test_egg.py::test_egg_blocks_csam -v
 
-# Run with coverage
-pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_scoring.py --cov=app --cov-report=html
+# CI-equivalent run (enforces coverage >= 70%)
+make test-ci
 ```
 
 #### Integration Tests (Requires API Keys)
@@ -1410,6 +1409,8 @@ pytest tests/test_real_backends.py -v
 ```
 
 ### Test Coverage
+
+Coverage enforcement (`--cov-fail-under=70`) is applied in CI via `make test-ci`, while local `pytest`/`make test` runs are intentionally ungated for faster iteration.
 
 Current test coverage:
 

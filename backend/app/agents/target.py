@@ -103,7 +103,6 @@ from abc import abstractmethod
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from app.auth import log_exception_safely
 from app.interfaces.target import BaseTarget
 from app.auth import redact_sensitive_text, log_exception_safely
 

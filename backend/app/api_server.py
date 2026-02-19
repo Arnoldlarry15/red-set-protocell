@@ -67,6 +67,11 @@ def track_background_task(task: asyncio.Task, context: str) -> asyncio.Task:
 RSP_ENVIRONMENT = os.getenv("RSP_ENVIRONMENT", "development")
 ALLOWED_ORIGINS_ENV = os.getenv("RSP_ALLOWED_ORIGINS", "")
 
+# Development fallback for local ergonomics.
+# Production must always provide explicit origins.
+if not ALLOWED_ORIGINS_ENV and RSP_ENVIRONMENT == "development":
+    ALLOWED_ORIGINS_ENV = "http://localhost:3000"
+
 # Production environment validation
 
 
@@ -120,13 +125,13 @@ def validate_production_environment():
 # Validate production environment on startup
 validate_production_environment()
 
-# SECURITY: RSP_ALLOWED_ORIGINS is REQUIRED in all environments
-# Fail fast if not set - no implicit defaults
+# SECURITY: RSP_ALLOWED_ORIGINS is required outside development.
+# Development uses localhost fallback; non-development fails fast if unset.
 if not ALLOWED_ORIGINS_ENV:
     raise ValueError(
         "FATAL: RSP_ALLOWED_ORIGINS environment variable must be set.\n"
         "For production: RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app\n"
-        "For local dev: RSP_ALLOWED_ORIGINS=http://localhost:3000\n"
+        "For local dev (optional): RSP_ALLOWED_ORIGINS=http://localhost:3000\n"
         "SECURITY: No defaults. No wildcards. Explicit trust only."
     )
 

@@ -476,7 +476,7 @@ pytest tests/ -v --cov=app
 
 ### 5. Deploy
 
-Follow [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for your platform:
+Follow `DEPLOYMENT_GUIDE.md` (archived reference: DEPLOYMENT_GUIDE.md) for your platform:
 - Docker: `docker-compose up -d`
 - Systemd: `sudo systemctl start rsp-api`
 - Cloud: Use platform-specific deployment
@@ -500,15 +500,15 @@ curl -X POST https://your-domain.com/api/auth/login \
 
 | Document | Purpose | Size |
 |----------|---------|------|
-| [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) | Deployment procedures for all platforms | 12.2 KB |
-| [MONITORING_GUIDE.md](MONITORING_GUIDE.md) | Monitoring, logging, alerting setup | 13.3 KB |
-| [COMPLIANCE_GUIDE.md](COMPLIANCE_GUIDE.md) | Privacy, GDPR, data handling | 13.6 KB |
-| [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) | Incident response playbook | 11.9 KB |
+| `DEPLOYMENT_GUIDE.md` (archived reference: DEPLOYMENT_GUIDE.md) | Deployment procedures for all platforms | 12.2 KB |
+| `MONITORING_GUIDE.md` (archived reference: MONITORING_GUIDE.md) | Monitoring, logging, alerting setup | 13.3 KB |
+| `COMPLIANCE_GUIDE.md` (archived reference: COMPLIANCE_GUIDE.md) | Privacy, GDPR, data handling | 13.6 KB |
+| `INCIDENT_RESPONSE.md` (archived reference: INCIDENT_RESPONSE.md) | Incident response playbook | 11.9 KB |
 | [SLO_DOCUMENTATION.md](SLO_DOCUMENTATION.md) | SLA/SLO/SLI framework | 14.2 KB |
-| [API_DOCUMENTATION.md](API_DOCUMENTATION.md) | API reference and usage | 13.2 KB |
-| [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md) | Pre-deployment checklist | 9.3 KB |
-| [SECURITY.md](SECURITY.md) | Security practices and reporting | Existing |
-| [README.md](README.md) | General documentation | Existing |
+| `API_DOCUMENTATION.md` (archived reference: API_DOCUMENTATION.md) | API reference and usage | 13.2 KB |
+| `PRODUCTION_DEPLOYMENT_CHECKLIST.md` (archived reference: PRODUCTION_DEPLOYMENT_CHECKLIST.md) | Pre-deployment checklist | 9.3 KB |
+| `SECURITY.md` (archived reference: SECURITY.md) | Security practices and reporting | Existing |
+| `README.md` (archived reference: README.md) | General documentation | Existing |
 
 **Total New Documentation**: 87.7 KB (7 new docs + updates)
 
@@ -558,10 +558,10 @@ curl -X POST https://your-domain.com/api/auth/login \
 
 Red Set ProtoCell is now production-ready! To deploy:
 
-1. ✅ Review [PRODUCTION_DEPLOYMENT_CHECKLIST.md](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
+1. ✅ Review `PRODUCTION_DEPLOYMENT_CHECKLIST.md` (archived reference: PRODUCTION_DEPLOYMENT_CHECKLIST.md)
 2. ✅ Configure production environment variables
 3. ✅ Set up monitoring and alerting
-4. ✅ Deploy following [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+4. ✅ Deploy following `DEPLOYMENT_GUIDE.md` (archived reference: DEPLOYMENT_GUIDE.md)
 5. ✅ Verify deployment with smoke tests
 6. ✅ Monitor for 30 minutes post-deployment
 

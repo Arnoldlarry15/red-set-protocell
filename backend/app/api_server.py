@@ -9,7 +9,6 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
@@ -26,6 +25,9 @@ from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine
 from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
 from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
+from app.auth import log_exception_safely, redact_sensitive_text
+from app.lifecycle import background_tasks as _background_tasks, bind_lifecycle_handlers, track_background_task as _track_background_task
+from app.routes import register_routes
 
 # Import production-ready middleware
 from app.middleware.security import InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
@@ -35,6 +37,15 @@ from app.telemetry.extractors import SessionDataExtractor
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def track_background_task(task: asyncio.Task, context: str) -> asyncio.Task:
+    """Backward-compatible wrapper around lifecycle task tracking."""
+    return _track_background_task(task, context, log_exception_safely)
+
+
+background_tasks = _background_tasks
+
 
 # Environment-aware CORS configuration
 # PRODUCTION: Set RSP_ENVIRONMENT=production and RSP_ALLOWED_ORIGINS to single origin
@@ -232,8 +243,6 @@ class LLMKeyValidation(BaseModel):
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
-
-
 # Utility functions
 
 # Token estimation constants
@@ -358,7 +367,7 @@ class ConnectionManager:
                 if connection in self.connection_metadata:
                     self.connection_metadata[connection]["messages_sent"] += 1
             except Exception as e:
-                logger.error(f"Error sending message to WebSocket: {e}")
+                log_exception_safely("Error sending message to WebSocket", e)
                 disconnected.append(connection)
 
         # Remove disconnected clients
@@ -388,73 +397,13 @@ manager = ConnectionManager()
 # Startup and shutdown hooks for proper async resource management
 
 
-@app.on_event("startup")
-async def startup_event():
-    """
-    Initialize async resources on startup.
-    Defensive initialization with explicit logging.
-    """
-    logger.info("=" * 60)
-    logger.info("RSP API Server - Startup")
-    logger.info("=" * 60)
-    logger.info(f"Environment: {RSP_ENVIRONMENT}")
-    logger.info(f"CORS Origins: {len(ALLOWED_ORIGINS)} configured")
-    logger.info(f"Max WebSocket Connections: {ConnectionManager.MAX_CONNECTIONS}")
-
-    # Create sessions directory if it doesn't exist
-    sessions_dir = Path("sessions")
-    sessions_dir.mkdir(exist_ok=True)
-    logger.info(f"Sessions directory: {sessions_dir.absolute()}")
-
-    logger.info("Startup complete - Server ready")
-    logger.info("=" * 60)
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Cleanup async resources on shutdown.
-    Ensures graceful teardown of all connections and sessions.
-    """
-    logger.info("=" * 60)
-    logger.info("RSP API Server - Shutdown")
-    logger.info("=" * 60)
-
-    # Close all active WebSocket connections
-    if manager.active_connections:
-        logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
-        for ws in list(manager.active_connections):
-            try:
-                await ws.close(code=1001, reason="Server shutting down")
-            except Exception as e:
-                logger.error(f"Error closing WebSocket: {e}")
-            finally:
-                manager.disconnect(ws)
-
-    # Terminate all active sessions
-    if active_sessions:
-        logger.info(f"Terminating {len(active_sessions)} active sessions")
-        for session_id, session_data in list(active_sessions.items()):
-            try:
-                orchestrator = session_data.get("orchestrator")
-                if orchestrator:
-                    orchestrator.terminate_session()
-            except Exception as e:
-                logger.error(f"Error terminating session {session_id}: {e}")
-
-    logger.info("Shutdown complete")
-    logger.info("=" * 60)
-
-
 # API endpoints
 
 
-@app.get("/")
 async def root():
     return {"name": "Red Set ProtoCell API", "version": "1.0.0", "status": "operational"}
 
 
-@app.get("/ping")
 async def ping():
     """
     Simple ping endpoint to test routing is working correctly.
@@ -463,7 +412,6 @@ async def ping():
     return {"pong": True, "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
-@app.get("/health")
 async def health_check_endpoint():
     """
     Basic health check endpoint for load balancers and monitoring.
@@ -477,7 +425,6 @@ async def health_check_endpoint():
     }
 
 
-@app.get("/health/detailed")
 async def detailed_health_check():
     """
     Detailed health check with component status.
@@ -494,7 +441,6 @@ async def detailed_health_check():
     return health_status
 
 
-@app.get("/metrics")
 async def get_metrics():
     """
     Prometheus-compatible metrics endpoint.
@@ -511,7 +457,6 @@ async def get_metrics():
     return metrics
 
 
-@app.get("/info")
 async def get_api_info():
     """
     API information endpoint.
@@ -536,7 +481,6 @@ async def get_api_info():
     }
 
 
-@app.post("/session/start")
 async def start_session(config: SessionConfig):
     """Start a new red teaming session"""
     try:
@@ -627,11 +571,10 @@ async def start_session(config: SessionConfig):
         return {"session_id": session_id, "status": "initialized", "message": "Session created successfully"}
 
     except Exception as e:
-        logger.error(f"Error creating session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error creating session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/session/{session_id}/execute")
 async def execute_session(session_id: str):
     """Execute a red teaming session"""
     if session_id not in active_sessions:
@@ -644,15 +587,15 @@ async def execute_session(session_id: str):
         session["status"] = "running"
 
         # Run session in background
-        asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
+        task = asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
+        track_background_task(task, f"session:{session_id}")
 
         return {"session_id": session_id, "status": "running", "message": "Session execution started"}
     except Exception as e:
-        logger.error(f"Error executing session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error executing session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/session/{session_id}/stop")
 async def stop_session(session_id: str):
     """Stop a running session"""
     if session_id not in active_sessions:
@@ -664,7 +607,6 @@ async def stop_session(session_id: str):
     return {"session_id": session_id, "status": "stopped", "message": "Session stopped"}
 
 
-@app.post("/prompt/execute")
 async def execute_custom_prompt(request: CustomPromptRequest):
     """Execute a custom user prompt"""
     if request.session_id not in active_sessions:
@@ -703,11 +645,10 @@ async def execute_custom_prompt(request: CustomPromptRequest):
             "message": "Custom prompt executed successfully",
         }
     except Exception as e:
-        logger.error(f"Error executing custom prompt: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error executing custom prompt", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/session/{session_id}/stats")
 async def get_session_stats(session_id: str):
     """Get session statistics"""
     if session_id not in active_sessions:
@@ -720,14 +661,13 @@ async def get_session_stats(session_id: str):
         stats = orchestrator.get_statistics()
         return {"session_id": session_id, "stats": stats, "status": session["status"]}
     except Exception as e:
-        logger.error(f"Error getting session stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting session stats", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Unified Infra Dashboard endpoints
 
 
-@app.get("/dashboard/live-sessions")
 async def get_live_sessions():
     """Get all currently active/live sessions"""
     try:
@@ -749,11 +689,10 @@ async def get_live_sessions():
             )
         return {"sessions": live_sessions}
     except Exception as e:
-        logger.error(f"Error getting live sessions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting live sessions", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/dashboard/historical-sessions")
 async def get_historical_sessions(db_path: str = "rsp_session.db"):
     """Get historical session data for comparison"""
     try:
@@ -761,11 +700,10 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
         sessions = extractor.get_all_sessions()
         return {"sessions": sessions}
     except Exception as e:
-        logger.error(f"Error getting historical sessions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting historical sessions", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/dashboard/compare-models")
 async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "rsp_session.db"):
     """Compare two model versions"""
     try:
@@ -794,11 +732,10 @@ async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "r
             "model_v2_metrics": calc_metrics(v2_sessions),
         }
     except Exception as e:
-        logger.error(f"Error comparing models: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error comparing models", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/dashboard/export/{session_id}")
 async def export_session_results(session_id: str, format: str = "json", db_path: str = "rsp_session.db"):
     """Export session results in CSV or JSON format"""
     try:
@@ -819,14 +756,13 @@ async def export_session_results(session_id: str, format: str = "json", db_path:
 
         return {"session_id": session_id, "format": format, "data": result}
     except Exception as e:
-        logger.error(f"Error exporting session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error exporting session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # User Management endpoints - Production-ready authentication
 
 
-@app.post("/auth/login")
 async def login(credentials: UserLogin):
     """
     User login with JWT token generation.
@@ -869,7 +805,6 @@ async def login(credentials: UserLogin):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/auth/register")
 async def register(user_data: UserCreate):
     """Register new user (admin only)"""
     try:
@@ -898,11 +833,10 @@ async def register(user_data: UserCreate):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error during registration: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error during registration", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/auth/users")
 async def list_users():
     """List all users (admin only)"""
     try:
@@ -910,17 +844,28 @@ async def list_users():
             "users": [{"username": username, "email": user["email"], "role": user["role"]} for username, user in users.items()]
         }
     except Exception as e:
-        logger.error(f"Error listing users: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error listing users", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/auth/validate-llm-key")
 async def validate_llm_key(validation: LLMKeyValidation):
     """
     Validate an LLM API key by making a test call to the provider.
     Returns success if the key is valid, error otherwise.
     """
     try:
+        # Fast-fail only obviously invalid key structures before network calls.
+        # Keep this intentionally minimal so new provider key formats are not
+        # accidentally blocked by overly strict local validation rules.
+        key = validation.api_key.strip()
+        if validation.backend.lower() == "openai" and not key.startswith("sk-"):
+            raise HTTPException(
+                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
+        if validation.backend.lower() == "anthropic" and not key.startswith("sk-ant-"):
+            raise HTTPException(
+                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
         # Create a minimal test backend instance
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
@@ -991,7 +936,8 @@ async def validate_llm_key(validation: LLMKeyValidation):
         )
 
         # Log the error with details for debugging
-        logger.warning(f"LLM API key validation failed: {error_type} - {error_message[:100]}")
+        safe_error_message = redact_sensitive_text(error_message)
+        logger.warning(f"LLM API key validation failed: {error_type} - {safe_error_message[:100]}")
 
         # Return appropriate error based on type (check auth first)
         if is_auth_error:
@@ -1013,7 +959,6 @@ async def validate_llm_key(validation: LLMKeyValidation):
 # Remote Triggering endpoints
 
 
-@app.post("/remote/start-run")
 async def start_remote_run(config: SessionConfig):
     """Start a run remotely with parameters"""
     try:
@@ -1031,11 +976,10 @@ async def start_remote_run(config: SessionConfig):
             "config": config.model_dump(),
         }
     except Exception as e:
-        logger.error(f"Error starting remote run: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error starting remote run", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/remote/config/save")
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
     try:
@@ -1044,11 +988,10 @@ async def save_experiment_config(config: ExperimentConfig):
 
         return {"config_id": config_id, "name": config.name, "message": "Configuration saved successfully"}
     except Exception as e:
-        logger.error(f"Error saving config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error saving config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/remote/config/list")
 async def list_experiment_configs():
     """List all saved experiment configurations"""
     try:
@@ -1065,11 +1008,10 @@ async def list_experiment_configs():
             ]
         }
     except Exception as e:
-        logger.error(f"Error listing configs: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error listing configs", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/remote/config/{config_id}")
 async def get_experiment_config(config_id: str):
     """Get a specific experiment configuration"""
     try:
@@ -1081,11 +1023,10 @@ async def get_experiment_config(config_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.delete("/remote/config/{config_id}")
 async def delete_experiment_config(config_id: str):
     """Delete an experiment configuration"""
     try:
@@ -1097,14 +1038,13 @@ async def delete_experiment_config(config_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error deleting config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # WebSocket endpoint
 
 
-@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await manager.connect(websocket)
@@ -1198,9 +1138,9 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             await manager.broadcast({"type": "status", "data": {"status": "completed", "reason": "All rounds completed"}})
 
     except Exception as e:
-        logger.error(f"Error in session execution: {e}")
+        log_exception_safely("Error in session execution", e)
         session["status"] = "error"
-        await manager.broadcast({"type": "error", "data": {"message": str(e)}})
+        await manager.broadcast({"type": "error", "data": {"message": "Internal server error"}})
 
 
 def get_severity(score: float) -> str:
@@ -1216,6 +1156,10 @@ def get_severity(score: float) -> str:
     else:
         return "critical"
 
+
+# Register lifecycle hooks and routes
+bind_lifecycle_handlers(app, manager, active_sessions, logger, log_exception_safely)
+register_routes(app, globals())
 
 if __name__ == "__main__":
     import uvicorn

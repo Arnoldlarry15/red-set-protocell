@@ -1,0 +1,11 @@
+# Red Set ProtoCell - Development Dependencies
+
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Code quality
+black>=23.7.0
+isort>=5.13.2
+flake8>=6.1.0
+mypy>=1.5.0

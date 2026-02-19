@@ -8,6 +8,9 @@ interface LiveFeedProps {
 }
 
 const LiveFeed: React.FC<LiveFeedProps> = ({ attacks }) => {
+  const safeAsync = (fn: () => Promise<void>) => {
+    fn().catch((err) => console.warn('Async cleanup failed', err));
+  };
   const feedRef = useRef<HTMLDivElement>(null);
   const [expandedAttacks, setExpandedAttacks] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -71,7 +74,8 @@ Scores:
 - L2 (Security): ${(attack.score.l2_security * 100).toFixed(1)}%
 - L3 (Cognitive): ${(attack.score.l3_cognitive * 100).toFixed(1)}%`;
 
-    navigator.clipboard.writeText(redactedContent).then(() => {
+    safeAsync(async () => {
+      await navigator.clipboard.writeText(redactedContent);
       setCopiedId(attack.id);
       setTimeout(() => setCopiedId(null), 2000);
     });

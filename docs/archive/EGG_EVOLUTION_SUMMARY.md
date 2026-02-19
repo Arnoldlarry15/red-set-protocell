@@ -185,8 +185,8 @@ python -m examples.egg_telemetry_demo
 ## Documentation
 
 Full documentation available at:
-- [EGG_TELEMETRY.md](rsp-core/backend/docs/EGG_TELEMETRY.md)
-- [Test Suite](rsp-core/backend/tests/test_egg_telemetry.py)
+- `EGG_TELEMETRY.md` (archived reference: rsp-core/backend/docs/EGG_TELEMETRY.md)
+- `Test Suite` (archived reference: rsp-core/backend/tests/test_egg_telemetry.py)
 
 ---
 

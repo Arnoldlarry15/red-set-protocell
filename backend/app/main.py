@@ -71,6 +71,7 @@ from app.core.config import RSPConfig, get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine
+from app.engines.selection import SelectionStrategy
 
 # Configure logging
 logging.basicConfig(
@@ -120,7 +121,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     selection_engine = None
     selection_strategy_enum = None
     if config.sniper.use_selection_engine:
-        from app.engines.selection import SelectionEngine, SelectionStrategy
+        from app.engines.selection import SelectionEngine
 
         selection_engine = SelectionEngine(
             decay_rate=config.sniper.decay_rate,
@@ -159,12 +160,6 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
 
     # Initialize Target Agent
     backend_value = config.target.backend.value if hasattr(config.target.backend, "value") else config.target.backend
-
-    # DEBUG: Log backend selection details
-    logger.info("DEBUG: Backend configuration:")
-    logger.info(f"  config.target.backend = {config.target.backend}")
-    logger.info(f"  backend_value = {backend_value}")
-    logger.info(f"  type = {type(backend_value)}")
 
     target = create_target(
         backend_type=backend_value,

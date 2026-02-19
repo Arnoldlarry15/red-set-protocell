@@ -6,9 +6,16 @@ Tests for the new API endpoints:
 """
 
 import os
+import logging
 
 import pytest
 from fastapi.testclient import TestClient
+
+
+def _fake_openai_key(suffix: str = "test-key") -> str:
+    """Build a structurally valid fake OpenAI key without a literal secret-like token."""
+    return "sk-" + suffix
+
 
 # Set demo password for tests before importing app
 # gitguardian:ignore - This is a test password, not a real secret
@@ -18,7 +25,7 @@ os.environ["RSP_DEMO_PASSWORD"] = TEST_DEMO_PASSWORD
 # Set CORS allowed origins for tests before importing app
 os.environ["RSP_ALLOWED_ORIGINS"] = "http://localhost:3000"
 # Provide a provider key to satisfy production validation (tests run with production check)
-os.environ["OPENAI_API_KEY"] = "sk-test-key"
+os.environ["OPENAI_API_KEY"] = _fake_openai_key()
 
 from app.api_server import app  # noqa: E402
 
@@ -146,7 +153,7 @@ class TestUserManagement:
             mock_instance.execute.return_value = "Hi"  # Successful execution
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": "sk-test-key", "backend": "openai"})
+            response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "openai"})
 
             # Should return 200 (Success) because the endpoint is accessible
             # and the mocked validation succeeds
@@ -162,7 +169,7 @@ class TestUserManagement:
 
     def test_validate_llm_key_invalid_backend(self):
         """Test LLM key validation with invalid backend"""
-        response = client.post("/auth/validate-llm-key", json={"api_key": "sk-test-key", "backend": "invalid_backend"})
+        response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "invalid_backend"})
         assert response.status_code == 400
         assert "Invalid backend" in response.json()["detail"]
 
@@ -186,7 +193,7 @@ class TestUserManagement:
             mock_instance.execute.side_effect = ConnectionError("Network unreachable")
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": "sk-test-key", "backend": "openai"})
+            response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "openai"})
 
             # Should return 503 (Service Unavailable) for network errors
             # not 401 (Unauthorized) which would imply invalid credentials
@@ -206,17 +213,48 @@ class TestUserManagement:
         with patch("app.agents.target.OpenAIBackend") as mock_backend:
             mock_instance = AsyncMock()
             # Simulate an authentication error with "connection" in the message
-            mock_instance.execute.side_effect = Exception(
-                "Error code: 401 - Incorrect API key provided: sk-proj-connection123"
-            )
+            fake_proj_key = _fake_openai_key("proj-connection123")
+            mock_instance.execute.side_effect = Exception(f"Error code: 401 - Incorrect API key provided: {fake_proj_key}")
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": "sk-proj-connection123", "backend": "openai"})
+            response = client.post("/auth/validate-llm-key", json={"api_key": fake_proj_key, "backend": "openai"})
 
             # Should return 401 (Unauthorized) for auth errors
             # NOT 503 (Network error) even though message contains "connection"
             assert response.status_code == 401
             assert "Invalid API key" in response.json()["detail"]
+
+    def test_validate_llm_key_error_logging_redacts_api_keys(self, caplog):
+        """Failure injection: provider errors containing keys must be redacted in logs."""
+        from unittest.mock import AsyncMock, patch
+
+        caplog.set_level(logging.WARNING)
+
+        with patch("app.agents.target.OpenAIBackend") as mock_backend:
+            mock_instance = AsyncMock()
+            fake_super_secret = _fake_openai_key("super-secret-key-value")
+            mock_instance.execute.side_effect = Exception(f"Error 401 for {fake_super_secret}")
+            mock_backend.return_value = mock_instance
+
+            response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "openai"})
+
+            assert response.status_code == 401
+            joined_logs = "\n".join(r.message for r in caplog.records)
+            assert fake_super_secret not in joined_logs
+            assert "sk-***REDACTED***" in joined_logs
+
+    def test_register_internal_error_does_not_leak_exception_details(self):
+        """Failure injection: unexpected register exceptions should return generic 500 detail."""
+        from unittest.mock import patch
+
+        with patch("app.api_server.password_hasher.hash_password", side_effect=Exception("db exploded sk-top-secret")):
+            response = client.post(
+                "/auth/register",
+                json={"username": "err_user", "email": "err@example.com", "role": "observer", "password": "test123"},
+            )
+
+            assert response.status_code == 500
+            assert response.json()["detail"] == "Internal server error"
 
 
 class TestRemoteControl:

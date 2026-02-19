@@ -2,15 +2,13 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Activity, AlertTriangle, Shield, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { Attack } from '../types';
 import '../styles/Components.css';
+import { safeAsync } from '../utils/async';
 
 interface LiveFeedProps {
   attacks: Attack[];
 }
 
 const LiveFeed: React.FC<LiveFeedProps> = ({ attacks }) => {
-  const safeAsync = (fn: () => Promise<void>) => {
-    fn().catch((err) => console.warn('Async cleanup failed', err));
-  };
   const feedRef = useRef<HTMLDivElement>(null);
   const [expandedAttacks, setExpandedAttacks] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);

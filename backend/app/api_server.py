@@ -11,8 +11,7 @@ import os
 import traceback
 import threading
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +27,9 @@ from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine
 from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
 from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
+from app.auth import log_exception_safely, redact_sensitive_text
+from app.lifecycle import bind_lifecycle_handlers
+from app.routes import register_routes
 
 # Import production-ready middleware
 from app.middleware.security import InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
@@ -505,12 +507,10 @@ async def shutdown_event():
 # API endpoints
 
 
-@app.get("/")
 async def root():
     return {"name": "Red Set ProtoCell API", "version": "1.0.0", "status": "operational"}
 
 
-@app.get("/ping")
 async def ping():
     """
     Simple ping endpoint to test routing is working correctly.
@@ -519,7 +519,6 @@ async def ping():
     return {"pong": True, "timestamp": datetime.now(timezone.utc).isoformat()}
 
 
-@app.get("/health")
 async def health_check_endpoint():
     """
     Basic health check endpoint for load balancers and monitoring.
@@ -533,7 +532,6 @@ async def health_check_endpoint():
     }
 
 
-@app.get("/health/detailed")
 async def detailed_health_check():
     """
     Detailed health check with component status.
@@ -550,7 +548,6 @@ async def detailed_health_check():
     return health_status
 
 
-@app.get("/metrics")
 async def get_metrics():
     """
     Prometheus-compatible metrics endpoint.
@@ -567,7 +564,6 @@ async def get_metrics():
     return metrics
 
 
-@app.get("/info")
 async def get_api_info():
     """
     API information endpoint.
@@ -592,7 +588,6 @@ async def get_api_info():
     }
 
 
-@app.post("/session/start")
 async def start_session(config: SessionConfig):
     """Start a new red teaming session"""
     try:
@@ -687,7 +682,6 @@ async def start_session(config: SessionConfig):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/session/{session_id}/execute")
 async def execute_session(session_id: str):
     """Execute a red teaming session"""
     if session_id not in active_sessions:
@@ -709,7 +703,6 @@ async def execute_session(session_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/session/{session_id}/stop")
 async def stop_session(session_id: str):
     """Stop a running session"""
     if session_id not in active_sessions:
@@ -721,7 +714,6 @@ async def stop_session(session_id: str):
     return {"session_id": session_id, "status": "stopped", "message": "Session stopped"}
 
 
-@app.post("/prompt/execute")
 async def execute_custom_prompt(request: CustomPromptRequest):
     """Execute a custom user prompt"""
     if request.session_id not in active_sessions:
@@ -764,7 +756,6 @@ async def execute_custom_prompt(request: CustomPromptRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/session/{session_id}/stats")
 async def get_session_stats(session_id: str):
     """Get session statistics"""
     if session_id not in active_sessions:
@@ -784,7 +775,6 @@ async def get_session_stats(session_id: str):
 # Unified Infra Dashboard endpoints
 
 
-@app.get("/dashboard/live-sessions")
 async def get_live_sessions():
     """Get all currently active/live sessions"""
     try:
@@ -810,7 +800,6 @@ async def get_live_sessions():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/dashboard/historical-sessions")
 async def get_historical_sessions(db_path: str = "rsp_session.db"):
     """Get historical session data for comparison"""
     try:
@@ -822,7 +811,6 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/dashboard/compare-models")
 async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "rsp_session.db"):
     """Compare two model versions"""
     try:
@@ -855,7 +843,6 @@ async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "r
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/dashboard/export/{session_id}")
 async def export_session_results(session_id: str, format: str = "json", db_path: str = "rsp_session.db"):
     """Export session results in CSV or JSON format"""
     try:
@@ -883,7 +870,6 @@ async def export_session_results(session_id: str, format: str = "json", db_path:
 # User Management endpoints - Production-ready authentication
 
 
-@app.post("/auth/login")
 async def login(credentials: UserLogin):
     """
     User login with JWT token generation.
@@ -926,7 +912,6 @@ async def login(credentials: UserLogin):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/auth/register")
 async def register(user_data: UserCreate):
     """Register new user (admin only)"""
     try:
@@ -959,7 +944,6 @@ async def register(user_data: UserCreate):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/auth/users")
 async def list_users():
     """List all users (admin only)"""
     try:
@@ -971,7 +955,6 @@ async def list_users():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/auth/validate-llm-key")
 async def validate_llm_key(validation: LLMKeyValidation):
     """
     Validate an LLM API key by making a test call to the provider.
@@ -1083,7 +1066,6 @@ async def validate_llm_key(validation: LLMKeyValidation):
 # Remote Triggering endpoints
 
 
-@app.post("/remote/start-run")
 async def start_remote_run(config: SessionConfig):
     """Start a run remotely with parameters"""
     try:
@@ -1105,7 +1087,6 @@ async def start_remote_run(config: SessionConfig):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.post("/remote/config/save")
 async def save_experiment_config(config: ExperimentConfig):
     """Save an experiment configuration"""
     try:
@@ -1118,7 +1099,6 @@ async def save_experiment_config(config: ExperimentConfig):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/remote/config/list")
 async def list_experiment_configs():
     """List all saved experiment configurations"""
     try:
@@ -1139,7 +1119,6 @@ async def list_experiment_configs():
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.get("/remote/config/{config_id}")
 async def get_experiment_config(config_id: str):
     """Get a specific experiment configuration"""
     try:
@@ -1155,7 +1134,6 @@ async def get_experiment_config(config_id: str):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@app.delete("/remote/config/{config_id}")
 async def delete_experiment_config(config_id: str):
     """Delete an experiment configuration"""
     try:
@@ -1174,7 +1152,6 @@ async def delete_experiment_config(config_id: str):
 # WebSocket endpoint
 
 
-@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time updates"""
     await manager.connect(websocket)
@@ -1286,6 +1263,10 @@ def get_severity(score: float) -> str:
     else:
         return "critical"
 
+
+# Register lifecycle hooks and routes
+bind_lifecycle_handlers(app, manager, active_sessions, logger, log_exception_safely)
+register_routes(app, globals())
 
 if __name__ == "__main__":
     import uvicorn

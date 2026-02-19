@@ -32,8 +32,8 @@ ALWAYS:
 """
 
 import random
-from typing import Optional, Dict, Any, List
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 # Import the base MutationStrategy enum to extend it
 # from app.engines.mutation import MutationStrategy  # Uncomment when implementing

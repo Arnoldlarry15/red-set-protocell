@@ -21,8 +21,8 @@ Engines vs Agents:
 """
 
 import logging
-from typing import Dict, Any, Optional, List
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -58,9 +58,7 @@ class NewEngine:
         >>> assert len(results) == 3
     """
 
-    def __init__(
-        self, mode: ProcessingMode = ProcessingMode.MODE_A, threshold: float = 0.5
-    ):
+    def __init__(self, mode: ProcessingMode = ProcessingMode.MODE_A, threshold: float = 0.5):
         """
         Initialize the engine.
 
@@ -148,9 +146,7 @@ class NewEngine:
 
         return result
 
-    def process_batch(
-        self, inputs: List[str], parameter: float = 0.0
-    ) -> List[Dict[str, Any]]:
+    def process_batch(self, inputs: List[str], parameter: float = 0.0) -> List[Dict[str, Any]]:
         """
         Process multiple inputs efficiently.
 

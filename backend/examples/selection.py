@@ -7,9 +7,10 @@ random mutation to directed exploration with explicit selection pressure.
 """
 
 import time
-from app.engines.mutation import MutationEngine, MutationStrategy
-from app.engines.selection import SelectionEngine, SelectionStrategy, PromptCandidate
+
 from app.agents.sniper import Sniper
+from app.engines.mutation import MutationEngine, MutationStrategy
+from app.engines.selection import PromptCandidate, SelectionEngine, SelectionStrategy
 
 
 def run_selection_strategies():
@@ -30,7 +31,7 @@ def run_selection_strategies():
         SelectionStrategy.ELITISM,
         SelectionStrategy.TOURNAMENT,
         SelectionStrategy.DIVERSITY_PRESERVATION,
-        SelectionStrategy.HYBRID
+        SelectionStrategy.HYBRID,
     ]
 
     for strategy in strategies:
@@ -94,7 +95,7 @@ def run_decay_function():
 
     # Decay calculation: 0.95 * 0.8^3 = 0.95 * 0.512 = 0.486
     decay_periods = int(old_winner.age_in_seconds() / 1.0)
-    decayed_score = old_winner.score * (0.8 ** decay_periods)
+    decayed_score = old_winner.score * (0.8**decay_periods)
 
     print(f"\nDecay calculation:")
     print(f"  Periods: {decay_periods}")
@@ -147,17 +148,13 @@ def run_full_evolution():
     print("=" * 60)
 
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    selection_engine = SelectionEngine(
-        decay_rate=0.95,
-        novelty_weight=0.3,
-        overfitting_threshold=3
-    )
+    selection_engine = SelectionEngine(decay_rate=0.95, novelty_weight=0.3, overfitting_threshold=3)
 
     sniper = Sniper(
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.HYBRID
+        selection_strategy=SelectionStrategy.HYBRID,
     )
 
     print("\nGenerating 10 prompts with evolution...")
@@ -179,7 +176,7 @@ def run_full_evolution():
     print(f"  Pool size: {stats['evolution_pool_size']}")
     print(f"  Selection strategy: {stats['selection_strategy']}")
 
-    sel_stats = stats['selection_stats']
+    sel_stats = stats["selection_stats"]
     print(f"\n✓ Selection Engine Stats:")
     print(f"  High scorer structures tracked: {sel_stats['high_scorer_count']}")
     print(f"  Unique patterns observed: {sel_stats['pattern_usage_count']}")

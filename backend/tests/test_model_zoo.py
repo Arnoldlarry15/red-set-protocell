@@ -2,17 +2,8 @@
 Tests for model zoo module.
 """
 
-from app.model_zoo.presets import (
-    create_default_registry,
-    get_anthropic_models,
-    get_openai_models,
-)
-from app.model_zoo.registry import (
-    ModelInfo,
-    ModelProvider,
-    ModelRegistry,
-    ModelVersion,
-)
+from app.model_zoo.presets import create_default_registry, get_anthropic_models, get_openai_models
+from app.model_zoo.registry import ModelInfo, ModelProvider, ModelRegistry, ModelVersion
 
 
 def test_model_version_creation():

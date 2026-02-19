@@ -4,12 +4,7 @@ Tests for benchmarking module.
 
 from datetime import datetime
 
-from app.benchmarking.benchmark_suite import (
-    BenchmarkConfig,
-    BenchmarkResult,
-    BenchmarkStatus,
-    BenchmarkSuite,
-)
+from app.benchmarking.benchmark_suite import BenchmarkConfig, BenchmarkResult, BenchmarkStatus, BenchmarkSuite
 
 
 def test_benchmark_config_creation():

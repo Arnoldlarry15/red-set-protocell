@@ -6,11 +6,7 @@ Preconfigured reference models from major providers.
 
 from typing import Dict, List
 
-from app.model_zoo.registry import (
-    ModelInfo,
-    ModelProvider,
-    ModelVersion,
-)
+from app.model_zoo.registry import ModelInfo, ModelProvider, ModelVersion
 
 
 def get_openai_models() -> List[ModelInfo]:

@@ -2,11 +2,7 @@
 Tests for telemetry export module.
 """
 
-from app.telemetry.exporter import (
-    ExportFormat,
-    TelemetryExporter,
-    create_metrics_snapshot,
-)
+from app.telemetry.exporter import ExportFormat, TelemetryExporter, create_metrics_snapshot
 
 
 def test_create_metrics_snapshot():

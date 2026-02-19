@@ -5,14 +5,8 @@ Tests for strategy tuning module.
 import pytest
 
 from app.engines.mutation import MutationStrategy
-from app.strategy_tuning.advisor import (
-    MutationStrategyAdvisor,
-    StrategyEffectiveness,
-)
-from app.strategy_tuning.optimizer import (
-    OptimizationConfig,
-    StrategyOptimizer,
-)
+from app.strategy_tuning.advisor import MutationStrategyAdvisor, StrategyEffectiveness
+from app.strategy_tuning.optimizer import OptimizationConfig, StrategyOptimizer
 
 
 def test_strategy_advisor_initialization():

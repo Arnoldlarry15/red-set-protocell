@@ -8,8 +8,9 @@ This shows:
 4. Adversarial testing to measure guard coverage
 """
 
-from app.core.egg import EthicalGuardrailGovernor
 import json
+
+from app.core.egg import EthicalGuardrailGovernor
 
 
 def print_header(title):
@@ -49,7 +50,7 @@ def run_telemetry():
     print(f"  Total inspections: {telemetry['total_inspections']}")
     print(f"  Block rate: {telemetry['block_rate']:.1f}%")
     print(f"\n  Category hits:")
-    for category, count in telemetry['category_hits'].items():
+    for category, count in telemetry["category_hits"].items():
         print(f"    - {category}: {count} hit(s)")
 
 
@@ -77,11 +78,10 @@ def run_shadow_mode():
 
     print(f"\n🔍 Shadow Mode Results:")
     print(f"  Total shadow matches: {telemetry['shadow_matches_count']}")
-    if telemetry['shadow_matches']:
+    if telemetry["shadow_matches"]:
         print(f"  Recent near-misses:")
-        for match in telemetry['shadow_matches'][:5]:
-            print(f"    - Category: {match['category']}, "
-                  f"Match score: {match['match_score']:.2f}")
+        for match in telemetry["shadow_matches"][:5]:
+            print(f"    - Category: {match['category']}, " f"Match score: {match['match_score']:.2f}")
 
 
 def run_coverage_metrics():
@@ -97,15 +97,15 @@ def run_coverage_metrics():
     telemetry = egg.get_telemetry()
 
     print("\n📈 Coverage Metrics:")
-    for category, metrics in telemetry['coverage_metrics'].items():
+    for category, metrics in telemetry["coverage_metrics"].items():
         print(f"\n  {category.upper()}:")
         print(f"    Total patterns: {metrics['total_patterns']}")
         print(f"    Used patterns: {metrics['used_patterns']}")
         print(f"    Coverage: {metrics['coverage_percentage']:.1f}%")
 
-        if metrics['unused_patterns']:
+        if metrics["unused_patterns"]:
             print(f"    Unused patterns (showing first 2):")
-            for pattern in metrics['unused_patterns'][:2]:
+            for pattern in metrics["unused_patterns"][:2]:
                 print(f"      - {pattern[:60]}...")
 
 
@@ -132,8 +132,8 @@ def run_adversarial_testing():
     print(f"  Block rate: {results['block_rate']:.1f}%")
 
     print(f"\n  Category coverage:")
-    for category, stats in results['category_coverage'].items():
-        if stats['blocked'] > 0:
+    for category, stats in results["category_coverage"].items():
+        if stats["blocked"] > 0:
             print(f"    - {category}: {stats['blocked']} blocked")
 
 
@@ -141,11 +141,7 @@ def run_full_integration():
     """Show full integration with all features enabled."""
     print_header("5. Full Integration - Monitored Immune Response")
 
-    egg = EthicalGuardrailGovernor(
-        shadow_mode=True,
-        shadow_threshold=0.5,
-        log_fingerprints=True
-    )
+    egg = EthicalGuardrailGovernor(shadow_mode=True, shadow_threshold=0.5, log_fingerprints=True)
 
     print("\nEGG is now a monitored immune response system:")
     print("  ✓ Telemetry tracking enabled")
@@ -178,8 +174,8 @@ def run_full_integration():
     print(f"  Shadow matches: {telemetry['shadow_matches_count']}")
 
     # Calculate overall coverage
-    total_used = sum(m['used_patterns'] for m in telemetry['coverage_metrics'].values())
-    total_patterns = sum(m['total_patterns'] for m in telemetry['coverage_metrics'].values())
+    total_used = sum(m["used_patterns"] for m in telemetry["coverage_metrics"].values())
+    total_patterns = sum(m["total_patterns"] for m in telemetry["coverage_metrics"].values())
     overall_coverage = (total_used / total_patterns * 100) if total_patterns > 0 else 0
 
     print(f"  Overall pattern coverage: {overall_coverage:.1f}%")
@@ -189,14 +185,16 @@ def run_full_integration():
 
 def main():
     """Run all examples."""
-    print("""
+    print(
+        """
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
 ║  EGG Evolution Examples - Monitored Immune Response                   ║
 ║  Red Set ProtoCell - Ethical Guardrail Governor                   ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
-""")
+"""
+    )
 
     run_telemetry()
     run_shadow_mode()

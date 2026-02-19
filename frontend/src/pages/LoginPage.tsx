@@ -59,24 +59,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
         <div className="grid-pattern"></div>
       </div>
 
-      {/* Left Image Grid */}
-      <div className="image-grid image-grid-left">
-        {[...Array(9)].map((_, index) => (
-          <div key={`left-${index}`} className="grid-image-cell">
-            <img src="/logo.png" alt={`Grid item ${index + 1}`} />
-          </div>
-        ))}
-      </div>
-
-      {/* Right Image Grid */}
-      <div className="image-grid image-grid-right">
-        {[...Array(9)].map((_, index) => (
-          <div key={`right-${index}`} className="grid-image-cell">
-            <img src="/logo.png" alt={`Grid item ${index + 1}`} />
-          </div>
-        ))}
-      </div>
-
       <div className="auth-content">
         <div className="auth-card glass-panel-dark">
           {/* Logo Section */}

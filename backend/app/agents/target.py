@@ -106,21 +106,19 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from app.interfaces.target import BaseTarget
+from app.auth import redact_sensitive_text, log_exception_safely
 
 logger = logging.getLogger(__name__)
 
 
 def _redact_sensitive_text(text: str) -> str:
-    """Redact credential-like tokens in error/log messages."""
-    redacted = re.sub(r"sk-[A-Za-z0-9_-]{8,}", "sk-***REDACTED***", str(text))
-    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***REDACTED***", redacted, flags=re.IGNORECASE)
-    return redacted
+    """Redact credential-like tokens in error/log messages using shared auth utilities."""
+    return redact_sensitive_text(text)
 
 
 def _log_exception_safely(context: str, exc: Exception) -> None:
-    """Log redacted exception details and traceback for internal debugging."""
-    logger.error(f"{context}: {type(exc).__name__} - {_redact_sensitive_text(exc)}")
-    logger.error(_redact_sensitive_text(traceback.format_exc()))
+    """Log redacted exception details and traceback for internal debugging using shared auth utilities."""
+    return log_exception_safely(context, exc)
 
 
 # Import requests for CustomHTTPBackend

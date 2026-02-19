@@ -8,9 +8,11 @@ Integrates with the existing RSP core system.
 import asyncio
 import logging
 import os
+import traceback
+import threading
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,6 +37,43 @@ from app.telemetry.extractors import SessionDataExtractor
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def redact_sensitive_text(text: str) -> str:
+    """Redact sensitive credential-like tokens from logs and error messages."""
+    import re
+
+    redacted = re.sub(r"sk-[A-Za-z0-9_-]{8,}", "sk-***REDACTED***", text)
+    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***REDACTED***", redacted, flags=re.IGNORECASE)
+    return redacted
+
+
+def log_exception_safely(context: str, exc: Exception) -> None:
+    """Log redacted exception details and traceback for internal debugging."""
+    redacted_message = redact_sensitive_text(str(exc))
+    redacted_traceback = redact_sensitive_text(traceback.format_exc())
+    logger.error(f"{context}: {type(exc).__name__} - {redacted_message}")
+    logger.error(redacted_traceback)
+
+
+def track_background_task(task: asyncio.Task, context: str) -> asyncio.Task:
+    """Track background tasks and surface exceptions deterministically."""
+    with background_tasks_lock:
+        background_tasks.add(task)
+
+    def _on_done(done_task: asyncio.Task) -> None:
+        with background_tasks_lock:
+            background_tasks.discard(done_task)
+        if done_task.cancelled():
+            return
+        try:
+            done_task.result()
+        except Exception as exc:  # pragma: no cover - callback guard path
+            log_exception_safely(f"Background task failed ({context})", exc)
+
+    task.add_done_callback(_on_done)
+    return task
+
 
 # Environment-aware CORS configuration
 # PRODUCTION: Set RSP_ENVIRONMENT=production and RSP_ALLOWED_ORIGINS to single origin
@@ -232,6 +271,10 @@ class LLMKeyValidation(BaseModel):
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
+background_tasks: Set[asyncio.Task] = set()
+# Asyncio is single-threaded by default, but callbacks/executors may evolve over time.
+# Guard registry mutations with a lock for future thread-safety hardening.
+background_tasks_lock = threading.Lock()
 
 
 # Utility functions
@@ -358,7 +401,7 @@ class ConnectionManager:
                 if connection in self.connection_metadata:
                     self.connection_metadata[connection]["messages_sent"] += 1
             except Exception as e:
-                logger.error(f"Error sending message to WebSocket: {e}")
+                log_exception_safely("Error sending message to WebSocket", e)
                 disconnected.append(connection)
 
         # Remove disconnected clients
@@ -427,7 +470,7 @@ async def shutdown_event():
             try:
                 await ws.close(code=1001, reason="Server shutting down")
             except Exception as e:
-                logger.error(f"Error closing WebSocket: {e}")
+                log_exception_safely("Error closing WebSocket", e)
             finally:
                 manager.disconnect(ws)
 
@@ -440,7 +483,20 @@ async def shutdown_event():
                 if orchestrator:
                     orchestrator.terminate_session()
             except Exception as e:
-                logger.error(f"Error terminating session {session_id}: {e}")
+                log_exception_safely(f"Error terminating session {session_id}", e)
+
+    # Cancel and await tracked background tasks to avoid orphaned coroutines
+    with background_tasks_lock:
+        tasks_snapshot = list(background_tasks)
+
+    if tasks_snapshot:
+        logger.info(f"Cancelling {len(tasks_snapshot)} tracked background task(s)")
+        for task in tasks_snapshot:
+            task.cancel()
+        await asyncio.gather(*tasks_snapshot, return_exceptions=True)
+        with background_tasks_lock:
+            for task in tasks_snapshot:
+                background_tasks.discard(task)
 
     logger.info("Shutdown complete")
     logger.info("=" * 60)
@@ -627,8 +683,8 @@ async def start_session(config: SessionConfig):
         return {"session_id": session_id, "status": "initialized", "message": "Session created successfully"}
 
     except Exception as e:
-        logger.error(f"Error creating session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error creating session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/session/{session_id}/execute")
@@ -644,12 +700,13 @@ async def execute_session(session_id: str):
         session["status"] = "running"
 
         # Run session in background
-        asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
+        task = asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
+        track_background_task(task, f"session:{session_id}")
 
         return {"session_id": session_id, "status": "running", "message": "Session execution started"}
     except Exception as e:
-        logger.error(f"Error executing session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error executing session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/session/{session_id}/stop")
@@ -703,8 +760,8 @@ async def execute_custom_prompt(request: CustomPromptRequest):
             "message": "Custom prompt executed successfully",
         }
     except Exception as e:
-        logger.error(f"Error executing custom prompt: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error executing custom prompt", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/session/{session_id}/stats")
@@ -720,8 +777,8 @@ async def get_session_stats(session_id: str):
         stats = orchestrator.get_statistics()
         return {"session_id": session_id, "stats": stats, "status": session["status"]}
     except Exception as e:
-        logger.error(f"Error getting session stats: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting session stats", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # Unified Infra Dashboard endpoints
@@ -749,8 +806,8 @@ async def get_live_sessions():
             )
         return {"sessions": live_sessions}
     except Exception as e:
-        logger.error(f"Error getting live sessions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting live sessions", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/dashboard/historical-sessions")
@@ -761,8 +818,8 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
         sessions = extractor.get_all_sessions()
         return {"sessions": sessions}
     except Exception as e:
-        logger.error(f"Error getting historical sessions: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting historical sessions", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/dashboard/compare-models")
@@ -794,8 +851,8 @@ async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "r
             "model_v2_metrics": calc_metrics(v2_sessions),
         }
     except Exception as e:
-        logger.error(f"Error comparing models: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error comparing models", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/dashboard/export/{session_id}")
@@ -819,8 +876,8 @@ async def export_session_results(session_id: str, format: str = "json", db_path:
 
         return {"session_id": session_id, "format": format, "data": result}
     except Exception as e:
-        logger.error(f"Error exporting session: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error exporting session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # User Management endpoints - Production-ready authentication
@@ -898,8 +955,8 @@ async def register(user_data: UserCreate):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error during registration: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error during registration", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/auth/users")
@@ -910,8 +967,8 @@ async def list_users():
             "users": [{"username": username, "email": user["email"], "role": user["role"]} for username, user in users.items()]
         }
     except Exception as e:
-        logger.error(f"Error listing users: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error listing users", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/auth/validate-llm-key")
@@ -1003,7 +1060,8 @@ async def validate_llm_key(validation: LLMKeyValidation):
         )
 
         # Log the error with details for debugging
-        logger.warning(f"LLM API key validation failed: {error_type} - {error_message[:100]}")
+        safe_error_message = redact_sensitive_text(error_message)
+        logger.warning(f"LLM API key validation failed: {error_type} - {safe_error_message[:100]}")
 
         # Return appropriate error based on type (check auth first)
         if is_auth_error:
@@ -1043,8 +1101,8 @@ async def start_remote_run(config: SessionConfig):
             "config": config.model_dump(),
         }
     except Exception as e:
-        logger.error(f"Error starting remote run: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error starting remote run", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.post("/remote/config/save")
@@ -1056,8 +1114,8 @@ async def save_experiment_config(config: ExperimentConfig):
 
         return {"config_id": config_id, "name": config.name, "message": "Configuration saved successfully"}
     except Exception as e:
-        logger.error(f"Error saving config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error saving config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/remote/config/list")
@@ -1077,8 +1135,8 @@ async def list_experiment_configs():
             ]
         }
     except Exception as e:
-        logger.error(f"Error listing configs: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error listing configs", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.get("/remote/config/{config_id}")
@@ -1093,8 +1151,8 @@ async def get_experiment_config(config_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error getting config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error getting config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 @app.delete("/remote/config/{config_id}")
@@ -1109,8 +1167,8 @@ async def delete_experiment_config(config_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error deleting config: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        log_exception_safely("Error deleting config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 
 # WebSocket endpoint
@@ -1210,9 +1268,9 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             await manager.broadcast({"type": "status", "data": {"status": "completed", "reason": "All rounds completed"}})
 
     except Exception as e:
-        logger.error(f"Error in session execution: {e}")
+        log_exception_safely("Error in session execution", e)
         session["status"] = "error"
-        await manager.broadcast({"type": "error", "data": {"message": str(e)}})
+        await manager.broadcast({"type": "error", "data": {"message": "Internal server error"}})
 
 
 def get_severity(score: float) -> str:

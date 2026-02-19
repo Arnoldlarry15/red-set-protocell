@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 127
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+target-version = ['py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -89,7 +89,7 @@ name = "red-set-protocell"
 version = "1.0.0"
 description = "An Open-source AI safety platform using dual-agent Sniper/Spotter red-teaming to audit and secure large language models"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Arnold Larry", email = "arnoldlarry15@users.noreply.github.com"}
@@ -101,9 +101,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",

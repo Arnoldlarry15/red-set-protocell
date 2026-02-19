@@ -1,7 +1,7 @@
 # Red Set ProtoCell (RSP)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml)
 [![Code Quality](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml)
 [![Security](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml)
@@ -426,7 +426,7 @@ Round N:
 
 ### Prerequisites
 
-- **Python 3.8+**
+- **Python 3.11+**
 - **API Key** from OpenAI or Anthropic
   - OpenAI: https://platform.openai.com/api-keys
   - Anthropic: https://console.anthropic.com/
@@ -705,7 +705,7 @@ docker-compose run rsp-backend python -m app.main --backend openai --api-key $OP
 ### System Requirements
 
 - **OS**: Linux, macOS, Windows (with WSL recommended)
-- **Python**: 3.8 or higher
+- **Python**: 3.11 or higher
 - **RAM**: 2GB minimum, 4GB recommended
 - **Disk**: 500MB for code, variable for session data
 - **Network**: Internet connection for API calls
@@ -1271,7 +1271,7 @@ mypy app/
 
 # Common mypy configuration (mypy.ini):
 [mypy]
-python_version = 3.8
+python_version = 3.11
 warn_return_any = True
 warn_unused_configs = True
 disallow_untyped_defs = True
@@ -2036,7 +2036,7 @@ A: Yes. RSP uses hashed fingerprinting for logging, and zero-retention mode (ena
 ### Technical Questions
 
 **Q: What Python version is required?**
-A: Python 3.8 or higher. Python 3.10+ is recommended.
+A: Python 3.11 or higher.
 
 **Q: Can I add support for other LLMs?**
 A: Yes! Implement the `TargetBackend` abstract class in `app/agents/target.py`. See [Development](#development) section for details.

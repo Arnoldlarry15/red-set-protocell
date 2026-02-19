@@ -3,33 +3,44 @@
 
 def register_routes(app, deps):
     """Register all HTTP and WebSocket routes from implementation functions."""
-    app.add_api_route("/", deps["root"], methods=["GET"])
-    app.add_api_route("/ping", deps["ping"], methods=["GET"])
-    app.add_api_route("/health", deps["health_check_endpoint"], methods=["GET"])
-    app.add_api_route("/health/detailed", deps["detailed_health_check"], methods=["GET"])
-    app.add_api_route("/metrics", deps["get_metrics"], methods=["GET"])
-    app.add_api_route("/info", deps["get_api_info"], methods=["GET"])
 
-    app.add_api_route("/session/start", deps["start_session"], methods=["POST"])
-    app.add_api_route("/session/{session_id}/execute", deps["execute_session"], methods=["POST"])
-    app.add_api_route("/session/{session_id}/stop", deps["stop_session"], methods=["POST"])
-    app.add_api_route("/prompt/execute", deps["execute_custom_prompt"], methods=["POST"])
-    app.add_api_route("/session/{session_id}/stats", deps["get_session_stats"], methods=["GET"])
+    route_definitions = [
+        ("/", deps["root"], ["GET"]),
+        ("/ping", deps["ping"], ["GET"]),
+        ("/health", deps["health_check_endpoint"], ["GET"]),
+        ("/health/detailed", deps["detailed_health_check"], ["GET"]),
+        ("/metrics", deps["get_metrics"], ["GET"]),
+        ("/info", deps["get_api_info"], ["GET"]),
+        ("/session/start", deps["start_session"], ["POST"]),
+        ("/session/{session_id}/execute", deps["execute_session"], ["POST"]),
+        ("/session/{session_id}/stop", deps["stop_session"], ["POST"]),
+        ("/prompt/execute", deps["execute_custom_prompt"], ["POST"]),
+        ("/session/{session_id}/stats", deps["get_session_stats"], ["GET"]),
+        ("/dashboard/live-sessions", deps["get_live_sessions"], ["GET"]),
+        ("/dashboard/historical-sessions", deps["get_historical_sessions"], ["GET"]),
+        ("/dashboard/compare-models", deps["compare_model_versions"], ["GET"]),
+        ("/dashboard/export/{session_id}", deps["export_session_results"], ["GET"]),
+        ("/auth/login", deps["login"], ["POST"]),
+        ("/auth/register", deps["register"], ["POST"]),
+        ("/auth/users", deps["list_users"], ["GET"]),
+        ("/auth/validate-llm-key", deps["validate_llm_key"], ["POST"]),
+        ("/remote/start-run", deps["start_remote_run"], ["POST"]),
+        ("/remote/config/save", deps["save_experiment_config"], ["POST"]),
+        ("/remote/config/list", deps["list_experiment_configs"], ["GET"]),
+        ("/remote/config/{config_id}", deps["get_experiment_config"], ["GET"]),
+        ("/remote/config/{config_id}", deps["delete_experiment_config"], ["DELETE"]),
+    ]
 
-    app.add_api_route("/dashboard/live-sessions", deps["get_live_sessions"], methods=["GET"])
-    app.add_api_route("/dashboard/historical-sessions", deps["get_historical_sessions"], methods=["GET"])
-    app.add_api_route("/dashboard/compare-models", deps["compare_model_versions"], methods=["GET"])
-    app.add_api_route("/dashboard/export/{session_id}", deps["export_session_results"], methods=["GET"])
+    # Backward-compatible API contract:
+    # - Historically some clients used /api/* paths
+    # - Current frontend/backend may use bare paths (e.g. /health)
+    # Register both so clients remain stable while docs converge.
+    for prefix in ("", "/api"):
+        for path, endpoint, methods in route_definitions:
+            if prefix == "/api" and path == "/":
+                # Avoid creating //api root alias
+                continue
+            app.add_api_route(f"{prefix}{path}", endpoint, methods=methods)
 
-    app.add_api_route("/auth/login", deps["login"], methods=["POST"])
-    app.add_api_route("/auth/register", deps["register"], methods=["POST"])
-    app.add_api_route("/auth/users", deps["list_users"], methods=["GET"])
-    app.add_api_route("/auth/validate-llm-key", deps["validate_llm_key"], methods=["POST"])
-
-    app.add_api_route("/remote/start-run", deps["start_remote_run"], methods=["POST"])
-    app.add_api_route("/remote/config/save", deps["save_experiment_config"], methods=["POST"])
-    app.add_api_route("/remote/config/list", deps["list_experiment_configs"], methods=["GET"])
-    app.add_api_route("/remote/config/{config_id}", deps["get_experiment_config"], methods=["GET"])
-    app.add_api_route("/remote/config/{config_id}", deps["delete_experiment_config"], methods=["DELETE"])
-
-    app.add_api_websocket_route("/ws", deps["websocket_endpoint"])
+    for prefix in ("", "/api"):
+        app.add_api_websocket_route(f"{prefix}/ws", deps["websocket_endpoint"])

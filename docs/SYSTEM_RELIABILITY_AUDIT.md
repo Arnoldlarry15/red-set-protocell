@@ -87,6 +87,8 @@ Scope: `backend/app`, `backend/tests`, `frontend/src`, dependency manifests, rou
 - Three.js resource disposal is implemented in `NeuralBackground` cleanup (geometries, materials, renderer) to prevent GPU and memory leaks.
 
 ### Outstanding risks
+- `NeuralBackground` cleanup path does **not yet** cancel outstanding animation frames, which can cause animation loops to continue after component unmount.
+- `NeuralBackground` does **not yet** dispose of allocated Three.js resources (e.g., geometries, materials, textures), leading to potential GPU and memory leaks over time.
 - Dashboard updates rely on WebSocket stream sequencing; additional race-condition tests are recommended for reconnect edge cases.
 
 ## 10) Architectural Drift Review

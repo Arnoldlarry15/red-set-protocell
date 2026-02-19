@@ -85,9 +85,10 @@ const NeuralBackground: React.FC = () => {
     const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
     scene.add(lines);
 
-    // Animation loop
+    // Animation loop - store frame ID for cleanup
+    let animationFrameId: number | undefined;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
 
       const posArray = particles.attributes.position.array as Float32Array;
 
@@ -124,8 +125,25 @@ const NeuralBackground: React.FC = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      // Cancel animation frame to prevent memory leaks
+      if (animationFrameId !== undefined) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      
+      // Remove event listener
       window.removeEventListener('resize', handleResize);
-      container.removeChild(renderer.domElement);
+      
+      // Dispose Three.js resources to prevent memory leaks
+      particles.dispose();
+      lineGeometry.dispose();
+      material.dispose();
+      lineMaterial.dispose();
+      renderer.dispose();
+      
+      // Remove renderer DOM element
+      if (container.contains(renderer.domElement)) {
+        container.removeChild(renderer.domElement);
+      }
     };
   }, []);
 

@@ -83,6 +83,8 @@ Scope: `backend/app`, `backend/tests`, `frontend/src`, dependency manifests, rou
 
 ### Current state
 - Stable ref capture in `NeuralBackground` effect cleanup path is implemented to avoid stale-ref cleanup bugs.
+- Animation frame cancellation is implemented in `NeuralBackground` cleanup to prevent animation loops from continuing after component unmount.
+- Three.js resource disposal is implemented in `NeuralBackground` cleanup (geometries, materials, renderer) to prevent GPU and memory leaks.
 
 ### Outstanding risks
 - `NeuralBackground` cleanup path does **not yet** cancel outstanding animation frames, which can cause animation loops to continue after component unmount.

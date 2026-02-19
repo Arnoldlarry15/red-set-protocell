@@ -99,12 +99,11 @@ This Will Age Well Because:
 import asyncio
 import logging
 import random
-import re
-import traceback
 from abc import abstractmethod
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from app.auth import log_exception_safely
 from app.interfaces.target import BaseTarget
 from app.auth import redact_sensitive_text, log_exception_safely
 
@@ -377,7 +376,7 @@ class OpenAIBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("OpenAI API call failed", e)
+            log_exception_safely("OpenAI API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -467,7 +466,7 @@ class AnthropicBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("Anthropic API call failed", e)
+            log_exception_safely("Anthropic API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -550,7 +549,7 @@ class OpenRouterBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("OpenRouter API call failed", e)
+            log_exception_safely("OpenRouter API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -636,7 +635,7 @@ class LlamaCppBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("LlamaCpp execution failed", e)
+            log_exception_safely("LlamaCpp execution failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -746,7 +745,7 @@ class CustomHTTPBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("Custom HTTP API call failed", e)
+            log_exception_safely("Custom HTTP API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -820,7 +819,7 @@ class Target:
             return response
 
         except Exception as e:
-            _log_exception_safely("Target execution failed", e)
+            log_exception_safely("Target execution failed", e)
             raise  # Re-raise the exception instead of returning error string
 
     def get_statistics(self) -> Dict[str, Any]:

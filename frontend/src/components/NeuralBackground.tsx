@@ -86,7 +86,7 @@ const NeuralBackground: React.FC = () => {
     scene.add(lines);
 
     // Animation loop
-    let animationId: number;
+    let animationId: number | undefined;
     const animate = () => {
       animationId = requestAnimationFrame(animate);
 
@@ -126,7 +126,9 @@ const NeuralBackground: React.FC = () => {
 
     return () => {
       // Cancel animation frame
-      cancelAnimationFrame(animationId);
+      if (animationId !== undefined) {
+        cancelAnimationFrame(animationId);
+      }
       
       // Remove event listener
       window.removeEventListener('resize', handleResize);

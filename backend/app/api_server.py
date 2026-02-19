@@ -12,7 +12,7 @@ import traceback
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -271,7 +271,7 @@ class LLMKeyValidation(BaseModel):
 active_sessions: Dict[str, Dict[str, Any]] = {}
 websocket_connections: List[WebSocket] = []
 stored_configs: Dict[str, ExperimentConfig] = {}
-background_tasks: set[asyncio.Task] = set()
+background_tasks: Set[asyncio.Task] = set()
 # Asyncio is single-threaded by default, but callbacks/executors may evolve over time.
 # Guard registry mutations with a lock for future thread-safety hardening.
 background_tasks_lock = threading.Lock()

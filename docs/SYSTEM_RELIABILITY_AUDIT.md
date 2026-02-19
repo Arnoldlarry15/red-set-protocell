@@ -81,8 +81,10 @@ Scope: `backend/app`, `backend/tests`, `frontend/src`, dependency manifests, rou
 
 ## 9) Frontend State Safety
 
-### Prior fix maintained
-- Stable ref capture in `NeuralBackground` effect cleanup path avoids stale-ref cleanup bugs.
+### Current state
+- Stable ref capture in `NeuralBackground` effect cleanup path is implemented to avoid stale-ref cleanup bugs.
+- Animation frame cancellation is implemented in `NeuralBackground` cleanup to prevent animation loops from continuing after component unmount.
+- Three.js resource disposal is implemented in `NeuralBackground` cleanup (geometries, materials, renderer) to prevent GPU and memory leaks.
 
 ### Outstanding risks
 - Dashboard updates rely on WebSocket stream sequencing; additional race-condition tests are recommended for reconnect edge cases.

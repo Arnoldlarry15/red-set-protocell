@@ -7,6 +7,7 @@ import AttackConfig from '../components/AttackConfig';
 import UserInput from '../components/UserInput';
 import CostTracker from '../components/CostTracker';
 import { useSessionStream } from '../hooks/useSessionStream';
+import { safeAsync } from '../utils/async';
 import '../styles/Dashboard.css';
 import { Attack, SessionStats, SessionConfig, WebSocketMessage, OutgoingWebSocketMessage } from '../types';
 
@@ -20,9 +21,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 const WS_URL = API_BASE_URL.replace(/^http/, 'ws') + '/ws';
 
 const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
-  const safeAsync = (fn: () => Promise<void>) => {
-    fn().catch((err) => console.warn('Async cleanup failed', err));
-  };
   const [attacks, setAttacks] = useState<Attack[]>([]);
   const [sessionStats, setSessionStats] = useState<SessionStats>({
     sessionId: '',

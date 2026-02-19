@@ -8,10 +8,10 @@ Integrates with the existing RSP core system.
 import asyncio
 import logging
 import os
-import traceback
 import threading
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,7 +28,7 @@ from app.engines.scoring import ScoringEngine
 from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
 from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
 from app.auth import log_exception_safely, redact_sensitive_text
-from app.lifecycle import background_tasks as _background_tasks, bind_lifecycle_handlers, track_background_task as _track_background_task
+from app.lifecycle import bind_lifecycle_handlers
 from app.routes import register_routes
 
 # Import production-ready middleware
@@ -39,23 +39,6 @@ from app.telemetry.extractors import SessionDataExtractor
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def redact_sensitive_text(text: str) -> str:
-    """Redact sensitive credential-like tokens from logs and error messages."""
-    import re
-
-    redacted = re.sub(r"sk-[A-Za-z0-9_-]{8,}", "sk-***REDACTED***", text)
-    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***REDACTED***", redacted, flags=re.IGNORECASE)
-    return redacted
-
-
-def log_exception_safely(context: str, exc: Exception) -> None:
-    """Log redacted exception details and traceback for internal debugging."""
-    redacted_message = redact_sensitive_text(str(exc))
-    redacted_traceback = redact_sensitive_text(traceback.format_exc())
-    logger.error(f"{context}: {type(exc).__name__} - {redacted_message}")
-    logger.error(redacted_traceback)
 
 
 def track_background_task(task: asyncio.Task, context: str) -> asyncio.Task:

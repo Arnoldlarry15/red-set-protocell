@@ -99,28 +99,14 @@ This Will Age Well Because:
 import asyncio
 import logging
 import random
-import re
-import traceback
 from abc import abstractmethod
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
+from app.auth import log_exception_safely
 from app.interfaces.target import BaseTarget
 
 logger = logging.getLogger(__name__)
-
-
-def _redact_sensitive_text(text: str) -> str:
-    """Redact credential-like tokens in error/log messages."""
-    redacted = re.sub(r"sk-[A-Za-z0-9_-]{8,}", "sk-***REDACTED***", str(text))
-    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***REDACTED***", redacted, flags=re.IGNORECASE)
-    return redacted
-
-
-def _log_exception_safely(context: str, exc: Exception) -> None:
-    """Log redacted exception details and traceback for internal debugging."""
-    logger.error(f"{context}: {type(exc).__name__} - {_redact_sensitive_text(exc)}")
-    logger.error(_redact_sensitive_text(traceback.format_exc()))
 
 
 # Import requests for CustomHTTPBackend
@@ -379,7 +365,7 @@ class OpenAIBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("OpenAI API call failed", e)
+            log_exception_safely("OpenAI API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -469,7 +455,7 @@ class AnthropicBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("Anthropic API call failed", e)
+            log_exception_safely("Anthropic API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -552,7 +538,7 @@ class OpenRouterBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("OpenRouter API call failed", e)
+            log_exception_safely("OpenRouter API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -638,7 +624,7 @@ class LlamaCppBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("LlamaCpp execution failed", e)
+            log_exception_safely("LlamaCpp execution failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -748,7 +734,7 @@ class CustomHTTPBackend(TargetBackend):
             return result
 
         except Exception as e:
-            _log_exception_safely("Custom HTTP API call failed", e)
+            log_exception_safely("Custom HTTP API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -822,7 +808,7 @@ class Target:
             return response
 
         except Exception as e:
-            _log_exception_safely("Target execution failed", e)
+            log_exception_safely("Target execution failed", e)
             raise  # Re-raise the exception instead of returning error string
 
     def get_statistics(self) -> Dict[str, Any]:

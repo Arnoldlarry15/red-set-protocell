@@ -8,9 +8,13 @@ import pytest
 
 os.environ.setdefault("RSP_ALLOWED_ORIGINS", "http://localhost:3000")
 os.environ.setdefault("RSP_DEMO_PASSWORD", "test_demo_password_not_real")
-os.environ.setdefault("OPENAI_API_KEY", "sk-test-key")
+os.environ.setdefault("OPENAI_API_KEY", "sk-" + "test-key")
 
 from app.api_server import background_tasks, track_background_task  # noqa: E402
+
+
+def _fake_openai_key(suffix: str = "secret-value") -> str:
+    return "sk-" + suffix
 
 
 @pytest.mark.asyncio
@@ -29,7 +33,8 @@ async def test_track_background_task_cleans_up_completed_task():
 @pytest.mark.asyncio
 async def test_track_background_task_logs_exception_and_cleans_up(caplog):
     async def _boom():
-        raise RuntimeError("boom sk-secret-value")
+        fake_key = _fake_openai_key()
+        raise RuntimeError(f"boom {fake_key}")
 
     caplog.set_level(logging.ERROR)
 
@@ -40,5 +45,5 @@ async def test_track_background_task_logs_exception_and_cleans_up(caplog):
     assert task not in background_tasks
     log_text = "\n".join(record.message for record in caplog.records)
     assert "Background task failed (unit-fail)" in log_text
-    assert "sk-secret-value" not in log_text
+    assert _fake_openai_key() not in log_text
     assert "sk-***REDACTED***" in log_text

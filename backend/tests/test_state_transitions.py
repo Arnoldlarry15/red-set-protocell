@@ -15,12 +15,14 @@ These tests verify that each transition is properly implemented and data
 flows correctly between states.
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
+
+import pytest
+
 from app.agents.orchestrator import Orchestrator, StateManager
-from app.engines.scoring import ScoringEngine
 from app.agents.sniper import AttackDomain
+from app.engines.scoring import ScoringEngine
 
 
 @pytest.fixture

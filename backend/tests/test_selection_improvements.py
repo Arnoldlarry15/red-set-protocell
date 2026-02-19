@@ -10,11 +10,8 @@ These tests validate the enhancements made to address the five key issues:
 """
 
 import time
-from app.engines.selection import (
-    SelectionEngine,
-    SelectionStrategy,
-    PromptCandidate
-)
+
+from app.engines.selection import PromptCandidate, SelectionEngine, SelectionStrategy
 
 
 def test_improved_structural_hash_granularity():
@@ -43,7 +40,7 @@ def test_structural_hash_features():
         with_quotes.structural_hash,
         with_brackets.structural_hash,
         with_newlines.structural_hash,
-        with_exclamations.structural_hash
+        with_exclamations.structural_hash,
     }
     assert len(hashes) == 4
 
@@ -123,11 +120,7 @@ def test_hash_distance_calculation():
 
 def test_performance_based_decay():
     """Test that decay considers performance history."""
-    engine = SelectionEngine(
-        decay_rate=0.9,
-        decay_interval=60.0,
-        performance_decay_weight=0.5
-    )
+    engine = SelectionEngine(decay_rate=0.9, decay_interval=60.0, performance_decay_weight=0.5)
 
     # Create a candidate with declining performance
     declining = PromptCandidate("Declining candidate", 1.0, "domain")
@@ -200,10 +193,7 @@ def test_overfitting_penalties_with_semantic_tracking():
 
 def test_single_select_balanced_strategy():
     """Test balanced strategy for single selection to prevent drift."""
-    engine = SelectionEngine(
-        novelty_weight=0.3,  # This is for other selection methods
-        single_select_strategy="balanced"
-    )
+    engine = SelectionEngine(novelty_weight=0.3, single_select_strategy="balanced")  # This is for other selection methods
 
     # Create high-scoring candidate with low novelty
     high_score_old = PromptCandidate("High scorer", 0.9, "domain1")
@@ -222,8 +212,13 @@ def test_single_select_balanced_strategy():
     assert len(selected) == 1
     # Calculate expected scores: fitness * 0.7 + novelty * 0.3 (complementary)
     novelty_component_weight = 1.0 - engine.SINGLE_SELECT_FITNESS_WEIGHT
-    high_score_balanced = high_score_old.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + high_score_old.novelty_score * novelty_component_weight
-    medium_score_balanced = medium_score_novel.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + medium_score_novel.novelty_score * novelty_component_weight
+    high_score_balanced = (
+        high_score_old.score * engine.SINGLE_SELECT_FITNESS_WEIGHT + high_score_old.novelty_score * novelty_component_weight
+    )
+    medium_score_balanced = (
+        medium_score_novel.score * engine.SINGLE_SELECT_FITNESS_WEIGHT
+        + medium_score_novel.novelty_score * novelty_component_weight
+    )
 
     # The one with higher balanced score should win
     if high_score_balanced > medium_score_balanced:
@@ -250,10 +245,7 @@ def test_single_select_elite_strategy():
 
 def test_single_select_novelty_strategy():
     """Test novelty strategy for single selection."""
-    engine = SelectionEngine(
-        novelty_weight=0.5,
-        single_select_strategy="novelty"
-    )
+    engine = SelectionEngine(novelty_weight=0.5, single_select_strategy="novelty")
 
     # Establish high scorer
     high_scorer = PromptCandidate("Old winner", 0.95, "domain0")
@@ -274,22 +266,19 @@ def test_single_select_novelty_strategy():
 
 def test_statistics_include_new_metrics():
     """Test that statistics include new tracking metrics."""
-    engine = SelectionEngine(
-        performance_decay_weight=0.5,
-        single_select_strategy="balanced"
-    )
+    engine = SelectionEngine(performance_decay_weight=0.5, single_select_strategy="balanced")
 
     stats = engine.get_statistics()
 
     # Check new fields are present
-    assert 'semantic_pattern_usage_count' in stats
-    assert 'most_used_semantic_pattern_count' in stats
-    assert 'performance_decay_weight' in stats
-    assert 'single_select_strategy' in stats
+    assert "semantic_pattern_usage_count" in stats
+    assert "most_used_semantic_pattern_count" in stats
+    assert "performance_decay_weight" in stats
+    assert "single_select_strategy" in stats
 
     # Check values
-    assert stats['performance_decay_weight'] == 0.5
-    assert stats['single_select_strategy'] == "balanced"
+    assert stats["performance_decay_weight"] == 0.5
+    assert stats["single_select_strategy"] == "balanced"
 
 
 def test_reset_includes_semantic_patterns():
@@ -332,11 +321,7 @@ def test_continuous_novelty_with_multiple_high_scorers():
 
 def test_performance_decay_with_improving_performance():
     """Test that improving performance doesn't cause extra decay."""
-    engine = SelectionEngine(
-        decay_rate=0.9,
-        decay_interval=60.0,
-        performance_decay_weight=0.5
-    )
+    engine = SelectionEngine(decay_rate=0.9, decay_interval=60.0, performance_decay_weight=0.5)
 
     # Create candidate with improving performance
     improving = PromptCandidate("Improving candidate", 1.0, "domain")
@@ -372,7 +357,7 @@ def test_semantic_hash_pattern_detection():
         instruction_override.semantic_hash,
         roleplay.semantic_hash,
         hypothetical.semantic_hash,
-        system_mode.semantic_hash
+        system_mode.semantic_hash,
     }
     # Should have diversity in hashes (some may overlap but not all)
     assert len(hashes) >= 2
@@ -386,8 +371,8 @@ def test_dataclass_field_initialization():
     candidate = PromptCandidate("Test", 0.5, "domain")
 
     # Check all new fields are initialized
-    assert hasattr(candidate, 'semantic_hash')
-    assert hasattr(candidate, 'performance_history')
+    assert hasattr(candidate, "semantic_hash")
+    assert hasattr(candidate, "performance_history")
     assert candidate.semantic_hash != ""
     assert isinstance(candidate.performance_history, list)
     assert len(candidate.performance_history) == 0
@@ -395,10 +380,7 @@ def test_dataclass_field_initialization():
 
 def test_engine_parameters_stored():
     """Test that new engine parameters are stored correctly."""
-    engine = SelectionEngine(
-        performance_decay_weight=0.7,
-        single_select_strategy="elite"
-    )
+    engine = SelectionEngine(performance_decay_weight=0.7, single_select_strategy="elite")
 
     assert engine.performance_decay_weight == 0.7
     assert engine.single_select_strategy == "elite"

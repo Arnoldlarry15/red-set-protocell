@@ -6,11 +6,7 @@ Preconfigured reference models from major providers.
 
 from typing import Dict, List
 
-from app.model_zoo.registry import (
-    ModelInfo,
-    ModelVersion,
-    ModelProvider,
-)
+from app.model_zoo.registry import ModelInfo, ModelProvider, ModelVersion
 
 
 def get_openai_models() -> List[ModelInfo]:
@@ -167,8 +163,8 @@ def get_all_reference_models() -> Dict[str, List[ModelInfo]]:
         Dictionary mapping provider names to model lists
     """
     return {
-        'openai': get_openai_models(),
-        'anthropic': get_anthropic_models(),
+        "openai": get_openai_models(),
+        "anthropic": get_anthropic_models(),
     }
 
 

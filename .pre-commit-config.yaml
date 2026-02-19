@@ -1,0 +1,32 @@
+# Pre-commit hooks configuration for Red Set ProtoCell
+# Install with: pip install pre-commit && pre-commit install
+# Run manually with: pre-commit run --all-files
+
+repos:
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        name: Format code with black
+        args: [--line-length=127]
+        files: ^backend/(app|tests)/
+        exclude: ^backend/(examples|templates|\.venv|venv|env|__pycache__|\.pytest_cache|build|dist)/
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: Sort imports with isort
+        args: [--profile=black, --line-length=127]
+        files: ^backend/(app|tests)/
+        exclude: ^backend/(examples|templates|\.venv|venv|env|__pycache__|\.pytest_cache|build|dist)/
+
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.1.0
+    hooks:
+      - id: flake8
+        name: Lint with flake8
+        # Use the .flake8 config file which ignores E203, E501, W503, C901
+        args: [--config=backend/.flake8]
+        files: ^backend/(app|tests)/
+        exclude: ^backend/(examples|templates|\.venv|venv|env|__pycache__|\.pytest_cache|build|dist)/

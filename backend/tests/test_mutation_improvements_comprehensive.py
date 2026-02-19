@@ -12,11 +12,8 @@ Tests cover:
 """
 
 from unittest.mock import patch
-from app.engines.mutation import (
-    MutationEngine,
-    MutationStrategy,
-    SemanticIntensity
-)
+
+from app.engines.mutation import MutationEngine, MutationStrategy, SemanticIntensity
 
 
 class TestRandomnessControl:
@@ -88,7 +85,7 @@ class TestFallbackSafety:
         prompt = "test prompt"
 
         # Mock _lexical_variation to raise exception
-        with patch.object(engine, '_lexical_variation', side_effect=Exception("Test error")):
+        with patch.object(engine, "_lexical_variation", side_effect=Exception("Test error")):
             result = engine.mutate(prompt, strategy=MutationStrategy.LEXICAL_VARIATION)
 
             # Should fall back to original prompt
@@ -99,7 +96,7 @@ class TestFallbackSafety:
         engine = MutationEngine(mutation_rate=1.0)
         prompt = "another test"
 
-        with patch.object(engine, '_encoding_transform', side_effect=RuntimeError("Transform failed")):
+        with patch.object(engine, "_encoding_transform", side_effect=RuntimeError("Transform failed")):
             result = engine.mutate(prompt, strategy=MutationStrategy.ENCODING_TRANSFORM)
 
             assert result == prompt
@@ -109,7 +106,7 @@ class TestFallbackSafety:
         engine = MutationEngine(mutation_rate=1.0)
         prompt = "test structural"
 
-        with patch.object(engine, '_structural_recombination', side_effect=ValueError("Bad structure")):
+        with patch.object(engine, "_structural_recombination", side_effect=ValueError("Bad structure")):
             result = engine.mutate(prompt, strategy=MutationStrategy.STRUCTURAL_RECOMBINATION)
 
             assert result == prompt
@@ -119,15 +116,15 @@ class TestFallbackSafety:
         engine = MutationEngine(mutation_rate=1.0)
         prompt = "log test"
 
-        with patch.object(engine, '_obfuscation', side_effect=Exception("Obfuscation error")):
-            with patch('logging.warning') as mock_log:
+        with patch.object(engine, "_obfuscation", side_effect=Exception("Obfuscation error")):
+            with patch("logging.warning") as mock_log:
                 engine.mutate(prompt, strategy=MutationStrategy.OBFUSCATION)
 
                 # Should have logged the warning
                 assert mock_log.called
                 # Check that warning contains strategy and error info
                 call_args = str(mock_log.call_args)
-                assert 'obfuscation' in call_args.lower()
+                assert "obfuscation" in call_args.lower()
 
 
 class TestAdaptiveStrategy:
@@ -145,13 +142,13 @@ class TestAdaptiveStrategy:
         prompt = "test adaptive"
 
         # Use string 'adaptive' - it should trigger adaptive selection
-        engine.mutate(prompt, strategy='adaptive')
+        engine.mutate(prompt, strategy="adaptive")
 
         # Should have mutated (result should be different from prompt)
         # The mutation record should exist
         assert len(engine.mutation_history) == 1
         # Check that a strategy was used (not no-op since mutation_rate=1.0)
-        assert engine.mutation_history[0]['strategy'] != 'no-op'
+        assert engine.mutation_history[0]["strategy"] != "no-op"
 
     def test_strategy_adaptive_case_insensitive(self):
         """Test that strategy='ADAPTIVE' also works."""
@@ -164,10 +161,10 @@ class TestAdaptiveStrategy:
         prompt = "test ADAPTIVE"
 
         # Should work with uppercase
-        engine.mutate(prompt, strategy='ADAPTIVE')
+        engine.mutate(prompt, strategy="ADAPTIVE")
         # Check mutation happened
         assert len(engine.mutation_history) == 1
-        assert engine.mutation_history[0]['strategy'] != 'no-op'
+        assert engine.mutation_history[0]["strategy"] != "no-op"
 
     def test_invalid_strategy_string_falls_back_to_random(self):
         """Test that invalid strategy strings fall back to random selection."""
@@ -175,7 +172,7 @@ class TestAdaptiveStrategy:
         prompt = "invalid strategy test"
 
         # Use invalid strategy string
-        result = engine.mutate(prompt, strategy='nonexistent_strategy')
+        result = engine.mutate(prompt, strategy="nonexistent_strategy")
 
         # Should still mutate (fallback to random)
         assert isinstance(result, str)
@@ -187,11 +184,7 @@ class TestSemanticIntensityTagging:
 
     def test_mutation_record_includes_semantic_intensity(self):
         """Test that mutation records include semantic_intensity."""
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.HIGH,
-            random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH, random_seed=42)
 
         prompt = "test intensity tagging"
         engine.mutate(prompt)
@@ -199,15 +192,12 @@ class TestSemanticIntensityTagging:
         # Check mutation record
         assert len(engine.mutation_history) == 1
         record = engine.mutation_history[0]
-        assert 'semantic_intensity' in record
-        assert record['semantic_intensity'] == 'high'
+        assert "semantic_intensity" in record
+        assert record["semantic_intensity"] == "high"
 
     def test_no_op_mutation_includes_semantic_intensity(self):
         """Test that even no-op mutations include semantic intensity."""
-        engine = MutationEngine(
-            mutation_rate=0.0,  # Never mutate
-            semantic_intensity=SemanticIntensity.LOW
-        )
+        engine = MutationEngine(mutation_rate=0.0, semantic_intensity=SemanticIntensity.LOW)  # Never mutate
 
         prompt = "no mutation test"
         engine.mutate(prompt)
@@ -215,17 +205,13 @@ class TestSemanticIntensityTagging:
         # Check no-op record
         assert len(engine.mutation_history) == 1
         record = engine.mutation_history[0]
-        assert record['strategy'] == 'no-op'
-        assert 'semantic_intensity' in record
-        assert record['semantic_intensity'] == 'low'
+        assert record["strategy"] == "no-op"
+        assert "semantic_intensity" in record
+        assert record["semantic_intensity"] == "low"
 
     def test_semantic_intensity_tracks_across_mutations(self):
         """Test that semantic intensity is correctly tracked across multiple mutations."""
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.MEDIUM,
-            random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM, random_seed=42)
 
         prompts = ["prompt 1", "prompt 2", "prompt 3"]
         for p in prompts:
@@ -233,7 +219,7 @@ class TestSemanticIntensityTagging:
 
         # All records should have medium intensity
         for record in engine.mutation_history:
-            assert record['semantic_intensity'] == 'medium'
+            assert record["semantic_intensity"] == "medium"
 
 
 class TestMinSamplesForAdaptive:
@@ -247,11 +233,7 @@ class TestMinSamplesForAdaptive:
     def test_adaptive_selection_respects_min_samples(self):
         """Test that adaptive selection uses min_samples threshold."""
         # Create engine with high threshold
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            min_samples_for_adaptive=100,
-            random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, min_samples_for_adaptive=100, random_seed=42)
         engine.adaptive_mode = True
 
         # Add fewer samples than threshold
@@ -266,11 +248,7 @@ class TestMinSamplesForAdaptive:
 
     def test_low_min_samples_enables_adaptive_early(self):
         """Test that low min_samples enables adaptive behavior earlier."""
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            min_samples_for_adaptive=5,  # Very low threshold
-            random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, min_samples_for_adaptive=5, random_seed=42)  # Very low threshold
         engine.adaptive_mode = True
 
         # Add just enough samples
@@ -291,7 +269,7 @@ class TestCachedRegexPatterns:
         """Test that regex patterns are cached during initialization."""
         engine = MutationEngine()
         # Check that patterns are cached
-        assert hasattr(engine, '_lexical_patterns')
+        assert hasattr(engine, "_lexical_patterns")
         assert len(engine._lexical_patterns) > 0
 
         # Check that all words in LEXICAL_SUBSTITUTIONS have patterns
@@ -316,37 +294,29 @@ class TestEncodingTransformLogging:
 
     def test_encoding_transform_logs_choice(self):
         """Test that _encoding_transform logs which transform was chosen."""
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.MEDIUM,
-            random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM, random_seed=42)
 
         prompt = "test encoding log"
 
-        with patch('logging.debug') as mock_log:
+        with patch("logging.debug") as mock_log:
             engine.mutate(prompt, strategy=MutationStrategy.ENCODING_TRANSFORM)
 
             # Should have logged the transform choice
             assert mock_log.called
             call_args = str(mock_log.call_args)
-            assert '_encoding_transform' in call_args
+            assert "_encoding_transform" in call_args
 
     def test_encoding_transform_logs_intensity_level(self):
         """Test that encoding transform logs include intensity level."""
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.HIGH,
-            random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH, random_seed=42)
 
         prompt = "test high intensity log"
 
-        with patch('logging.debug') as mock_log:
+        with patch("logging.debug") as mock_log:
             engine.mutate(prompt, strategy=MutationStrategy.ENCODING_TRANSFORM)
 
             call_args = str(mock_log.call_args)
-            assert 'high' in call_args.lower()
+            assert "high" in call_args.lower()
 
 
 class TestAllMutationMethodsImplemented:
@@ -459,10 +429,11 @@ class TestThreadSafety:
         """Test that engine uses isolated Random instance."""
         engine = MutationEngine(random_seed=42)
         # Should have _random attribute
-        assert hasattr(engine, '_random')
+        assert hasattr(engine, "_random")
 
         # Should be a Random instance, not using global random
         import random
+
         assert isinstance(engine._random, random.Random)
 
     def test_multiple_engines_dont_interfere(self):
@@ -512,8 +483,8 @@ class TestEGGFeedbackIntegration:
         """Test that EGG block tracking structures are initialized."""
         engine = MutationEngine()
         # Should have EGG tracking attributes
-        assert hasattr(engine, 'strategy_egg_blocks')
-        assert hasattr(engine, 'strategy_egg_block_rate')
+        assert hasattr(engine, "strategy_egg_blocks")
+        assert hasattr(engine, "strategy_egg_block_rate")
 
         # All strategies should be initialized to 0
         for strategy in MutationStrategy:
@@ -531,11 +502,7 @@ class TestEGGFeedbackIntegration:
         assert engine.strategy_egg_blocks[strategy.value] == 0
 
         # Update with EGG blocked (should not add to performance history)
-        engine.update_strategy_performance(
-            strategy, 0.0,
-            egg_blocked=True,
-            egg_category="test_category"
-        )
+        engine.update_strategy_performance(strategy, 0.0, egg_blocked=True, egg_category="test_category")
 
         # Performance history should not increase (blocked mutations don't get scored)
         assert len(engine.strategy_performance[strategy.value]) == 1
@@ -555,11 +522,7 @@ class TestEGGFeedbackIntegration:
 
         # Add some blocked mutations
         for _ in range(3):
-            engine.update_strategy_performance(
-                strategy, 0.0,
-                egg_blocked=True,
-                egg_category="test"
-            )
+            engine.update_strategy_performance(strategy, 0.0, egg_blocked=True, egg_category="test")
 
         # Block rate should be 3 / (7 + 3) = 0.3
         assert engine.strategy_egg_block_rate[strategy.value] == 0.3
@@ -581,11 +544,7 @@ class TestEGGFeedbackIntegration:
 
         # Add high block rate to risky strategy (50% blocked)
         for _ in range(25):
-            engine.update_strategy_performance(
-                risky_strategy, 0.0,
-                egg_blocked=True,
-                egg_category="test"
-            )
+            engine.update_strategy_performance(risky_strategy, 0.0, egg_blocked=True, egg_category="test")
 
         # Block rate for risky strategy should be 25 / (25 + 25) = 0.5
         assert engine.strategy_egg_block_rate[risky_strategy.value] == 0.5
@@ -613,13 +572,13 @@ class TestObservabilityMetrics:
         metrics = engine.get_observability_metrics()
 
         # Should have all expected keys
-        assert 'timestamp' in metrics
-        assert 'mutation_counts' in metrics
-        assert 'strategy_success_rates' in metrics
-        assert 'egg_block_metrics' in metrics
-        assert 'adaptive_mode_status' in metrics
-        assert 'performance_summary' in metrics
-        assert 'memory_usage' in metrics
+        assert "timestamp" in metrics
+        assert "mutation_counts" in metrics
+        assert "strategy_success_rates" in metrics
+        assert "egg_block_metrics" in metrics
+        assert "adaptive_mode_status" in metrics
+        assert "performance_summary" in metrics
+        assert "memory_usage" in metrics
 
     def test_observability_mutation_counts(self):
         """Test that mutation counts are tracked correctly."""
@@ -630,11 +589,11 @@ class TestObservabilityMetrics:
         engine.mutate("test 3", strategy=MutationStrategy.ENCODING_TRANSFORM)
 
         metrics = engine.get_observability_metrics()
-        mutation_counts = metrics['mutation_counts']
+        mutation_counts = metrics["mutation_counts"]
 
         # Should have counts for each strategy used
-        assert mutation_counts.get('lexical_variation', 0) == 2
-        assert mutation_counts.get('encoding_transform', 0) == 1
+        assert mutation_counts.get("lexical_variation", 0) == 2
+        assert mutation_counts.get("encoding_transform", 0) == 1
 
     def test_observability_success_rates(self):
         """Test that success rates are calculated correctly."""
@@ -647,13 +606,10 @@ class TestObservabilityMetrics:
 
         # Add 2 blocked mutations
         for _ in range(2):
-            engine.update_strategy_performance(
-                strategy, 0.0,
-                egg_blocked=True
-            )
+            engine.update_strategy_performance(strategy, 0.0, egg_blocked=True)
 
         metrics = engine.get_observability_metrics()
-        success_rate = metrics['strategy_success_rates'][strategy.value]
+        success_rate = metrics["strategy_success_rates"][strategy.value]
 
         # Success rate should be 8 / (8 + 2) = 0.8
         assert success_rate == 0.8
@@ -662,54 +618,44 @@ class TestObservabilityMetrics:
         """Test that EGG block metrics are reported."""
         engine = MutationEngine()
         # Add some blocks
-        engine.update_strategy_performance(
-            MutationStrategy.ASSUMPTION_FLIP, 0.0,
-            egg_blocked=True, egg_category="bioweapons"
-        )
-        engine.update_strategy_performance(
-            MutationStrategy.COMPETING_GOALS, 0.0,
-            egg_blocked=True, egg_category="csam"
-        )
+        engine.update_strategy_performance(MutationStrategy.ASSUMPTION_FLIP, 0.0, egg_blocked=True, egg_category="bioweapons")
+        engine.update_strategy_performance(MutationStrategy.COMPETING_GOALS, 0.0, egg_blocked=True, egg_category="csam")
 
         metrics = engine.get_observability_metrics()
-        egg_metrics = metrics['egg_block_metrics']
+        egg_metrics = metrics["egg_block_metrics"]
 
         # Should report total blocks
-        assert egg_metrics['total_blocks'] == 2
+        assert egg_metrics["total_blocks"] == 2
 
         # Should report blocks by strategy
-        assert egg_metrics['blocks_by_strategy']['assumption_flip'] == 1
-        assert egg_metrics['blocks_by_strategy']['competing_goals'] == 1
+        assert egg_metrics["blocks_by_strategy"]["assumption_flip"] == 1
+        assert egg_metrics["blocks_by_strategy"]["competing_goals"] == 1
 
     def test_observability_adaptive_status(self):
         """Test that adaptive mode status is reported correctly."""
-        engine = MutationEngine(
-            min_samples_for_adaptive=20
-        )
+        engine = MutationEngine(min_samples_for_adaptive=20)
 
         # Initial state: not enough samples, adaptive mode disabled
         metrics = engine.get_observability_metrics()
-        status = metrics['adaptive_mode_status']
+        status = metrics["adaptive_mode_status"]
 
-        assert status['enabled'] is False
-        assert status['total_samples'] == 0
-        assert status['min_samples_threshold'] == 20
-        assert status['ready_for_sophisticated_selection'] is False
+        assert status["enabled"] is False
+        assert status["total_samples"] == 0
+        assert status["min_samples_threshold"] == 20
+        assert status["ready_for_sophisticated_selection"] is False
 
         # Add samples
         for _ in range(25):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.7
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.7)
 
         engine.enable_adaptive_mode()
 
         metrics = engine.get_observability_metrics()
-        status = metrics['adaptive_mode_status']
+        status = metrics["adaptive_mode_status"]
 
-        assert status['enabled'] is True
-        assert status['total_samples'] == 25
-        assert status['ready_for_sophisticated_selection'] is True
+        assert status["enabled"] is True
+        assert status["total_samples"] == 25
+        assert status["ready_for_sophisticated_selection"] is True
 
     def test_observability_performance_summary(self):
         """Test that performance summary shows best/worst performers."""
@@ -717,25 +663,21 @@ class TestObservabilityMetrics:
         # Add performance data
         # Good performer
         for _ in range(10):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.9
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.9)
 
         # Poor performer
         for _ in range(10):
-            engine.update_strategy_performance(
-                MutationStrategy.OBFUSCATION, 0.2
-            )
+            engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.2)
 
         metrics = engine.get_observability_metrics()
-        summary = metrics['performance_summary']
+        summary = metrics["performance_summary"]
 
         # Should identify best and worst
-        assert summary['best_performer']['strategy'] == 'lexical_variation'
-        assert abs(summary['best_performer']['avg_score'] - 0.9) < 1e-9
+        assert summary["best_performer"]["strategy"] == "lexical_variation"
+        assert abs(summary["best_performer"]["avg_score"] - 0.9) < 1e-9
 
-        assert summary['worst_performer']['strategy'] == 'obfuscation'
-        assert abs(summary['worst_performer']['avg_score'] - 0.2) < 1e-9
+        assert summary["worst_performer"]["strategy"] == "obfuscation"
+        assert abs(summary["worst_performer"]["avg_score"] - 0.2) < 1e-9
 
 
 class TestAdaptiveSelectorStability:
@@ -743,10 +685,7 @@ class TestAdaptiveSelectorStability:
 
     def test_early_stage_detection(self):
         """Test that early stage is detected correctly."""
-        engine = MutationEngine(
-            min_samples_for_adaptive=20,
-            random_seed=42
-        )
+        engine = MutationEngine(min_samples_for_adaptive=20, random_seed=42)
         engine.enable_adaptive_mode()
 
         # With no samples, should use early-stage logic
@@ -757,17 +696,12 @@ class TestAdaptiveSelectorStability:
 
     def test_early_stage_uses_uniform_exploration(self):
         """Test that early stage uses uniform exploration."""
-        engine = MutationEngine(
-            min_samples_for_adaptive=20,
-            random_seed=42
-        )
+        engine = MutationEngine(min_samples_for_adaptive=20, random_seed=42)
         engine.enable_adaptive_mode()
 
         # Add just a few samples (less than threshold)
         for _ in range(5):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.9
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.9)
 
         # Should still use early-stage logic
         # Select many times to verify uniform-ish distribution
@@ -782,20 +716,13 @@ class TestAdaptiveSelectorStability:
 
     def test_mature_stage_after_threshold(self):
         """Test that mature stage logic activates after threshold."""
-        engine = MutationEngine(
-            min_samples_for_adaptive=20,
-            random_seed=42
-        )
+        engine = MutationEngine(min_samples_for_adaptive=20, random_seed=42)
         engine.enable_adaptive_mode()
 
         # Add samples above threshold
         for _ in range(25):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.95
-            )
-            engine.update_strategy_performance(
-                MutationStrategy.OBFUSCATION, 0.1
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.95)
+            engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.1)
 
         # Should now use mature logic (performance-based)
         selections = []
@@ -804,8 +731,8 @@ class TestAdaptiveSelectorStability:
             selections.append(strategy.value)
 
         # High-performing strategy should be selected more often
-        lexical_count = selections.count('lexical_variation')
-        obfuscation_count = selections.count('obfuscation')
+        lexical_count = selections.count("lexical_variation")
+        obfuscation_count = selections.count("obfuscation")
 
         # LEXICAL_VARIATION (0.95 avg) should be selected more than OBFUSCATION (0.1 avg)
         assert lexical_count > obfuscation_count
@@ -819,16 +746,11 @@ class TestAdaptiveSelectorStability:
 
     def test_adaptive_selector_handles_minimal_data(self):
         """Test that adaptive selector works with minimal data."""
-        engine = MutationEngine(
-            min_samples_for_adaptive=20,
-            random_seed=42
-        )
+        engine = MutationEngine(min_samples_for_adaptive=20, random_seed=42)
         engine.enable_adaptive_mode()
 
         # Add just 1 sample
-        engine.update_strategy_performance(
-            MutationStrategy.LEXICAL_VARIATION, 0.8
-        )
+        engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8)
 
         # Should still work (early stage)
         strategy = engine._select_strategy_adaptive()
@@ -837,30 +759,20 @@ class TestAdaptiveSelectorStability:
     def test_threshold_parameter_controls_transition(self):
         """Test that min_samples_for_adaptive controls early->mature transition."""
         # Low threshold
-        engine_low = MutationEngine(
-            min_samples_for_adaptive=5,
-            random_seed=42
-        )
+        engine_low = MutationEngine(min_samples_for_adaptive=5, random_seed=42)
         engine_low.enable_adaptive_mode()
 
         # Add 6 samples to one strategy
         for _ in range(6):
-            engine_low.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.95
-            )
+            engine_low.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.95)
 
         # High threshold
-        engine_high = MutationEngine(
-            min_samples_for_adaptive=50,
-            random_seed=42
-        )
+        engine_high = MutationEngine(min_samples_for_adaptive=50, random_seed=42)
         engine_high.enable_adaptive_mode()
 
         # Add same 6 samples
         for _ in range(6):
-            engine_high.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.95
-            )
+            engine_high.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.95)
 
         # Low threshold engine should be in mature mode
         # High threshold engine should still be in early mode
@@ -874,8 +786,8 @@ class TestAdaptiveSelectorStability:
 
         # Low threshold (mature) should favor high performer more strongly
         # than high threshold (early stage exploration)
-        low_lexical_ratio = selections_low.count('lexical_variation') / len(selections_low)
-        high_lexical_ratio = selections_high.count('lexical_variation') / len(selections_high)
+        low_lexical_ratio = selections_low.count("lexical_variation") / len(selections_low)
+        high_lexical_ratio = selections_high.count("lexical_variation") / len(selections_high)
 
         # With mature mode (low threshold), the high-performing strategy should be
         # selected noticeably more often than in early-stage mode (high threshold)

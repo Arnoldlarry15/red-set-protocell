@@ -2,18 +2,8 @@
 Tests for model zoo module.
 """
 
-
-from app.model_zoo.registry import (
-    ModelRegistry,
-    ModelInfo,
-    ModelVersion,
-    ModelProvider,
-)
-from app.model_zoo.presets import (
-    get_openai_models,
-    get_anthropic_models,
-    create_default_registry,
-)
+from app.model_zoo.presets import create_default_registry, get_anthropic_models, get_openai_models
+from app.model_zoo.registry import ModelInfo, ModelProvider, ModelRegistry, ModelVersion
 
 
 def test_model_version_creation():
@@ -152,25 +142,27 @@ def test_get_model_config():
 
     config = registry.get_model_config("openai-gpt-3.5-turbo")
 
-    assert config['backend'] == 'openai'
-    assert config['model_name'] == 'gpt-3.5-turbo'
-    assert 'model_version' in config
-    assert 'context_window' in config
+    assert config["backend"] == "openai"
+    assert config["model_name"] == "gpt-3.5-turbo"
+    assert "model_version" in config
+    assert "context_window" in config
 
 
 def test_compare_models():
     """Test model comparison."""
     registry = create_default_registry()
 
-    comparison = registry.compare_models([
-        "openai-gpt-3.5-turbo",
-        "openai-gpt-4",
-    ])
+    comparison = registry.compare_models(
+        [
+            "openai-gpt-3.5-turbo",
+            "openai-gpt-4",
+        ]
+    )
 
-    assert 'models' in comparison
-    assert 'providers' in comparison
-    assert 'context_windows' in comparison
-    assert len(comparison['models']) == 2
+    assert "models" in comparison
+    assert "providers" in comparison
+    assert "context_windows" in comparison
+    assert len(comparison["models"]) == 2
 
 
 def test_get_openai_models():

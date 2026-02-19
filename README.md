@@ -1188,32 +1188,78 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # Install dependencies (including dev tools)
 pip install -r requirements.txt
 
-# Install pre-commit hooks (if available)
-# pre-commit install
+# Install pre-commit hooks (recommended)
+pip install pre-commit
+pre-commit install
 ```
 
 ### Code Style and Quality
 
-#### Formatting with Black
+#### Quick Validation (Recommended)
+
+Use the validation script to run all checks at once:
+
+```bash
+# From repository root, run all checks (format, lint, test)
+./validate.sh
+```
+
+This script automatically:
+1. ✅ Formats code with Black
+2. ✅ Sorts imports with isort
+3. ✅ Lints with flake8
+4. ✅ Runs tests with pytest
+
+The script fails fast on errors, making it easy to identify issues.
+
+#### Pre-commit Hooks (Automated)
+
+Pre-commit hooks automatically format and lint before each commit:
+
+```bash
+# One-time setup
+pip install pre-commit
+pre-commit install
+
+# Now every git commit will automatically run checks!
+# You can also run manually:
+pre-commit run --all-files
+```
+
+#### Manual Commands
+
+From the `backend/` directory:
+
+**Formatting with Black:**
 
 ```bash
 # Format all Python files
-black app/ tests/
+python -m black app/ tests/ --line-length 127
 
 # Check formatting without making changes
-black --check app/ tests/
+python -m black --check app/ tests/
 ```
 
-#### Linting with Flake8
+**Import Sorting with isort:**
+
+```bash
+# Sort imports
+python -m isort app/ tests/ --profile black --line-length 127
+
+# Check without making changes
+python -m isort --check-only app/ tests/
+```
+
+**Linting with Flake8:**
 
 ```bash
 # Lint all Python files
-flake8 app/ tests/
+python -m flake8 app/ tests/
 
-# Common flake8 configuration (.flake8):
+# Configuration (.flake8):
 [flake8]
-max-line-length = 88
-extend-ignore = E203, W503
+max-line-length = 127
+extend-ignore = E203, W503, C901
 exclude = .git,__pycache__,venv
 ```
 

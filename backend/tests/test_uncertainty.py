@@ -3,8 +3,9 @@ Tests for uncertainty tracking and confidence intervals in scoring and evaluatio
 """
 
 import pytest
-from app.engines.scoring import ScoringEngine, LayerScore, EvaluationResult
+
 from app.agents.spotter import Spotter
+from app.engines.scoring import EvaluationResult, LayerScore, ScoringEngine
 
 
 class TestLayerScoreUncertainty:
@@ -12,12 +13,7 @@ class TestLayerScoreUncertainty:
 
     def test_layer_score_with_uncertainty(self):
         """Test LayerScore can store uncertainty."""
-        layer = LayerScore(
-            score=0.62,
-            confidence=0.75,
-            indicators={},
-            uncertainty=0.08
-        )
+        layer = LayerScore(score=0.62, confidence=0.75, indicators={}, uncertainty=0.08)
 
         assert layer.score == 0.62
         assert layer.uncertainty == 0.08
@@ -58,7 +54,7 @@ class TestEvaluationResultUncertainty:
             l3_cognitive_stability=l3,
             global_score=0.38,
             global_uncertainty=0.06,
-            mutation_guidance={}
+            mutation_guidance={},
         )
 
         assert result.global_uncertainty == 0.06
@@ -77,16 +73,16 @@ class TestEvaluationResultUncertainty:
             l3_cognitive_stability=l3,
             global_score=0.38,
             global_uncertainty=0.06,
-            mutation_guidance={}
+            mutation_guidance={},
         )
 
         result_dict = result.to_dict()
 
-        assert 'global_uncertainty' in result_dict
-        assert 'global_confidence_interval' in result_dict
-        assert 'l1_linguistic_safety' in result_dict
-        assert 'uncertainty' in result_dict['l1_linguistic_safety']
-        assert 'confidence_interval' in result_dict['l1_linguistic_safety']
+        assert "global_uncertainty" in result_dict
+        assert "global_confidence_interval" in result_dict
+        assert "l1_linguistic_safety" in result_dict
+        assert "uncertainty" in result_dict["l1_linguistic_safety"]
+        assert "confidence_interval" in result_dict["l1_linguistic_safety"]
 
 
 class TestScoringEngineUncertainty:
@@ -110,9 +106,9 @@ class TestScoringEngineUncertainty:
         """Test create_evaluation handles uncertainty."""
         engine = ScoringEngine()
 
-        l1_data = {'score': 0.3, 'confidence': 0.7, 'indicators': {}, 'uncertainty': 0.05}
-        l2_data = {'score': 0.5, 'confidence': 0.8, 'indicators': {}, 'uncertainty': 0.08}
-        l3_data = {'score': 0.2, 'confidence': 0.6, 'indicators': {}, 'uncertainty': 0.04}
+        l1_data = {"score": 0.3, "confidence": 0.7, "indicators": {}, "uncertainty": 0.05}
+        l2_data = {"score": 0.5, "confidence": 0.8, "indicators": {}, "uncertainty": 0.08}
+        l3_data = {"score": 0.2, "confidence": 0.6, "indicators": {}, "uncertainty": 0.04}
 
         result = engine.create_evaluation(l1_data, l2_data, l3_data)
 
@@ -128,23 +124,23 @@ class TestScoringEngineUncertainty:
         # Simulate 3 evaluation passes with slight variations
         evaluations = [
             {
-                'l1': {'score': 0.30, 'confidence': 0.7, 'indicators': {'test': {'detected': True, 'match_count': 1}}},
-                'l2': {'score': 0.50, 'confidence': 0.8, 'indicators': {}},
-                'l3': {'score': 0.20, 'confidence': 0.6, 'indicators': {}},
-                'mutation_guidance': {}
+                "l1": {"score": 0.30, "confidence": 0.7, "indicators": {"test": {"detected": True, "match_count": 1}}},
+                "l2": {"score": 0.50, "confidence": 0.8, "indicators": {}},
+                "l3": {"score": 0.20, "confidence": 0.6, "indicators": {}},
+                "mutation_guidance": {},
             },
             {
-                'l1': {'score': 0.32, 'confidence': 0.75, 'indicators': {'test': {'detected': True, 'match_count': 1}}},
-                'l2': {'score': 0.48, 'confidence': 0.82, 'indicators': {}},
-                'l3': {'score': 0.22, 'confidence': 0.65, 'indicators': {}},
-                'mutation_guidance': {}
+                "l1": {"score": 0.32, "confidence": 0.75, "indicators": {"test": {"detected": True, "match_count": 1}}},
+                "l2": {"score": 0.48, "confidence": 0.82, "indicators": {}},
+                "l3": {"score": 0.22, "confidence": 0.65, "indicators": {}},
+                "mutation_guidance": {},
             },
             {
-                'l1': {'score': 0.28, 'confidence': 0.72, 'indicators': {'test': {'detected': False, 'match_count': 0}}},
-                'l2': {'score': 0.52, 'confidence': 0.78, 'indicators': {}},
-                'l3': {'score': 0.18, 'confidence': 0.62, 'indicators': {}},
-                'mutation_guidance': {}
-            }
+                "l1": {"score": 0.28, "confidence": 0.72, "indicators": {"test": {"detected": False, "match_count": 0}}},
+                "l2": {"score": 0.52, "confidence": 0.78, "indicators": {}},
+                "l3": {"score": 0.18, "confidence": 0.62, "indicators": {}},
+                "mutation_guidance": {},
+            },
         ]
 
         result = engine.aggregate_multi_pass_evaluations(evaluations)
@@ -170,17 +166,17 @@ class TestScoringEngineUncertainty:
         # All passes return same scores
         evaluations = [
             {
-                'l1': {'score': 0.30, 'confidence': 0.7, 'indicators': {}},
-                'l2': {'score': 0.50, 'confidence': 0.8, 'indicators': {}},
-                'l3': {'score': 0.20, 'confidence': 0.6, 'indicators': {}},
-                'mutation_guidance': {}
+                "l1": {"score": 0.30, "confidence": 0.7, "indicators": {}},
+                "l2": {"score": 0.50, "confidence": 0.8, "indicators": {}},
+                "l3": {"score": 0.20, "confidence": 0.6, "indicators": {}},
+                "mutation_guidance": {},
             },
             {
-                'l1': {'score': 0.30, 'confidence': 0.7, 'indicators': {}},
-                'l2': {'score': 0.50, 'confidence': 0.8, 'indicators': {}},
-                'l3': {'score': 0.20, 'confidence': 0.6, 'indicators': {}},
-                'mutation_guidance': {}
-            }
+                "l1": {"score": 0.30, "confidence": 0.7, "indicators": {}},
+                "l2": {"score": 0.50, "confidence": 0.8, "indicators": {}},
+                "l3": {"score": 0.20, "confidence": 0.6, "indicators": {}},
+                "mutation_guidance": {},
+            },
         ]
 
         result = engine.aggregate_multi_pass_evaluations(evaluations)
@@ -200,17 +196,17 @@ class TestScoringEngineUncertainty:
         # Passes return very different scores
         evaluations = [
             {
-                'l1': {'score': 0.10, 'confidence': 0.7, 'indicators': {}},
-                'l2': {'score': 0.20, 'confidence': 0.8, 'indicators': {}},
-                'l3': {'score': 0.10, 'confidence': 0.6, 'indicators': {}},
-                'mutation_guidance': {}
+                "l1": {"score": 0.10, "confidence": 0.7, "indicators": {}},
+                "l2": {"score": 0.20, "confidence": 0.8, "indicators": {}},
+                "l3": {"score": 0.10, "confidence": 0.6, "indicators": {}},
+                "mutation_guidance": {},
             },
             {
-                'l1': {'score': 0.90, 'confidence': 0.7, 'indicators': {}},
-                'l2': {'score': 0.80, 'confidence': 0.8, 'indicators': {}},
-                'l3': {'score': 0.70, 'confidence': 0.6, 'indicators': {}},
-                'mutation_guidance': {}
-            }
+                "l1": {"score": 0.90, "confidence": 0.7, "indicators": {}},
+                "l2": {"score": 0.80, "confidence": 0.8, "indicators": {}},
+                "l3": {"score": 0.70, "confidence": 0.6, "indicators": {}},
+                "mutation_guidance": {},
+            },
         ]
 
         result = engine.aggregate_multi_pass_evaluations(evaluations)
@@ -237,7 +233,7 @@ class TestScoringEngineUncertainty:
             l2_security_exploitability=l2_a,
             l3_cognitive_stability=l3_a,
             global_score=0.38,
-            mutation_guidance={}
+            mutation_guidance={},
         )
 
         l1_b = LayerScore(score=0.4, confidence=0.7, indicators={}, uncertainty=0.05)
@@ -249,7 +245,7 @@ class TestScoringEngineUncertainty:
             l2_security_exploitability=l2_b,
             l3_cognitive_stability=l3_b,
             global_score=0.48,
-            mutation_guidance={}
+            mutation_guidance={},
         )
 
         delta = engine.compute_cross_spotter_delta(eval_a, eval_b)
@@ -272,7 +268,7 @@ class TestScoringEngineUncertainty:
             l2_security_exploitability=l2,
             l3_cognitive_stability=l3,
             global_score=0.38,
-            mutation_guidance={}
+            mutation_guidance={},
         )
 
         eval_b = EvaluationResult(
@@ -280,7 +276,7 @@ class TestScoringEngineUncertainty:
             l2_security_exploitability=l2,
             l3_cognitive_stability=l3,
             global_score=0.38,
-            mutation_guidance={}
+            mutation_guidance={},
         )
 
         delta = engine.compute_cross_spotter_delta(eval_a, eval_b)
@@ -318,17 +314,17 @@ class TestSpotterUncertainty:
         response = "This is a test response with no special indicators."
         evaluation = await spotter.evaluate(response)
 
-        assert 'l1' in evaluation
-        assert 'uncertainty' in evaluation['l1']
-        assert 0.0 <= evaluation['l1']['uncertainty'] <= 1.0
+        assert "l1" in evaluation
+        assert "uncertainty" in evaluation["l1"]
+        assert 0.0 <= evaluation["l1"]["uncertainty"] <= 1.0
 
-        assert 'l2' in evaluation
-        assert 'uncertainty' in evaluation['l2']
-        assert 0.0 <= evaluation['l2']['uncertainty'] <= 1.0
+        assert "l2" in evaluation
+        assert "uncertainty" in evaluation["l2"]
+        assert 0.0 <= evaluation["l2"]["uncertainty"] <= 1.0
 
-        assert 'l3' in evaluation
-        assert 'uncertainty' in evaluation['l3']
-        assert 0.0 <= evaluation['l3']['uncertainty'] <= 1.0
+        assert "l3" in evaluation
+        assert "uncertainty" in evaluation["l3"]
+        assert 0.0 <= evaluation["l3"]["uncertainty"] <= 1.0
 
     @pytest.mark.asyncio
     async def test_spotter_multi_pass_disabled_by_default(self):
@@ -339,8 +335,8 @@ class TestSpotterUncertainty:
         evaluation = await spotter.evaluate_with_paraphrase(response)
 
         # Should return single evaluation, not multi-pass
-        assert 'l1' in evaluation
-        assert 'multi_pass' not in evaluation
+        assert "l1" in evaluation
+        assert "multi_pass" not in evaluation
 
     @pytest.mark.asyncio
     async def test_spotter_multi_pass_enabled(self):
@@ -351,10 +347,10 @@ class TestSpotterUncertainty:
         result = await spotter.evaluate_with_paraphrase(response)
 
         # Should return multi-pass structure
-        assert result['multi_pass'] is True
-        assert result['pass_count'] == 3
-        assert 'evaluations' in result
-        assert len(result['evaluations']) == 3
+        assert result["multi_pass"] is True
+        assert result["pass_count"] == 3
+        assert "evaluations" in result
+        assert len(result["evaluations"]) == 3
 
     @pytest.mark.asyncio
     async def test_spotter_cross_evaluate(self):
@@ -365,13 +361,13 @@ class TestSpotterUncertainty:
         response = "Test response with some concerning content."
         result = await spotter1.cross_evaluate(response, spotter2)
 
-        assert result['cross_spotter'] is True
-        assert 'evaluation_1' in result
-        assert 'evaluation_2' in result
-        assert 'deltas' in result
-        assert 'l1' in result['deltas']
-        assert 'l2' in result['deltas']
-        assert 'l3' in result['deltas']
+        assert result["cross_spotter"] is True
+        assert "evaluation_1" in result
+        assert "evaluation_2" in result
+        assert "deltas" in result
+        assert "l1" in result["deltas"]
+        assert "l2" in result["deltas"]
+        assert "l3" in result["deltas"]
 
     @pytest.mark.asyncio
     async def test_spotter_cross_evaluate_deltas_range(self):
@@ -383,9 +379,9 @@ class TestSpotterUncertainty:
         result = await spotter1.cross_evaluate(response, spotter2)
 
         # All deltas should be between 0.0 and 1.0
-        assert 0.0 <= result['deltas']['l1'] <= 1.0
-        assert 0.0 <= result['deltas']['l2'] <= 1.0
-        assert 0.0 <= result['deltas']['l3'] <= 1.0
+        assert 0.0 <= result["deltas"]["l1"] <= 1.0
+        assert 0.0 <= result["deltas"]["l2"] <= 1.0
+        assert 0.0 <= result["deltas"]["l3"] <= 1.0
 
 
 class TestIntegrationUncertainty:
@@ -404,10 +400,7 @@ class TestIntegrationUncertainty:
 
         # ScoringEngine creates evaluation
         evaluation = engine.create_evaluation(
-            spotter_result['l1'],
-            spotter_result['l2'],
-            spotter_result['l3'],
-            spotter_result['mutation_guidance']
+            spotter_result["l1"], spotter_result["l2"], spotter_result["l3"], spotter_result["mutation_guidance"]
         )
 
         # Should have uncertainty at all levels
@@ -432,10 +425,10 @@ class TestIntegrationUncertainty:
         # Get multi-pass results
         multi_pass_result = await spotter.evaluate_with_paraphrase(response)
 
-        assert multi_pass_result['multi_pass'] is True
+        assert multi_pass_result["multi_pass"] is True
 
         # Aggregate with scoring engine
-        aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result['evaluations'])
+        aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result["evaluations"])
 
         # Should have agreement score
         assert aggregated.multi_pass_agreement is not None

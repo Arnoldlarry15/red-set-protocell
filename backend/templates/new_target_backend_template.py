@@ -32,8 +32,8 @@ ALWAYS:
 """
 
 import logging
-from typing import Optional, Dict, Any
 from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -159,15 +159,9 @@ class NewBackend(TargetBackend):
             # self.client = Client(api_key=api_key)
             pass
         except ImportError as e:
-            raise ImportError(
-                f"Required package not installed. "
-                f"Install with: pip install [package-name]"
-            ) from e
+            raise ImportError(f"Required package not installed. " f"Install with: pip install [package-name]") from e
 
-        logger.info(
-            f"NewBackend initialized (model={model_name}, "
-            f"max_tokens={max_tokens}, temperature={temperature})"
-        )
+        logger.info(f"NewBackend initialized (model={model_name}, " f"max_tokens={max_tokens}, temperature={temperature})")
         # NOTE: Never log API keys!
 
     def execute(self, prompt: str, metadata: Optional[Dict[str, Any]] = None) -> str:

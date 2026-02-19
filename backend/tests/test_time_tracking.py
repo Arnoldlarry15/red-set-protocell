@@ -4,25 +4,27 @@ Tests for time-based analytics features.
 Tests fatigue tracking, regression detection, and score drift analysis.
 """
 
-import pytest
 import sqlite3
 import tempfile
 from datetime import datetime, timedelta
+
+import pytest
+
 from app.analytics.time_tracking import (
+    DriftDirection,
+    FatigueReport,
     FatigueTracker,
     RegressionDetector,
+    RegressionReport,
     ScoreDriftAnalyzer,
-    DriftDirection,
     TimeSeriesMetrics,
-    FatigueReport,
-    RegressionReport
 )
 
 
 @pytest.fixture
 def temp_database():
     """Create a temporary database for testing."""
-    temp_file = tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.db')
+    temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".db")
     db_path = temp_file.name
     temp_file.close()
 
@@ -30,7 +32,8 @@ def temp_database():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    cursor.execute('''
+    cursor.execute(
+        """
         CREATE TABLE rounds (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT NOT NULL,
@@ -45,7 +48,8 @@ def temp_database():
             model_version TEXT DEFAULT 'unknown',
             session_start_time TEXT
         )
-    ''')
+    """
+    )
 
     conn.commit()
     conn.close()
@@ -54,10 +58,11 @@ def temp_database():
 
     # Cleanup
     import os
+
     os.unlink(db_path)
 
 
-def insert_test_rounds(db_path, session_id, scores, model_version='test-model-v1'):
+def insert_test_rounds(db_path, session_id, scores, model_version="test-model-v1"):
     """Helper to insert test rounds with increasing timestamps."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -66,24 +71,27 @@ def insert_test_rounds(db_path, session_id, scores, model_version='test-model-v1
 
     for i, score in enumerate(scores):
         timestamp = (base_time + timedelta(minutes=i * 2)).isoformat()
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO rounds (
                 session_id, round_number, prompt, attack_domain,
                 target_response, evaluation, global_score,
                 blocked_by_egg, timestamp, model_version
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            session_id,
-            i + 1,
-            f"test prompt {i}",
-            "injection",
-            f"test response {i}",
-            "{}",
-            score,
-            0,
-            timestamp,
-            model_version
-        ))
+        """,
+            (
+                session_id,
+                i + 1,
+                f"test prompt {i}",
+                "injection",
+                f"test response {i}",
+                "{}",
+                score,
+                0,
+                timestamp,
+                model_version,
+            ),
+        )
 
     conn.commit()
     conn.close()
@@ -276,10 +284,10 @@ def test_time_series_metrics_to_dict(temp_database):
 
     data = metrics.to_dict()
     assert isinstance(data, dict)
-    assert 'mean_score' in data
-    assert 'trend_slope' in data
-    assert 'drift_direction' in data
-    assert data['drift_direction'] in ['improving', 'degrading', 'stable', 'volatile']
+    assert "mean_score" in data
+    assert "trend_slope" in data
+    assert "drift_direction" in data
+    assert data["drift_direction"] in ["improving", "degrading", "stable", "volatile"]
 
 
 def test_fatigue_report_to_dict(temp_database):
@@ -293,10 +301,10 @@ def test_fatigue_report_to_dict(temp_database):
 
     data = report.to_dict()
     assert isinstance(data, dict)
-    assert 'is_fatigued' in data
-    assert 'fatigue_score' in data
-    assert 'degradation_rate' in data
-    assert isinstance(data['is_fatigued'], bool)
+    assert "is_fatigued" in data
+    assert "fatigue_score" in data
+    assert "degradation_rate" in data
+    assert isinstance(data["is_fatigued"], bool)
 
 
 def test_regression_report_to_dict(temp_database):
@@ -312,10 +320,10 @@ def test_regression_report_to_dict(temp_database):
 
     data = report.to_dict()
     assert isinstance(data, dict)
-    assert 'verdict' in data
-    assert 'score_delta' in data
-    assert 'is_regression' in data
-    assert isinstance(data['is_regression'], bool)
+    assert "verdict" in data
+    assert "score_delta" in data
+    assert "is_regression" in data
+    assert isinstance(data["is_regression"], bool)
 
 
 def test_edge_case_empty_session(temp_database):
@@ -351,16 +359,16 @@ def test_blocked_rounds_excluded(temp_database):
     for i in range(6):
         blocked = 1 if i % 2 == 0 else 0  # Every other round blocked
         timestamp = (base_time + timedelta(minutes=i * 2)).isoformat()
-        cursor.execute('''
+        cursor.execute(
+            """
             INSERT INTO rounds (
                 session_id, round_number, prompt, attack_domain,
                 target_response, evaluation, global_score,
                 blocked_by_egg, timestamp, model_version
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            session_id, i + 1, f"prompt {i}", "injection",
-            f"response {i}", "{}", 0.3, blocked, timestamp, "test"
-        ))
+        """,
+            (session_id, i + 1, f"prompt {i}", "injection", f"response {i}", "{}", 0.3, blocked, timestamp, "test"),
+        )
 
     conn.commit()
     conn.close()

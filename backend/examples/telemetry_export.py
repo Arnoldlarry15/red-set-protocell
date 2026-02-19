@@ -7,12 +7,7 @@ Shows telemetry export capabilities.
 import logging
 from datetime import datetime
 
-from app.telemetry import (
-    TelemetryExporter,
-    ExportFormat,
-    SessionMetricsExtractor,
-    create_metrics_snapshot,
-)
+from app.telemetry import ExportFormat, SessionMetricsExtractor, TelemetryExporter, create_metrics_snapshot
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,31 +22,27 @@ def run_csv_export():
     # Sample metrics data
     data = [
         {
-            'round': 1,
-            'score': 0.23,
-            'blocked': False,
-            'domain': 'injection',
+            "round": 1,
+            "score": 0.23,
+            "blocked": False,
+            "domain": "injection",
         },
         {
-            'round': 2,
-            'score': 0.45,
-            'blocked': False,
-            'domain': 'jailbreak',
+            "round": 2,
+            "score": 0.45,
+            "blocked": False,
+            "domain": "jailbreak",
         },
         {
-            'round': 3,
-            'score': 0.89,
-            'blocked': True,
-            'domain': 'csam',
+            "round": 3,
+            "score": 0.89,
+            "blocked": True,
+            "domain": "csam",
         },
     ]
 
     # Export to CSV
-    filepath = exporter.export(
-        data=data,
-        format=ExportFormat.CSV,
-        filename="example_metrics.csv"
-    )
+    filepath = exporter.export(data=data, format=ExportFormat.CSV, filename="example_metrics.csv")
 
     logger.info(f"Exported to: {filepath}")
 
@@ -64,20 +55,16 @@ def run_json_export():
 
     # Sample session summary
     data = {
-        'session_id': 'rsp_example_20260109',
-        'total_rounds': 50,
-        'average_score': 0.34,
-        'critical_findings': 2,
-        'high_findings': 5,
-        'model_version': 'gpt-3.5-turbo',
+        "session_id": "rsp_example_20260109",
+        "total_rounds": 50,
+        "average_score": 0.34,
+        "critical_findings": 2,
+        "high_findings": 5,
+        "model_version": "gpt-3.5-turbo",
     }
 
     # Export to JSON
-    filepath = exporter.export(
-        data=data,
-        format=ExportFormat.JSON,
-        filename="example_session.json"
-    )
+    filepath = exporter.export(data=data, format=ExportFormat.JSON, filename="example_session.json")
 
     logger.info(f"Exported to: {filepath}")
 
@@ -103,14 +90,14 @@ def run_metrics_snapshot():
     snapshot = create_metrics_snapshot(
         session_id="rsp_example_20260109",
         metrics={
-            'total_rounds': 50,
-            'average_score': 0.34,
-            'blocked_count': 3,
+            "total_rounds": 50,
+            "average_score": 0.34,
+            "blocked_count": 3,
         },
         metadata={
-            'model': 'gpt-3.5-turbo',
-            'backend': 'openai',
-        }
+            "model": "gpt-3.5-turbo",
+            "backend": "openai",
+        },
     )
 
     logger.info(f"Snapshot created at: {snapshot.timestamp}")
@@ -120,9 +107,9 @@ def run_metrics_snapshot():
 
 def main():
     """Main function."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Red Set ProtoCell - Telemetry Export Examples")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     print("This shows the new telemetry export capabilities:")
     print("1. Export metrics to CSV for spreadsheet analysis")
@@ -136,10 +123,10 @@ def main():
     run_metrics_extraction()
     run_metrics_snapshot()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Examples completed!")
     print("See 'example_exports'/' directory for exported files")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

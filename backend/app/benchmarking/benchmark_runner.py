@@ -7,15 +7,11 @@ Executes benchmarks and manages benchmark lifecycle.
 import asyncio
 import logging
 import time
-from typing import Dict, Optional
 from datetime import datetime, timezone
+from typing import Dict, Optional
 
-from app.benchmarking.benchmark_suite import (
-    BenchmarkConfig,
-    BenchmarkResult,
-    BenchmarkStatus,
-)
 from app.agents.orchestrator import Orchestrator
+from app.benchmarking.benchmark_suite import BenchmarkConfig, BenchmarkResult, BenchmarkStatus
 
 logger = logging.getLogger(__name__)
 
@@ -74,27 +70,24 @@ class BenchmarkRunner:
                 self.orchestrator.concurrent_rounds = config.concurrent_rounds
 
             # Run the session
-            stats = await asyncio.wait_for(
-                self.orchestrator.run_session(),
-                timeout=config.timeout_seconds
-            )
+            stats = await asyncio.wait_for(self.orchestrator.run_session(), timeout=config.timeout_seconds)
 
             # Extract metrics from stats
-            session_stats = stats.get('session', {})
-            score_stats = stats.get('scores', {})
+            session_stats = stats.get("session", {})
+            score_stats = stats.get("scores", {})
 
-            total_rounds = session_stats.get('total_rounds', 0)
-            average_score = score_stats.get('average_global_score', 0.0)
-            std_deviation = score_stats.get('std_deviation', 0.0)
-            min_score = score_stats.get('min_score', 0.0)
-            max_score = score_stats.get('max_score', 1.0)
-            blocked_count = score_stats.get('total_blocked', 0)
+            total_rounds = session_stats.get("total_rounds", 0)
+            average_score = score_stats.get("average_global_score", 0.0)
+            std_deviation = score_stats.get("std_deviation", 0.0)
+            min_score = score_stats.get("min_score", 0.0)
+            max_score = score_stats.get("max_score", 1.0)
+            blocked_count = score_stats.get("total_blocked", 0)
 
             # Categorize findings by severity
-            critical_findings = score_stats.get('critical_count', 0)
-            high_findings = score_stats.get('high_count', 0)
-            medium_findings = score_stats.get('medium_count', 0)
-            low_findings = score_stats.get('low_count', 0)
+            critical_findings = score_stats.get("critical_count", 0)
+            high_findings = score_stats.get("high_count", 0)
+            medium_findings = score_stats.get("medium_count", 0)
+            low_findings = score_stats.get("low_count", 0)
 
             execution_time = time.time() - start_time
 
@@ -192,30 +185,30 @@ def create_standard_benchmarks() -> Dict[str, BenchmarkConfig]:
         Dictionary of benchmark name to configuration
     """
     return {
-        'quick': BenchmarkConfig(
-            name='quick',
-            description='Quick benchmark for rapid testing (10 rounds)',
+        "quick": BenchmarkConfig(
+            name="quick",
+            description="Quick benchmark for rapid testing (10 rounds)",
             rounds=10,
             concurrent_rounds=1,
             timeout_seconds=600,
         ),
-        'standard': BenchmarkConfig(
-            name='standard',
-            description='Standard benchmark for routine evaluation (50 rounds)',
+        "standard": BenchmarkConfig(
+            name="standard",
+            description="Standard benchmark for routine evaluation (50 rounds)",
             rounds=50,
             concurrent_rounds=1,
             timeout_seconds=1800,
         ),
-        'comprehensive': BenchmarkConfig(
-            name='comprehensive',
-            description='Comprehensive benchmark for thorough evaluation (100 rounds)',
+        "comprehensive": BenchmarkConfig(
+            name="comprehensive",
+            description="Comprehensive benchmark for thorough evaluation (100 rounds)",
             rounds=100,
             concurrent_rounds=1,
             timeout_seconds=3600,
         ),
-        'stress': BenchmarkConfig(
-            name='stress',
-            description='Stress test with high concurrency (200 rounds)',
+        "stress": BenchmarkConfig(
+            name="stress",
+            description="Stress test with high concurrency (200 rounds)",
             rounds=200,
             concurrent_rounds=5,
             timeout_seconds=7200,

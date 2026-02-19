@@ -6,17 +6,18 @@ Core benchmarking infrastructure for comparing model versions.
 
 import json
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Dict, List, Any, Optional
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class BenchmarkStatus(Enum):
     """Status of a benchmark run."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -26,6 +27,7 @@ class BenchmarkStatus(Enum):
 @dataclass
 class BenchmarkConfig:
     """Configuration for a benchmark run."""
+
     name: str
     description: str
     rounds: int = 50
@@ -42,6 +44,7 @@ class BenchmarkConfig:
 @dataclass
 class BenchmarkResult:
     """Result of a single benchmark run."""
+
     benchmark_name: str
     model_name: str
     model_version: str
@@ -66,8 +69,8 @@ class BenchmarkResult:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         result = asdict(self)
-        result['status'] = self.status.value
-        result['config'] = self.config.to_dict()
+        result["status"] = self.status.value
+        result["config"] = self.config.to_dict()
         return result
 
     def to_json(self) -> str:
@@ -78,6 +81,7 @@ class BenchmarkResult:
 @dataclass
 class ComparisonReport:
     """Comparison report between two benchmark results."""
+
     baseline_result: BenchmarkResult
     comparison_result: BenchmarkResult
     timestamp: str
@@ -108,38 +112,38 @@ class ComparisonReport:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
         return {
-            'baseline': {
-                'model': self.baseline_result.model_name,
-                'version': self.baseline_result.model_version,
-                'score': self.baseline_result.average_score,
-                'timestamp': self.baseline_result.timestamp,
+            "baseline": {
+                "model": self.baseline_result.model_name,
+                "version": self.baseline_result.model_version,
+                "score": self.baseline_result.average_score,
+                "timestamp": self.baseline_result.timestamp,
             },
-            'comparison': {
-                'model': self.comparison_result.model_name,
-                'version': self.comparison_result.model_version,
-                'score': self.comparison_result.average_score,
-                'timestamp': self.comparison_result.timestamp,
+            "comparison": {
+                "model": self.comparison_result.model_name,
+                "version": self.comparison_result.model_version,
+                "score": self.comparison_result.average_score,
+                "timestamp": self.comparison_result.timestamp,
             },
-            'analysis': {
-                'score_delta': self.score_delta,
-                'score_delta_pct': self.score_delta_pct,
-                'improvement': self.improvement,
-                'regression': self.regression,
-                'statistically_significant': self.statistically_significant,
+            "analysis": {
+                "score_delta": self.score_delta,
+                "score_delta_pct": self.score_delta_pct,
+                "improvement": self.improvement,
+                "regression": self.regression,
+                "statistically_significant": self.statistically_significant,
             },
-            'findings_delta': {
-                'critical': self.critical_delta,
-                'high': self.high_delta,
-                'medium': self.medium_delta,
-                'low': self.low_delta,
-                'blocked': self.blocked_delta,
+            "findings_delta": {
+                "critical": self.critical_delta,
+                "high": self.high_delta,
+                "medium": self.medium_delta,
+                "low": self.low_delta,
+                "blocked": self.blocked_delta,
             },
-            'performance': {
-                'execution_time_delta': self.execution_time_delta,
+            "performance": {
+                "execution_time_delta": self.execution_time_delta,
             },
-            'verdict': self.verdict,
-            'recommendation': self.recommendation,
-            'timestamp': self.timestamp,
+            "verdict": self.verdict,
+            "recommendation": self.recommendation,
+            "timestamp": self.timestamp,
         }
 
     def to_json(self) -> str:
@@ -185,7 +189,7 @@ class BenchmarkSuite:
         filepath = self.results_dir / filename
 
         # Save result
-        with open(filepath, 'w') as f:
+        with open(filepath, "w") as f:
             f.write(result.to_json())
 
         logger.info(f"Saved benchmark result to {filepath}")
@@ -201,37 +205,37 @@ class BenchmarkSuite:
         Returns:
             Loaded benchmark result
         """
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             data = json.load(f)
 
         # Reconstruct config
-        config = BenchmarkConfig(**data['config'])
+        config = BenchmarkConfig(**data["config"])
 
         # Reconstruct status
-        status = BenchmarkStatus(data['status'])
+        status = BenchmarkStatus(data["status"])
 
         # Create result
         result = BenchmarkResult(
-            benchmark_name=data['benchmark_name'],
-            model_name=data['model_name'],
-            model_version=data['model_version'],
-            backend=data['backend'],
-            timestamp=data['timestamp'],
+            benchmark_name=data["benchmark_name"],
+            model_name=data["model_name"],
+            model_version=data["model_version"],
+            backend=data["backend"],
+            timestamp=data["timestamp"],
             status=status,
-            total_rounds=data['total_rounds'],
-            completed_rounds=data['completed_rounds'],
-            average_score=data['average_score'],
-            std_deviation=data['std_deviation'],
-            min_score=data['min_score'],
-            max_score=data['max_score'],
-            blocked_count=data['blocked_count'],
-            critical_findings=data['critical_findings'],
-            high_findings=data['high_findings'],
-            medium_findings=data['medium_findings'],
-            low_findings=data['low_findings'],
-            execution_time_seconds=data['execution_time_seconds'],
+            total_rounds=data["total_rounds"],
+            completed_rounds=data["completed_rounds"],
+            average_score=data["average_score"],
+            std_deviation=data["std_deviation"],
+            min_score=data["min_score"],
+            max_score=data["max_score"],
+            blocked_count=data["blocked_count"],
+            critical_findings=data["critical_findings"],
+            high_findings=data["high_findings"],
+            medium_findings=data["medium_findings"],
+            low_findings=data["low_findings"],
+            execution_time_seconds=data["execution_time_seconds"],
             config=config,
-            detailed_results=data.get('detailed_results'),
+            detailed_results=data.get("detailed_results"),
         )
 
         return result
@@ -289,7 +293,7 @@ class BenchmarkSuite:
 
         # Statistical significance (simple t-test approximation)
         pooled_std = (baseline.std_deviation + comparison.std_deviation) / 2
-        statistically_significant = abs(score_delta) > (2 * pooled_std / (baseline.total_rounds ** 0.5))
+        statistically_significant = abs(score_delta) > (2 * pooled_std / (baseline.total_rounds**0.5))
 
         # Calculate finding deltas
         critical_delta = comparison.critical_findings - baseline.critical_findings
@@ -360,15 +364,15 @@ class BenchmarkSuite:
             Summary report dictionary
         """
         if not results:
-            return {'error': 'No results to summarize'}
+            return {"error": "No results to summarize"}
 
         return {
-            'total_runs': len(results),
-            'models_tested': list(set(r.model_name for r in results)),
-            'average_score': sum(r.average_score for r in results) / len(results),
-            'best_model': min(results, key=lambda r: r.average_score).model_name,
-            'worst_model': max(results, key=lambda r: r.average_score).model_name,
-            'total_critical_findings': sum(r.critical_findings for r in results),
-            'total_rounds_executed': sum(r.completed_rounds for r in results),
-            'timestamp': datetime.now(timezone.utc).isoformat(),
+            "total_runs": len(results),
+            "models_tested": list(set(r.model_name for r in results)),
+            "average_score": sum(r.average_score for r in results) / len(results),
+            "best_model": min(results, key=lambda r: r.average_score).model_name,
+            "worst_model": max(results, key=lambda r: r.average_score).model_name,
+            "total_critical_findings": sum(r.critical_findings for r in results),
+            "total_rounds_executed": sum(r.completed_rounds for r in results),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }

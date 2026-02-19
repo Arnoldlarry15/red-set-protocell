@@ -5,16 +5,16 @@ Verifies preserved adversarial discovery structure and serialization.
 """
 
 import json
-import tempfile
 import os
+import tempfile
 
 from app.core.specimen import (
+    Evaluation,
     FailureSpecimen,
     Lineage,
     PromptGenome,
-    Evaluation,
-    create_specimen_from_evaluation,
     batch_save_specimens,
+    create_specimen_from_evaluation,
     load_specimens_from_directory,
 )
 
@@ -24,11 +24,7 @@ class TestSpecimenDataclasses:
 
     def test_lineage_creation(self):
         """Test Lineage tracks evolutionary history."""
-        lineage = Lineage(
-            generation=5,
-            parent_ids=["fsp-123", "fsp-456"],
-            mutation_operator="instruction_conflict"
-        )
+        lineage = Lineage(generation=5, parent_ids=["fsp-123", "fsp-456"], mutation_operator="instruction_conflict")
 
         assert lineage.generation == 5
         assert len(lineage.parent_ids) == 2
@@ -37,10 +33,7 @@ class TestSpecimenDataclasses:
     def test_prompt_genome_structure(self):
         """Test PromptGenome preserves attack structure."""
         genome = PromptGenome(
-            structure=[
-                {"type": "system", "gene": "authority_shift"},
-                {"type": "user", "gene": "policy_pressure"}
-            ]
+            structure=[{"type": "system", "gene": "authority_shift"}, {"type": "user", "gene": "policy_pressure"}]
         )
 
         assert len(genome.structure) == 2
@@ -53,7 +46,7 @@ class TestSpecimenDataclasses:
             fitness_score=0.85,
             failure_class="policy_override",
             severity="critical",
-            spotter_rationale="Model bypassed safety controls"
+            spotter_rationale="Model bypassed safety controls",
         )
 
         assert evaluation.fitness_score == 0.85
@@ -70,24 +63,15 @@ class TestFailureSpecimen:
         specimen = FailureSpecimen(
             specimen_id="fsp-test123",
             manifest_id="manifest-456",
-            lineage=Lineage(
-                generation=10,
-                parent_ids=["fsp-parent1"],
-                mutation_operator="semantic_twist"
-            ),
-            prompt_genome=PromptGenome(
-                structure=[{"type": "user", "gene": "test"}]
-            ),
+            lineage=Lineage(generation=10, parent_ids=["fsp-parent1"], mutation_operator="semantic_twist"),
+            prompt_genome=PromptGenome(structure=[{"type": "user", "gene": "test"}]),
             rendered_prompt="Test prompt",
             model_response="Test response",
             evaluation=Evaluation(
-                fitness_score=0.7,
-                failure_class="test_failure",
-                severity="major",
-                spotter_rationale="Test reason"
+                fitness_score=0.7, failure_class="test_failure", severity="major", spotter_rationale="Test reason"
             ),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
         assert specimen.specimen_id == "fsp-test123"
@@ -104,14 +88,9 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Response",
-            evaluation=Evaluation(
-                fitness_score=0.5,
-                failure_class="test",
-                severity="minor",
-                spotter_rationale="Test"
-            ),
+            evaluation=Evaluation(fitness_score=0.5, failure_class="test", severity="minor", spotter_rationale="Test"),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
         json_str = specimen.to_json()
@@ -126,24 +105,18 @@ class TestFailureSpecimen:
         json_data = {
             "specimen_id": "fsp-deserialize",
             "manifest_id": "manifest-test",
-            "lineage": {
-                "generation": 5,
-                "parent_ids": ["fsp-p1", "fsp-p2"],
-                "mutation_operator": "test_op"
-            },
-            "prompt_genome": {
-                "structure": [{"type": "user", "gene": "test"}]
-            },
+            "lineage": {"generation": 5, "parent_ids": ["fsp-p1", "fsp-p2"], "mutation_operator": "test_op"},
+            "prompt_genome": {"structure": [{"type": "user", "gene": "test"}]},
             "rendered_prompt": "Test prompt",
             "model_response": "Test response",
             "evaluation": {
                 "fitness_score": 0.9,
                 "failure_class": "critical_test",
                 "severity": "critical",
-                "spotter_rationale": "Severe issue"
+                "spotter_rationale": "Severe issue",
             },
             "replayable": True,
-            "timestamp_utc": "2026-01-21T12:00:00Z"
+            "timestamp_utc": "2026-01-21T12:00:00Z",
         }
 
         specimen = FailureSpecimen.from_dict(json_data)
@@ -162,17 +135,12 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Save test",
             model_response="Load test",
-            evaluation=Evaluation(
-                fitness_score=0.6,
-                failure_class="test",
-                severity="major",
-                spotter_rationale="Test"
-            ),
+            evaluation=Evaluation(fitness_score=0.6, failure_class="test", severity="major", spotter_rationale="Test"),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
             specimen.save(temp_path)
 
@@ -193,14 +161,9 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Fingerprint prompt",
             model_response="Fingerprint response",
-            evaluation=Evaluation(
-                fitness_score=0.5,
-                failure_class="test",
-                severity="minor",
-                spotter_rationale="Test"
-            ),
+            evaluation=Evaluation(fitness_score=0.5, failure_class="test", severity="minor", spotter_rationale="Test"),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
         fingerprint = specimen.get_fingerprint()
@@ -220,14 +183,9 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Test",
-            evaluation=Evaluation(
-                fitness_score=0.95,
-                failure_class="test",
-                severity="critical",
-                spotter_rationale="Test"
-            ),
+            evaluation=Evaluation(fitness_score=0.95, failure_class="test", severity="critical", spotter_rationale="Test"),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
         assert critical_specimen.is_critical() is True
@@ -239,14 +197,9 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Test",
-            evaluation=Evaluation(
-                fitness_score=0.4,
-                failure_class="test",
-                severity="minor",
-                spotter_rationale="Test"
-            ),
+            evaluation=Evaluation(fitness_score=0.4, failure_class="test", severity="minor", spotter_rationale="Test"),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
         assert minor_specimen.is_critical() is False
@@ -256,22 +209,15 @@ class TestFailureSpecimen:
         specimen = FailureSpecimen(
             specimen_id="fsp-summary-test",
             manifest_id="manifest-test",
-            lineage=Lineage(
-                generation=7,
-                parent_ids=[],
-                mutation_operator="role_injection"
-            ),
+            lineage=Lineage(generation=7, parent_ids=[], mutation_operator="role_injection"),
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Test",
             evaluation=Evaluation(
-                fitness_score=0.75,
-                failure_class="policy_violation",
-                severity="major",
-                spotter_rationale="Test"
+                fitness_score=0.75, failure_class="policy_violation", severity="major", spotter_rationale="Test"
             ),
             replayable=True,
-            timestamp_utc="2026-01-21T12:00:00Z"
+            timestamp_utc="2026-01-21T12:00:00Z",
         )
 
         summary = specimen.get_summary()
@@ -296,7 +242,7 @@ class TestSpecimenCreation:
             classification="jailbreak",
             rationale="Successfully bypassed controls",
             parent_ids=["fsp-parent1", "fsp-parent2"],
-            mutation_operator="instruction_conflict"
+            mutation_operator="instruction_conflict",
         )
 
         assert specimen.manifest_id == "manifest-test"
@@ -319,7 +265,7 @@ class TestSpecimenCreation:
             response="test",
             score=0.90,
             classification="test",
-            rationale="test"
+            rationale="test",
         )
         assert critical.evaluation.severity == "critical"
 
@@ -331,7 +277,7 @@ class TestSpecimenCreation:
             response="test",
             score=0.65,
             classification="test",
-            rationale="test"
+            rationale="test",
         )
         assert major.evaluation.severity == "major"
 
@@ -343,7 +289,7 @@ class TestSpecimenCreation:
             response="test",
             score=0.35,
             classification="test",
-            rationale="test"
+            rationale="test",
         )
         assert minor.evaluation.severity == "minor"
 
@@ -356,7 +302,7 @@ class TestSpecimenCreation:
             response="same response",
             score=0.5,
             classification="test",
-            rationale="test"
+            rationale="test",
         )
 
         specimen2 = create_specimen_from_evaluation(
@@ -366,7 +312,7 @@ class TestSpecimenCreation:
             response="same response",
             score=0.5,
             classification="test",
-            rationale="test"
+            rationale="test",
         )
 
         # Same content should produce same ID
@@ -382,10 +328,7 @@ class TestSpecimenCreation:
             score=0.5,
             classification="test",
             rationale="test",
-            genome_structure=[
-                {"type": "system", "gene": "custom_authority"},
-                {"type": "user", "gene": "custom_instruction"}
-            ]
+            genome_structure=[{"type": "system", "gene": "custom_authority"}, {"type": "user", "gene": "custom_instruction"}],
         )
 
         assert len(specimen.prompt_genome.structure) == 2
@@ -405,7 +348,7 @@ class TestSpecimenBatchOperations:
                 response=f"response{i}",
                 score=0.5 + i * 0.1,
                 classification="test",
-                rationale="test"
+                rationale="test",
             )
             for i in range(3)
         ]
@@ -416,7 +359,7 @@ class TestSpecimenBatchOperations:
             # Verify files were created
             files = os.listdir(temp_dir)
             assert len(files) == 3
-            assert all(f.endswith('.json') for f in files)
+            assert all(f.endswith(".json") for f in files)
 
     def test_load_specimens_from_directory(self):
         """Test loading multiple specimens from directory."""
@@ -428,7 +371,7 @@ class TestSpecimenBatchOperations:
                 response=f"response{i}",
                 score=0.5,
                 classification="test",
-                rationale="test"
+                rationale="test",
             )
             for i in range(5)
         ]

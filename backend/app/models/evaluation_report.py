@@ -6,7 +6,8 @@ Provides clean, extensible data structures for evaluation results.
 """
 
 from datetime import datetime
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
+
 from pydantic import BaseModel, Field
 
 

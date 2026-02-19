@@ -6,12 +6,8 @@ Shows mutation strategy tuning capabilities.
 
 import logging
 
-from app.strategy_tuning import (
-    MutationStrategyAdvisor,
-    StrategyOptimizer,
-    OptimizationConfig,
-)
 from app.engines.mutation import MutationStrategy
+from app.strategy_tuning import MutationStrategyAdvisor, OptimizationConfig, StrategyOptimizer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -127,9 +123,9 @@ def run_optimization_report():
 
 def main():
     """Main function."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Red Set ProtoCell - Strategy Tuning Examples")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     print("This shows the new mutation strategy tuning capabilities:")
     print("1. Strategy performance tracking and analysis")
@@ -142,9 +138,9 @@ def main():
     run_strategy_optimizer()
     run_optimization_report()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Examples completed!")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

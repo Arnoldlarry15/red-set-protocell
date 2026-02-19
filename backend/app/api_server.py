@@ -5,45 +5,32 @@ FastAPI server providing REST API and WebSocket endpoints for the web UI.
 Integrates with the existing RSP core system.
 """
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 import asyncio
 import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from app.agents.orchestrator import Orchestrator, StateManager
+from app.agents.sniper import Sniper
+from app.agents.spotter import Spotter
+from app.agents.target import create_target
 from app.core.config import get_default_config
 from app.core.egg import EthicalGuardrailGovernor
-from app.engines.scoring import ScoringEngine
 from app.engines.mutation import MutationEngine
-from app.agents.sniper import Sniper
-from app.agents.target import create_target
-from app.agents.spotter import Spotter
-from app.agents.orchestrator import Orchestrator, StateManager
-from app.telemetry.exporter import TelemetryExporter, ExportFormat
-from app.telemetry.extractors import SessionDataExtractor
+from app.engines.scoring import ScoringEngine
+from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
+from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
 
 # Import production-ready middleware
-from app.middleware.security import (
-    SecurityHeadersMiddleware,
-    RateLimitMiddleware,
-    InputValidationMiddleware
-)
-from app.middleware.auth import (
-    AuthenticationMiddleware,
-    TokenManager,
-    PasswordHasher,
-    JWT_EXPIRATION_HOURS
-)
-from app.middleware.monitoring import (
-    RequestLoggingMiddleware,
-    MetricsMiddleware,
-    HealthCheck,
-    metrics_collector
-)
+from app.middleware.security import InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
+from app.telemetry.exporter import ExportFormat, TelemetryExporter
+from app.telemetry.extractors import SessionDataExtractor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -88,10 +75,7 @@ def validate_production_environment():
     # Require demo password to be set
     demo_password = os.getenv("RSP_DEMO_PASSWORD")
     if not demo_password:
-        errors.append(
-            "RSP_DEMO_PASSWORD environment variable must be set. "
-            "This is a critical security requirement."
-        )
+        errors.append("RSP_DEMO_PASSWORD environment variable must be set. " "This is a critical security requirement.")
 
     # Require at least one real provider API key (no simulation mode)
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -161,11 +145,7 @@ app.add_middleware(MetricsMiddleware, collector=metrics_collector)
 # Configure based on environment
 rate_limit_per_min = int(os.getenv("RSP_RATE_LIMIT_PER_MIN", "60"))
 rate_limit_per_hour = int(os.getenv("RSP_RATE_LIMIT_PER_HOUR", "1000"))
-app.add_middleware(
-    RateLimitMiddleware,
-    requests_per_minute=rate_limit_per_min,
-    requests_per_hour=rate_limit_per_hour
-)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=rate_limit_per_min, requests_per_hour=rate_limit_per_hour)
 
 # 5. Input validation (prevent injection attacks)
 app.add_middleware(InputValidationMiddleware)
@@ -263,7 +243,12 @@ DEFAULT_INPUT_COST_PER_1K = 0.01  # Default cost per 1000 input tokens (GPT-3.5-
 DEFAULT_OUTPUT_COST_PER_1K = 0.02  # Default cost per 1000 output tokens (GPT-3.5-turbo)
 
 
-def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = DEFAULT_INPUT_COST_PER_1K, output_cost_per_1k: float = DEFAULT_OUTPUT_COST_PER_1K) -> float:
+def estimate_token_cost(
+    prompt: str,
+    response: str,
+    input_cost_per_1k: float = DEFAULT_INPUT_COST_PER_1K,
+    output_cost_per_1k: float = DEFAULT_OUTPUT_COST_PER_1K,
+) -> float:
     """
     Estimate the cost of a prompt/response pair based on token usage.
 
@@ -298,10 +283,7 @@ def estimate_token_cost(prompt: str, response: str, input_cost_per_1k: float = D
 DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD")
 
 if not DEMO_PASSWORD_PLAIN:
-    raise ValueError(
-        "RSP_DEMO_PASSWORD environment variable must be set. "
-        "This is a critical security requirement."
-    )
+    raise ValueError("RSP_DEMO_PASSWORD environment variable must be set. " "This is a critical security requirement.")
 
 # Initialize users with hashed passwords
 users: Dict[str, Dict[str, Any]] = {}
@@ -312,11 +294,7 @@ def _initialize_demo_users():
     # Hash the demo password on startup
     hashed_password = password_hasher.hash_password(DEMO_PASSWORD_PLAIN)
 
-    users["admin"] = {
-        "email": "admin@rsp.com",
-        "role": "admin",
-        "password_hash": hashed_password  # Store hashed password
-    }
+    users["admin"] = {"email": "admin@rsp.com", "role": "admin", "password_hash": hashed_password}  # Store hashed password
 
 
 # Initialize demo users on module load
@@ -467,16 +445,13 @@ async def shutdown_event():
     logger.info("Shutdown complete")
     logger.info("=" * 60)
 
+
 # API endpoints
 
 
 @app.get("/")
 async def root():
-    return {
-        "name": "Red Set ProtoCell API",
-        "version": "1.0.0",
-        "status": "operational"
-    }
+    return {"name": "Red Set ProtoCell API", "version": "1.0.0", "status": "operational"}
 
 
 @app.get("/ping")
@@ -498,7 +473,7 @@ async def health_check_endpoint():
         "status": "healthy",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_sessions": len(active_sessions),
-        "websocket_connections": len(manager.active_connections)
+        "websocket_connections": len(manager.active_connections),
     }
 
 
@@ -509,11 +484,13 @@ async def detailed_health_check():
     Use for detailed monitoring and diagnostics.
     """
     health_status = await health_check.run_checks()
-    health_status.update({
-        "active_sessions": len(active_sessions),
-        "websocket_connections": len(manager.active_connections),
-        "environment": RSP_ENVIRONMENT,
-    })
+    health_status.update(
+        {
+            "active_sessions": len(active_sessions),
+            "websocket_connections": len(manager.active_connections),
+            "environment": RSP_ENVIRONMENT,
+        }
+    )
     return health_status
 
 
@@ -524,11 +501,13 @@ async def get_metrics():
     Returns operational metrics for monitoring.
     """
     metrics = metrics_collector.get_metrics()
-    metrics.update({
-        "active_sessions": len(active_sessions),
-        "websocket_connections": len(manager.active_connections),
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-    })
+    metrics.update(
+        {
+            "active_sessions": len(active_sessions),
+            "websocket_connections": len(manager.active_connections),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
     return metrics
 
 
@@ -580,45 +559,45 @@ async def start_session(config: SessionConfig):
             block_csam=rsp_config.egg.block_csam,
             block_bioweapons=rsp_config.egg.block_bioweapons,
             block_real_exploits=rsp_config.egg.block_real_exploits,
-            block_real_hacking=rsp_config.egg.block_real_hacking
+            block_real_hacking=rsp_config.egg.block_real_hacking,
         )
 
         scoring_engine = ScoringEngine(
             l1_weight=rsp_config.scoring.l1_weight,
             l2_weight=rsp_config.scoring.l2_weight,
-            l3_weight=rsp_config.scoring.l3_weight
+            l3_weight=rsp_config.scoring.l3_weight,
         )
 
         mutation_engine = MutationEngine(
-            mutation_rate=rsp_config.sniper.mutation_rate,
-            semantic_intensity=config.semantic_intensity
+            mutation_rate=rsp_config.sniper.mutation_rate, semantic_intensity=config.semantic_intensity
         )
 
         sniper = Sniper(
             mutation_engine=mutation_engine,
             evolution_pool_size=rsp_config.sniper.evolution_pool_size,
             creativity_temperature=rsp_config.sniper.creativity_temperature,
-            domain_selection_temperature=rsp_config.sniper.domain_selection_temperature
+            domain_selection_temperature=rsp_config.sniper.domain_selection_temperature,
         )
 
-        backend_value = rsp_config.target.backend.value if hasattr(rsp_config.target.backend, 'value') else rsp_config.target.backend
+        backend_value = (
+            rsp_config.target.backend.value if hasattr(rsp_config.target.backend, "value") else rsp_config.target.backend
+        )
         target = create_target(
             backend_type=backend_value,
             api_key=rsp_config.target.api_key,
             model_name=rsp_config.target.model_name,
             max_tokens=rsp_config.target.max_tokens,
             temperature=rsp_config.target.temperature,
-            fresh_context=rsp_config.target.fresh_context
+            fresh_context=rsp_config.target.fresh_context,
         )
 
         spotter = Spotter(
             confidence_threshold=rsp_config.spotter.confidence_threshold,
-            use_auxiliary_classifiers=rsp_config.spotter.use_auxiliary_classifiers
+            use_auxiliary_classifiers=rsp_config.spotter.use_auxiliary_classifiers,
         )
 
         state_manager = StateManager(
-            database_path=rsp_config.storage.database_path,
-            zero_retention=rsp_config.storage.zero_retention
+            database_path=rsp_config.storage.database_path, zero_retention=rsp_config.storage.zero_retention
         )
 
         orchestrator = Orchestrator(
@@ -629,7 +608,7 @@ async def start_session(config: SessionConfig):
             scoring_engine=scoring_engine,
             state_manager=state_manager,
             max_rounds=rsp_config.orchestrator.max_rounds,
-            round_timeout=rsp_config.orchestrator.round_timeout_seconds
+            round_timeout=rsp_config.orchestrator.round_timeout_seconds,
         )
 
         # Store session
@@ -640,16 +619,12 @@ async def start_session(config: SessionConfig):
             "status": "initialized",
             "current_cost": 0.0,
             "max_cost": config.max_api_cost,
-            "halt_on_critical": config.halt_on_critical
+            "halt_on_critical": config.halt_on_critical,
         }
 
         logger.info(f"Session {session_id} created successfully")
 
-        return {
-            "session_id": session_id,
-            "status": "initialized",
-            "message": "Session created successfully"
-        }
+        return {"session_id": session_id, "status": "initialized", "message": "Session created successfully"}
 
     except Exception as e:
         logger.error(f"Error creating session: {e}")
@@ -671,11 +646,7 @@ async def execute_session(session_id: str):
         # Run session in background
         asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
 
-        return {
-            "session_id": session_id,
-            "status": "running",
-            "message": "Session execution started"
-        }
+        return {"session_id": session_id, "status": "running", "message": "Session execution started"}
     except Exception as e:
         logger.error(f"Error executing session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -690,11 +661,7 @@ async def stop_session(session_id: str):
     session = active_sessions[session_id]
     session["status"] = "stopped"
 
-    return {
-        "session_id": session_id,
-        "status": "stopped",
-        "message": "Session stopped"
-    }
+    return {"session_id": session_id, "status": "stopped", "message": "Session stopped"}
 
 
 @app.post("/prompt/execute")
@@ -717,10 +684,7 @@ async def execute_custom_prompt(request: CustomPromptRequest):
 
         # Update session cost based on result using utility function
         if result.get("status") == "success":
-            estimated_cost = estimate_token_cost(
-                request.prompt,
-                result.get("response", "")
-            )
+            estimated_cost = estimate_token_cost(request.prompt, result.get("response", ""))
             session["current_cost"] += estimated_cost
 
         return {
@@ -736,7 +700,7 @@ async def execute_custom_prompt(request: CustomPromptRequest):
             },
             "blocked": result.get("blocked", False),
             "timestamp": result.get("timestamp", ""),
-            "message": "Custom prompt executed successfully"
+            "message": "Custom prompt executed successfully",
         }
     except Exception as e:
         logger.error(f"Error executing custom prompt: {e}")
@@ -754,14 +718,11 @@ async def get_session_stats(session_id: str):
 
     try:
         stats = orchestrator.get_statistics()
-        return {
-            "session_id": session_id,
-            "stats": stats,
-            "status": session["status"]
-        }
+        return {"session_id": session_id, "stats": stats, "status": session["status"]}
     except Exception as e:
         logger.error(f"Error getting session stats: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # Unified Infra Dashboard endpoints
 
@@ -772,18 +733,20 @@ async def get_live_sessions():
     try:
         live_sessions = []
         for session_id, session in active_sessions.items():
-            live_sessions.append({
-                "session_id": session_id,
-                "status": session["status"],
-                "start_time": session["start_time"],
-                "current_cost": session.get("current_cost", 0),
-                "max_cost": session.get("max_cost", 0),
-                "config": {
-                    "backend": session["config"].backend,
-                    "model": session["config"].model,
-                    "max_rounds": session["config"].max_rounds,
+            live_sessions.append(
+                {
+                    "session_id": session_id,
+                    "status": session["status"],
+                    "start_time": session["start_time"],
+                    "current_cost": session.get("current_cost", 0),
+                    "max_cost": session.get("max_cost", 0),
+                    "config": {
+                        "backend": session["config"].backend,
+                        "model": session["config"].model,
+                        "max_rounds": session["config"].max_rounds,
+                    },
                 }
-            })
+            )
         return {"sessions": live_sessions}
     except Exception as e:
         logger.error(f"Error getting live sessions: {e}")
@@ -803,11 +766,7 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
 
 
 @app.get("/dashboard/compare-models")
-async def compare_model_versions(
-    model_v1: str,
-    model_v2: str,
-    db_path: str = "rsp_session.db"
-):
+async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "rsp_session.db"):
     """Compare two model versions"""
     try:
         extractor = SessionDataExtractor(db_path)
@@ -825,14 +784,14 @@ async def compare_model_versions(
                 "avg_score": total_score / len(sessions) if sessions else 0,
                 "blocked_count": total_blocked,
                 "total_rounds": total_rounds,
-                "session_count": len(sessions)
+                "session_count": len(sessions),
             }
 
         return {
             "model_v1": model_v1,
             "model_v1_metrics": calc_metrics(v1_sessions),
             "model_v2": model_v2,
-            "model_v2_metrics": calc_metrics(v2_sessions)
+            "model_v2_metrics": calc_metrics(v2_sessions),
         }
     except Exception as e:
         logger.error(f"Error comparing models: {e}")
@@ -840,11 +799,7 @@ async def compare_model_versions(
 
 
 @app.get("/dashboard/export/{session_id}")
-async def export_session_results(
-    session_id: str,
-    format: str = "json",
-    db_path: str = "rsp_session.db"
-):
+async def export_session_results(session_id: str, format: str = "json", db_path: str = "rsp_session.db"):
     """Export session results in CSV or JSON format"""
     try:
         extractor = SessionDataExtractor(db_path)
@@ -862,14 +817,11 @@ async def export_session_results(
         # Export to string (in-memory)
         result = exporter.export_to_string(rounds, export_format)
 
-        return {
-            "session_id": session_id,
-            "format": format,
-            "data": result
-        }
+        return {"session_id": session_id, "format": format, "data": result}
     except Exception as e:
         logger.error(f"Error exporting session: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # User Management endpoints - Production-ready authentication
 
@@ -884,25 +836,15 @@ async def login(credentials: UserLogin):
         # Step 1: Verify credentials exist
         stored_user = users.get(credentials.username)
         if not stored_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         # Step 2: Verify password using secure hash comparison
         password_hash = stored_user.get("password_hash")
         if not password_hash or not password_hasher.verify_password(credentials.password, password_hash):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         # Step 3: Build user_info from stored data only (no credentials access)
-        user_info = {
-            "username": credentials.username,
-            "email": stored_user["email"],
-            "role": stored_user["role"]
-        }
+        user_info = {"username": credentials.username, "email": stored_user["email"], "role": stored_user["role"]}
 
         # Step 4: Generate JWT token using clean data only
         token = token_manager.create_access_token(
@@ -918,12 +860,7 @@ async def login(credentials: UserLogin):
         # Log only the event without sensitive user details to satisfy security scanning
         logger.info("User login event succeeded")
 
-        return {
-            "access_token": token,
-            "token_type": "bearer",
-            "expires_in": JWT_EXPIRATION_HOURS * 3600,
-            "user": user_info
-        }
+        return {"access_token": token, "token_type": "bearer", "expires_in": JWT_EXPIRATION_HOURS * 3600, "user": user_info}
     except HTTPException:
         raise
     except Exception:
@@ -949,14 +886,14 @@ async def register(user_data: UserCreate):
         users[user_data.username] = {
             "email": user_data.email,
             "role": user_data.role,
-            "password_hash": hashed_password  # Store hashed password
+            "password_hash": hashed_password,  # Store hashed password
         }
 
         return {
             "username": user_data.username,
             "email": user_data.email,
             "role": user_data.role,
-            "message": "User created successfully"
+            "message": "User created successfully",
         }
     except HTTPException:
         raise
@@ -970,14 +907,7 @@ async def list_users():
     """List all users (admin only)"""
     try:
         return {
-            "users": [
-                {
-                    "username": username,
-                    "email": user["email"],
-                    "role": user["role"]
-                }
-                for username, user in users.items()
-            ]
+            "users": [{"username": username, "email": user["email"], "role": user["role"]} for username, user in users.items()]
         }
     except Exception as e:
         logger.error(f"Error listing users: {e}")
@@ -992,26 +922,21 @@ async def validate_llm_key(validation: LLMKeyValidation):
     """
     try:
         # Create a minimal test backend instance
-        if validation.backend.lower() == 'openai':
+        if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
+
             test_backend = OpenAIBackend(
-                api_key=validation.api_key,
-                model_name="gpt-3.5-turbo",
-                max_tokens=10,
-                temperature=0.0
+                api_key=validation.api_key, model_name="gpt-3.5-turbo", max_tokens=10, temperature=0.0
             )
-        elif validation.backend.lower() == 'anthropic':
+        elif validation.backend.lower() == "anthropic":
             from app.agents.target import AnthropicBackend
+
             test_backend = AnthropicBackend(
-                api_key=validation.api_key,
-                model_name="claude-3-haiku-20240307",
-                max_tokens=10,
-                temperature=0.0
+                api_key=validation.api_key, model_name="claude-3-haiku-20240307", max_tokens=10, temperature=0.0
             )
         else:
             raise HTTPException(
-                status_code=400,
-                detail=f"Invalid backend: {validation.backend}. Must be 'openai' or 'anthropic'"
+                status_code=400, detail=f"Invalid backend: {validation.backend}. Must be 'openai' or 'anthropic'"
             )
 
         # Make a minimal test call to validate the key
@@ -1019,11 +944,7 @@ async def validate_llm_key(validation: LLMKeyValidation):
         await test_backend.execute(test_prompt)
 
         # If we got here, the key is valid
-        return {
-            "valid": True,
-            "backend": validation.backend,
-            "message": "API key validated successfully"
-        }
+        return {"valid": True, "backend": validation.backend, "message": "API key validated successfully"}
     except HTTPException:
         raise
     except Exception as e:
@@ -1036,32 +957,37 @@ async def validate_llm_key(validation: LLMKeyValidation):
         # false positives where auth error messages contain words like "connection"
         # (e.g., in API keys like "sk-proj-connection123")
         is_auth_error = (
-            error_type in ['AuthenticationError', 'Unauthorized', 'PermissionDenied']
-            or 'authentication' in error_message
-            or 'invalid api key' in error_message
-            or 'invalid key' in error_message
-            or 'incorrect api key' in error_message
-            or 'unauthorized' in error_message
-            or error_message.startswith('401')
-            or ' 401 ' in error_message
+            error_type in ["AuthenticationError", "Unauthorized", "PermissionDenied"]
+            or "authentication" in error_message
+            or "invalid api key" in error_message
+            or "invalid key" in error_message
+            or "incorrect api key" in error_message
+            or "unauthorized" in error_message
+            or error_message.startswith("401")
+            or " 401 " in error_message
         )
 
         # Check for network/connection errors (only if not an auth error)
         # These can come from the underlying HTTP libraries (httpx, aiohttp, requests)
         # or from the OpenAI/Anthropic SDKs
         # Use exact type name matching to avoid false positives
-        is_connection_error = (
-            not is_auth_error
-            and (
-                error_type in ['APIConnectionError', 'APITimeoutError', 'ConnectionError',
-                               'TimeoutError', 'Timeout', 'ConnectTimeout', 'ReadTimeout']
-                or 'connection' in error_message
-                or 'timeout' in error_message
-                or 'network' in error_message
-                or 'dns' in error_message
-                or 'unreachable' in error_message
-                or 'timed out' in error_message
-            )
+        is_connection_error = not is_auth_error and (
+            error_type
+            in [
+                "APIConnectionError",
+                "APITimeoutError",
+                "ConnectionError",
+                "TimeoutError",
+                "Timeout",
+                "ConnectTimeout",
+                "ReadTimeout",
+            ]
+            or "connection" in error_message
+            or "timeout" in error_message
+            or "network" in error_message
+            or "dns" in error_message
+            or "unreachable" in error_message
+            or "timed out" in error_message
         )
 
         # Log the error with details for debugging
@@ -1070,19 +996,17 @@ async def validate_llm_key(validation: LLMKeyValidation):
         # Return appropriate error based on type (check auth first)
         if is_auth_error:
             raise HTTPException(
-                status_code=401,
-                detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
             )
         elif is_connection_error:
             raise HTTPException(
                 status_code=503,
-                detail=f"Network error: Unable to connect to {validation.backend} API. Please check your internet connection and try again."
+                detail=f"Network error: Unable to connect to {validation.backend} API. Please check your internet connection and try again.",
             )
         else:
             # Generic error for other cases (no error_type exposure for security)
             raise HTTPException(
-                status_code=500,
-                detail="API validation failed. Please try again or contact support if the issue persists."
+                status_code=500, detail="API validation failed. Please try again or contact support if the issue persists."
             )
 
 
@@ -1104,7 +1028,7 @@ async def start_remote_run(config: SessionConfig):
             "session_id": session_id,
             "status": "started",
             "message": "Remote run started successfully",
-            "config": config.model_dump()
+            "config": config.model_dump(),
         }
     except Exception as e:
         logger.error(f"Error starting remote run: {e}")
@@ -1118,11 +1042,7 @@ async def save_experiment_config(config: ExperimentConfig):
         config_id = f"config_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         stored_configs[config_id] = config
 
-        return {
-            "config_id": config_id,
-            "name": config.name,
-            "message": "Configuration saved successfully"
-        }
+        return {"config_id": config_id, "name": config.name, "message": "Configuration saved successfully"}
     except Exception as e:
         logger.error(f"Error saving config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1139,7 +1059,7 @@ async def list_experiment_configs():
                     "name": config.name,
                     "description": config.description,
                     "backend": config.backend,
-                    "model": config.model
+                    "model": config.model,
                 }
                 for config_id, config in stored_configs.items()
             ]
@@ -1157,10 +1077,7 @@ async def get_experiment_config(config_id: str):
             raise HTTPException(status_code=404, detail="Configuration not found")
 
         config = stored_configs[config_id]
-        return {
-            "config_id": config_id,
-            "config": config.model_dump()
-        }
+        return {"config_id": config_id, "config": config.model_dump()}
     except HTTPException:
         raise
     except Exception as e:
@@ -1182,6 +1099,7 @@ async def delete_experiment_config(config_id: str):
     except Exception as e:
         logger.error(f"Error deleting config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # WebSocket endpoint
 
@@ -1215,10 +1133,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             result = await orchestrator.run_round(round_num)
 
             # Calculate estimated cost using utility function
-            estimated_round_cost = estimate_token_cost(
-                result.get("prompt", ""),
-                result.get("response", "")
-            )
+            estimated_round_cost = estimate_token_cost(result.get("prompt", ""), result.get("response", ""))
 
             session["current_cost"] += estimated_round_cost
 
@@ -1241,8 +1156,8 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                         "l3_cognitive": result.get("l3_score", 0),
                     },
                     "severity": get_severity(result.get("global_score", 0)),
-                    "blocked": result.get("blocked", False)
-                }
+                    "blocked": result.get("blocked", False),
+                },
             }
             await manager.broadcast(attack_data)
 
@@ -1257,32 +1172,22 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                     "average_score": stats.get("scores", {}).get("average_global_score", 0),
                     "blocked_count": stats.get("scores", {}).get("total_blocked", 0),
                     "api_cost": session["current_cost"],
-                    "status": session["status"]
-                }
+                    "status": session["status"],
+                },
             }
             await manager.broadcast(stats_data)
 
             # Check halt conditions
             if halt_on_critical and attack_data["data"]["severity"] == "critical":
                 session["status"] = "halted"
-                await manager.broadcast({
-                    "type": "status",
-                    "data": {
-                        "status": "halted",
-                        "reason": "Critical vulnerability detected"
-                    }
-                })
+                await manager.broadcast(
+                    {"type": "status", "data": {"status": "halted", "reason": "Critical vulnerability detected"}}
+                )
                 break
 
             if session["current_cost"] >= max_cost:
                 session["status"] = "halted"
-                await manager.broadcast({
-                    "type": "status",
-                    "data": {
-                        "status": "halted",
-                        "reason": "Max API cost reached"
-                    }
-                })
+                await manager.broadcast({"type": "status", "data": {"status": "halted", "reason": "Max API cost reached"}})
                 break
 
             # Small delay between rounds
@@ -1290,23 +1195,12 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
 
         if session["status"] == "running":
             session["status"] = "completed"
-            await manager.broadcast({
-                "type": "status",
-                "data": {
-                    "status": "completed",
-                    "reason": "All rounds completed"
-                }
-            })
+            await manager.broadcast({"type": "status", "data": {"status": "completed", "reason": "All rounds completed"}})
 
     except Exception as e:
         logger.error(f"Error in session execution: {e}")
         session["status"] = "error"
-        await manager.broadcast({
-            "type": "error",
-            "data": {
-                "message": str(e)
-            }
-        })
+        await manager.broadcast({"type": "error", "data": {"message": str(e)}})
 
 
 def get_severity(score: float) -> str:
@@ -1325,4 +1219,5 @@ def get_severity(score: float) -> str:
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

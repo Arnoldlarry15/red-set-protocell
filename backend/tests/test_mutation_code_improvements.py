@@ -7,12 +7,7 @@ Tests the new features addressing design tensions:
 3. Multi-dimensional fitness scoring
 """
 
-from app.engines.mutation import (
-    MutationEngine,
-    MutationStrategy,
-    MultidimensionalFitness,
-    SemanticIntensity
-)
+from app.engines.mutation import MultidimensionalFitness, MutationEngine, MutationStrategy, SemanticIntensity
 
 
 def test_semantic_intensity_initialization():
@@ -52,9 +47,9 @@ def test_encoding_transform_high_intensity():
     mutated = engine.mutate(prompt, strategy=MutationStrategy.ENCODING_TRANSFORM)
 
     # High intensity should use philosophical/metaphorical language
-    assert any(word in mutated.lower() for word in [
-        "metaphor", "abstract", "reflect", "underlying", "intent", "socratic", "question"
-    ])
+    assert any(
+        word in mutated.lower() for word in ["metaphor", "abstract", "reflect", "underlying", "intent", "socratic", "question"]
+    )
 
 
 def test_encoding_transform_medium_intensity():
@@ -129,11 +124,7 @@ def test_mature_stage_adaptive_selector():
 
 def test_multidimensional_fitness_initialization():
     """Test MultidimensionalFitness can be created with dimensions."""
-    fitness = MultidimensionalFitness(
-        effectiveness=0.8,
-        consistency=0.7,
-        novelty=0.6
-    )
+    fitness = MultidimensionalFitness(effectiveness=0.8, consistency=0.7, novelty=0.6)
 
     assert fitness.effectiveness == 0.8
     assert fitness.consistency == 0.7
@@ -143,21 +134,13 @@ def test_multidimensional_fitness_initialization():
 def test_multidimensional_fitness_bounds():
     """Test MultidimensionalFitness enforces bounds [0.0, 1.0]."""
     # Test upper bounds
-    fitness_high = MultidimensionalFitness(
-        effectiveness=1.5,
-        consistency=2.0,
-        novelty=1.2
-    )
+    fitness_high = MultidimensionalFitness(effectiveness=1.5, consistency=2.0, novelty=1.2)
     assert fitness_high.effectiveness == 1.0
     assert fitness_high.consistency == 1.0
     assert fitness_high.novelty == 1.0
 
     # Test lower bounds
-    fitness_low = MultidimensionalFitness(
-        effectiveness=-0.5,
-        consistency=-1.0,
-        novelty=-0.2
-    )
+    fitness_low = MultidimensionalFitness(effectiveness=-0.5, consistency=-1.0, novelty=-0.2)
     assert fitness_low.effectiveness == 0.0
     assert fitness_low.consistency == 0.0
     assert fitness_low.novelty == 0.0
@@ -165,11 +148,7 @@ def test_multidimensional_fitness_bounds():
 
 def test_multidimensional_fitness_aggregate():
     """Test fitness aggregation with default weights."""
-    fitness = MultidimensionalFitness(
-        effectiveness=0.8,
-        consistency=0.6,
-        novelty=0.4
-    )
+    fitness = MultidimensionalFitness(effectiveness=0.8, consistency=0.6, novelty=0.4)
 
     aggregate = fitness.aggregate()
 
@@ -180,17 +159,9 @@ def test_multidimensional_fitness_aggregate():
 
 def test_multidimensional_fitness_custom_weights():
     """Test fitness aggregation with custom weights."""
-    fitness = MultidimensionalFitness(
-        effectiveness=0.8,
-        consistency=0.6,
-        novelty=0.4
-    )
+    fitness = MultidimensionalFitness(effectiveness=0.8, consistency=0.6, novelty=0.4)
 
-    custom_weights = {
-        'effectiveness': 0.5,
-        'consistency': 0.3,
-        'novelty': 0.2
-    }
+    custom_weights = {"effectiveness": 0.5, "consistency": 0.3, "novelty": 0.2}
     aggregate = fitness.aggregate(weights=custom_weights)
 
     expected = 0.8 * 0.5 + 0.6 * 0.3 + 0.4 * 0.2
@@ -199,21 +170,17 @@ def test_multidimensional_fitness_custom_weights():
 
 def test_multidimensional_fitness_to_dict():
     """Test fitness export to dictionary."""
-    fitness = MultidimensionalFitness(
-        effectiveness=0.8,
-        consistency=0.7,
-        novelty=0.6
-    )
+    fitness = MultidimensionalFitness(effectiveness=0.8, consistency=0.7, novelty=0.6)
 
     result = fitness.to_dict()
 
-    assert 'effectiveness' in result
-    assert 'consistency' in result
-    assert 'novelty' in result
-    assert 'aggregate' in result
-    assert result['effectiveness'] == 0.8
-    assert result['consistency'] == 0.7
-    assert result['novelty'] == 0.6
+    assert "effectiveness" in result
+    assert "consistency" in result
+    assert "novelty" in result
+    assert "aggregate" in result
+    assert result["effectiveness"] == 0.8
+    assert result["consistency"] == 0.7
+    assert result["novelty"] == 0.6
 
 
 def test_multidimensional_fitness_from_scalar():
@@ -242,11 +209,7 @@ def test_update_strategy_performance_with_multidimensional():
     engine = MutationEngine()
 
     strategy = MutationStrategy.ENCODING_TRANSFORM
-    fitness = MultidimensionalFitness(
-        effectiveness=0.8,
-        consistency=0.7,
-        novelty=0.6
-    )
+    fitness = MultidimensionalFitness(effectiveness=0.8, consistency=0.7, novelty=0.6)
 
     engine.update_strategy_performance(strategy, fitness)
 

@@ -18,19 +18,15 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.agents.orchestrator import Orchestrator, StateManager
+from app.agents.sniper import Sniper
+from app.agents.spotter import Spotter
+from app.agents.target import create_target
+from app.analytics.time_tracking import FatigueTracker, RegressionDetector, ScoreDriftAnalyzer
 from app.core.config import RSPConfig, load_config_from_env
 from app.core.egg import EthicalGuardrailGovernor
-from app.engines.scoring import ScoringEngine
 from app.engines.mutation import MutationEngine
-from app.agents.sniper import Sniper
-from app.agents.target import create_target
-from app.agents.spotter import Spotter
-from app.agents.orchestrator import Orchestrator, StateManager
-from app.analytics.time_tracking import (
-    FatigueTracker,
-    RegressionDetector,
-    ScoreDriftAnalyzer
-)
+from app.engines.scoring import ScoringEngine
 
 
 async def run_test_session(model_version: str, rounds: int = 30) -> str:
@@ -56,6 +52,7 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
 
     # Verify API key is available
     import os
+
     if not config.target.api_key:
         print("ERROR: No API key found in configuration.")
         print("Set appropriate environment variables:")
@@ -71,29 +68,21 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
     scoring_engine = ScoringEngine()
     mutation_engine = MutationEngine()
 
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=5,
-        creativity_temperature=0.8
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5, creativity_temperature=0.8)
 
     # Create target using config loaded from environment
     from app.factories import TargetFactory
-    
+
     target = TargetFactory.create(
         backend_type=config.target.backend.value,
         api_key=config.target.api_key,
         model_name=config.target.model_name,
-        max_tokens=500
+        max_tokens=500,
     )
 
     spotter = Spotter()
 
-    state_manager = StateManager(
-        database_path="time_analytics_example.db",
-        zero_retention=False,
-        model_version=model_version
-    )
+    state_manager = StateManager(database_path="time_analytics_example.db", zero_retention=False, model_version=model_version)
 
     orchestrator = Orchestrator(
         sniper=sniper,
@@ -102,7 +91,7 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
         egg=egg,
         scoring_engine=scoring_engine,
         state_manager=state_manager,
-        max_rounds=rounds
+        max_rounds=rounds,
     )
 
     # Run session
@@ -205,14 +194,16 @@ def analyze_drift(session_id: str):
 
 async def main():
     """Main function."""
-    print("""
+    print(
+        """
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║         RSP Time Analytics Examples                           ║
     ║         Time as a First-Class Dimension                   ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
-    """)
+    """
+    )
 
     print("\nThis showcases RSP's time-based analytics:")
     print("1. Fatigue tracking - Does the model degrade over rounds?")
@@ -220,9 +211,9 @@ async def main():
     print("3. Score drift - What are the performance trends?")
 
     # Run multiple sessions with different model versions
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("STEP 1: Running test sessions")
-    print("="*60)
+    print("=" * 60)
 
     session1 = await run_test_session("model-v1.0", rounds=20)
     session2 = await run_test_session("model-v2.0", rounds=20)
@@ -240,9 +231,9 @@ async def main():
     analyze_drift(session2)
     analyze_drift(session3)
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("EXAMPLE COMPLETE")
-    print("="*60)
+    print("=" * 60)
     print("\nKey Insights:")
     print("• Time analytics provide quantitative measures of model behavior")
     print("• Fatigue detection identifies degradation under sustained pressure")

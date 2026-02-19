@@ -3,20 +3,13 @@ Tests for the Selection Engine
 """
 
 import time
-from app.engines.selection import (
-    SelectionEngine,
-    SelectionStrategy,
-    PromptCandidate
-)
+
+from app.engines.selection import PromptCandidate, SelectionEngine, SelectionStrategy
 
 
 def test_prompt_candidate_initialization():
     """Test PromptCandidate initialization and computed fields."""
-    candidate = PromptCandidate(
-        prompt="Test prompt",
-        score=0.5,
-        domain="test_domain"
-    )
+    candidate = PromptCandidate(prompt="Test prompt", score=0.5, domain="test_domain")
 
     assert candidate.prompt == "Test prompt"
     assert candidate.score == 0.5
@@ -64,11 +57,7 @@ def test_candidate_age():
 
 def test_selection_engine_initialization():
     """Test selection engine initialization."""
-    engine = SelectionEngine(
-        decay_rate=0.9,
-        novelty_weight=0.4,
-        elite_fraction=0.3
-    )
+    engine = SelectionEngine(decay_rate=0.9, novelty_weight=0.4, elite_fraction=0.3)
 
     assert engine.decay_rate == 0.9
     assert engine.novelty_weight == 0.4
@@ -86,11 +75,7 @@ def test_elitism_selection():
         PromptCandidate("Higher score", 0.8, "domain4"),
     ]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.ELITISM,
-        num_select=2
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.ELITISM, num_select=2)
 
     assert len(selected) == 2
     # Should select highest scores
@@ -102,16 +87,9 @@ def test_tournament_selection():
     """Test tournament selection strategy."""
     engine = SelectionEngine(tournament_size=2)
 
-    candidates = [
-        PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}")
-        for i in range(10)
-    ]
+    candidates = [PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(10)]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.TOURNAMENT,
-        num_select=3
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.TOURNAMENT, num_select=3)
 
     assert len(selected) == 3
     # Tournament should select reasonable candidates (not necessarily best)
@@ -134,11 +112,7 @@ def test_diversity_selection():
         PromptCandidate("Another short", 0.6, "domain5"),  # Similar to first
     ]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.DIVERSITY_PRESERVATION,
-        num_select=3
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.DIVERSITY_PRESERVATION, num_select=3)
 
     assert len(selected) == 3
     # Should prefer diverse structures
@@ -167,11 +141,7 @@ def test_novelty_selection():
         PromptCandidate("Another novel with {special} chars", 0.5, "domain5"),  # Novel
     ]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.NOVELTY_SEARCH,
-        num_select=1
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.NOVELTY_SEARCH, num_select=1)
 
     assert len(selected) == 1
     # Should prefer novel structure even with lower score
@@ -182,16 +152,9 @@ def test_hybrid_selection():
     """Test hybrid selection strategy."""
     engine = SelectionEngine(elite_fraction=0.3)
 
-    candidates = [
-        PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}")
-        for i in range(10)
-    ]
+    candidates = [PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(10)]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.HYBRID,
-        num_select=5
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=5)
 
     assert len(selected) == 5
     # Hybrid should select a mix
@@ -233,11 +196,7 @@ def test_overfitting_penalties():
     # Simulate usage history
     engine.pattern_usage[candidate1.structural_hash] = 3  # Overused
 
-    selected = engine.select(
-        [candidate1, candidate2],
-        strategy=SelectionStrategy.ELITISM,
-        num_select=1
-    )
+    selected = engine.select([candidate1, candidate2], strategy=SelectionStrategy.ELITISM, num_select=1)
 
     # Should penalize the overused pattern
     assert len(selected) == 1
@@ -311,10 +270,10 @@ def test_selection_statistics():
 
     stats = engine.get_statistics()
 
-    assert 'high_scorer_count' in stats
-    assert 'pattern_usage_count' in stats
-    assert 'decay_rate' in stats
-    assert stats['decay_rate'] == engine.decay_rate
+    assert "high_scorer_count" in stats
+    assert "pattern_usage_count" in stats
+    assert "decay_rate" in stats
+    assert stats["decay_rate"] == engine.decay_rate
 
 
 def test_pattern_tracking_reset():
@@ -382,16 +341,9 @@ def test_hybrid_single_selection():
     """Test hybrid selection with single candidate requested."""
     engine = SelectionEngine()
 
-    candidates = [
-        PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}")
-        for i in range(5)
-    ]
+    candidates = [PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(5)]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.HYBRID,
-        num_select=1
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=1)
 
     assert len(selected) == 1
 
@@ -400,16 +352,9 @@ def test_large_population_selection():
     """Test selection with large population."""
     engine = SelectionEngine()
 
-    candidates = [
-        PromptCandidate(f"Prompt {i}", (i % 10) * 0.1, f"domain{i}")
-        for i in range(100)
-    ]
+    candidates = [PromptCandidate(f"Prompt {i}", (i % 10) * 0.1, f"domain{i}") for i in range(100)]
 
-    selected = engine.select(
-        candidates,
-        strategy=SelectionStrategy.HYBRID,
-        num_select=10
-    )
+    selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=10)
 
     assert len(selected) == 10
     # Check that selected prompts are from original candidates

@@ -6,6 +6,7 @@ and structured evaluation reports introduced in v1.0.0.
 """
 
 import asyncio
+
 from app.agents.spotter import Spotter
 from app.models.evaluation_report import EvaluationReport
 
@@ -23,7 +24,7 @@ async def basic_evaluation_example():
         enable_aggregated_scoring=True,  # This is the default
         enable_context_sensitivity=True,
         enable_contradiction_detection=True,
-        enable_pattern_drift_tracking=True
+        enable_pattern_drift_tracking=True,
     )
 
     # Evaluate a potentially harmful response
@@ -34,8 +35,8 @@ async def basic_evaluation_example():
     evaluation = await spotter.evaluate(response, prompt=prompt)
 
     # Access the aggregated risk score
-    if 'aggregated_risk' in evaluation:
-        risk = evaluation['aggregated_risk']
+    if "aggregated_risk" in evaluation:
+        risk = evaluation["aggregated_risk"]
         print(f"\nRisk Score: {risk['risk_score']}")
         print(f"Risk Level: {risk['risk_level']}")
         print(f"Confidence Interval: {risk['confidence_interval']}")
@@ -112,24 +113,21 @@ async def custom_weights_example():
 
     # Create custom weights that prioritize policy violations more heavily
     custom_weights = {
-        "policy_violation": 0.50,      # Increased from 0.40
+        "policy_violation": 0.50,  # Increased from 0.40
         "danger_context": 0.20,
-        "manipulation_risk": 0.10,     # Decreased from 0.15
-        "contradiction_score": 0.10,   # Decreased from 0.15
-        "fluency_penalty": 0.05,       # Same as baseline
+        "manipulation_risk": 0.10,  # Decreased from 0.15
+        "contradiction_score": 0.10,  # Decreased from 0.15
+        "fluency_penalty": 0.05,  # Same as baseline
         "pattern_drift_penalty": 0.05,
     }
 
-    spotter = Spotter(
-        enable_aggregated_scoring=True,
-        scoring_weights=custom_weights
-    )
+    spotter = Spotter(enable_aggregated_scoring=True, scoring_weights=custom_weights)
 
     response = "Test response with potential policy violations"
     evaluation = await spotter.evaluate(response)
 
-    if 'aggregated_risk' in evaluation:
-        risk = evaluation['aggregated_risk']
+    if "aggregated_risk" in evaluation:
+        risk = evaluation["aggregated_risk"]
         print(f"\nRisk Score (custom weights): {risk['risk_score']}")
         print(f"Weights used: {risk['weights_used']}")
 
@@ -154,7 +152,7 @@ async def backward_compatibility_example():
     print(f"L3 Score: {evaluation['l3']['score']}")
 
     # New aggregated risk is also available (enabled by default)
-    if 'aggregated_risk' in evaluation:
+    if "aggregated_risk" in evaluation:
         print(f"\nAggregated Risk Score: {evaluation['aggregated_risk']['risk_score']}")
         print("✓ New features work alongside existing code")
 

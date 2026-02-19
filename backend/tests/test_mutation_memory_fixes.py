@@ -8,12 +8,8 @@ Validates:
 """
 
 import random
-from app.engines.mutation import (
-    MutationEngine,
-    MutationStrategy,
-    SemanticIntensity,
-    MultidimensionalFitness
-)
+
+from app.engines.mutation import MultidimensionalFitness, MutationEngine, MutationStrategy, SemanticIntensity
 
 
 class TestSemanticIntensityEnum:
@@ -68,41 +64,23 @@ class TestSemanticIntensityEnum:
         random.seed(42)
 
         # Test LOW intensity
-        engine_low = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.LOW
-        )
-        result_low = engine_low.mutate(
-            "test prompt",
-            strategy=MutationStrategy.ENCODING_TRANSFORM
-        )
+        engine_low = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.LOW)
+        result_low = engine_low.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
         # Low intensity should use simple, mechanical transforms
         assert "test prompt" in result_low
         assert any(word in result_low.lower() for word in ["rephrase", "consider", "address", "respond"])
 
         # Test MEDIUM intensity
         random.seed(42)
-        engine_medium = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.MEDIUM
-        )
-        result_medium = engine_medium.mutate(
-            "test prompt",
-            strategy=MutationStrategy.ENCODING_TRANSFORM
-        )
+        engine_medium = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM)
+        result_medium = engine_medium.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
         # Medium intensity should use more complex transforms
         assert isinstance(result_medium, str)
 
         # Test HIGH intensity
         random.seed(42)
-        engine_high = MutationEngine(
-            mutation_rate=1.0,
-            semantic_intensity=SemanticIntensity.HIGH
-        )
-        result_high = engine_high.mutate(
-            "test prompt",
-            strategy=MutationStrategy.ENCODING_TRANSFORM
-        )
+        engine_high = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH)
+        result_high = engine_high.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
         # High intensity should use philosophical transforms
         assert isinstance(result_high, str)
 
@@ -116,7 +94,7 @@ class TestStrategyPerformanceBounds:
 
         # Verify it's a deque with maxlen
         for strategy_name, perf_deque in engine.strategy_performance.items():
-            assert hasattr(perf_deque, 'maxlen')
+            assert hasattr(perf_deque, "maxlen")
             assert perf_deque.maxlen == 100
 
     def test_strategy_performance_respects_max_size(self):
@@ -126,10 +104,7 @@ class TestStrategyPerformanceBounds:
 
         # Add more scores than the max size
         for i in range(100):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION,
-                float(i)
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, float(i))
 
         # Should be capped at max_size
         assert len(engine.strategy_performance["lexical_variation"]) == max_size
@@ -141,10 +116,7 @@ class TestStrategyPerformanceBounds:
 
         # Add scores 0-19
         for i in range(20):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION,
-                float(i)
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, float(i))
 
         # Should only have the last 10 scores (10-19)
         scores = list(engine.strategy_performance["lexical_variation"])
@@ -169,9 +141,7 @@ class TestStrategyPerformanceBounds:
         # Add archetype-specific scores
         for i in range(100):
             engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION,
-                float(i),
-                archetypes=["manipulation", "evasion"]
+                MutationStrategy.LEXICAL_VARIATION, float(i), archetypes=["manipulation", "evasion"]
             )
 
         # Check archetype tracking is also bounded
@@ -184,7 +154,7 @@ class TestStrategyPerformanceBounds:
         assert len(archetype_perf["evasion"]) == max_size
 
         # Verify it's a deque with maxlen
-        assert hasattr(archetype_perf["manipulation"], 'maxlen')
+        assert hasattr(archetype_perf["manipulation"], "maxlen")
         assert archetype_perf["manipulation"].maxlen == max_size
 
     def test_multidimensional_fitness_with_bounded_performance(self):
@@ -194,15 +164,8 @@ class TestStrategyPerformanceBounds:
 
         # Add multidimensional fitness scores
         for i in range(30):
-            fitness = MultidimensionalFitness(
-                effectiveness=i / 30.0,
-                consistency=0.8,
-                novelty=0.5
-            )
-            engine.update_strategy_performance(
-                MutationStrategy.ENCODING_TRANSFORM,
-                fitness
-            )
+            fitness = MultidimensionalFitness(effectiveness=i / 30.0, consistency=0.8, novelty=0.5)
+            engine.update_strategy_performance(MutationStrategy.ENCODING_TRANSFORM, fitness)
 
         # Should be capped at max_size
         scores = engine.strategy_performance["encoding_transform"]
@@ -215,18 +178,12 @@ class TestStrategyPerformanceBounds:
     def test_statistics_work_with_bounded_performance(self):
         """Test that get_statistics works correctly with bounded performance."""
         max_size = 30
-        engine = MutationEngine(
-            mutation_rate=1.0,
-            max_performance_history=max_size
-        )
+        engine = MutationEngine(mutation_rate=1.0, max_performance_history=max_size)
 
         # Add more scores than max_size
         for i in range(50):
             engine.mutate(f"test prompt {i}", fitness_score=0.5)
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION,
-                float(i) / 50.0
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, float(i) / 50.0)
 
         stats = engine.get_statistics()
 

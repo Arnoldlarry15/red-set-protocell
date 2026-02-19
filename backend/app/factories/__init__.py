@@ -6,18 +6,18 @@ without tight coupling to concrete implementations.
 """
 
 import logging
-from typing import Dict, Type, Any, Optional
 from abc import ABC
+from typing import Any, Dict, Optional, Type
 
 from app.agents.target import (
-    OpenAIBackend,
     AnthropicBackend,
-    LlamaCppBackend,
     CustomHTTPBackend,
+    LlamaCppBackend,
+    OpenAIBackend,
     OpenRouterBackend,
-    TargetBackend,
-    Target,
     PerturbationConfig,
+    Target,
+    TargetBackend,
 )
 
 

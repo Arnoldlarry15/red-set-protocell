@@ -532,7 +532,7 @@ class Sniper:
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get generation statistics."""
-        domain_counts = {}
+        domain_counts: Dict[str, int] = {}
         for candidate in self.evolution_pool:
             domain = candidate.domain
             domain_counts[domain] = domain_counts.get(domain, 0) + 1

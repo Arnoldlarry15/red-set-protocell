@@ -12,7 +12,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +92,10 @@ class TelemetryExporter:
             data = [self._flatten_dict(item) for item in data]
 
         # Get all unique keys across all items
-        fieldnames = set()
+        fieldnames_set: set[str] = set()
         for item in data:
-            fieldnames.update(item.keys())
-        fieldnames = sorted(fieldnames)
+            fieldnames_set.update(item.keys())
+        fieldnames = sorted(fieldnames_set)
 
         # Write CSV
         with open(filepath, "w", newline="") as f:
@@ -226,10 +226,10 @@ class TelemetryExporter:
                 data = [self._flatten_dict(item) for item in data]
 
             # Get fieldnames
-            fieldnames = set()
+            fieldnames_set: set[str] = set()
             for item in data:
-                fieldnames.update(item.keys())
-            fieldnames = sorted(fieldnames)
+                fieldnames_set.update(item.keys())
+            fieldnames = sorted(fieldnames_set)
 
             # Write to string buffer
             output = io.StringIO()
@@ -270,7 +270,7 @@ class TelemetryExporter:
         Returns:
             Flattened dictionary
         """
-        items = []
+        items: List[Tuple[str, Any]] = []
         for k, v in d.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
             if isinstance(v, dict):

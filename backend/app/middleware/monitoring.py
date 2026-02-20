@@ -57,7 +57,7 @@ class JSONFormatter(logging.Formatter):
     """Custom JSON log formatter."""
 
     def format(self, record: logging.LogRecord) -> str:
-        log_data = {
+        log_data: Dict[str, Any] = {
             "timestamp": datetime.utcfromtimestamp(record.created).isoformat(),
             "level": record.levelname,
             "logger": record.name,
@@ -252,7 +252,7 @@ class HealthCheck:
         """Run all health checks and return results."""
         import inspect
 
-        results = {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
+        results: Dict[str, Any] = {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
 
         for name, check_fn in self.checks.items():
             try:

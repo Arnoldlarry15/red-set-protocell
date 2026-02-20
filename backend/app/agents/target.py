@@ -121,7 +121,7 @@ def _log_exception_safely(context: str, exc: Exception) -> None:
 
 # Import requests for CustomHTTPBackend
 try:
-    import requests
+    import requests  # type: ignore[import-untyped]
 except ImportError:
     requests = None
 

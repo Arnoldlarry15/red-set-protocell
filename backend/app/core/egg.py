@@ -64,7 +64,7 @@ import random
 import re
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from app.core.security import hash_prompt
 
@@ -645,7 +645,7 @@ class EthicalGuardrailGovernor:
 
         test_prompts = self.generate_adversarial_test_prompts(count=test_count)
 
-        results = {
+        results: Dict[str, Any] = {
             "total_tests": len(test_prompts),
             "blocked": 0,
             "allowed": 0,

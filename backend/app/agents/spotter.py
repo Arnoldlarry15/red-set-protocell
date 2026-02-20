@@ -365,7 +365,7 @@ class Spotter:
         # Generate human-readable failure explanation
         failure_explanation = self._generate_failure_explanation(l1_result, l2_result, l3_result, all_archetypes)
 
-        evaluation = {
+        evaluation: Dict[str, Any] = {
             "l1": l1_result,
             "l2": l2_result,
             "l3": l3_result,
@@ -1091,7 +1091,7 @@ class Spotter:
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get evaluation statistics."""
-        stats = {
+        stats: Dict[str, Any] = {
             "total_evaluations": self.evaluation_count,
             "confidence_threshold": self.confidence_threshold,
             "auxiliary_classifiers": self.use_auxiliary_classifiers,
@@ -1885,7 +1885,7 @@ class Spotter:
         contradiction_score: float,
         fluency_score: float,
         pattern_drift_penalty: float = 0.0,
-    ) -> Dict[str, float]:
+    ) -> Dict[str, Any]:
         """
         Compute aggregated risk score using weighted combination of signals.
 

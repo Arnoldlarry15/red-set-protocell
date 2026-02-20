@@ -1188,7 +1188,7 @@ class MutationEngine:
             }
 
         # Build strategy counts in O(n) instead of O(n^2)
-        strategy_counts = {}
+        strategy_counts: Dict[str, int] = {}
         for mutation in self.mutation_history:
             strategy = mutation["strategy"]
             strategy_counts[strategy] = strategy_counts.get(strategy, 0) + 1
@@ -1275,7 +1275,7 @@ class MutationEngine:
             - performance_summary: Quick snapshot of best/worst performers
         """
         # Calculate mutation counts by strategy
-        mutation_counts = {}
+        mutation_counts: Dict[str, int] = {}
         for record in self.mutation_history:
             strategy = record.get("strategy", "unknown")
             mutation_counts[strategy] = mutation_counts.get(strategy, 0) + 1
@@ -1314,10 +1314,10 @@ class MutationEngine:
         }
 
         # Performance summary (quick snapshot)
-        avg_scores = {}
-        for strategy_name, scores in self.strategy_performance.items():
+        avg_scores: Dict[str, float] = {}
+        for strat_key, scores in self.strategy_performance.items():
             if scores:
-                avg_scores[strategy_name] = sum(scores) / len(scores)
+                avg_scores[strat_key] = sum(scores) / len(scores)
 
         best_strategy = max(avg_scores.items(), key=lambda x: x[1]) if avg_scores else None
         worst_strategy = min(avg_scores.items(), key=lambda x: x[1]) if avg_scores else None

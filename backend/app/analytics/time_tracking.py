@@ -16,7 +16,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Sequence, Union
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +248,7 @@ class FatigueTracker:
             recommendation=recommendation,
         )
 
-    def _calculate_trend(self, x: List[float], y: List[float]) -> float:
+    def _calculate_trend(self, x: Sequence[Union[int, float]], y: Sequence[Union[int, float]]) -> float:
         """
         Calculate linear trend slope using least squares.
 
@@ -524,8 +524,7 @@ class ScoreDriftAnalyzer:
             results[session_id] = self.analyze_drift(session_id)
         return results
 
-    def _calculate_trend(self, x: List[float], y: List[float]) -> float:
-        """Calculate linear trend slope."""
+    def _calculate_trend(self, x: Sequence[Union[int, float]], y: Sequence[Union[int, float]]) -> float:
         n = len(x)
         if n < 2:
             return 0.0

@@ -21,7 +21,7 @@ from app.agents.orchestrator import Orchestrator, StateManager
 from app.agents.sniper import Sniper
 from app.agents.spotter import Spotter
 from app.agents.target import create_target
-from app.core.config import get_default_config
+from app.core.config import ModelBackend, get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine
@@ -584,7 +584,7 @@ async def start_session(config: SessionConfig):
         # Create RSP configuration
         rsp_config = get_default_config()
         rsp_config.orchestrator.max_rounds = config.max_rounds
-        rsp_config.target.backend = config.backend
+        rsp_config.target.backend = ModelBackend(config.backend)
         rsp_config.target.api_key = config.api_key
         if config.model:
             rsp_config.target.model_name = config.model
@@ -618,7 +618,7 @@ async def start_session(config: SessionConfig):
             domain_selection_temperature=rsp_config.sniper.domain_selection_temperature,
         )
 
-        backend_value = (
+        backend_value = str(
             rsp_config.target.backend.value if hasattr(rsp_config.target.backend, "value") else rsp_config.target.backend
         )
         target = create_target(
@@ -962,6 +962,7 @@ async def validate_llm_key(validation: LLMKeyValidation):
                 status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
             )
         # Create a minimal test backend instance
+        test_backend: Any
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
 
@@ -1173,7 +1174,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             session["current_cost"] += estimated_round_cost
 
             # Broadcast attack data
-            attack_data = {
+            attack_data: Dict[str, Any] = {
                 "type": "attack",
                 "data": {
                     "id": f"attack_{session_id}_{round_num}",

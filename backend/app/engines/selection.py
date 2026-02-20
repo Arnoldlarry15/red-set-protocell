@@ -65,6 +65,7 @@ class PromptCandidate:
     diversity_score: float = 0.0
     novelty_score: float = 0.0
     performance_history: List[float] = None
+    feedback_history: Optional[List[Dict[str, Any]]] = None
 
     def __post_init__(self):
         """Initialize computed fields."""
@@ -76,6 +77,8 @@ class PromptCandidate:
             self.semantic_hash = self._compute_semantic_hash()
         if self.performance_history is None:
             self.performance_history = []
+        if self.feedback_history is None:
+            self.feedback_history = []
 
     def _compute_structural_hash(self) -> str:
         """
@@ -423,7 +426,7 @@ class SelectionEngine:
         Update diversity scores based on uniqueness within current population.
         """
         # Count structural hash occurrences
-        hash_counts = defaultdict(int)
+        hash_counts: Dict[str, int] = defaultdict(int)
         for candidate in candidates:
             hash_counts[candidate.structural_hash] += 1
 
@@ -544,7 +547,7 @@ class SelectionEngine:
             num_diverse = num_select - num_elite - num_novelty
 
         selected = []
-        selected_set = set()  # Track IDs for O(1) lookup
+        selected_set: Set[int] = set()  # Track IDs for O(1) lookup
 
         # Elite selection
         elite = self._elitism_select(candidates, num_elite)

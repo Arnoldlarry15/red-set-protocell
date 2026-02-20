@@ -141,7 +141,7 @@ class SessionMetricsExtractor:
                 LEFT JOIN rounds r ON s.session_id = r.session_id
             """
 
-            params = []
+            params: List[Any] = []
             if model_version:
                 query += " WHERE s.model_version = ?"
                 params.append(model_version)
@@ -222,7 +222,7 @@ class RoundMetricsExtractor:
                 WHERE session_id = ?
             """
 
-            params = [session_id]
+            params: List[Any] = [session_id]
             if round_number is not None:
                 query += " AND round_number = ?"
                 params.append(round_number)

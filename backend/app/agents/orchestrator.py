@@ -187,8 +187,7 @@ class StateManager:
         cursor = conn.cursor()
 
         # Create rounds table with model_version and session_start_time
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS rounds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
@@ -203,20 +202,17 @@ class StateManager:
                 model_version TEXT DEFAULT 'unknown',
                 session_start_time TEXT
             )
-        """
-        )
+        """)
 
         # Create metadata table
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS metadata (
                 session_id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
                 config TEXT NOT NULL,
                 model_version TEXT DEFAULT 'unknown'
             )
-        """
-        )
+        """)
 
         # Add model_version column if it doesn't exist (migration)
         try:

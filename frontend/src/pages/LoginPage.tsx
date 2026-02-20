@@ -3,21 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import axios from 'axios';
 import { User } from '../types';
+import { getUserFriendlyApiError } from '../utils/apiErrors';
 import '../styles/Auth.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
-
-const getUserFriendlyApiError = (error: unknown): string => {
-  const axiosError = error as { response?: { data?: { detail?: string } }; message?: string; code?: string };
-
-  if (axiosError.response?.data?.detail) return axiosError.response.data.detail;
-
-  if (axiosError.message === 'Network Error' || axiosError.code === 'ERR_NETWORK') {
-    return `Cannot reach backend at ${API_BASE_URL}. Check VITE_API_BASE_URL, backend availability, and CORS origin settings.`;
-  }
-
-  return axiosError.message || 'Failed to validate API key';
-};
 
 interface LoginPageProps {
   onAuth: (apiKey: string, backend: string, userData?: User) => void;
@@ -59,7 +48,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
         navigate('/admin'); // Navigate to admin dashboard
       }
     } catch (err) {
-      setError(getUserFriendlyApiError(err));
+      setError(getUserFriendlyApiError(err, API_BASE_URL));
       setLoading(false);
     }
   };

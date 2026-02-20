@@ -38,7 +38,7 @@ def register_routes(app, deps):
     for prefix in ("", "/api"):
         for path, endpoint, methods in route_definitions:
             if prefix == "/api" and path == "/":
-                # Avoid creating //api root alias
+                # Avoid creating /api/ root alias
                 continue
             app.add_api_route(f"{prefix}{path}", endpoint, methods=methods)
 

@@ -54,15 +54,21 @@ echo "[live-watch] starting backend on ${BACKEND_HOST}:${BACKEND_PORT}"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!
 
+# Determine the host to probe: use localhost when binding to all interfaces, otherwise use BACKEND_HOST directly
+_PROBE_HOST="localhost"
+if [[ "$BACKEND_HOST" != "0.0.0.0" && "$BACKEND_HOST" != "::" ]]; then
+  _PROBE_HOST="$BACKEND_HOST"
+fi
+
 # Wait until backend is reachable
 for _ in {1..40}; do
-  if curl -fsS "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1; then
+  if curl -fsS "http://${_PROBE_HOST}:${BACKEND_PORT}/health" >/dev/null 2>&1; then
     break
   fi
   sleep 0.5
 done
 
-if ! curl -fsS "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1; then
+if ! curl -fsS "http://${_PROBE_HOST}:${BACKEND_PORT}/health" >/dev/null 2>&1; then
   echo "[live-watch] backend failed to start. See $BACKEND_LOG"
   exit 1
 fi

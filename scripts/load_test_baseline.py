@@ -61,6 +61,11 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=5.0)
     args = parser.parse_args()
 
+    if args.requests < 1:
+        raise SystemExit("--requests must be >= 1")
+    if args.concurrency < 1:
+        raise SystemExit("--concurrency must be >= 1")
+
     overall_ok = True
     for path in ("/health", "/api/health"):
       url = f"{args.base_url}{path}"

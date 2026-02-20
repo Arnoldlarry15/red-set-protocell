@@ -1,0 +1,49 @@
+name: Nightly Real Provider Smoke
+
+on:
+  schedule:
+    - cron: '30 2 * * *' # daily 02:30 UTC
+  workflow_dispatch:
+
+jobs:
+  real-provider-smoke:
+    name: Real provider smoke (staging)
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Validate required secrets
+        run: |
+          missing=0
+          [[ -z "${OPENAI_API_KEY:-}" ]] && echo "Missing OPENAI_API_KEY" && missing=1
+          [[ -z "${ANTHROPIC_API_KEY:-}" ]] && echo "Missing ANTHROPIC_API_KEY" && missing=1
+          if [[ "$missing" -ne 0 ]]; then
+            echo "Required staging secrets are missing."
+            exit 1
+          fi
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+
+      - name: Run real backend smoke tests
+        working-directory: ./backend
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SKIP_REAL_API_TESTS: "false"
+        run: |
+          pytest tests/test_real_backends.py -v -s

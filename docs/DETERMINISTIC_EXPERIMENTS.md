@@ -22,7 +22,7 @@ cd backend
 
 # Set the backend type and API key
 export BACKEND_TYPE=openrouter
-export OPENROUTER_API_KEY="sk-or-v1-your-actual-key"
+export OPENROUTER_API_KEY="<OPENROUTER_API_KEY>"
 
 # Verify environment variables are set
 echo $BACKEND_TYPE
@@ -44,7 +44,7 @@ python examples/time_analytics.py
 cd backend
 
 # Set OpenAI API key (BACKEND_TYPE defaults to openai if not set)
-export OPENAI_API_KEY="sk-your-openai-key"
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 
 # Run any script
 PYTHONPATH=$(pwd) python ../scripts/run_deterministic_experiment.py --verify --seed 15
@@ -58,7 +58,7 @@ cd backend
 
 # Set the backend type and API key
 export BACKEND_TYPE=anthropic
-export ANTHROPIC_API_KEY="sk-ant-your-anthropic-key"
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 
 # Run any script
 PYTHONPATH=$(pwd) python ../scripts/run_deterministic_experiment.py --verify --seed 15

@@ -454,11 +454,11 @@ class Sniper:
                 # This enables higher-resolution evolution guidance
                 if structured_feedback:
                     if not hasattr(candidate, "feedback_history"):
-                        candidate.feedback_history = []
-                    candidate.feedback_history.append(structured_feedback)
+                        candidate.feedback_history = []  # type: ignore[attr-defined]
+                    candidate.feedback_history.append(structured_feedback)  # type: ignore[attr-defined]
                     # Keep only last 3 feedback entries to avoid memory bloat
-                    if len(candidate.feedback_history) > 3:
-                        candidate.feedback_history = candidate.feedback_history[-3:]
+                    if len(candidate.feedback_history) > 3:  # type: ignore[attr-defined]
+                        candidate.feedback_history = candidate.feedback_history[-3:]  # type: ignore[attr-defined]
 
                 # Apply novelty bonus: reward discovery of diverse failure archetypes
                 # This encourages systematic exploration over lucky exploits
@@ -532,7 +532,7 @@ class Sniper:
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get generation statistics."""
-        domain_counts = {}
+        domain_counts: dict[str, int] = {}
         for candidate in self.evolution_pool:
             domain = candidate.domain
             domain_counts[domain] = domain_counts.get(domain, 0) + 1

@@ -162,7 +162,7 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     backend_value = config.target.backend.value if hasattr(config.target.backend, "value") else config.target.backend
 
     target = create_target(
-        backend_type=backend_value,
+        backend_type=str(backend_value),
         api_key=config.target.api_key,
         model_name=config.target.model_name,
         max_tokens=config.target.max_tokens,
@@ -307,8 +307,7 @@ def parse_arguments():
 
 if __name__ == "__main__":
     # Display banner
-    print(
-        """
+    print("""
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║         RED SET PROTOCELL (RSP)                           ║
@@ -317,8 +316,7 @@ if __name__ == "__main__":
     ║         Defense-Only | Zero-Retention | Ethical           ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
-    """
-    )
+    """)
 
     # Parse arguments
     args = parse_arguments()

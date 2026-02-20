@@ -47,7 +47,7 @@ def summarize(name: str, results: list[Result]) -> tuple[float, float, float, fl
     success = sum(1 for r in results if r.ok)
     success_rate = (success / len(results)) * 100
     p50 = statistics.median(latencies)
-    p95 = statistics.quantiles(latencies, n=20)[18] if len(latencies) >= 20 else max(latencies)
+    p95 = statistics.quantiles(latencies, n=20)[18] if len(latencies) > 20 else max(latencies)
     avg = statistics.mean(latencies)
     print(f"[{name}] success={success}/{len(results)} ({success_rate:.2f}%) avg={avg:.1f}ms p50={p50:.1f}ms p95={p95:.1f}ms")
     return success_rate, avg, p50, p95
@@ -61,13 +61,18 @@ def main() -> None:
     parser.add_argument("--timeout", type=float, default=5.0)
     args = parser.parse_args()
 
+    if args.requests < 1:
+        raise SystemExit("--requests must be >= 1")
+    if args.concurrency < 1:
+        raise SystemExit("--concurrency must be >= 1")
+
     overall_ok = True
     for path in ("/health", "/api/health"):
-      url = f"{args.base_url}{path}"
-      results = run(url, args.requests, args.concurrency, args.timeout)
-      success_rate, _avg, _p50, p95 = summarize(path, results)
-      if success_rate < 99.0 or p95 > 500:
-          overall_ok = False
+        url = f"{args.base_url}{path}"
+        results = run(url, args.requests, args.concurrency, args.timeout)
+        success_rate, _avg, _p50, p95 = summarize(path, results)
+        if success_rate < 99.0 or p95 > 500:
+            overall_ok = False
 
     if not overall_ok:
         raise SystemExit("Load baseline failed: requires >=99% success and p95 <= 500ms")

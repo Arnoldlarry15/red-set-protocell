@@ -63,11 +63,11 @@ def main() -> None:
 
     overall_ok = True
     for path in ("/health", "/api/health"):
-      url = f"{args.base_url}{path}"
-      results = run(url, args.requests, args.concurrency, args.timeout)
-      success_rate, _avg, _p50, p95 = summarize(path, results)
-      if success_rate < 99.0 or p95 > 500:
-          overall_ok = False
+        url = f"{args.base_url}{path}"
+        results = run(url, args.requests, args.concurrency, args.timeout)
+        success_rate, _avg, _p50, p95 = summarize(path, results)
+        if success_rate < 99.0 or p95 > 500:
+            overall_ok = False
 
     if not overall_ok:
         raise SystemExit("Load baseline failed: requires >=99% success and p95 <= 500ms")

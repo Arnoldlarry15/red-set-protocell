@@ -75,8 +75,8 @@ Railway provides the easiest container deployment with automatic HTTPS and domai
    - Dockerfile Path: `backend/Dockerfile`
 4. **Set Environment Variables** (in Railway Dashboard)
    ```
-   OPENAI_API_KEY=sk-...
-   ANTHROPIC_API_KEY=sk-ant-...
+   OPENAI_API_KEY=<OPENAI_API_KEY>
+   ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
    RSP_DEMO_PASSWORD=your-secure-password
    RSP_ENVIRONMENT=production
    RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
@@ -127,8 +127,8 @@ cd backend
 fly launch
 
 # Set secrets
-fly secrets set OPENAI_API_KEY=sk-...
-fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+fly secrets set OPENAI_API_KEY=<OPENAI_API_KEY>
+fly secrets set ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 fly secrets set RSP_DEMO_PASSWORD=your-password
 fly secrets set RSP_ENVIRONMENT=production
 fly secrets set RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
@@ -150,8 +150,8 @@ docker build -t rsp-backend:latest .
 # Run backend
 docker run -d \
   -p 8000:8000 \
-  -e OPENAI_API_KEY="sk-..." \
-  -e ANTHROPIC_API_KEY="sk-ant-..." \
+  -e OPENAI_API_KEY="<OPENAI_API_KEY>" \
+  -e ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>" \
   -e RSP_DEMO_PASSWORD="changeme" \
   -e RSP_ENVIRONMENT="production" \
   -e RSP_ALLOWED_ORIGINS="https://your-frontend.vercel.app" \
@@ -195,8 +195,8 @@ VITE_API_BASE_URL=https://your-backend.railway.app
 
 ```bash
 # Required: At least one API key
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=<OPENAI_API_KEY>
+ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 
 # Required: Security
 RSP_DEMO_PASSWORD=your-secure-password

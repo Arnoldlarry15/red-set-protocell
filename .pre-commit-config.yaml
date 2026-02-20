@@ -30,3 +30,10 @@ repos:
         args: [--config=backend/.flake8]
         files: ^backend/(app|tests)/
         exclude: ^backend/(examples|templates|\.venv|venv|env|__pycache__|\.pytest_cache|build|dist)/
+
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.24.3
+    hooks:
+      - id: gitleaks
+        name: Scan for secrets with gitleaks

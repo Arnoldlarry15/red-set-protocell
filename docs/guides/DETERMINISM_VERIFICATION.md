@@ -16,7 +16,7 @@ This guide explains how to use the determinism verification tools to ensure infr
 
 ```bash
 cd backend
-export OPENAI_API_KEY="sk-..."  # Or ANTHROPIC_API_KEY
+export OPENAI_API_KEY="<OPENAI_API_KEY>"  # Or ANTHROPIC_API_KEY
 
 python ../scripts/run_full_cycle.py --seed 42 --rounds 10
 ```
@@ -403,7 +403,7 @@ echo $BACKEND_TYPE
 
 # 2. Run with explicit config
 export BACKEND_TYPE=openai
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 python ../scripts/run_full_cycle.py --verify --seed 42 --rounds 5
 
 # 3. Compare audit trails
@@ -443,7 +443,7 @@ pip install numpy  # Additional dependency for scripts
 ```bash
 # Use different backend
 export BACKEND_TYPE=anthropic
-export ANTHROPIC_API_KEY="sk-ant-..."
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 python ../scripts/run_full_cycle.py --seed 42 --rounds 10
 
 # Use different model

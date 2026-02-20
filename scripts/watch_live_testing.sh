@@ -27,7 +27,7 @@ Optional env vars:
   FRONTEND_HOST, FRONTEND_PORT
   VITE_API_BASE_URL
   RSP_ALLOWED_ORIGINS
-  RSP_DEMO_PASSWORD (defaults to 'dev-only' if not set - set explicitly for any shared environment)
+  RSP_DEMO_PASSWORD (defaults to 'changeme')
 USAGE
   exit 0
 fi
@@ -49,7 +49,7 @@ echo "[live-watch] starting backend on ${BACKEND_HOST}:${BACKEND_PORT}"
   RSP_ENVIRONMENT=development \
   RSP_ALLOWED_ORIGINS="$ALLOWED_ORIGINS" \
   RSP_REQUIRE_AUTH=false \
-  RSP_DEMO_PASSWORD="${RSP_DEMO_PASSWORD:-dev-only}" \
+  RSP_DEMO_PASSWORD="${RSP_DEMO_PASSWORD:-changeme}" \
   uvicorn app.api_server:app --host "$BACKEND_HOST" --port "$BACKEND_PORT"
 ) >"$BACKEND_LOG" 2>&1 &
 BACKEND_PID=$!

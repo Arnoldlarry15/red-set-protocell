@@ -89,6 +89,10 @@ Use this checklist before deploying Red Set ProtoCell to production.
 
 ### Deployment
 
+- [ ] **Hardened Compose Path Verified**
+  - [ ] `docker compose -f docker-compose.production.yml config` succeeds
+  - [ ] Required env vars validated before deploy
+
 - [ ] **Deployment Method**
   - [ ] Docker image built and tested
   - [ ] OR: Systemd service configured
@@ -126,7 +130,7 @@ Use this checklist before deploying Red Set ProtoCell to production.
 ### Testing
 
 - [ ] **Smoke Tests**
-  - [ ] Health check: `curl https://api.your-domain.com/api/health`
+  - [ ] Health checks: `curl https://api.your-domain.com/health` and `curl https://api.your-domain.com/api/health`
   - [ ] Login works
   - [ ] Session start works
   - [ ] Metrics endpoint works (internal)
@@ -136,6 +140,7 @@ Use this checklist before deploying Red Set ProtoCell to production.
   - [ ] Performance acceptable under load
   - [ ] No memory leaks detected
   - [ ] Example: `hey -n 1000 -c 10 https://api.your-domain.com/api/health`
+  - [ ] Baseline script pass: `python scripts/load_test_baseline.py --base-url https://api.your-domain.com --requests 200 --concurrency 20`
 
 - [ ] **Security Testing**
   - [ ] Penetration test completed (if required)

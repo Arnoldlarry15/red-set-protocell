@@ -378,7 +378,7 @@ RSP_ENVIRONMENT=production
 RSP_ALLOWED_ORIGINS=https://your-domain.com
 RSP_JWT_SECRET=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
 RSP_REQUIRE_AUTH=true
-OPENAI_API_KEY=sk-your-key
+OPENAI_API_KEY=<OPENAI_API_KEY>
 ```
 
 ### Recommended Production Configuration
@@ -392,8 +392,8 @@ RSP_JWT_SECRET=<generated-secret-32-chars-min>
 RSP_JWT_EXPIRATION_HOURS=24
 RSP_REQUIRE_AUTH=true
 RSP_DEMO_PASSWORD=<strong-password>
-OPENAI_API_KEY=sk-your-openai-key
-ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+OPENAI_API_KEY=<OPENAI_API_KEY>
+ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 RSP_RATE_LIMIT_PER_MIN=60
 RSP_RATE_LIMIT_PER_HOUR=1000
 RSP_POSTGRES_URI=postgresql://user:pass@localhost:5432/rsp

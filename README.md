@@ -44,6 +44,10 @@ Local setup: [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md)
 docker compose -f docker-compose.production.yml up --build
 ```
 
+**Nightly real-provider smoke (staging):**
+- Workflow: `.github/workflows/nightly-real-backend-smoke.yml`
+- Requires staging secrets: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
+
 
 ---
 
@@ -454,7 +458,7 @@ cd backend
 pip install -r requirements.txt
 
 # 3. Set your API key
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 
 # 4. Run a 10-round session
 python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
@@ -709,7 +713,7 @@ cd red-set-protocell/backend
 docker-compose build
 
 # Run with environment variable
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 docker-compose run rsp-backend python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
@@ -748,7 +752,7 @@ docker-compose run rsp-backend python -m app.main --backend openai --api-key $OP
 
 ```bash
 cd backend
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
@@ -756,7 +760,7 @@ python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 
 ```bash
 cd backend
-export ANTHROPIC_API_KEY="sk-ant-..."
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 ```
 
@@ -764,7 +768,7 @@ python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 
 ```bash
 cd backend
-export OPENROUTER_API_KEY="sk-or-v1-..."
+export OPENROUTER_API_KEY="<OPENROUTER_API_KEY>"
 python -m app.main --backend openrouter --api-key $OPENROUTER_API_KEY --rounds 10
 ```
 
@@ -775,7 +779,7 @@ OpenRouter can also be configured via environment variables for easier setup:
 ```bash
 cd backend
 export BACKEND_TYPE=openrouter
-export OPENROUTER_API_KEY="sk-or-v1-..."
+export OPENROUTER_API_KEY="<OPENROUTER_API_KEY>"
 python -m app.main --rounds 10
 ```
 
@@ -844,7 +848,7 @@ python -m app.main \
 ```bash
 # Using Docker Compose
 cd backend
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 docker-compose run rsp-backend python -m app.main \
   --backend openai \
   --api-key $OPENAI_API_KEY \
@@ -1119,7 +1123,7 @@ config = RSPConfig()
 # Customize target
 config.target.backend = "anthropic"
 config.target.model_name = "claude-3-opus-20240229"
-config.target.api_key = "sk-ant-..."
+config.target.api_key = "<ANTHROPIC_API_KEY>"
 
 # Adjust scoring weights
 config.scoring.l1_weight = 0.30  # Reduce linguistic weight
@@ -1410,8 +1414,8 @@ make test-ci
 
 ```bash
 # Set environment variables
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 
 # Run integration tests
 pytest tests/test_real_backends.py -v
@@ -1577,8 +1581,8 @@ The backend lives in `backend/` and runs as a Docker container.
    
 3. **Set Environment Variables**
    ```
-   OPENAI_API_KEY=sk-...
-   ANTHROPIC_API_KEY=sk-ant-...
+   OPENAI_API_KEY=<OPENAI_API_KEY>
+   ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
    RSP_DEMO_PASSWORD=your-secure-password
    RSP_ENVIRONMENT=production
    RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
@@ -1625,8 +1629,8 @@ cd backend
 fly launch
 
 # Set secrets
-fly secrets set OPENAI_API_KEY=sk-...
-fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+fly secrets set OPENAI_API_KEY=<OPENAI_API_KEY>
+fly secrets set ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 fly secrets set RSP_DEMO_PASSWORD=your-password
 
 # Deploy
@@ -1646,7 +1650,7 @@ docker build -t rsp-backend:latest .
 # Run backend API server
 docker run -d \
   -p 8000:8000 \
-  -e OPENAI_API_KEY="sk-..." \
+  -e OPENAI_API_KEY="<OPENAI_API_KEY>" \
   -e RSP_DEMO_PASSWORD="changeme" \
   rsp-backend:latest
 
@@ -1728,12 +1732,12 @@ All configuration is done via the `.env` file. Required variables:
 
 ```bash
 # API Keys (at least one required)
-OPENAI_API_KEY=sk-your-key-here
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+OPENAI_API_KEY=<OPENAI_API_KEY>
+ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 
 # Agent-specific API Keys (optional, for independent agent operations)
-SNIPER_ANTHROPIC_API_KEY=sk-ant-your-sniper-key-here
-SPOTTER_ANTHROPIC_API_KEY=sk-ant-your-spotter-key-here
+SNIPER_ANTHROPIC_API_KEY=<SNIPER_ANTHROPIC_API_KEY>
+SPOTTER_ANTHROPIC_API_KEY=<SPOTTER_ANTHROPIC_API_KEY>
 
 # Security
 RSP_DEMO_PASSWORD=your-secure-password
@@ -1774,8 +1778,8 @@ VITE_API_BASE_URL=https://your-backend.railway.app
 
 ```bash
 # Required: At least one API key
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=<OPENAI_API_KEY>
+ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 
 # Required: Security
 RSP_DEMO_PASSWORD=your-secure-password
@@ -1945,7 +1949,7 @@ echo $OPENAI_API_KEY
 
 # Check key format
 # OpenAI: starts with "sk-"
-# Anthropic: starts with "sk-ant-"
+# Anthropic: starts with provider-specific anthropic key prefix
 
 # Test key directly
 curl https://api.openai.com/v1/models \
@@ -2066,6 +2070,19 @@ A: Modify the configuration programmatically or edit defaults in `app/core/confi
 
 **Q: What's the difference between Sniper and Spotter?**
 A: Sniper generates adversarial prompts (attacker), while Spotter evaluates responses (defender). They operate independently under Orchestrator control.
+
+
+#### Production Release Gates (GA)
+
+Before GA, require all of the following:
+
+- Nightly real-provider smoke green for 7 consecutive days
+- Load baseline pass (>=99% success, p95 <= 500ms):
+  ```bash
+  python scripts/load_test_baseline.py --base-url http://localhost:8000 --requests 200 --concurrency 20
+  ```
+- Incident response runbook reviewed and on-call rota confirmed
+- Backup/restore drill completed and documented
 
 ### Deployment Questions
 

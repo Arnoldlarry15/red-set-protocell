@@ -21,7 +21,7 @@ from app.agents.orchestrator import Orchestrator, StateManager
 from app.agents.sniper import Sniper
 from app.agents.spotter import Spotter
 from app.agents.target import create_target
-from app.core.config import ModelBackend, get_default_config
+from app.core.config import get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine

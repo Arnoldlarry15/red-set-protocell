@@ -5,8 +5,13 @@ import axios from 'axios';
 import { User } from '../types';
 import '../styles/Auth.css';
 import { getUserFriendlyApiError } from '../utils/apiErrors';
+<<<<<<< copilot/sub-pr-155-again
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+=======
 import { API_BASE_URL } from '../utils/config';
 
+>>>>>>> main
 
 interface AuthPageProps {
   onAuth: (apiKey: string, backend: string, userData?: User) => void;

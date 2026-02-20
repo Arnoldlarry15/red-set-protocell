@@ -34,6 +34,17 @@ Red Set ProtoCell now includes a modern, glassmorphism-styled web interface feat
 
 Local setup: [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md)
 
+**Live local watch mode (backend + UI):**
+```bash
+./scripts/watch_live_testing.sh
+```
+
+**Production-hardened compose template:**
+```bash
+docker compose -f docker-compose.production.yml up --build
+```
+
+
 ---
 
 ## 🎯 Table of Contents
@@ -197,14 +208,14 @@ Most AI risk comes from unknown failure modes. Static test suites, manual red te
 ### 🔌 Production-Ready Integrations
 - **OpenAI API**: Full GPT-3.5, GPT-4, and GPT-4 Turbo support
 - **Anthropic API**: Claude models (Claude 3 Opus, Sonnet, Haiku)
-- **Local Models**: GGUF models via llama-cpp-python
+- **Local Models**: Planned/experimental (not currently available in the production API server)
 - **Custom APIs**: Generic HTTP endpoint support for any LLM
 - **Extensible Backend System**: Easy to add new LLM providers
 
 ### ⚡ Performance & Scalability
 - **Parallel Execution**: Concurrent round processing (5-10x speedup)
 - **Adaptive Learning**: Mutation strategies improve over time
-- **Zero API Costs**: Run completely offline with local models
+- **Cost Controls**: Configure round limits and API cost caps for predictable spend
 - **Comprehensive Testing**: 50+ tests including uncertainty tracking
 
 ### 🆕 v1.1.0 Enhancements (Latest)
@@ -1791,7 +1802,7 @@ Before deploying to production:
 - [ ] **CORS configured** - `RSP_ALLOWED_ORIGINS` includes your Vercel domain
 - [ ] **Secrets secured** - Never commit API keys to git
 - [ ] **Monitoring enabled** - Check platform dashboards
-- [ ] **Health checks working** - Test `/api/health` endpoint
+- [ ] **Health checks working** - Test `/health` and `/api/health` endpoints
 - [ ] **WebSocket connection tested** - Verify real-time features work
 
 ---
@@ -2028,7 +2039,7 @@ A: Yes. RSP requires real API keys from OpenAI or Anthropic. No mock/simulation 
 A: Costs depend on your API provider and usage. A 100-round session with GPT-3.5-turbo typically costs $0.50-$2.00. Use `--rounds 10` for testing to minimize costs.
 
 **Q: Can I run RSP offline?**
-A: No. RSP requires internet access to communicate with LLM APIs. Local model support is not currently available.
+A: No for the current production API server. RSP currently requires internet access to communicate with LLM APIs.
 
 **Q: Is my data kept private?**
 A: Yes. RSP uses hashed fingerprinting for logging, and zero-retention mode (enabled by default) destroys all session data after completion. No data is sent to third parties except the target LLM API.

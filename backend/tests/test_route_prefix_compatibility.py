@@ -52,3 +52,17 @@ def test_health_route_available_with_and_without_api_prefix():
     assert plain.status_code == 200
     assert prefixed.status_code == 200
     assert plain.json() == prefixed.json() == {"status": "healthy"}
+
+
+def test_auth_validate_route_available_with_and_without_api_prefix():
+    app = FastAPI()
+    register_routes(app, _minimal_deps())
+    client = TestClient(app)
+
+    payload = {"api_key": "sk-test", "backend": "openai"}
+    plain = client.post("/auth/validate-llm-key", json=payload)
+    prefixed = client.post("/api/auth/validate-llm-key", json=payload)
+
+    assert plain.status_code == 200
+    assert prefixed.status_code == 200
+    assert plain.json() == prefixed.json() == {}

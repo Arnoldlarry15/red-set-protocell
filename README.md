@@ -1,7 +1,7 @@
 # Red Set ProtoCell (RSP)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml)
 [![Code Quality](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml)
 [![Security](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml)
@@ -33,6 +33,17 @@ Red Set ProtoCell now includes a modern, glassmorphism-styled web interface feat
 - 🔧 **Advanced**: See [DEPLOYMENT.md](DEPLOYMENT.md) for production configuration
 
 Local setup: [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md)
+
+**Live local watch mode (backend + UI):**
+```bash
+./scripts/watch_live_testing.sh
+```
+
+**Production-hardened compose template:**
+```bash
+docker compose -f docker-compose.production.yml up --build
+```
+
 
 ---
 
@@ -197,14 +208,14 @@ Most AI risk comes from unknown failure modes. Static test suites, manual red te
 ### 🔌 Production-Ready Integrations
 - **OpenAI API**: Full GPT-3.5, GPT-4, and GPT-4 Turbo support
 - **Anthropic API**: Claude models (Claude 3 Opus, Sonnet, Haiku)
-- **Local Models**: GGUF models via llama-cpp-python
+- **Local Models**: Planned/experimental (not currently available in the production API server)
 - **Custom APIs**: Generic HTTP endpoint support for any LLM
 - **Extensible Backend System**: Easy to add new LLM providers
 
 ### ⚡ Performance & Scalability
 - **Parallel Execution**: Concurrent round processing (5-10x speedup)
 - **Adaptive Learning**: Mutation strategies improve over time
-- **Zero API Costs**: Run completely offline with local models
+- **Cost Controls**: Configure round limits and API cost caps for predictable spend
 - **Comprehensive Testing**: 50+ tests including uncertainty tracking
 
 ### 🆕 v1.1.0 Enhancements (Latest)
@@ -426,7 +437,7 @@ Round N:
 
 ### Prerequisites
 
-- **Python 3.8+**
+- **Python 3.11+**
 - **API Key** from OpenAI or Anthropic
   - OpenAI: https://platform.openai.com/api-keys
   - Anthropic: https://console.anthropic.com/
@@ -705,7 +716,7 @@ docker-compose run rsp-backend python -m app.main --backend openai --api-key $OP
 ### System Requirements
 
 - **OS**: Linux, macOS, Windows (with WSL recommended)
-- **Python**: 3.8 or higher
+- **Python**: 3.11 or higher
 - **RAM**: 2GB minimum, 4GB recommended
 - **Disk**: 500MB for code, variable for session data
 - **Network**: Internet connection for API calls
@@ -1271,7 +1282,7 @@ mypy app/
 
 # Common mypy configuration (mypy.ini):
 [mypy]
-python_version = 3.8
+python_version = 3.11
 warn_return_any = True
 warn_unused_configs = True
 disallow_untyped_defs = True
@@ -1791,7 +1802,7 @@ Before deploying to production:
 - [ ] **CORS configured** - `RSP_ALLOWED_ORIGINS` includes your Vercel domain
 - [ ] **Secrets secured** - Never commit API keys to git
 - [ ] **Monitoring enabled** - Check platform dashboards
-- [ ] **Health checks working** - Test `/api/health` endpoint
+- [ ] **Health checks working** - Test `/health` and `/api/health` endpoints
 - [ ] **WebSocket connection tested** - Verify real-time features work
 
 ---
@@ -2028,7 +2039,7 @@ A: Yes. RSP requires real API keys from OpenAI or Anthropic. No mock/simulation 
 A: Costs depend on your API provider and usage. A 100-round session with GPT-3.5-turbo typically costs $0.50-$2.00. Use `--rounds 10` for testing to minimize costs.
 
 **Q: Can I run RSP offline?**
-A: No. RSP requires internet access to communicate with LLM APIs. Local model support is not currently available.
+A: No for the current production API server. RSP currently requires internet access to communicate with LLM APIs.
 
 **Q: Is my data kept private?**
 A: Yes. RSP uses hashed fingerprinting for logging, and zero-retention mode (enabled by default) destroys all session data after completion. No data is sent to third parties except the target LLM API.
@@ -2036,7 +2047,7 @@ A: Yes. RSP uses hashed fingerprinting for logging, and zero-retention mode (ena
 ### Technical Questions
 
 **Q: What Python version is required?**
-A: Python 3.8 or higher. Python 3.10+ is recommended.
+A: Python 3.11 or higher.
 
 **Q: Can I add support for other LLMs?**
 A: Yes! Implement the `TargetBackend` abstract class in `app/agents/target.py`. See [Development](#development) section for details.

@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - RSP_ENVIRONMENT=production
+      - RSP_ALLOWED_ORIGINS=${RSP_ALLOWED_ORIGINS:?set production frontend origin}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - RSP_DEMO_PASSWORD=${RSP_DEMO_PASSWORD:?set strong demo password}
+      - RSP_REQUIRE_AUTH=true
+      - RSP_JWT_SECRET=${RSP_JWT_SECRET:?set 32+ char JWT secret}
+    volumes:
+      - sessions-data:/app/sessions
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL:?set public backend URL}
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  sessions-data:

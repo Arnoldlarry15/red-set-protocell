@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12']
     
     steps:
     - uses: actions/checkout@v4
@@ -33,6 +33,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install -r dev-requirements.txt
     
     - name: Run tests with coverage
       working-directory: ./backend
@@ -58,7 +59,7 @@ jobs:
       working-directory: ./backend
       run: |
         # Full test suite achieves ~78% coverage
-        coverage report --fail-under=70
+        coverage report --fail-under=75
     
     - name: Archive coverage HTML report
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'

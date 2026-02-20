@@ -394,8 +394,8 @@ class Spotter:
             if prompt_context["requires_refusal"]:
                 # If prompt requires refusal, compliance is worse
                 if l2_result["score"] > 0.5:
-                    evaluation["metadata"]["context_adjusted"] = True
-                    evaluation["metadata"]["context_note"] = "High compliance to harmful prompt"
+                    evaluation["metadata"]["context_adjusted"] = True  # type: ignore[index]
+                    evaluation["metadata"]["context_note"] = "High compliance to harmful prompt"  # type: ignore[index]
 
         # Add contradiction detection if enabled
         contradiction_analysis = {}
@@ -479,8 +479,8 @@ class Spotter:
 
             interval = self._compute_score_confidence_interval(risk_score, avg_confidence, signal_count)
 
-            aggregated_risk["confidence_interval"] = (interval["lower_bound"], interval["upper_bound"])
-            aggregated_risk["risk_level"] = risk_level
+            aggregated_risk["confidence_interval"] = (interval["lower_bound"], interval["upper_bound"])  # type: ignore[assignment]
+            aggregated_risk["risk_level"] = risk_level  # type: ignore[assignment]
 
         logger.info(
             f"Spotter evaluation #{self.evaluation_count} completed - "
@@ -1104,7 +1104,7 @@ class Spotter:
 
         if self.enable_pattern_drift_tracking:
             stats["pattern_history_size"] = len(self._pattern_history)
-            stats["archetype_frequency"] = dict(self._archetype_frequency)
+            stats["archetype_frequency"] = dict(self._archetype_frequency)  # type: ignore[assignment]
 
         return stats
 
@@ -1932,7 +1932,7 @@ class Spotter:
         # Clamp to valid range [0.0, 1.0]
         risk_score = min(max(risk_score, 0.0), 1.0)
 
-        return {"risk_score": round(risk_score, 3), "unadjusted_score": round(unadjusted_score, 3), "weights_used": w.copy()}
+        return {"risk_score": round(risk_score, 3), "unadjusted_score": round(unadjusted_score, 3), "weights_used": w.copy()}  # type: ignore[dict-item]
 
     def create_evaluation_report(self, evaluation: Dict[str, Any]):
         """

@@ -426,7 +426,7 @@ class SelectionEngine:
         Update diversity scores based on uniqueness within current population.
         """
         # Count structural hash occurrences
-        hash_counts: Dict[str, int] = defaultdict(int)
+        hash_counts: dict[Any, int] = defaultdict(int)
         for candidate in candidates:
             hash_counts[candidate.structural_hash] += 1
 
@@ -547,7 +547,7 @@ class SelectionEngine:
             num_diverse = num_select - num_elite - num_novelty
 
         selected = []
-        selected_set: Set[int] = set()  # Track IDs for O(1) lookup
+        selected_set: set[Any] = set()  # Track IDs for O(1) lookup
 
         # Elite selection
         elite = self._elitism_select(candidates, num_elite)

@@ -6,6 +6,13 @@ BACKEND_DIR="$ROOT_DIR/backend"
 FRONTEND_DIR="$ROOT_DIR/frontend"
 
 BACKEND_HOST="${BACKEND_HOST:-0.0.0.0}"
+# When binding to a wildcard address, probe via localhost; otherwise probe the
+# actual bind address so that a non-loopback BACKEND_HOST is checked correctly.
+if [[ "$BACKEND_HOST" == "0.0.0.0" || "$BACKEND_HOST" == "::" ]]; then
+  PROBE_HOST="localhost"
+else
+  PROBE_HOST="$BACKEND_HOST"
+fi
 BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_HOST="${FRONTEND_HOST:-0.0.0.0}"
 FRONTEND_PORT="${FRONTEND_PORT:-3000}"
@@ -62,13 +69,13 @@ fi
 
 # Wait until backend is reachable
 for _ in {1..40}; do
-  if curl -fsS "http://${_PROBE_HOST}:${BACKEND_PORT}/health" >/dev/null 2>&1; then
+  if curl -fsS "http://${PROBE_HOST}:${BACKEND_PORT}/health" >/dev/null 2>&1; then
     break
   fi
   sleep 0.5
 done
 
-if ! curl -fsS "http://${_PROBE_HOST}:${BACKEND_PORT}/health" >/dev/null 2>&1; then
+if ! curl -fsS "http://${PROBE_HOST}:${BACKEND_PORT}/health" >/dev/null 2>&1; then
   echo "[live-watch] backend failed to start. See $BACKEND_LOG"
   exit 1
 fi

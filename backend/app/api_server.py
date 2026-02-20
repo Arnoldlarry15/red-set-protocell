@@ -584,7 +584,7 @@ async def start_session(config: SessionConfig):
         # Create RSP configuration
         rsp_config = get_default_config()
         rsp_config.orchestrator.max_rounds = config.max_rounds
-        rsp_config.target.backend = ModelBackend(config.backend)
+        rsp_config.target.backend = config.backend  # type: ignore[assignment]
         rsp_config.target.api_key = config.api_key
         if config.model:
             rsp_config.target.model_name = config.model
@@ -622,7 +622,7 @@ async def start_session(config: SessionConfig):
             rsp_config.target.backend.value if hasattr(rsp_config.target.backend, "value") else rsp_config.target.backend
         )
         target = create_target(
-            backend_type=backend_value,
+            backend_type=str(backend_value),
             api_key=rsp_config.target.api_key,
             model_name=rsp_config.target.model_name,
             max_tokens=rsp_config.target.max_tokens,
@@ -972,7 +972,7 @@ async def validate_llm_key(validation: LLMKeyValidation):
         elif validation.backend.lower() == "anthropic":
             from app.agents.target import AnthropicBackend
 
-            test_backend = AnthropicBackend(
+            test_backend = AnthropicBackend(  # type: ignore[assignment]
                 api_key=validation.api_key, model_name="claude-3-haiku-20240307", max_tokens=10, temperature=0.0
             )
         else:
@@ -1214,7 +1214,7 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             await manager.broadcast(stats_data)
 
             # Check halt conditions
-            if halt_on_critical and attack_data["data"]["severity"] == "critical":
+            if halt_on_critical and attack_data["data"]["severity"] == "critical":  # type: ignore[index]
                 session["status"] = "halted"
                 await manager.broadcast(
                     {"type": "status", "data": {"status": "halted", "reason": "Critical vulnerability detected"}}

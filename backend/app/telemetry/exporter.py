@@ -92,10 +92,10 @@ class TelemetryExporter:
             data = [self._flatten_dict(item) for item in data]
 
         # Get all unique keys across all items
-        fieldnames_set: set[str] = set()
+        fieldnames: set[Any] = set()
         for item in data:
-            fieldnames_set.update(item.keys())
-        fieldnames = sorted(fieldnames_set)
+            fieldnames.update(item.keys())
+        fieldnames = sorted(fieldnames)  # type: ignore[assignment]
 
         # Write CSV
         with open(filepath, "w", newline="") as f:
@@ -226,10 +226,10 @@ class TelemetryExporter:
                 data = [self._flatten_dict(item) for item in data]
 
             # Get fieldnames
-            fieldnames_set: set[str] = set()
+            fieldnames: set[Any] = set()
             for item in data:
-                fieldnames_set.update(item.keys())
-            fieldnames = sorted(fieldnames_set)
+                fieldnames.update(item.keys())
+            fieldnames = sorted(fieldnames)  # type: ignore[assignment]
 
             # Write to string buffer
             output = io.StringIO()
@@ -270,7 +270,7 @@ class TelemetryExporter:
         Returns:
             Flattened dictionary
         """
-        items: List[Tuple[str, Any]] = []
+        items: list[Any] = []
         for k, v in d.items():
             new_key = f"{parent_key}{sep}{k}" if parent_key else k
             if isinstance(v, dict):

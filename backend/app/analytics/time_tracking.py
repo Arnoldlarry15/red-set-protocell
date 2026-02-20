@@ -210,7 +210,7 @@ class FatigueTracker:
 
         # Calculate degradation rate (linear trend)
         all_scores = [r[1] for r in rows]
-        rounds = list(range(1, len(all_scores) + 1))
+        rounds = [float(i) for i in range(1, len(all_scores) + 1)]
         degradation_rate = self._calculate_trend(rounds, all_scores)
 
         # Calculate time span
@@ -482,7 +482,7 @@ class ScoreDriftAnalyzer:
         score_range = max_score - min_score
 
         # Calculate trend
-        rounds = list(range(1, len(scores) + 1))
+        rounds = [float(i) for i in range(1, len(scores) + 1)]
         trend_slope = self._calculate_trend(rounds, scores)
 
         # Calculate time span

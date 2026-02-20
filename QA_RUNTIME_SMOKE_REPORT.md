@@ -38,7 +38,7 @@ Scope: Local CI-equivalent commands, backend API runtime checks, and UI interact
 
 ## UX and integration notes
 
-- `GET /health` and `GET /api/health` both exist and return healthy status. Both bare and `/api`-prefixed paths are now registered as part of the route-prefix compatibility fix.
+- `GET /health` and `GET /api/health` both return a healthy status. Prior to the route-prefix compatibility fix, `GET /api/health` returned 404; that issue is now resolved by the `/api`-prefixed route aliases added in this PR.
 - API-key validation endpoint does fast local prefix checks and then attempts a real provider call. In no-egress or proxy-restricted environments, users can see failures even with otherwise valid flows.
 
 ## Artifacts from UI smoke test

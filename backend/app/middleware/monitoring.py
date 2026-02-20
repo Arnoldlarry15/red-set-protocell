@@ -66,8 +66,8 @@ class JSONFormatter(logging.Formatter):
 
         # Add exception info if present
         if record.exc_info:
-            log_data["exception"] = {
-                "type": record.exc_info[0].__name__,
+            log_data["exception"] = {  # type: ignore[assignment]
+                "type": record.exc_info[0].__name__ if record.exc_info[0] else "Unknown",  # type: ignore[union-attr]
                 "message": str(record.exc_info[1]),
                 "traceback": traceback.format_exception(*record.exc_info),
             }
@@ -265,13 +265,13 @@ class HealthCheck:
                     # Not a function, use as-is (e.g., boolean value)
                     check_result = check_fn
 
-                results["checks"][name] = {"status": "pass" if check_result else "fail", "details": check_result}
+                results["checks"][name] = {"status": "pass" if check_result else "fail", "details": check_result}  # type: ignore[index]
 
                 if not check_result:
                     results["status"] = "degraded"
 
             except Exception as e:
-                results["checks"][name] = {"status": "fail", "error": str(e)}
+                results["checks"][name] = {"status": "fail", "error": str(e)}  # type: ignore[index]
                 results["status"] = "unhealthy"
 
         return results

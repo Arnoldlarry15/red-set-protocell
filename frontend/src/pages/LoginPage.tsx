@@ -5,8 +5,9 @@ import axios from 'axios';
 import { User } from '../types';
 import { getUserFriendlyApiError } from '../utils/apiErrors';
 import '../styles/Auth.css';
+import { getUserFriendlyApiError } from '../utils/apiErrors';
+import { API_BASE_URL } from '../utils/config';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 interface LoginPageProps {
   onAuth: (apiKey: string, backend: string, userData?: User) => void;

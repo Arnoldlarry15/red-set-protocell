@@ -10,7 +10,9 @@ background_tasks: Set[asyncio.Task] = set()
 background_tasks_lock = threading.Lock()
 
 
-def track_background_task(task: asyncio.Task, context: str, log_exception_safely: Callable[[str, Exception], None]) -> asyncio.Task:
+def track_background_task(
+    task: asyncio.Task, context: str, log_exception_safely: Callable[[str, Exception], None]
+) -> asyncio.Task:
     """Track background tasks and surface exceptions deterministically."""
     with background_tasks_lock:
         background_tasks.add(task)

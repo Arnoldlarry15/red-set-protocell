@@ -151,7 +151,7 @@ class SessionMetricsExtractor:
                 ORDER BY s.timestamp DESC
                 LIMIT ?
             """
-            params.append(limit)
+            params.append(limit)  # type: ignore[arg-type]
 
             cursor.execute(query, params)
 
@@ -225,7 +225,7 @@ class RoundMetricsExtractor:
             params = [session_id]
             if round_number is not None:
                 query += " AND round_number = ?"
-                params.append(round_number)
+                params.append(round_number)  # type: ignore[arg-type]
 
             query += " ORDER BY round_number"
 

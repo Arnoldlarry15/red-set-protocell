@@ -47,7 +47,7 @@ def summarize(name: str, results: list[Result]) -> tuple[float, float, float, fl
     success = sum(1 for r in results if r.ok)
     success_rate = (success / len(results)) * 100
     p50 = statistics.median(latencies)
-    p95 = statistics.quantiles(latencies, n=20)[18] if len(latencies) >= 20 else max(latencies)
+    p95 = statistics.quantiles(latencies, n=20)[18] if len(latencies) > 20 else max(latencies)
     avg = statistics.mean(latencies)
     print(f"[{name}] success={success}/{len(results)} ({success_rate:.2f}%) avg={avg:.1f}ms p50={p50:.1f}ms p95={p95:.1f}ms")
     return success_rate, avg, p50, p95

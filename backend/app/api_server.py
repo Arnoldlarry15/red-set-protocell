@@ -969,9 +969,7 @@ async def validate_llm_key(validation: LLMKeyValidation):
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
 
-            test_backend = OpenAIBackend(
-                api_key=validation.api_key, model_name="gpt-4o-mini", max_tokens=10, temperature=0.0
-            )
+            test_backend = OpenAIBackend(api_key=validation.api_key, model_name="gpt-4o-mini", max_tokens=10, temperature=0.0)
         elif validation.backend.lower() == "anthropic":
             from app.agents.target import AnthropicBackend
 
@@ -986,7 +984,8 @@ async def validate_llm_key(validation: LLMKeyValidation):
             )
         else:
             raise HTTPException(
-                status_code=400, detail=f"Invalid backend: {validation.backend}. Must be 'openai', 'anthropic', or 'openrouter'"
+                status_code=400,
+                detail=f"Invalid backend: {validation.backend}. Must be 'openai', 'anthropic', or 'openrouter'",
             )
 
         # Make a minimal test call to validate the key

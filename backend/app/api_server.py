@@ -254,7 +254,7 @@ class UserLogin(BaseModel):
 
 class LLMKeyValidation(BaseModel):
     api_key: str
-    backend: str  # 'openai' or 'anthropic'
+    backend: str  # 'openai', 'anthropic', or 'openrouter'
 
 
 # Global state
@@ -961,22 +961,31 @@ async def validate_llm_key(validation: LLMKeyValidation):
             raise HTTPException(
                 status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
             )
+        if validation.backend.lower() == "openrouter" and not key.startswith("sk-or-"):
+            raise HTTPException(
+                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+            )
         # Create a minimal test backend instance
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
 
-            test_backend = OpenAIBackend(
-                api_key=validation.api_key, model_name="gpt-3.5-turbo", max_tokens=10, temperature=0.0
-            )
+            test_backend = OpenAIBackend(api_key=validation.api_key, model_name="gpt-4o-mini", max_tokens=10, temperature=0.0)
         elif validation.backend.lower() == "anthropic":
             from app.agents.target import AnthropicBackend
 
             test_backend = AnthropicBackend(  # type: ignore[assignment]
                 api_key=validation.api_key, model_name="claude-3-haiku-20240307", max_tokens=10, temperature=0.0
             )
+        elif validation.backend.lower() == "openrouter":
+            from app.agents.target import OpenRouterBackend
+
+            test_backend = OpenRouterBackend(  # type: ignore[assignment]
+                api_key=validation.api_key, model_name="openai/gpt-4o-mini", max_tokens=10, temperature=0.0
+            )
         else:
             raise HTTPException(
-                status_code=400, detail=f"Invalid backend: {validation.backend}. Must be 'openai' or 'anthropic'"
+                status_code=400,
+                detail=f"Invalid backend: {validation.backend}. Must be 'openai', 'anthropic', or 'openrouter'",
             )
 
         # Make a minimal test call to validate the key

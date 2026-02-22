@@ -179,6 +179,33 @@ class TestUserManagement:
         # Should return 401 because key is invalid
         assert response.status_code == 401
 
+    def test_validate_openrouter_llm_key_publicly_accessible(self):
+        """Test OpenRouter key validation endpoint flow without JWT."""
+        from unittest.mock import AsyncMock, patch
+
+        with patch("app.agents.target.OpenRouterBackend") as mock_backend:
+            mock_instance = AsyncMock()
+            mock_instance.execute.return_value = "Hi"
+            mock_backend.return_value = mock_instance
+
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={"api_key": "sk-or-v1-test123", "backend": "openrouter"},
+            )
+
+            assert response.status_code == 200
+            data = response.json()
+            assert data["valid"] is True
+            assert data["backend"] == "openrouter"
+
+    def test_validate_openrouter_llm_key_invalid_format(self):
+        """Test OpenRouter validation rejects malformed keys."""
+        response = client.post(
+            "/auth/validate-llm-key",
+            json={"api_key": "invalid-openrouter-key", "backend": "openrouter"},
+        )
+        assert response.status_code == 401
+
     def test_validate_llm_key_network_error(self):
         """Test LLM key validation handles network errors appropriately"""
         # This test verifies that the endpoint can distinguish between

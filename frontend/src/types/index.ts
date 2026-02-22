@@ -63,7 +63,7 @@ export interface SessionConfig {
   maxRounds: number;
   maxApiCost: number;
   haltOnCritical: boolean;
-  backend: 'openai' | 'anthropic';
+  backend: 'openai' | 'anthropic' | 'openrouter';
   model: string;
   mutationRate: number;
   semanticIntensity: 'low' | 'medium' | 'high'; // NEW: Control encoding transform drift

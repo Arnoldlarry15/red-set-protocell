@@ -11,7 +11,11 @@ from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from app.agents.orchestrator import Orchestrator
-from app.benchmarking.benchmark_suite import BenchmarkConfig, BenchmarkResult, BenchmarkStatus
+from app.benchmarking.benchmark_suite import (
+    BenchmarkConfig,
+    BenchmarkResult,
+    BenchmarkStatus,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +74,9 @@ class BenchmarkRunner:
                 self.orchestrator.concurrent_rounds = config.concurrent_rounds
 
             # Run the session
-            stats = await asyncio.wait_for(self.orchestrator.run_session(), timeout=config.timeout_seconds)
+            stats = await asyncio.wait_for(
+                self.orchestrator.run_session(), timeout=config.timeout_seconds
+            )
 
             # Extract metrics from stats
             session_stats = stats.get("session", {})

@@ -22,7 +22,11 @@ from app.agents.orchestrator import Orchestrator, StateManager
 from app.agents.sniper import Sniper
 from app.agents.spotter import Spotter
 from app.agents.target import create_target
-from app.analytics.time_tracking import FatigueTracker, RegressionDetector, ScoreDriftAnalyzer
+from app.analytics.time_tracking import (
+    FatigueTracker,
+    RegressionDetector,
+    ScoreDriftAnalyzer,
+)
 from app.core.config import RSPConfig, load_config_from_env
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.mutation import MutationEngine
@@ -68,7 +72,11 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
     scoring_engine = ScoringEngine()
     mutation_engine = MutationEngine()
 
-    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5, creativity_temperature=0.8)
+    sniper = Sniper(
+        mutation_engine=mutation_engine,
+        evolution_pool_size=5,
+        creativity_temperature=0.8,
+    )
 
     # Create target using config loaded from environment
     from app.factories import TargetFactory
@@ -82,7 +90,11 @@ async def run_test_session(model_version: str, rounds: int = 30) -> str:
 
     spotter = Spotter()
 
-    state_manager = StateManager(database_path="time_analytics_example.db", zero_retention=False, model_version=model_version)
+    state_manager = StateManager(
+        database_path="time_analytics_example.db",
+        zero_retention=False,
+        model_version=model_version,
+    )
 
     orchestrator = Orchestrator(
         sniper=sniper,
@@ -194,16 +206,14 @@ def analyze_drift(session_id: str):
 
 async def main():
     """Main function."""
-    print(
-        """
+    print("""
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║         RSP Time Analytics Examples                           ║
     ║         Time as a First-Class Dimension                   ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
-    """
-    )
+    """)
 
     print("\nThis showcases RSP's time-based analytics:")
     print("1. Fatigue tracking - Does the model degrade over rounds?")

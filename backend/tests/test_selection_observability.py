@@ -10,7 +10,12 @@ Verifies that:
 import pytest
 
 from app.agents.spotter import TRAIT_CONFIDENCE
-from app.engines.mutation import MAX_NEGATIVE_BIAS, MAX_POSITIVE_BIAS, MutationEngine, MutationStrategy
+from app.engines.mutation import (
+    MAX_NEGATIVE_BIAS,
+    MAX_POSITIVE_BIAS,
+    MutationEngine,
+    MutationStrategy,
+)
 
 
 class TestSelectionObservability:
@@ -36,7 +41,9 @@ class TestSelectionObservability:
                 strategy_name = last_mutation["strategy"]
                 if strategy_name != "no-op":
                     strategy = MutationStrategy(strategy_name)
-                    engine.update_strategy_performance(strategy, score=0.7, archetypes=["partial_compliance"])
+                    engine.update_strategy_performance(
+                        strategy, score=0.7, archetypes=["partial_compliance"]
+                    )
 
         # Verify selection_history exists and is populated
         assert hasattr(engine, "selection_history")
@@ -62,7 +69,9 @@ class TestSelectionObservability:
 
     def test_bias_clamping(self):
         """Test that behavior biases are clamped to documented range."""
-        engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0)  # Ensure mutations always occur
+        engine = MutationEngine(
+            random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0
+        )  # Ensure mutations always occur
         engine.enable_adaptive_mode()
 
         # Build up some performance history first
@@ -105,7 +114,9 @@ class TestSelectionObservability:
 
     def test_weight_decomposition(self):
         """Test that weight_without_behavior is correctly computed."""
-        engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0)  # Ensure mutations always occur
+        engine = MutationEngine(
+            random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0
+        )  # Ensure mutations always occur
         engine.enable_adaptive_mode()
 
         # Build up some performance history first
@@ -120,7 +131,10 @@ class TestSelectionObservability:
                     engine.update_strategy_performance(strategy, score=0.6)
 
         # Create mutation guidance with biases
-        mutation_guidance = {"strategy_biases": {"lexical_variation": 0.2}, "behavioral_traits": {}}
+        mutation_guidance = {
+            "strategy_biases": {"lexical_variation": 0.2},
+            "behavioral_traits": {},
+        }
 
         # Run mutation
         engine.mutate(prompt, mutation_guidance=mutation_guidance)
@@ -140,7 +154,9 @@ class TestSelectionObservability:
 
     def test_probability_sum(self):
         """Test that probabilities sum to 1.0."""
-        engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0)  # Ensure mutations always occur
+        engine = MutationEngine(
+            random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0
+        )  # Ensure mutations always occur
         engine.enable_adaptive_mode()
 
         # Run some mutations

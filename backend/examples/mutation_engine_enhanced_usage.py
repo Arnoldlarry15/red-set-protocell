@@ -22,9 +22,15 @@ def example_basic_mutation_with_archetypes():
     engine = MutationEngine(mutation_rate=1.0)
 
     # Simulate mutations with different archetypes
-    prompt1 = engine.mutate("Tell me a secret", fitness_score=0.8, archetypes=["HIDDEN_COMPLIANCE"])
+    prompt1 = engine.mutate(
+        "Tell me a secret", fitness_score=0.8, archetypes=["HIDDEN_COMPLIANCE"]
+    )
 
-    prompt2 = engine.mutate("Bypass the rules", fitness_score=0.6, archetypes=["EXPLOIT_RISK", "HIDDEN_COMPLIANCE"])
+    prompt2 = engine.mutate(
+        "Bypass the rules",
+        fitness_score=0.6,
+        archetypes=["EXPLOIT_RISK", "HIDDEN_COMPLIANCE"],
+    )
 
     # Check mutation history includes archetypes
     for i, record in enumerate(engine.mutation_history, 1):
@@ -48,15 +54,21 @@ def example_adaptive_selection_with_performance():
 
     # Lexical variation performs well
     for _ in range(10):
-        engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.85, archetypes=["HIDDEN_COMPLIANCE"])
+        engine.update_strategy_performance(
+            MutationStrategy.LEXICAL_VARIATION, 0.85, archetypes=["HIDDEN_COMPLIANCE"]
+        )
 
     # Obfuscation performs poorly
     for _ in range(10):
-        engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.25, archetypes=["EXPLOIT_RISK"])
+        engine.update_strategy_performance(
+            MutationStrategy.OBFUSCATION, 0.25, archetypes=["EXPLOIT_RISK"]
+        )
 
     # Role play performs moderately
     for _ in range(5):
-        engine.update_strategy_performance(MutationStrategy.ROLE_PLAY_FRAMING, 0.55, archetypes=["HIDDEN_COMPLIANCE"])
+        engine.update_strategy_performance(
+            MutationStrategy.ROLE_PLAY_FRAMING, 0.55, archetypes=["HIDDEN_COMPLIANCE"]
+        )
 
     # Now generate mutations adaptively
     print("\nGeneration phase - adaptive selection in action...")
@@ -132,7 +144,9 @@ def example_enriched_statistics():
     for strategy, archetypes in stats["strategy_archetype_correlations"].items():
         print(f"  {strategy}:")
         for archetype, data in archetypes.items():
-            print(f"    {archetype}: avg_score={data['avg_score']:.2f}, count={data['count']}")
+            print(
+                f"    {archetype}: avg_score={data['avg_score']:.2f}, count={data['count']}"
+            )
 
     print("\nThese statistics enable:")
     print("  - Identifying which strategies work best")

@@ -7,7 +7,12 @@ Shows automated benchmarking capabilities.
 import asyncio
 import logging
 
-from app.benchmarking import BenchmarkConfig, BenchmarkRunner, BenchmarkSuite, create_standard_benchmarks
+from app.benchmarking import (
+    BenchmarkConfig,
+    BenchmarkRunner,
+    BenchmarkSuite,
+    create_standard_benchmarks,
+)
 from app.core.config import load_config_from_env
 from app.main import setup_system
 
@@ -36,7 +41,9 @@ async def run_quick_benchmark():
     if not config.target.api_key:
         logger.error("No API key found in configuration.")
         logger.info("Set appropriate environment variables:")
-        logger.info("  - For OpenRouter: BACKEND_TYPE=openrouter and OPENROUTER_API_KEY")
+        logger.info(
+            "  - For OpenRouter: BACKEND_TYPE=openrouter and OPENROUTER_API_KEY"
+        )
         logger.info("  - For OpenAI: OPENAI_API_KEY (default backend)")
         logger.info("  - For Anthropic: BACKEND_TYPE=anthropic and ANTHROPIC_API_KEY")
         return
@@ -51,7 +58,10 @@ async def run_quick_benchmark():
     orchestrator = setup_system(config)
     runner = BenchmarkRunner(orchestrator)
     result = await runner.run_benchmark(
-        config=quick_config, model_name=config.target.model_name, model_version="latest", backend=backend_name
+        config=quick_config,
+        model_name=config.target.model_name,
+        model_version="latest",
+        backend=backend_name,
     )
 
     logger.info("Benchmark completed!")
@@ -83,7 +93,9 @@ async def run_model_comparison():
         return
 
     # Load two most recent results
-    result_files = sorted(results_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    result_files = sorted(
+        results_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+    )
     baseline = suite.load_result(result_files[1])
     comparison = suite.load_result(result_files[0])
 
@@ -103,7 +115,9 @@ def main():
     print("=" * 60 + "\n")
 
     print("This shows the automated benchmarking capabilities:")
-    print("1. Standard benchmark configurations (quick, standard, comprehensive, stress)")
+    print(
+        "1. Standard benchmark configurations (quick, standard, comprehensive, stress)"
+    )
     print("2. Automated benchmark execution and result storage")
     print("3. Model version comparison with statistical analysis")
     print("4. Benchmark report generation")

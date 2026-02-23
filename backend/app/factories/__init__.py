@@ -60,7 +60,10 @@ class BackendFactory(ABC):
 
         if backend_type_lower not in cls._registry:
             available = ", ".join(cls._registry.keys())
-            raise ValueError(f"Unknown backend type: {backend_type}. " f"Available backends: {available}")
+            raise ValueError(
+                f"Unknown backend type: {backend_type}. "
+                f"Available backends: {available}"
+            )
 
         backend_class = cls._registry[backend_type_lower]
 
@@ -68,7 +71,9 @@ class BackendFactory(ABC):
         return cls._instantiate_backend(backend_class, config)
 
     @classmethod
-    def _instantiate_backend(cls, backend_class: Type[TargetBackend], config: Dict[str, Any]) -> TargetBackend:
+    def _instantiate_backend(
+        cls, backend_class: Type[TargetBackend], config: Dict[str, Any]
+    ) -> TargetBackend:
         """
         Instantiate a backend with appropriate configuration.
 
@@ -149,7 +154,11 @@ class TargetFactory:
     """
 
     @staticmethod
-    def create(backend_type: str, perturbation_config: Optional[PerturbationConfig] = None, **config) -> Target:
+    def create(
+        backend_type: str,
+        perturbation_config: Optional[PerturbationConfig] = None,
+        **config,
+    ) -> Target:
         """
         Create a Target agent with specified backend.
 
@@ -170,7 +179,8 @@ class TargetFactory:
         return Target(
             backend,
             fresh_context=config.get("fresh_context", True),
-            perturbation_config=perturbation_config or config.get("perturbation_config"),
+            perturbation_config=perturbation_config
+            or config.get("perturbation_config"),
         )
 
 

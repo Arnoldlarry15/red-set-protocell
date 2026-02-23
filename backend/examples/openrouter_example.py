@@ -14,7 +14,7 @@ Usage:
     # Using environment variable
     export OPENROUTER_API_KEY="sk-or-v1-..."
     python openrouter_example.py
-    
+
     # Or via command line
     python -m app.main --rounds 10 --backend openrouter --api-key "sk-or-v1-..." --model "openai/gpt-3.5-turbo"
 """
@@ -32,7 +32,9 @@ async def test_openrouter_backend():
     api_key = os.environ.get("OPENROUTER_API_KEY", "your-api-key-here")
 
     if api_key == "your-api-key-here":
-        print("[!] Warning: Using placeholder API key. Set OPENROUTER_API_KEY environment variable.")
+        print(
+            "[!] Warning: Using placeholder API key. Set OPENROUTER_API_KEY environment variable."
+        )
         print("[!] This example will fail without a valid API key.\n")
 
     # Available models on OpenRouter (examples)
@@ -48,7 +50,11 @@ async def test_openrouter_backend():
     print("=" * 60)
     print("OpenRouter Backend Example")
     print("=" * 60)
-    print("API Key: configured" if api_key and api_key != "your-api-key-here" else "API Key: not set")
+    print(
+        "API Key: configured"
+        if api_key and api_key != "your-api-key-here"
+        else "API Key: not set"
+    )
     print(f"Available models: {len(models)}")
     print()
 
@@ -59,7 +65,11 @@ async def test_openrouter_backend():
     try:
         # Create Target using OpenRouter backend
         target = TargetFactory.create(
-            backend_type="openrouter", api_key=api_key, model_name=test_model, max_tokens=100, temperature=0.7
+            backend_type="openrouter",
+            api_key=api_key,
+            model_name=test_model,
+            max_tokens=100,
+            temperature=0.7,
         )
 
         backend_info = target.backend.get_backend_info()

@@ -194,5 +194,8 @@ class TrustBoundary:
         """
         # Basic validation: ensure output is not None and has content
         return output is not None and (
-            isinstance(output, str) and len(output) > 0 or isinstance(output, dict) and len(output) > 0
+            isinstance(output, str)
+            and len(output) > 0
+            or isinstance(output, dict)
+            and len(output) > 0
         )

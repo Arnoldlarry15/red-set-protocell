@@ -21,11 +21,25 @@ async def test_archetype_recommendations_policy_erosion():
         "indicators": {},
         "archetypes": [FailureArchetype.POLICY_EROSION],
     }
-    l2_result = {"score": 0.3, "confidence": 0.6, "uncertainty": 0.4, "indicators": {}, "archetypes": []}
-    l3_result = {"score": 0.2, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l2_result = {
+        "score": 0.3,
+        "confidence": 0.6,
+        "uncertainty": 0.4,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l3_result = {
+        "score": 0.2,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
-    guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
+    guidance = spotter._generate_mutation_guidance(
+        l1_result, l2_result, l3_result, None, axes
+    )
 
     # Should include archetype in detected_archetypes
     assert "detected_archetypes" in guidance
@@ -41,7 +55,13 @@ async def test_archetype_recommendations_role_confusion():
     """Test that ROLE_CONFUSION archetype recommends role-play strategies."""
     spotter = Spotter()
 
-    l1_result = {"score": 0.3, "confidence": 0.7, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l1_result = {
+        "score": 0.3,
+        "confidence": 0.7,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
     l2_result = {
         "score": 0.6,
         "confidence": 0.8,
@@ -49,10 +69,18 @@ async def test_archetype_recommendations_role_confusion():
         "indicators": {},
         "archetypes": [FailureArchetype.ROLE_CONFUSION],
     }
-    l3_result = {"score": 0.2, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l3_result = {
+        "score": 0.2,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
-    guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
+    guidance = spotter._generate_mutation_guidance(
+        l1_result, l2_result, l3_result, None, axes
+    )
 
     # Should detect role confusion
     assert "role_confusion" in guidance["detected_archetypes"]
@@ -81,10 +109,18 @@ async def test_multiple_archetypes_combine_strategies():
         "indicators": {},
         "archetypes": [FailureArchetype.HIDDEN_COMPLIANCE],
     }
-    l3_result = {"score": 0.4, "confidence": 0.7, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l3_result = {
+        "score": 0.4,
+        "confidence": 0.7,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
-    guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
+    guidance = spotter._generate_mutation_guidance(
+        l1_result, l2_result, l3_result, None, axes
+    )
 
     # Should detect both archetypes
     assert "misplaced_helpfulness" in guidance["detected_archetypes"]
@@ -102,12 +138,32 @@ async def test_no_archetypes_provides_default_guidance():
     """Test that missing archetypes still provides useful guidance."""
     spotter = Spotter()
 
-    l1_result = {"score": 0.2, "confidence": 0.7, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
-    l2_result = {"score": 0.3, "confidence": 0.8, "uncertainty": 0.2, "indicators": {}, "archetypes": []}
-    l3_result = {"score": 0.1, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l1_result = {
+        "score": 0.2,
+        "confidence": 0.7,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l2_result = {
+        "score": 0.3,
+        "confidence": 0.8,
+        "uncertainty": 0.2,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l3_result = {
+        "score": 0.1,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
-    guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
+    guidance = spotter._generate_mutation_guidance(
+        l1_result, l2_result, l3_result, None, axes
+    )
 
     # Should still have recommendations from layer-based logic
     assert len(guidance["recommended_strategies"]) > 0
@@ -127,15 +183,31 @@ async def test_archetype_focus_areas():
         "indicators": {},
         "archetypes": [FailureArchetype.REFUSAL_COLLAPSE],
     }
-    l2_result = {"score": 0.3, "confidence": 0.8, "uncertainty": 0.2, "indicators": {}, "archetypes": []}
-    l3_result = {"score": 0.2, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l2_result = {
+        "score": 0.3,
+        "confidence": 0.8,
+        "uncertainty": 0.2,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l3_result = {
+        "score": 0.2,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
-    guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
+    guidance = spotter._generate_mutation_guidance(
+        l1_result, l2_result, l3_result, None, axes
+    )
 
     # Should have archetype-specific focus areas
     focus_areas = guidance["focus_areas"]
-    assert any(area in focus_areas for area in ["refusal_robustness", "persistence_testing"])
+    assert any(
+        area in focus_areas for area in ["refusal_robustness", "persistence_testing"]
+    )
 
 
 @pytest.mark.asyncio
@@ -153,7 +225,9 @@ async def test_integration_with_scoring_engine():
     result = await spotter.evaluate(response, attack_domain="policy_circumvention")
 
     # Create evaluation with scoring engine
-    evaluation = engine.create_evaluation(result["l1"], result["l2"], result["l3"], result["mutation_guidance"])
+    evaluation = engine.create_evaluation(
+        result["l1"], result["l2"], result["l3"], result["mutation_guidance"]
+    )
 
     # Verify mutation guidance has archetype information
     assert "detected_archetypes" in evaluation.mutation_guidance
@@ -165,7 +239,9 @@ async def test_integration_with_scoring_engine():
 
     # Verify layer contributions
     assert evaluation.layer_contributions is not None
-    assert sum(evaluation.layer_contributions.values()) == pytest.approx(evaluation.global_score, abs=0.001)
+    assert sum(evaluation.layer_contributions.values()) == pytest.approx(
+        evaluation.global_score, abs=0.001
+    )
 
 
 def test_get_archetype_strategy_recommendations():

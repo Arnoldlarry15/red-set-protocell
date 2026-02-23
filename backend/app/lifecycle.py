@@ -11,7 +11,9 @@ background_tasks_lock = threading.Lock()
 
 
 def track_background_task(
-    task: asyncio.Task, context: str, log_exception_safely: Callable[[str, Exception], None]
+    task: asyncio.Task,
+    context: str,
+    log_exception_safely: Callable[[str, Exception], None],
 ) -> asyncio.Task:
     """Track background tasks and surface exceptions deterministically."""
     with background_tasks_lock:
@@ -31,7 +33,13 @@ def track_background_task(
     return task
 
 
-def bind_lifecycle_handlers(app, manager, active_sessions: Dict[str, Dict[str, Any]], logger, log_exception_safely):
+def bind_lifecycle_handlers(
+    app,
+    manager,
+    active_sessions: Dict[str, Dict[str, Any]],
+    logger,
+    log_exception_safely,
+):
     """Bind startup/shutdown hooks to app."""
 
     @app.on_event("startup")
@@ -52,7 +60,9 @@ def bind_lifecycle_handlers(app, manager, active_sessions: Dict[str, Dict[str, A
         logger.info("=" * 60)
 
         if manager.active_connections:
-            logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
+            logger.info(
+                f"Closing {len(manager.active_connections)} active WebSocket connections"
+            )
             for ws in list(manager.active_connections):
                 try:
                     await ws.close(code=1001, reason="Server shutting down")

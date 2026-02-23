@@ -106,9 +106,24 @@ class TestScoringEngineUncertainty:
         """Test create_evaluation handles uncertainty."""
         engine = ScoringEngine()
 
-        l1_data = {"score": 0.3, "confidence": 0.7, "indicators": {}, "uncertainty": 0.05}
-        l2_data = {"score": 0.5, "confidence": 0.8, "indicators": {}, "uncertainty": 0.08}
-        l3_data = {"score": 0.2, "confidence": 0.6, "indicators": {}, "uncertainty": 0.04}
+        l1_data = {
+            "score": 0.3,
+            "confidence": 0.7,
+            "indicators": {},
+            "uncertainty": 0.05,
+        }
+        l2_data = {
+            "score": 0.5,
+            "confidence": 0.8,
+            "indicators": {},
+            "uncertainty": 0.08,
+        }
+        l3_data = {
+            "score": 0.2,
+            "confidence": 0.6,
+            "indicators": {},
+            "uncertainty": 0.04,
+        }
 
         result = engine.create_evaluation(l1_data, l2_data, l3_data)
 
@@ -124,19 +139,31 @@ class TestScoringEngineUncertainty:
         # Simulate 3 evaluation passes with slight variations
         evaluations = [
             {
-                "l1": {"score": 0.30, "confidence": 0.7, "indicators": {"test": {"detected": True, "match_count": 1}}},
+                "l1": {
+                    "score": 0.30,
+                    "confidence": 0.7,
+                    "indicators": {"test": {"detected": True, "match_count": 1}},
+                },
                 "l2": {"score": 0.50, "confidence": 0.8, "indicators": {}},
                 "l3": {"score": 0.20, "confidence": 0.6, "indicators": {}},
                 "mutation_guidance": {},
             },
             {
-                "l1": {"score": 0.32, "confidence": 0.75, "indicators": {"test": {"detected": True, "match_count": 1}}},
+                "l1": {
+                    "score": 0.32,
+                    "confidence": 0.75,
+                    "indicators": {"test": {"detected": True, "match_count": 1}},
+                },
                 "l2": {"score": 0.48, "confidence": 0.82, "indicators": {}},
                 "l3": {"score": 0.22, "confidence": 0.65, "indicators": {}},
                 "mutation_guidance": {},
             },
             {
-                "l1": {"score": 0.28, "confidence": 0.72, "indicators": {"test": {"detected": False, "match_count": 0}}},
+                "l1": {
+                    "score": 0.28,
+                    "confidence": 0.72,
+                    "indicators": {"test": {"detected": False, "match_count": 0}},
+                },
                 "l2": {"score": 0.52, "confidence": 0.78, "indicators": {}},
                 "l3": {"score": 0.18, "confidence": 0.62, "indicators": {}},
                 "mutation_guidance": {},
@@ -291,7 +318,9 @@ class TestSpotterUncertainty:
         spotter = Spotter()
 
         # High confidence, high matches
-        uncertainty = spotter._compute_uncertainty(confidence=0.9, matches=8, total_checks=10)
+        uncertainty = spotter._compute_uncertainty(
+            confidence=0.9, matches=8, total_checks=10
+        )
 
         # Should be low uncertainty
         assert uncertainty < 0.3
@@ -301,7 +330,9 @@ class TestSpotterUncertainty:
         spotter = Spotter()
 
         # Low confidence, few matches
-        uncertainty = spotter._compute_uncertainty(confidence=0.3, matches=2, total_checks=10)
+        uncertainty = spotter._compute_uncertainty(
+            confidence=0.3, matches=2, total_checks=10
+        )
 
         # Should be high uncertainty
         assert uncertainty > 0.5
@@ -400,7 +431,10 @@ class TestIntegrationUncertainty:
 
         # ScoringEngine creates evaluation
         evaluation = engine.create_evaluation(
-            spotter_result["l1"], spotter_result["l2"], spotter_result["l3"], spotter_result["mutation_guidance"]
+            spotter_result["l1"],
+            spotter_result["l2"],
+            spotter_result["l3"],
+            spotter_result["mutation_guidance"],
         )
 
         # Should have uncertainty at all levels
@@ -428,7 +462,9 @@ class TestIntegrationUncertainty:
         assert multi_pass_result["multi_pass"] is True
 
         # Aggregate with scoring engine
-        aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result["evaluations"])
+        aggregated = engine.aggregate_multi_pass_evaluations(
+            multi_pass_result["evaluations"]
+        )
 
         # Should have agreement score
         assert aggregated.multi_pass_agreement is not None

@@ -18,7 +18,9 @@ async def test_sequential_execution():
     """Test that sequential execution works correctly."""
     # Create mock agents
     sniper = Mock()
-    sniper.generate_prompt = AsyncMock(return_value=("test prompt", Mock(value="test_domain")))
+    sniper.generate_prompt = AsyncMock(
+        return_value=("test prompt", Mock(value="test_domain"))
+    )
     sniper.update_prompt_score = Mock()
     sniper.get_statistics = Mock(return_value={})
     sniper.mutation_engine = Mock()
@@ -29,7 +31,9 @@ async def test_sequential_execution():
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = AsyncMock(return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}})
+    spotter.evaluate = AsyncMock(
+        return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}}
+    )
     spotter.get_statistics = Mock(return_value={})
 
     egg = Mock()
@@ -71,7 +75,9 @@ async def test_parallel_execution():
     """Test that parallel execution works correctly."""
     # Create mock agents with async support
     sniper = Mock()
-    sniper.generate_prompt = AsyncMock(return_value=("test prompt", Mock(value="test_domain")))
+    sniper.generate_prompt = AsyncMock(
+        return_value=("test prompt", Mock(value="test_domain"))
+    )
     sniper.update_prompt_score = Mock()
     sniper.get_statistics = Mock(return_value={})
     sniper.mutation_engine = Mock()
@@ -82,7 +88,9 @@ async def test_parallel_execution():
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = AsyncMock(return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}})
+    spotter.evaluate = AsyncMock(
+        return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}}
+    )
     spotter.get_statistics = Mock(return_value={})
 
     egg = Mock()
@@ -123,7 +131,9 @@ async def test_parallel_execution():
 async def test_parallel_with_timeout():
     """Test that parallel execution handles timeouts correctly."""
     sniper = Mock()
-    sniper.generate_prompt = Mock(return_value=("test prompt", Mock(value="test_domain")))
+    sniper.generate_prompt = Mock(
+        return_value=("test prompt", Mock(value="test_domain"))
+    )
     sniper.update_prompt_score = Mock()
     sniper.get_statistics = Mock(return_value={})
     sniper.mutation_engine = Mock()
@@ -139,7 +149,9 @@ async def test_parallel_with_timeout():
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = Mock(return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}})
+    spotter.evaluate = Mock(
+        return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}}
+    )
     spotter.get_statistics = Mock(return_value={})
 
     egg = Mock()

@@ -59,15 +59,27 @@ class TestEvaluationReportSchema:
             evaluation_id="test-001",
             timestamp=datetime.utcnow(),
             strategy_used="adversarial_suffix",
-            prompt_analysis=PromptAnalysis(danger_score=0.8, categories=["harmful"], requires_refusal=True),
+            prompt_analysis=PromptAnalysis(
+                danger_score=0.8, categories=["harmful"], requires_refusal=True
+            ),
             response_analysis=ResponseAnalysis(
-                policy_violation_score=0.7, contradiction_score=0.3, fluency_score=0.8, manipulation_risk=0.4
+                policy_violation_score=0.7,
+                contradiction_score=0.3,
+                fluency_score=0.8,
+                manipulation_risk=0.4,
             ),
             behavioral_flags=BehavioralFlags(
-                early_compliance=True, authority_mimicry=False, emotional_manipulation=False, overconfidence=True
+                early_compliance=True,
+                authority_mimicry=False,
+                emotional_manipulation=False,
+                overconfidence=True,
             ),
-            drift_metrics=DriftMetrics(entropy=0.75, diversity_score=0.8, saturation_warning=False),
-            aggregated=AggregatedRisk(risk_score=0.65, confidence_interval=(0.60, 0.70), risk_level="HIGH"),
+            drift_metrics=DriftMetrics(
+                entropy=0.75, diversity_score=0.8, saturation_warning=False
+            ),
+            aggregated=AggregatedRisk(
+                risk_score=0.65, confidence_interval=(0.60, 0.70), risk_level="HIGH"
+            ),
             explanation="Test evaluation explanation",
             metadata={"test": "data"},
         )
@@ -81,20 +93,29 @@ class TestEvaluationReportSchema:
         """Test that scores are validated to be in [0.0, 1.0] range."""
         # Valid score
         analysis = ResponseAnalysis(
-            policy_violation_score=0.5, contradiction_score=0.3, fluency_score=0.8, manipulation_risk=0.4
+            policy_violation_score=0.5,
+            contradiction_score=0.3,
+            fluency_score=0.8,
+            manipulation_risk=0.4,
         )
         assert analysis.policy_violation_score == 0.5
 
         # Invalid score (> 1.0) should raise validation error
         with pytest.raises(Exception):  # Pydantic ValidationError
             ResponseAnalysis(
-                policy_violation_score=1.5, contradiction_score=0.3, fluency_score=0.8, manipulation_risk=0.4  # Invalid
+                policy_violation_score=1.5,
+                contradiction_score=0.3,
+                fluency_score=0.8,
+                manipulation_risk=0.4,  # Invalid
             )
 
         # Invalid score (< 0.0) should raise validation error
         with pytest.raises(Exception):  # Pydantic ValidationError
             ResponseAnalysis(
-                policy_violation_score=-0.1, contradiction_score=0.3, fluency_score=0.8, manipulation_risk=0.4  # Invalid
+                policy_violation_score=-0.1,
+                contradiction_score=0.3,
+                fluency_score=0.8,
+                manipulation_risk=0.4,  # Invalid
             )
 
 

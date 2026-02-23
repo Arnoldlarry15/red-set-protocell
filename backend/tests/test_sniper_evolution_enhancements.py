@@ -18,7 +18,9 @@ from app.engines.mutation import MutationEngine, MutationStrategy
 def test_archetype_extraction_and_passing():
     """Test that archetypes are extracted from structured_feedback and passed to mutation engine."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)  # Not needed for this test
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )  # Not needed for this test
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -46,7 +48,9 @@ def test_archetype_extraction_and_passing():
     sniper.update_prompt_score(prompt, 0.8, structured_feedback=structured_feedback)
 
     # Check that archetypes were passed to mutation engine
-    strategy_performance = engine.strategy_archetype_performance[MutationStrategy.LEXICAL_VARIATION.value]
+    strategy_performance = engine.strategy_archetype_performance[
+        MutationStrategy.LEXICAL_VARIATION.value
+    ]
     assert "HIDDEN_COMPLIANCE" in strategy_performance
     assert "EXPLOIT_RISK" in strategy_performance
     assert "REFUSAL_COLLAPSE" in strategy_performance
@@ -62,7 +66,9 @@ def test_archetype_extraction_and_passing():
 def test_blocked_prompt_skips_strategy_update():
     """Test that blocked prompts don't update mutation engine strategy performance."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -92,8 +98,12 @@ def test_blocked_prompt_skips_strategy_update():
     sniper.update_prompt_score(prompt, 0.0, structured_feedback=blocked_feedback)
 
     # Check that strategy performance was NOT updated
-    strategy_performance = engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]
-    assert len(strategy_performance) == 0, "Blocked prompts should not update strategy performance"
+    strategy_performance = engine.strategy_performance[
+        MutationStrategy.LEXICAL_VARIATION.value
+    ]
+    assert (
+        len(strategy_performance) == 0
+    ), "Blocked prompts should not update strategy performance"
 
     # Check that candidate score was NOT updated
     candidate = sniper.evolution_pool[0]
@@ -103,7 +113,9 @@ def test_blocked_prompt_skips_strategy_update():
 def test_novelty_bonus_calculation():
     """Test that novelty bonus is correctly calculated based on diverse archetypes."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -145,13 +157,17 @@ def test_novelty_bonus_calculation():
     # Adjusted score: 0.7 + 0.20 = 0.90
     import math
 
-    assert math.isclose(candidate.score, 0.90, rel_tol=1e-9), f"Expected 0.90, got {candidate.score}"
+    assert math.isclose(
+        candidate.score, 0.90, rel_tol=1e-9
+    ), f"Expected 0.90, got {candidate.score}"
 
 
 def test_novelty_bonus_capped_at_one():
     """Test that novelty bonus doesn't push score above 1.0."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -179,13 +195,17 @@ def test_novelty_bonus_capped_at_one():
     # Novelty bonus would be 9 * 0.05 = 0.45
     # But score should be capped at 1.0
     candidate = sniper.evolution_pool[0]
-    assert candidate.score == 1.0, f"Score should be capped at 1.0, got {candidate.score}"
+    assert (
+        candidate.score == 1.0
+    ), f"Score should be capped at 1.0, got {candidate.score}"
 
 
 def test_no_archetypes_no_bonus():
     """Test that prompts with no archetypes don't get novelty bonus."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -218,7 +238,9 @@ def test_no_archetypes_no_bonus():
 def test_archetype_deduplication():
     """Test that duplicate archetypes across layers are deduplicated."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -238,13 +260,18 @@ def test_archetype_deduplication():
     # Create feedback with duplicate archetypes across layers
     feedback = {
         "l1": {"score": 0.7, "archetypes": ["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"]},
-        "l2": {"score": 0.6, "archetypes": ["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"]},  # Duplicates
+        "l2": {
+            "score": 0.6,
+            "archetypes": ["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"],
+        },  # Duplicates
         "l3": {"score": 0.5, "archetypes": ["HIDDEN_COMPLIANCE"]},  # Duplicate
     }
     sniper.update_prompt_score(prompt, 0.7, structured_feedback=feedback)
 
     # Check that only unique archetypes were passed to mutation engine
-    strategy_performance = engine.strategy_archetype_performance[MutationStrategy.LEXICAL_VARIATION.value]
+    strategy_performance = engine.strategy_archetype_performance[
+        MutationStrategy.LEXICAL_VARIATION.value
+    ]
     assert "HIDDEN_COMPLIANCE" in strategy_performance
     assert "EXPLOIT_RISK" in strategy_performance
 
@@ -256,7 +283,9 @@ def test_archetype_deduplication():
 def test_no_structured_feedback_still_works():
     """Test that update_prompt_score works without structured_feedback (backward compatibility)."""
     engine = MutationEngine(mutation_rate=1.0)
-    sniper = Sniper(mutation_engine=engine, selection_engine=None, evolution_pool_size=10)
+    sniper = Sniper(
+        mutation_engine=engine, selection_engine=None, evolution_pool_size=10
+    )
 
     # Generate a prompt and add it to evolution pool
     prompt = "test prompt"
@@ -281,6 +310,8 @@ def test_no_structured_feedback_still_works():
     assert candidate.score == 0.7, f"Expected 0.7, got {candidate.score}"
 
     # Check that strategy performance was updated with no archetypes
-    strategy_performance = engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]
+    strategy_performance = engine.strategy_performance[
+        MutationStrategy.LEXICAL_VARIATION.value
+    ]
     assert len(strategy_performance) == 1
     assert strategy_performance[0] == 0.7

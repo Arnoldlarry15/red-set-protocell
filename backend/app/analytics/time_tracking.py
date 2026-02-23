@@ -154,7 +154,9 @@ class FatigueTracker:
         """
         self.database_path = database_path
 
-    def analyze_fatigue(self, session_id: str, fatigue_threshold: float = 0.15) -> FatigueReport:
+    def analyze_fatigue(
+        self, session_id: str, fatigue_threshold: float = 0.15
+    ) -> FatigueReport:
         """
         Analyze fatigue for a session.
 
@@ -301,7 +303,9 @@ class RegressionDetector:
         """
         self.database_path = database_path
 
-    def compare_versions(self, baseline: str, comparison: str, significance_threshold: float = 0.05) -> RegressionReport:
+    def compare_versions(
+        self, baseline: str, comparison: str, significance_threshold: float = 0.05
+    ) -> RegressionReport:
         """
         Compare two model versions.
 
@@ -509,7 +513,9 @@ class ScoreDriftAnalyzer:
             drift_direction=drift_direction,
         )
 
-    def analyze_session_comparison(self, session_ids: List[str]) -> Dict[str, TimeSeriesMetrics]:
+    def analyze_session_comparison(
+        self, session_ids: List[str]
+    ) -> Dict[str, TimeSeriesMetrics]:
         """
         Compare drift across multiple sessions.
 
@@ -541,7 +547,9 @@ class ScoreDriftAnalyzer:
 
         return numerator / denominator
 
-    def _classify_drift(self, trend_slope: float, std_deviation: float) -> DriftDirection:
+    def _classify_drift(
+        self, trend_slope: float, std_deviation: float
+    ) -> DriftDirection:
         """
         Classify drift direction based on trend and variance.
 

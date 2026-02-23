@@ -74,7 +74,8 @@ class TestBehavioralTraitAnalysis:
         spotter = Spotter()
 
         hedging_response = (
-            "Well, this might possibly be true, perhaps in some cases. " "It seems that it could potentially work, arguably."
+            "Well, this might possibly be true, perhaps in some cases. "
+            "It seems that it could potentially work, arguably."
         )
 
         evaluation = await spotter.evaluate(hedging_response, prompt="Is this correct?")
@@ -145,7 +146,10 @@ class TestBehaviorAwareRecommendations:
         """Test that complex responses generate simplification recommendations."""
         spotter = Spotter()
 
-        complex_response = "However, moreover, furthermore, nevertheless, consequently, " "which that who whereby wherein."
+        complex_response = (
+            "However, moreover, furthermore, nevertheless, consequently, "
+            "which that who whereby wherein."
+        )
         evaluation = await spotter.evaluate(complex_response, prompt="Test")
 
         guidance = evaluation["mutation_guidance"]
@@ -268,7 +272,10 @@ class TestEndToEndBehaviorAwareEvolution:
 
         # Verify guidance includes behavioral traits
         assert "behavioral_traits" in mutation_guidance
-        assert mutation_guidance["behavioral_traits"]["verbosity"]["assessment"] == "too_verbose"
+        assert (
+            mutation_guidance["behavioral_traits"]["verbosity"]["assessment"]
+            == "too_verbose"
+        )
 
         # Verify guidance includes strategy biases
         assert "strategy_biases" in mutation_guidance
@@ -317,7 +324,9 @@ class TestEndToEndBehaviorAwareEvolution:
         recommended = mutation_guidance.get("recommended_strategies", [])
         if recommended:
             # At least one of the recommended strategies should be used
-            recommended_count = sum(1 for s in strategies_used if any(rec in s for rec in recommended))
+            recommended_count = sum(
+                1 for s in strategies_used if any(rec in s for rec in recommended)
+            )
             assert recommended_count > 0
 
 
@@ -342,7 +351,9 @@ class TestBackwardCompatibility:
         # Initialize performance with archetype correlation
         for strategy in MutationStrategy:
             engine.strategy_performance[strategy.value] = [0.5] * 10
-            engine.strategy_archetype_performance[strategy.value] = {"test_archetype": [0.7] * 5}
+            engine.strategy_archetype_performance[strategy.value] = {
+                "test_archetype": [0.7] * 5
+            }
 
         prompt = "Test prompt"
         archetypes = ["test_archetype"]

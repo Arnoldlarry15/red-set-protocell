@@ -81,7 +81,10 @@ def run_shadow_mode():
     if telemetry["shadow_matches"]:
         print(f"  Recent near-misses:")
         for match in telemetry["shadow_matches"][:5]:
-            print(f"    - Category: {match['category']}, " f"Match score: {match['match_score']:.2f}")
+            print(
+                f"    - Category: {match['category']}, "
+                f"Match score: {match['match_score']:.2f}"
+            )
 
 
 def run_coverage_metrics():
@@ -141,7 +144,9 @@ def run_full_integration():
     """Show full integration with all features enabled."""
     print_header("5. Full Integration - Monitored Immune Response")
 
-    egg = EthicalGuardrailGovernor(shadow_mode=True, shadow_threshold=0.5, log_fingerprints=True)
+    egg = EthicalGuardrailGovernor(
+        shadow_mode=True, shadow_threshold=0.5, log_fingerprints=True
+    )
 
     print("\nEGG is now a monitored immune response system:")
     print("  ✓ Telemetry tracking enabled")
@@ -175,26 +180,28 @@ def run_full_integration():
 
     # Calculate overall coverage
     total_used = sum(m["used_patterns"] for m in telemetry["coverage_metrics"].values())
-    total_patterns = sum(m["total_patterns"] for m in telemetry["coverage_metrics"].values())
+    total_patterns = sum(
+        m["total_patterns"] for m in telemetry["coverage_metrics"].values()
+    )
     overall_coverage = (total_used / total_patterns * 100) if total_patterns > 0 else 0
 
     print(f"  Overall pattern coverage: {overall_coverage:.1f}%")
 
-    print("\n✅ EGG has evolved from a static firewall into a monitored immune response!")
+    print(
+        "\n✅ EGG has evolved from a static firewall into a monitored immune response!"
+    )
 
 
 def main():
     """Run all examples."""
-    print(
-        """
+    print("""
 ╔═══════════════════════════════════════════════════════════════════╗
 ║                                                                   ║
 ║  EGG Evolution Examples - Monitored Immune Response                   ║
 ║  Red Set ProtoCell - Ethical Guardrail Governor                   ║
 ║                                                                   ║
 ╚═══════════════════════════════════════════════════════════════════╝
-"""
-    )
+""")
 
     run_telemetry()
     run_shadow_mode()

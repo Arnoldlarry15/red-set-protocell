@@ -10,7 +10,12 @@ logger = logging.getLogger(__name__)
 def redact_sensitive_text(text: str) -> str:
     """Redact sensitive credential-like tokens from logs and error messages."""
     redacted = re.sub(r"sk-[A-Za-z0-9_-]{8,}", "sk-***REDACTED***", text)
-    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._-]+", "Bearer ***REDACTED***", redacted, flags=re.IGNORECASE)
+    redacted = re.sub(
+        r"Bearer\s+[A-Za-z0-9._-]+",
+        "Bearer ***REDACTED***",
+        redacted,
+        flags=re.IGNORECASE,
+    )
     return redacted
 
 

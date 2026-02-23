@@ -107,7 +107,12 @@ def test_adversarial_test_prompt_generation():
     assert len(test_prompts) == 10
     assert all(isinstance(p, str) for p in test_prompts)
     # Updated to check for any test marker (SYNTHETIC, PARAPHRASE, OBFUSCATION, or BOUNDARY)
-    test_markers = ["[SYNTHETIC TEST]", "[PARAPHRASE TEST]", "[OBFUSCATION TEST]", "[BOUNDARY TEST]"]
+    test_markers = [
+        "[SYNTHETIC TEST]",
+        "[PARAPHRASE TEST]",
+        "[OBFUSCATION TEST]",
+        "[BOUNDARY TEST]",
+    ]
     assert all(any(marker in p for marker in test_markers) for p in test_prompts)
 
 
@@ -201,7 +206,12 @@ def test_coverage_percentage_calculation():
 
 def test_shadow_mode_match_dataclass():
     """Test that ShadowModeMatch dataclass works correctly."""
-    match = ShadowModeMatch(pattern=r"\btest\b", category="test_category", match_score=0.75, prompt_fingerprint="abc123")
+    match = ShadowModeMatch(
+        pattern=r"\btest\b",
+        category="test_category",
+        match_score=0.75,
+        prompt_fingerprint="abc123",
+    )
 
     assert match.pattern == r"\btest\b"
     assert match.category == "test_category"
@@ -271,5 +281,7 @@ def test_integration_telemetry_after_multiple_operations():
     assert len(telemetry["category_hits"]) > 0  # Some categories hit
 
     # Coverage should show some patterns used
-    used_pattern_count = sum(m["used_patterns"] for m in telemetry["coverage_metrics"].values())
+    used_pattern_count = sum(
+        m["used_patterns"] for m in telemetry["coverage_metrics"].values()
+    )
     assert used_pattern_count > 0

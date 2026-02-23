@@ -26,4 +26,6 @@ if __name__ == "__main__":
 
     # Run the server directly
     # For production, use gunicorn or uvicorn via command line
-    uvicorn.run("app.api_server:app", host="0.0.0.0", port=port, reload=False, log_level="info")  # Set to True for development
+    uvicorn.run(
+        "app.api_server:app", host="0.0.0.0", port=port, reload=False, log_level="info"
+    )  # Set to True for development

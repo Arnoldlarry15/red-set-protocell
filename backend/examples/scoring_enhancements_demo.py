@@ -34,12 +34,20 @@ async def demo_dominant_layer_tracking():
     This should do what you need."""
 
     result = await spotter.evaluate(response)
-    evaluation = engine.create_evaluation(result["l1"], result["l2"], result["l3"], result["mutation_guidance"])
+    evaluation = engine.create_evaluation(
+        result["l1"], result["l2"], result["l3"], result["mutation_guidance"]
+    )
 
     print("Layer Scores:")
-    print(f"  L1 (Linguistic Safety):       {evaluation.l1_linguistic_safety.score:.3f}")
-    print(f"  L2 (Security Exploitability):  {evaluation.l2_security_exploitability.score:.3f}")
-    print(f"  L3 (Cognitive Stability):      {evaluation.l3_cognitive_stability.score:.3f}")
+    print(
+        f"  L1 (Linguistic Safety):       {evaluation.l1_linguistic_safety.score:.3f}"
+    )
+    print(
+        f"  L2 (Security Exploitability):  {evaluation.l2_security_exploitability.score:.3f}"
+    )
+    print(
+        f"  L3 (Cognitive Stability):      {evaluation.l3_cognitive_stability.score:.3f}"
+    )
 
     print("\nLayer Contributions to Global Score:")
     for layer, contribution in evaluation.layer_contributions.items():
@@ -49,7 +57,9 @@ async def demo_dominant_layer_tracking():
     print(f"   Global Score: {evaluation.global_score:.3f}")
 
     print("\n✓ Interpretation: The dominant layer tells you which dimension")
-    print(f"  drove the risk score most strongly. In this case, {evaluation.dominant_layer.upper()}")
+    print(
+        f"  drove the risk score most strongly. In this case, {evaluation.dominant_layer.upper()}"
+    )
     print("  is the primary concern that needs to be addressed.\n")
 
 
@@ -69,7 +79,9 @@ async def demo_uncertainty_types():
     print("-" * 40)
     response1 = "That's an interesting question. I'll try to help."
     result1 = await spotter.evaluate(response1)
-    eval1 = engine.create_evaluation(result1["l1"], result1["l2"], result1["l3"], result1["mutation_guidance"])
+    eval1 = engine.create_evaluation(
+        result1["l1"], result1["l2"], result1["l3"], result1["mutation_guidance"]
+    )
 
     print(f"Response: {response1[:50]}...")
     print(f"L1 Uncertainty: {eval1.l1_linguistic_safety.uncertainty:.3f}")
@@ -82,7 +94,9 @@ async def demo_uncertainty_types():
     print("-" * 40)
     response2 = "I can't help with that, but here's some related information..."
     result2 = await spotter.evaluate(response2)
-    eval2 = engine.create_evaluation(result2["l1"], result2["l2"], result2["l3"], result2["mutation_guidance"])
+    eval2 = engine.create_evaluation(
+        result2["l1"], result2["l2"], result2["l3"], result2["mutation_guidance"]
+    )
 
     print(f"Response: {response2[:50]}...")
     print(f"L1 Uncertainty: {eval2.l1_linguistic_safety.uncertainty:.3f}")
@@ -113,7 +127,9 @@ async def demo_archetype_driven_guidance():
     )
 
     result = await spotter.evaluate(response, attack_domain="policy_circumvention")
-    evaluation = engine.create_evaluation(result["l1"], result["l2"], result["l3"], result["mutation_guidance"])
+    evaluation = engine.create_evaluation(
+        result["l1"], result["l2"], result["l3"], result["mutation_guidance"]
+    )
 
     print("Response:")
     print(f"  {response[:80]}...\n")
@@ -154,8 +170,7 @@ async def main():
     print("=" * 70)
     print("SUMMARY")
     print("=" * 70)
-    print(
-        """
+    print("""
 These three enhancements make scoring more interpretable and actionable:
 
 1. **Dominant Layer Tracking**: Immediately see which risk dimension matters most
@@ -164,8 +179,7 @@ These three enhancements make scoring more interpretable and actionable:
 
 Together, these features create a tighter feedback loop between evaluation
 and evolution, making the red-teaming process more effective.
-    """
-    )
+    """)
 
 
 if __name__ == "__main__":

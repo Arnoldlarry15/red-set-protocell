@@ -47,9 +47,17 @@ class TestHashComputation:
 
     def test_compute_interaction_hash_different_data(self):
         """Test that different data produces different hashes."""
-        data1 = {"seed": 42, "rounds": 10, "round_details": [{"round": 1, "score": 0.5}]}
+        data1 = {
+            "seed": 42,
+            "rounds": 10,
+            "round_details": [{"round": 1, "score": 0.5}],
+        }
 
-        data2 = {"seed": 43, "rounds": 10, "round_details": [{"round": 1, "score": 0.5}]}  # Different seed
+        data2 = {
+            "seed": 43,
+            "rounds": 10,
+            "round_details": [{"round": 1, "score": 0.5}],
+        }  # Different seed
 
         hash1 = compute_interaction_hash(data1)
         hash2 = compute_interaction_hash(data2)
@@ -58,9 +66,17 @@ class TestHashComputation:
 
     def test_compute_interaction_hash_order_independent(self):
         """Test that key order doesn't affect hash (canonical representation)."""
-        data1 = {"seed": 42, "rounds": 10, "configuration": {"backend": "openai", "model": "gpt-4"}}
+        data1 = {
+            "seed": 42,
+            "rounds": 10,
+            "configuration": {"backend": "openai", "model": "gpt-4"},
+        }
 
-        data2 = {"configuration": {"model": "gpt-4", "backend": "openai"}, "rounds": 10, "seed": 42}
+        data2 = {
+            "configuration": {"model": "gpt-4", "backend": "openai"},
+            "rounds": 10,
+            "seed": 42,
+        }
 
         hash1 = compute_interaction_hash(data1)
         hash2 = compute_interaction_hash(data2)
@@ -101,9 +117,15 @@ class TestFullCycleRunner:
         assert "target_interactions" in runner.audit_trail["role_separation"]
 
         # Verify these are lists
-        assert isinstance(runner.audit_trail["role_separation"]["sniper_instructions"], list)
-        assert isinstance(runner.audit_trail["role_separation"]["spotter_instructions"], list)
-        assert isinstance(runner.audit_trail["role_separation"]["target_interactions"], list)
+        assert isinstance(
+            runner.audit_trail["role_separation"]["sniper_instructions"], list
+        )
+        assert isinstance(
+            runner.audit_trail["role_separation"]["spotter_instructions"], list
+        )
+        assert isinstance(
+            runner.audit_trail["role_separation"]["target_interactions"], list
+        )
 
         # Verify round_details is a list
         assert isinstance(runner.audit_trail["round_details"], list)

@@ -6,7 +6,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.agents.target import AnthropicBackend, CustomHTTPBackend, LlamaCppBackend, OpenAIBackend, Target, create_target
+from app.agents.target import (
+    AnthropicBackend,
+    CustomHTTPBackend,
+    LlamaCppBackend,
+    OpenAIBackend,
+    Target,
+    create_target,
+)
 
 # Check if optional packages are available
 try:
@@ -31,7 +38,9 @@ def test_create_target_openai():
 @pytest.mark.skipif(not ANTHROPIC_AVAILABLE, reason="Anthropic package not installed")
 def test_create_target_anthropic():
     """Test creating Anthropic backend."""
-    target = create_target("anthropic", api_key="test-key", model_name="claude-3-5-sonnet-20241022")
+    target = create_target(
+        "anthropic", api_key="test-key", model_name="claude-3-5-sonnet-20241022"
+    )
     assert isinstance(target, Target)
     assert isinstance(target.backend, AnthropicBackend)
 
@@ -44,7 +53,11 @@ def test_create_target_llama_cpp():
 
 def test_create_target_custom_http():
     """Test creating custom HTTP backend."""
-    target = create_target("custom_http", api_url="http://localhost:8000/v1/completions", api_key="test-key")
+    target = create_target(
+        "custom_http",
+        api_url="http://localhost:8000/v1/completions",
+        api_key="test-key",
+    )
     assert isinstance(target, Target)
     assert isinstance(target.backend, CustomHTTPBackend)
 
@@ -57,7 +70,9 @@ def test_create_target_invalid_backend():
 
 def test_custom_http_backend_initialization():
     """Test CustomHTTPBackend initialization."""
-    backend = CustomHTTPBackend(api_url="http://localhost:8000/api", api_key="test-key", request_format="openai")
+    backend = CustomHTTPBackend(
+        api_url="http://localhost:8000/api", api_key="test-key", request_format="openai"
+    )
 
     assert backend.api_url == "http://localhost:8000/api"
     assert "Authorization" in backend.headers
@@ -77,10 +92,14 @@ def test_custom_http_backend_no_api_key():
 async def test_custom_http_backend_execute_openai_format(mock_requests):
     """Test CustomHTTPBackend execution with OpenAI format."""
     mock_response = Mock()
-    mock_response.json.return_value = {"choices": [{"message": {"content": "Test response"}}]}
+    mock_response.json.return_value = {
+        "choices": [{"message": {"content": "Test response"}}]
+    }
     mock_requests.post.return_value = mock_response
 
-    backend = CustomHTTPBackend(api_url="http://localhost:8000/api", request_format="openai")
+    backend = CustomHTTPBackend(
+        api_url="http://localhost:8000/api", request_format="openai"
+    )
 
     result = await backend.execute("Test prompt")
 
@@ -93,10 +112,14 @@ async def test_custom_http_backend_execute_openai_format(mock_requests):
 async def test_custom_http_backend_execute_anthropic_format(mock_requests):
     """Test CustomHTTPBackend execution with Anthropic format."""
     mock_response = Mock()
-    mock_response.json.return_value = {"content": [{"text": "Test response from Anthropic"}]}
+    mock_response.json.return_value = {
+        "content": [{"text": "Test response from Anthropic"}]
+    }
     mock_requests.post.return_value = mock_response
 
-    backend = CustomHTTPBackend(api_url="http://localhost:8000/api", request_format="anthropic")
+    backend = CustomHTTPBackend(
+        api_url="http://localhost:8000/api", request_format="anthropic"
+    )
 
     result = await backend.execute("Test prompt")
 
@@ -111,7 +134,9 @@ async def test_custom_http_backend_execute_generic_format(mock_requests):
     mock_response.json.return_value = {"response": "Generic API response"}
     mock_requests.post.return_value = mock_response
 
-    backend = CustomHTTPBackend(api_url="http://localhost:8000/api", request_format="generic")
+    backend = CustomHTTPBackend(
+        api_url="http://localhost:8000/api", request_format="generic"
+    )
 
     result = await backend.execute("Test prompt")
 

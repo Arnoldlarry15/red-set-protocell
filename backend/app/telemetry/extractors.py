@@ -352,7 +352,9 @@ class SessionDataExtractor:
             logger.error(f"Database error getting all sessions: {e}")
             return []
 
-    def get_sessions_by_model_version(self, model_version: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_sessions_by_model_version(
+        self, model_version: str, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """
         Get sessions for a specific model version.
 

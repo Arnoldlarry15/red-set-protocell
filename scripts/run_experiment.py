@@ -48,12 +48,14 @@ async def run_session(session_name: str, seed: int):
 
     # Export logs
     mutation_engine = orchestrator.sniper.mutation_engine
-    with open(f'selection_history_{session_name}.jsonl', 'w') as f:
+    with open(f"selection_history_{session_name}.jsonl", "w") as f:
         for log in mutation_engine.selection_history:
-            f.write(json.dumps(log) + '\n')
+            f.write(json.dumps(log) + "\n")
 
-    print(f"✓ Session {session_name} complete: "
-          f"{stats['session']['total_rounds']} rounds")
+    print(
+        f"✓ Session {session_name} complete: "
+        f"{stats['session']['total_rounds']} rounds"
+    )
     return stats
 
 
@@ -66,17 +68,17 @@ async def main():
     # Future work: Add configuration variants for A/B testing
 
     print("Running Session A...")
-    await run_session('A_default', seed=42)
+    await run_session("A_default", seed=42)
 
-    await run_session('C_control', seed=44)
-    await run_session('B_weighted', seed=43)
+    await run_session("C_control", seed=44)
+    await run_session("B_weighted", seed=43)
 
     print("Running Session C...")
-    await run_session('C_control', seed=44)
+    await run_session("C_control", seed=44)
 
     print("\n=== Experiment Complete ===")
     print("Analyze results with: python scripts/analyze_selection.py")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(main())

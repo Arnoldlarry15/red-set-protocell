@@ -62,7 +62,9 @@ class TelemetryExporter:
         """
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Telemetry exporter initialized with output dir: {self.output_dir}")
+        logger.info(
+            f"Telemetry exporter initialized with output dir: {self.output_dir}"
+        )
 
     def export_to_csv(
         self,

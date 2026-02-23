@@ -41,7 +41,12 @@ class StructuredLogger:
 
     def log(self, level: str, message: str, **kwargs):
         """Log a structured message with additional fields."""
-        log_data = {"timestamp": datetime.utcnow().isoformat(), "level": level, "message": message, **kwargs}
+        log_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": level,
+            "message": message,
+            **kwargs,
+        }
 
         if level == "error":
             self.logger.error(json.dumps(log_data))
@@ -92,7 +97,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         start_time = time.time()
 
         # Generate request ID
-        request_id = request.headers.get("X-Request-ID", f"req_{int(start_time * 1000)}")
+        request_id = request.headers.get(
+            "X-Request-ID", f"req_{int(start_time * 1000)}"
+        )
 
         # Log request
         request_data = {
@@ -169,10 +176,14 @@ class MetricsCollector:
 
         # By status code
         status_key = str(status_code)
-        self.metrics["requests_by_status"][status_key] = self.metrics["requests_by_status"].get(status_key, 0) + 1
+        self.metrics["requests_by_status"][status_key] = (
+            self.metrics["requests_by_status"].get(status_key, 0) + 1
+        )
 
         # By endpoint
-        self.metrics["requests_by_endpoint"][endpoint] = self.metrics["requests_by_endpoint"].get(endpoint, 0) + 1
+        self.metrics["requests_by_endpoint"][endpoint] = (
+            self.metrics["requests_by_endpoint"].get(endpoint, 0) + 1
+        )
 
         # Track errors
         if status_code >= 500:
@@ -188,7 +199,9 @@ class MetricsCollector:
 
         # Calculate derived metrics
         if metrics["requests_total"] > 0:
-            metrics["average_duration_ms"] = metrics["total_duration_ms"] / metrics["requests_total"]
+            metrics["average_duration_ms"] = (
+                metrics["total_duration_ms"] / metrics["requests_total"]
+            )
             metrics["error_rate"] = metrics["errors_total"] / metrics["requests_total"]
         else:
             metrics["average_duration_ms"] = 0
@@ -223,14 +236,20 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
             # Record metrics
             duration_ms = (time.time() - start_time) * 1000
-            self.collector.record_request(endpoint=request.url.path, status_code=response.status_code, duration_ms=duration_ms)
+            self.collector.record_request(
+                endpoint=request.url.path,
+                status_code=response.status_code,
+                duration_ms=duration_ms,
+            )
 
             return response
 
         except Exception:
             # Record error
             duration_ms = (time.time() - start_time) * 1000
-            self.collector.record_request(endpoint=request.url.path, status_code=500, duration_ms=duration_ms)
+            self.collector.record_request(
+                endpoint=request.url.path, status_code=500, duration_ms=duration_ms
+            )
             raise
 
 
@@ -252,7 +271,11 @@ class HealthCheck:
         """Run all health checks and return results."""
         import inspect
 
-        results = {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
+        results = {
+            "status": "healthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "checks": {},
+        }
 
         for name, check_fn in self.checks.items():
             try:

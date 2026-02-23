@@ -25,14 +25,28 @@ from app.core.config import get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine
-from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
-from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
+from app.middleware.auth import (
+    JWT_EXPIRATION_HOURS,
+    AuthenticationMiddleware,
+    PasswordHasher,
+    TokenManager,
+)
+from app.middleware.monitoring import (
+    HealthCheck,
+    MetricsMiddleware,
+    RequestLoggingMiddleware,
+    metrics_collector,
+)
 from app.auth import log_exception_safely, redact_sensitive_text
 from app.lifecycle import bind_lifecycle_handlers
 from app.routes import register_routes
 
 # Import production-ready middleware
-from app.middleware.security import InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
+from app.middleware.security import (
+    InputValidationMiddleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.telemetry.exporter import ExportFormat, TelemetryExporter
 from app.telemetry.extractors import SessionDataExtractor
 
@@ -104,7 +118,10 @@ def validate_production_environment():
     # Require demo password to be set
     demo_password = os.getenv("RSP_DEMO_PASSWORD")
     if not demo_password:
-        errors.append("RSP_DEMO_PASSWORD environment variable must be set. " "This is a critical security requirement.")
+        errors.append(
+            "RSP_DEMO_PASSWORD environment variable must be set. "
+            "This is a critical security requirement."
+        )
 
     # Require at least one real provider API key (no simulation mode)
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -116,7 +133,9 @@ def validate_production_environment():
         )
 
     if errors:
-        error_msg = "Production environment validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
+        error_msg = "Production environment validation failed:\n" + "\n".join(
+            f"  - {err}" for err in errors
+        )
         raise ValueError(error_msg)
 
     logger.info("Production environment validation passed")
@@ -140,7 +159,9 @@ ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
 
 # Log CORS configuration
 if RSP_ENVIRONMENT == "production":
-    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}")
+    logger.info(
+        f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}"
+    )
     # Validate production doesn't include localhost
     for origin in ALLOWED_ORIGINS:
         if "localhost" in origin or "127.0.0.1" in origin:
@@ -149,14 +170,18 @@ if RSP_ENVIRONMENT == "production":
                 "Use separate backend instance for local development."
             )
 else:
-    logger.info(f"Development mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}")
+    logger.info(
+        f"Development mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}"
+    )
 
 # FastAPI app with production-ready configuration
 app = FastAPI(
     title="Red Set ProtoCell API",
     description="REST API and WebSocket interface for RSP red teaming system",
     version="1.0.0",
-    docs_url="/api/docs" if RSP_ENVIRONMENT == "development" else None,  # Disable docs in production
+    docs_url=(
+        "/api/docs" if RSP_ENVIRONMENT == "development" else None
+    ),  # Disable docs in production
     redoc_url="/api/redoc" if RSP_ENVIRONMENT == "development" else None,
 )
 
@@ -174,14 +199,23 @@ app.add_middleware(MetricsMiddleware, collector=metrics_collector)
 # Configure based on environment
 rate_limit_per_min = int(os.getenv("RSP_RATE_LIMIT_PER_MIN", "60"))
 rate_limit_per_hour = int(os.getenv("RSP_RATE_LIMIT_PER_HOUR", "1000"))
-app.add_middleware(RateLimitMiddleware, requests_per_minute=rate_limit_per_min, requests_per_hour=rate_limit_per_hour)
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=rate_limit_per_min,
+    requests_per_hour=rate_limit_per_hour,
+)
 
 # 5. Input validation (prevent injection attacks)
 app.add_middleware(InputValidationMiddleware)
 
 # 6. Authentication (JWT-based session management)
 # Disabled in development by default, enabled in production
-require_auth = os.getenv("RSP_REQUIRE_AUTH", "true" if RSP_ENVIRONMENT == "production" else "false").lower() == "true"
+require_auth = (
+    os.getenv(
+        "RSP_REQUIRE_AUTH", "true" if RSP_ENVIRONMENT == "production" else "false"
+    ).lower()
+    == "true"
+)
 app.add_middleware(AuthenticationMiddleware, require_auth=require_auth)
 
 # 7. CORS middleware - Explicit and defensive (applied last, executed first)
@@ -316,7 +350,10 @@ def estimate_token_cost(
 DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD")
 
 if not DEMO_PASSWORD_PLAIN:
-    raise ValueError("RSP_DEMO_PASSWORD environment variable must be set. " "This is a critical security requirement.")
+    raise ValueError(
+        "RSP_DEMO_PASSWORD environment variable must be set. "
+        "This is a critical security requirement."
+    )
 
 # Initialize users with hashed passwords
 users: Dict[str, Dict[str, Any]] = {}
@@ -327,7 +364,11 @@ def _initialize_demo_users():
     # Hash the demo password on startup
     hashed_password = password_hasher.hash_password(DEMO_PASSWORD_PLAIN)
 
-    users["admin"] = {"email": "admin@rsp.com", "role": "admin", "password_hash": hashed_password}  # Store hashed password
+    users["admin"] = {
+        "email": "admin@rsp.com",
+        "role": "admin",
+        "password_hash": hashed_password,
+    }  # Store hashed password
 
 
 # Initialize demo users on module load
@@ -354,7 +395,9 @@ class ConnectionManager:
         """Accept and track a new WebSocket connection."""
         # Enforce connection limit to prevent memory exhaustion
         if len(self.active_connections) >= self.MAX_CONNECTIONS:
-            logger.warning(f"Connection limit reached ({self.MAX_CONNECTIONS}), rejecting new connection")
+            logger.warning(
+                f"Connection limit reached ({self.MAX_CONNECTIONS}), rejecting new connection"
+            )
             await websocket.close(code=1008, reason="Server at capacity")
             return False
 
@@ -364,7 +407,9 @@ class ConnectionManager:
             "connected_at": datetime.now(timezone.utc).isoformat(),
             "messages_sent": 0,
         }
-        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
+        logger.info(
+            f"WebSocket connected. Total connections: {len(self.active_connections)}"
+        )
         return True
 
     def disconnect(self, websocket: WebSocket):
@@ -376,7 +421,9 @@ class ConnectionManager:
         if websocket in self.connection_metadata:
             del self.connection_metadata[websocket]
 
-        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
+        logger.info(
+            f"WebSocket disconnected. Total connections: {len(self.active_connections)}"
+        )
 
     async def broadcast(self, message: dict):
         """
@@ -455,7 +502,9 @@ async def shutdown_event():
 
     # Close all active WebSocket connections
     if manager.active_connections:
-        logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
+        logger.info(
+            f"Closing {len(manager.active_connections)} active WebSocket connections"
+        )
         for ws in list(manager.active_connections):
             try:
                 await ws.close(code=1001, reason="Server shutting down")
@@ -496,7 +545,11 @@ async def shutdown_event():
 
 
 async def root():
-    return {"name": "Red Set ProtoCell API", "version": "1.0.0", "status": "operational"}
+    return {
+        "name": "Red Set ProtoCell API",
+        "version": "1.0.0",
+        "status": "operational",
+    }
 
 
 async def ping():
@@ -608,7 +661,8 @@ async def start_session(config: SessionConfig):
         )
 
         mutation_engine = MutationEngine(
-            mutation_rate=rsp_config.sniper.mutation_rate, semantic_intensity=config.semantic_intensity
+            mutation_rate=rsp_config.sniper.mutation_rate,
+            semantic_intensity=config.semantic_intensity,
         )
 
         sniper = Sniper(
@@ -619,7 +673,9 @@ async def start_session(config: SessionConfig):
         )
 
         backend_value = (
-            rsp_config.target.backend.value if hasattr(rsp_config.target.backend, "value") else rsp_config.target.backend
+            rsp_config.target.backend.value
+            if hasattr(rsp_config.target.backend, "value")
+            else rsp_config.target.backend
         )
         target = create_target(
             backend_type=str(backend_value),
@@ -636,7 +692,8 @@ async def start_session(config: SessionConfig):
         )
 
         state_manager = StateManager(
-            database_path=rsp_config.storage.database_path, zero_retention=rsp_config.storage.zero_retention
+            database_path=rsp_config.storage.database_path,
+            zero_retention=rsp_config.storage.zero_retention,
         )
 
         orchestrator = Orchestrator(
@@ -663,7 +720,11 @@ async def start_session(config: SessionConfig):
 
         logger.info(f"Session {session_id} created successfully")
 
-        return {"session_id": session_id, "status": "initialized", "message": "Session created successfully"}
+        return {
+            "session_id": session_id,
+            "status": "initialized",
+            "message": "Session created successfully",
+        }
 
     except Exception as e:
         log_exception_safely("Error creating session", e)
@@ -682,10 +743,16 @@ async def execute_session(session_id: str):
         session["status"] = "running"
 
         # Run session in background
-        task = asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
+        task = asyncio.create_task(
+            run_session_with_websocket(session_id, orchestrator, session)
+        )
         track_background_task(task, f"session:{session_id}")
 
-        return {"session_id": session_id, "status": "running", "message": "Session execution started"}
+        return {
+            "session_id": session_id,
+            "status": "running",
+            "message": "Session execution started",
+        }
     except Exception as e:
         log_exception_safely("Error executing session", e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -721,7 +788,9 @@ async def execute_custom_prompt(request: CustomPromptRequest):
 
         # Update session cost based on result using utility function
         if result.get("status") == "success":
-            estimated_cost = estimate_token_cost(request.prompt, result.get("response", ""))
+            estimated_cost = estimate_token_cost(
+                request.prompt, result.get("response", "")
+            )
             session["current_cost"] += estimated_cost
 
         return {
@@ -799,7 +868,9 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "rsp_session.db"):
+async def compare_model_versions(
+    model_v1: str, model_v2: str, db_path: str = "rsp_session.db"
+):
     """Compare two model versions"""
     try:
         extractor = SessionDataExtractor(db_path)
@@ -831,7 +902,9 @@ async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "r
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def export_session_results(session_id: str, format: str = "json", db_path: str = "rsp_session.db"):
+async def export_session_results(
+    session_id: str, format: str = "json", db_path: str = "rsp_session.db"
+):
     """Export session results in CSV or JSON format"""
     try:
         extractor = SessionDataExtractor(db_path)
@@ -867,15 +940,25 @@ async def login(credentials: UserLogin):
         # Step 1: Verify credentials exist
         stored_user = users.get(credentials.username)
         if not stored_user:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
 
         # Step 2: Verify password using secure hash comparison
         password_hash = stored_user.get("password_hash")
-        if not password_hash or not password_hasher.verify_password(credentials.password, password_hash):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        if not password_hash or not password_hasher.verify_password(
+            credentials.password, password_hash
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+            )
 
         # Step 3: Build user_info from stored data only (no credentials access)
-        user_info = {"username": credentials.username, "email": stored_user["email"], "role": stored_user["role"]}
+        user_info = {
+            "username": credentials.username,
+            "email": stored_user["email"],
+            "role": stored_user["role"],
+        }
 
         # Step 4: Generate JWT token using clean data only
         token = token_manager.create_access_token(
@@ -891,7 +974,12 @@ async def login(credentials: UserLogin):
         # Log only the event without sensitive user details to satisfy security scanning
         logger.info("User login event succeeded")
 
-        return {"access_token": token, "token_type": "bearer", "expires_in": JWT_EXPIRATION_HOURS * 3600, "user": user_info}
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "expires_in": JWT_EXPIRATION_HOURS * 3600,
+            "user": user_info,
+        }
     except HTTPException:
         raise
     except Exception:
@@ -936,7 +1024,10 @@ async def list_users():
     """List all users (admin only)"""
     try:
         return {
-            "users": [{"username": username, "email": user["email"], "role": user["role"]} for username, user in users.items()]
+            "users": [
+                {"username": username, "email": user["email"], "role": user["role"]}
+                for username, user in users.items()
+            ]
         }
     except Exception as e:
         log_exception_safely("Error listing users", e)
@@ -955,32 +1046,46 @@ async def validate_llm_key(validation: LLMKeyValidation):
         key = validation.api_key.strip()
         if validation.backend.lower() == "openai" and not key.startswith("sk-"):
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         if validation.backend.lower() == "anthropic" and not key.startswith("sk-ant-"):
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         if validation.backend.lower() == "openrouter" and not key.startswith("sk-or-"):
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         # Create a minimal test backend instance
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
 
-            test_backend = OpenAIBackend(api_key=validation.api_key, model_name="gpt-4o-mini", max_tokens=10, temperature=0.0)
+            test_backend = OpenAIBackend(
+                api_key=validation.api_key,
+                model_name="gpt-4o-mini",
+                max_tokens=10,
+                temperature=0.0,
+            )
         elif validation.backend.lower() == "anthropic":
             from app.agents.target import AnthropicBackend
 
             test_backend = AnthropicBackend(  # type: ignore[assignment]
-                api_key=validation.api_key, model_name="claude-3-haiku-20240307", max_tokens=10, temperature=0.0
+                api_key=validation.api_key,
+                model_name="claude-3-haiku-20240307",
+                max_tokens=10,
+                temperature=0.0,
             )
         elif validation.backend.lower() == "openrouter":
             from app.agents.target import OpenRouterBackend
 
             test_backend = OpenRouterBackend(  # type: ignore[assignment]
-                api_key=validation.api_key, model_name="openai/gpt-4o-mini", max_tokens=10, temperature=0.0
+                api_key=validation.api_key,
+                model_name="openai/gpt-4o-mini",
+                max_tokens=10,
+                temperature=0.0,
             )
         else:
             raise HTTPException(
@@ -993,7 +1098,11 @@ async def validate_llm_key(validation: LLMKeyValidation):
         await test_backend.execute(test_prompt)
 
         # If we got here, the key is valid
-        return {"valid": True, "backend": validation.backend, "message": "API key validated successfully"}
+        return {
+            "valid": True,
+            "backend": validation.backend,
+            "message": "API key validated successfully",
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -1041,12 +1150,15 @@ async def validate_llm_key(validation: LLMKeyValidation):
 
         # Log the error with details for debugging
         safe_error_message = redact_sensitive_text(error_message)
-        logger.warning(f"LLM API key validation failed: {error_type} - {safe_error_message[:100]}")
+        logger.warning(
+            f"LLM API key validation failed: {error_type} - {safe_error_message[:100]}"
+        )
 
         # Return appropriate error based on type (check auth first)
         if is_auth_error:
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         elif is_connection_error:
             raise HTTPException(
@@ -1056,7 +1168,8 @@ async def validate_llm_key(validation: LLMKeyValidation):
         else:
             # Generic error for other cases (no error_type exposure for security)
             raise HTTPException(
-                status_code=500, detail="API validation failed. Please try again or contact support if the issue persists."
+                status_code=500,
+                detail="API validation failed. Please try again or contact support if the issue persists.",
             )
 
 
@@ -1090,7 +1203,11 @@ async def save_experiment_config(config: ExperimentConfig):
         config_id = f"config_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         stored_configs[config_id] = config
 
-        return {"config_id": config_id, "name": config.name, "message": "Configuration saved successfully"}
+        return {
+            "config_id": config_id,
+            "name": config.name,
+            "message": "Configuration saved successfully",
+        }
     except Exception as e:
         log_exception_safely("Error saving config", e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -1162,7 +1279,9 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info("WebSocket client disconnected")
 
 
-async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator, session: dict):
+async def run_session_with_websocket(
+    session_id: str, orchestrator: Orchestrator, session: dict
+):
     """Run session and broadcast updates via WebSocket"""
     try:
         config = session["config"]
@@ -1177,7 +1296,9 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             result = await orchestrator.run_round(round_num)
 
             # Calculate estimated cost using utility function
-            estimated_round_cost = estimate_token_cost(result.get("prompt", ""), result.get("response", ""))
+            estimated_round_cost = estimate_token_cost(
+                result.get("prompt", ""), result.get("response", "")
+            )
 
             session["current_cost"] += estimated_round_cost
 
@@ -1213,7 +1334,9 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
                     "session_id": session_id,
                     "completed_rounds": round_num,
                     "total_rounds": config.max_rounds,
-                    "average_score": stats.get("scores", {}).get("average_global_score", 0),
+                    "average_score": stats.get("scores", {}).get(
+                        "average_global_score", 0
+                    ),
                     "blocked_count": stats.get("scores", {}).get("total_blocked", 0),
                     "api_cost": session["current_cost"],
                     "status": session["status"],
@@ -1225,13 +1348,24 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             if halt_on_critical and attack_data["data"]["severity"] == "critical":  # type: ignore[index]
                 session["status"] = "halted"
                 await manager.broadcast(
-                    {"type": "status", "data": {"status": "halted", "reason": "Critical vulnerability detected"}}
+                    {
+                        "type": "status",
+                        "data": {
+                            "status": "halted",
+                            "reason": "Critical vulnerability detected",
+                        },
+                    }
                 )
                 break
 
             if session["current_cost"] >= max_cost:
                 session["status"] = "halted"
-                await manager.broadcast({"type": "status", "data": {"status": "halted", "reason": "Max API cost reached"}})
+                await manager.broadcast(
+                    {
+                        "type": "status",
+                        "data": {"status": "halted", "reason": "Max API cost reached"},
+                    }
+                )
                 break
 
             # Small delay between rounds
@@ -1239,12 +1373,19 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
 
         if session["status"] == "running":
             session["status"] = "completed"
-            await manager.broadcast({"type": "status", "data": {"status": "completed", "reason": "All rounds completed"}})
+            await manager.broadcast(
+                {
+                    "type": "status",
+                    "data": {"status": "completed", "reason": "All rounds completed"},
+                }
+            )
 
     except Exception as e:
         log_exception_safely("Error in session execution", e)
         session["status"] = "error"
-        await manager.broadcast({"type": "error", "data": {"message": "Internal server error"}})
+        await manager.broadcast(
+            {"type": "error", "data": {"message": "Internal server error"}}
+        )
 
 
 def get_severity(score: float) -> str:

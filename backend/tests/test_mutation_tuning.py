@@ -27,8 +27,12 @@ def test_strategy_performance_tracking():
     engine.update_strategy_performance(MutationStrategy.ROLE_PLAY_FRAMING, 0.5)
 
     # Check tracking
-    assert len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2
-    assert len(engine.strategy_performance[MutationStrategy.ROLE_PLAY_FRAMING.value]) == 1
+    assert (
+        len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2
+    )
+    assert (
+        len(engine.strategy_performance[MutationStrategy.ROLE_PLAY_FRAMING.value]) == 1
+    )
 
 
 def test_adaptive_strategy_selection():

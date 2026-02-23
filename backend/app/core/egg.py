@@ -103,7 +103,9 @@ class EthicalGuardrailGovernor:
     DEFAULT_SHADOW_MATCH_LIMIT = 10
     DEFAULT_TEST_COUNT = 50
     MIN_HIGH_CONFIDENCE_MATCHES = 3  # Threshold for suggesting pattern review
-    MIN_FREQUENT_PATTERN_COUNT = 5  # Threshold for identifying frequently near-missed patterns
+    MIN_FREQUENT_PATTERN_COUNT = (
+        5  # Threshold for identifying frequently near-missed patterns
+    )
 
     # Patterns for content that must be blocked
     BLOCKED_PATTERNS = {
@@ -203,7 +205,9 @@ class EthicalGuardrailGovernor:
                 except re.error as e:
                     # Log the malformed pattern but don't crash
                     self.malformed_patterns[category].append(pattern)
-                    pattern_display = pattern[:50] + ("..." if len(pattern) > 50 else "")
+                    pattern_display = pattern[:50] + (
+                        "..." if len(pattern) > 50 else ""
+                    )
                     logger.error(
                         f"EGG pattern validation failed - Category: {category}, "
                         f"Pattern: {pattern_display}, Error: {e}. "
@@ -246,7 +250,9 @@ class EthicalGuardrailGovernor:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
                         self.pattern_usage["csam"].add(pattern)
-                        return False, self._block_prompt(prompt, "csam", "CSAM content detected")
+                        return False, self._block_prompt(
+                            prompt, "csam", "CSAM content detected"
+                        )
                     elif self.shadow_mode:
                         self._check_shadow_mode(prompt, pattern, "csam", prompt_lower)
                 except re.error as e:
@@ -262,9 +268,13 @@ class EthicalGuardrailGovernor:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
                         self.pattern_usage["bioweapons"].add(pattern)
-                        return False, self._block_prompt(prompt, "bioweapons", "Bioweapon instructions detected")
+                        return False, self._block_prompt(
+                            prompt, "bioweapons", "Bioweapon instructions detected"
+                        )
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, "bioweapons", prompt_lower)
+                        self._check_shadow_mode(
+                            prompt, pattern, "bioweapons", prompt_lower
+                        )
                 except re.error as e:
                     logger.error(f"EGG runtime pattern error in bioweapons: {e}")
                     continue
@@ -277,9 +287,13 @@ class EthicalGuardrailGovernor:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
                         self.pattern_usage["real_exploits"].add(pattern)
-                        return False, self._block_prompt(prompt, "real_exploits", "Real exploit payload detected")
+                        return False, self._block_prompt(
+                            prompt, "real_exploits", "Real exploit payload detected"
+                        )
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, "real_exploits", prompt_lower)
+                        self._check_shadow_mode(
+                            prompt, pattern, "real_exploits", prompt_lower
+                        )
                 except re.error as e:
                     logger.error(f"EGG runtime pattern error in real_exploits: {e}")
                     continue
@@ -292,9 +306,13 @@ class EthicalGuardrailGovernor:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
                         self.pattern_usage["real_hacking"].add(pattern)
-                        return False, self._block_prompt(prompt, "real_hacking", "Real hacking attempt detected")
+                        return False, self._block_prompt(
+                            prompt, "real_hacking", "Real hacking attempt detected"
+                        )
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, "real_hacking", prompt_lower)
+                        self._check_shadow_mode(
+                            prompt, pattern, "real_hacking", prompt_lower
+                        )
                 except re.error as e:
                     logger.error(f"EGG runtime pattern error in real_hacking: {e}")
                     continue
@@ -320,7 +338,10 @@ class EthicalGuardrailGovernor:
 
         if self.log_fingerprints:
             self.blocked_fingerprints.append(fingerprint)
-            logger.warning(f"EGG blocked prompt - Category: {category}, " f"Reason: {reason}, Fingerprint: {fingerprint}")
+            logger.warning(
+                f"EGG blocked prompt - Category: {category}, "
+                f"Reason: {reason}, Fingerprint: {fingerprint}"
+            )
 
         self.blocked_count += 1
 
@@ -348,7 +369,9 @@ class EthicalGuardrailGovernor:
             "fingerprints_logged": len(self.blocked_fingerprints),
         }
 
-    def _check_shadow_mode(self, prompt: str, pattern: str, category: str, prompt_lower: str) -> None:
+    def _check_shadow_mode(
+        self, prompt: str, pattern: str, category: str, prompt_lower: str
+    ) -> None:
         """
         Check if a prompt almost matched a pattern (shadow mode).
 
@@ -365,7 +388,10 @@ class EthicalGuardrailGovernor:
         if match_score >= self.shadow_threshold and match_score < 1.0:
             fingerprint = hash_prompt(prompt)
             shadow_match = ShadowModeMatch(
-                pattern=pattern, category=category, match_score=match_score, prompt_fingerprint=fingerprint
+                pattern=pattern,
+                category=category,
+                match_score=match_score,
+                prompt_fingerprint=fingerprint,
             )
             self.shadow_matches.append(shadow_match)
 
@@ -389,7 +415,9 @@ class EthicalGuardrailGovernor:
         # Extract keywords from the pattern (simplified approach)
         # Remove regex special chars and split on word boundaries
         keywords = re.findall(r"\b\w+\b", pattern.replace("\\b", ""))
-        keywords = [k.lower() for k in keywords if len(k) > 3 and k not in self.STOPWORDS]
+        keywords = [
+            k.lower() for k in keywords if len(k) > 3 and k not in self.STOPWORDS
+        ]
 
         if not keywords:
             return 0.0
@@ -426,20 +454,40 @@ class EthicalGuardrailGovernor:
             coverage_metrics[category] = {
                 "total_patterns": total_patterns,
                 "used_patterns": used_patterns,
-                "coverage_percentage": (used_patterns / total_patterns * 100) if total_patterns > 0 else 0.0,
-                "unused_patterns": [p for p in patterns if p not in self.pattern_usage.get(category, set())],
+                "coverage_percentage": (
+                    (used_patterns / total_patterns * 100)
+                    if total_patterns > 0
+                    else 0.0
+                ),
+                "unused_patterns": [
+                    p
+                    for p in patterns
+                    if p not in self.pattern_usage.get(category, set())
+                ],
             }
 
         return {
             "category_hits": dict(self.category_hits),
             "shadow_matches_count": len(self.shadow_matches),
             "shadow_matches": [
-                {"category": sm.category, "match_score": sm.match_score, "fingerprint": sm.prompt_fingerprint}
-                for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0 else self.shadow_matches)
+                {
+                    "category": sm.category,
+                    "match_score": sm.match_score,
+                    "fingerprint": sm.prompt_fingerprint,
+                }
+                for sm in (
+                    self.shadow_matches[-shadow_match_limit:]
+                    if shadow_match_limit > 0
+                    else self.shadow_matches
+                )
             ],
             "coverage_metrics": coverage_metrics,
             "total_inspections": self.total_inspections,
-            "block_rate": (self.blocked_count / self.total_inspections * 100) if self.total_inspections > 0 else 0.0,
+            "block_rate": (
+                (self.blocked_count / self.total_inspections * 100)
+                if self.total_inspections > 0
+                else 0.0
+            ),
         }
 
     def get_shadow_mode_suggestions(self) -> Dict[str, List[str]]:
@@ -478,7 +526,11 @@ class EthicalGuardrailGovernor:
             for match in matches:
                 pattern_counts[match.pattern] += 1
 
-            frequent_patterns = [p for p, c in pattern_counts.items() if c >= self.MIN_FREQUENT_PATTERN_COUNT]
+            frequent_patterns = [
+                p
+                for p, c in pattern_counts.items()
+                if c >= self.MIN_FREQUENT_PATTERN_COUNT
+            ]
             if frequent_patterns:
                 suggestions[category].append(
                     f"Patterns with frequent near-misses ({len(frequent_patterns)} patterns): "

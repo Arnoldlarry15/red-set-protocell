@@ -83,7 +83,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def setup_system(config: RSPConfig, model_version_override: Optional[str] = None) -> Orchestrator:
+def setup_system(
+    config: RSPConfig, model_version_override: Optional[str] = None
+) -> Orchestrator:
     """
     Setup and initialize the RSP system.
 
@@ -109,7 +111,9 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
 
     # Initialize Scoring Engine
     scoring_engine = ScoringEngine(
-        l1_weight=config.scoring.l1_weight, l2_weight=config.scoring.l2_weight, l3_weight=config.scoring.l3_weight
+        l1_weight=config.scoring.l1_weight,
+        l2_weight=config.scoring.l2_weight,
+        l3_weight=config.scoring.l3_weight,
     )
     logger.info("[OK] Scoring Engine initialized")
 
@@ -141,8 +145,12 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
             "novelty_search": SelectionStrategy.NOVELTY_SEARCH,
             "hybrid": SelectionStrategy.HYBRID,
         }
-        selection_strategy_enum = strategy_map.get(config.sniper.selection_strategy.lower(), SelectionStrategy.HYBRID)
-        logger.info(f"[OK] Selection Engine initialized (strategy: {config.sniper.selection_strategy})")
+        selection_strategy_enum = strategy_map.get(
+            config.sniper.selection_strategy.lower(), SelectionStrategy.HYBRID
+        )
+        logger.info(
+            f"[OK] Selection Engine initialized (strategy: {config.sniper.selection_strategy})"
+        )
     else:
         selection_strategy_enum = SelectionStrategy.HYBRID
 
@@ -159,7 +167,11 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     logger.info("[OK] Sniper Agent initialized")
 
     # Initialize Target Agent
-    backend_value = config.target.backend.value if hasattr(config.target.backend, "value") else config.target.backend
+    backend_value = (
+        config.target.backend.value
+        if hasattr(config.target.backend, "value")
+        else config.target.backend
+    )
 
     target = create_target(
         backend_type=str(backend_value),
@@ -182,9 +194,13 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     # Initialize State Manager
     model_version = model_version_override or config.target.model_name
     state_manager = StateManager(
-        database_path=config.storage.database_path, zero_retention=config.storage.zero_retention, model_version=model_version
+        database_path=config.storage.database_path,
+        zero_retention=config.storage.zero_retention,
+        model_version=model_version,
     )
-    logger.info(f"[OK] State Manager initialized (zero_retention={config.storage.zero_retention})")
+    logger.info(
+        f"[OK] State Manager initialized (zero_retention={config.storage.zero_retention})"
+    )
 
     # Initialize Orchestrator
     orchestrator = Orchestrator(
@@ -248,15 +264,23 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
             logger.info(f"  Fatigue Detected: {fatigue['is_fatigued']}")
             if fatigue["is_fatigued"]:
                 logger.info(f"  Fatigue Score: {fatigue['fatigue_score']:.3f}")
-                logger.info(f"  Degradation Rate: {fatigue['degradation_rate']:.4f} per round")
+                logger.info(
+                    f"  Degradation Rate: {fatigue['degradation_rate']:.4f} per round"
+                )
             logger.info(f"  Score Drift: {drift['drift_direction']}")
             logger.info(f"  Trend Slope: {drift['trend_slope']:+.4f}")
 
         logger.info("")
         logger.info("Agent Statistics:")
-        logger.info(f"  Sniper: {stats['agents']['sniper']['total_generated']} prompts generated")
-        logger.info(f"  Target: {stats['agents']['target']['total_executions']} executions")
-        logger.info(f"  Spotter: {stats['agents']['spotter']['total_evaluations']} evaluations")
+        logger.info(
+            f"  Sniper: {stats['agents']['sniper']['total_generated']} prompts generated"
+        )
+        logger.info(
+            f"  Target: {stats['agents']['target']['total_executions']} executions"
+        )
+        logger.info(
+            f"  Spotter: {stats['agents']['spotter']['total_evaluations']} evaluations"
+        )
         logger.info(f"  EGG: {stats['agents']['egg']['total_blocked']} blocked")
         logger.info("")
         logger.info("Mutation Statistics:")
@@ -278,9 +302,16 @@ async def main(config: RSPConfig, model_version_override: Optional[str] = None):
 
 def parse_arguments():
     """Parse command line arguments."""
-    parser = argparse.ArgumentParser(description="Red Set ProtoCell - AI Red Teaming System")
+    parser = argparse.ArgumentParser(
+        description="Red Set ProtoCell - AI Red Teaming System"
+    )
 
-    parser.add_argument("--rounds", type=int, default=100, help="Maximum number of rounds to execute (default: 100)")
+    parser.add_argument(
+        "--rounds",
+        type=int,
+        default=100,
+        help="Maximum number of rounds to execute (default: 100)",
+    )
 
     parser.add_argument(
         "--backend",
@@ -290,16 +321,32 @@ def parse_arguments():
         help="Target backend to use (required: openai, anthropic, openrouter, llama_cpp, or custom_http)",
     )
 
-    parser.add_argument("--api-key", type=str, required=True, help="API key for target backend (required)")
+    parser.add_argument(
+        "--api-key",
+        type=str,
+        required=True,
+        help="API key for target backend (required)",
+    )
 
     parser.add_argument("--model", type=str, help="Model name for target backend")
 
-    parser.add_argument("--no-zero-retention", action="store_true", help="Disable zero-retention policy (keep session data)")
-
-    parser.add_argument("--db-path", type=str, default="rsp_session.db", help="Database path (default: rsp_session.db)")
+    parser.add_argument(
+        "--no-zero-retention",
+        action="store_true",
+        help="Disable zero-retention policy (keep session data)",
+    )
 
     parser.add_argument(
-        "--model-version", type=str, help="Model version identifier for tracking (optional, defaults to model name)"
+        "--db-path",
+        type=str,
+        default="rsp_session.db",
+        help="Database path (default: rsp_session.db)",
+    )
+
+    parser.add_argument(
+        "--model-version",
+        type=str,
+        help="Model version identifier for tracking (optional, defaults to model name)",
     )
 
     return parser.parse_args()

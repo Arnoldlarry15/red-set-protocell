@@ -33,7 +33,9 @@ async def test_sniper_with_selection_engine():
 @pytest.mark.asyncio
 async def test_sniper_score_updates():
     """Test that Sniper properly updates prompt scores."""
-    mutation_engine = MutationEngine(mutation_rate=1.0)  # Always mutate for unique prompts
+    mutation_engine = MutationEngine(
+        mutation_rate=1.0
+    )  # Always mutate for unique prompts
     selection_engine = SelectionEngine()
 
     sniper = Sniper(
@@ -87,7 +89,11 @@ async def test_sniper_pool_size_limit():
     mutation_engine = MutationEngine(mutation_rate=0.7)
     selection_engine = SelectionEngine()
 
-    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5, selection_engine=selection_engine)
+    sniper = Sniper(
+        mutation_engine=mutation_engine,
+        evolution_pool_size=5,
+        selection_engine=selection_engine,
+    )
 
     # Generate more prompts than pool size
     for i in range(10):
@@ -220,7 +226,11 @@ async def test_sniper_overfitting_detection():
     mutation_engine = MutationEngine(mutation_rate=0.7)
     selection_engine = SelectionEngine(overfitting_threshold=2)
 
-    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5, selection_engine=selection_engine)
+    sniper = Sniper(
+        mutation_engine=mutation_engine,
+        evolution_pool_size=5,
+        selection_engine=selection_engine,
+    )
 
     # Generate and score prompts
     for i in range(5):

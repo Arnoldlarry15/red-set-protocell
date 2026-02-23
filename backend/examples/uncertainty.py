@@ -33,7 +33,10 @@ def run_basic_uncertainty():
 
     # Create evaluation with uncertainty
     evaluation = engine.create_evaluation(
-        eval_result["l1"], eval_result["l2"], eval_result["l3"], eval_result["mutation_guidance"]
+        eval_result["l1"],
+        eval_result["l2"],
+        eval_result["l3"],
+        eval_result["mutation_guidance"],
     )
 
     # Display results with uncertainty
@@ -62,7 +65,9 @@ def run_basic_uncertainty():
     )
 
     print(f"\n{'='*30}")
-    print(f"GLOBAL SCORE: {evaluation.global_score:.3f} ± {evaluation.global_uncertainty:.3f}")
+    print(
+        f"GLOBAL SCORE: {evaluation.global_score:.3f} ± {evaluation.global_uncertainty:.3f}"
+    )
     print(
         f"Confidence Interval: [{evaluation.global_confidence_interval[0]:.3f}, "
         f"{evaluation.global_confidence_interval[1]:.3f}]"
@@ -95,10 +100,14 @@ def run_multi_pass_agreement():
     print(f"\nRunning {multi_pass_result['pass_count']} evaluation passes...")
 
     # Aggregate results
-    aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result["evaluations"])
+    aggregated = engine.aggregate_multi_pass_evaluations(
+        multi_pass_result["evaluations"]
+    )
 
     print(f"\nAggregated Results:")
-    print(f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}")
+    print(
+        f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}"
+    )
     print(f"  Multi-Pass Agreement: {aggregated.multi_pass_agreement:.3f}")
 
     if aggregated.multi_pass_agreement > 0.9:
@@ -203,27 +212,39 @@ def run_scientific_format():
     response = "I apologize, but I cannot help with that request."
 
     multi_pass_result = spotter.evaluate_with_paraphrase(response)
-    aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result["evaluations"])
+    aggregated = engine.aggregate_multi_pass_evaluations(
+        multi_pass_result["evaluations"]
+    )
 
     print("\nBEFORE (Traditional Output):")
     print("  Global Score: 0.234")
     print()
 
     print("AFTER (Scientific Output with Uncertainty):")
-    print(f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}")
+    print(
+        f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}"
+    )
     print(
         f"  95% Confidence Interval: [{aggregated.global_confidence_interval[0]:.3f}, "
         f"{aggregated.global_confidence_interval[1]:.3f}]"
     )
-    print(f"  Multi-Pass Agreement: {aggregated.multi_pass_agreement:.3f} (n={multi_pass_result['pass_count']})")
+    print(
+        f"  Multi-Pass Agreement: {aggregated.multi_pass_agreement:.3f} (n={multi_pass_result['pass_count']})"
+    )
     print()
     print("  Layer Breakdown:")
-    print(f"    L1: {aggregated.l1_linguistic_safety.score:.3f} ± " f"{aggregated.l1_linguistic_safety.uncertainty:.3f}")
+    print(
+        f"    L1: {aggregated.l1_linguistic_safety.score:.3f} ± "
+        f"{aggregated.l1_linguistic_safety.uncertainty:.3f}"
+    )
     print(
         f"    L2: {aggregated.l2_security_exploitability.score:.3f} ± "
         f"{aggregated.l2_security_exploitability.uncertainty:.3f}"
     )
-    print(f"    L3: {aggregated.l3_cognitive_stability.score:.3f} ± " f"{aggregated.l3_cognitive_stability.uncertainty:.3f}")
+    print(
+        f"    L3: {aggregated.l3_cognitive_stability.score:.3f} ± "
+        f"{aggregated.l3_cognitive_stability.uncertainty:.3f}"
+    )
 
     print("\n✓ This format is:")
     print("  - Scientifically rigorous (includes uncertainty quantification)")
@@ -247,8 +268,7 @@ def main():
     print("\n\n" + "=" * 70)
     print("KEY BENEFITS")
     print("=" * 70)
-    print(
-        """
+    print("""
 1. UNCERTAINTY QUANTIFICATION
    - Scores now include confidence intervals
    - Shows reliability of measurements
@@ -271,8 +291,7 @@ def main():
    - Helps prioritize human review
 
 This transforms RSP scores from simple numbers into rich epistemic signals!
-    """
-    )
+    """)
 
 
 if __name__ == "__main__":

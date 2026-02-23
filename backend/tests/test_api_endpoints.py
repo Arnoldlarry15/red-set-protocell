@@ -65,7 +65,9 @@ class TestInfraDashboard:
 
     def test_model_comparison(self):
         """Test model version comparison endpoint"""
-        response = client.get("/dashboard/compare-models?model_v1=gpt-4-v1&model_v2=gpt-4-v2")
+        response = client.get(
+            "/dashboard/compare-models?model_v1=gpt-4-v1&model_v2=gpt-4-v2"
+        )
         assert response.status_code in [200, 500]  # May fail if no DB
         if response.status_code == 200:
             data = response.json()
@@ -78,7 +80,9 @@ class TestUserManagement:
 
     def test_login_success(self):
         """Test successful login"""
-        response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
+        response = client.post(
+            "/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
+        )
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
@@ -90,7 +94,9 @@ class TestUserManagement:
 
     def test_login_failure(self):
         """Test failed login with invalid credentials"""
-        response = client.post("/auth/login", json={"username": "invalid", "password": "wrong"})
+        response = client.post(
+            "/auth/login", json={"username": "invalid", "password": "wrong"}
+        )
         assert response.status_code == 401
 
     def test_list_users(self):
@@ -107,7 +113,12 @@ class TestUserManagement:
         """Test user registration"""
         response = client.post(
             "/auth/register",
-            json={"username": "test_user", "email": "test@example.com", "role": "researcher", "password": "test123"},
+            json={
+                "username": "test_user",
+                "email": "test@example.com",
+                "role": "researcher",
+                "password": "test123",
+            },
         )
         assert response.status_code == 200
         data = response.json()
@@ -119,12 +130,22 @@ class TestUserManagement:
         # Register first time
         client.post(
             "/auth/register",
-            json={"username": "duplicate_user", "email": "dup@example.com", "role": "observer", "password": "test123"},
+            json={
+                "username": "duplicate_user",
+                "email": "dup@example.com",
+                "role": "observer",
+                "password": "test123",
+            },
         )
         # Try to register again
         response = client.post(
             "/auth/register",
-            json={"username": "duplicate_user", "email": "dup2@example.com", "role": "observer", "password": "test123"},
+            json={
+                "username": "duplicate_user",
+                "email": "dup2@example.com",
+                "role": "observer",
+                "password": "test123",
+            },
         )
         assert response.status_code == 400
 
@@ -153,7 +174,10 @@ class TestUserManagement:
             mock_instance.execute.return_value = "Hi"  # Successful execution
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "openai"})
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={"api_key": _fake_openai_key(), "backend": "openai"},
+            )
 
             # Should return 200 (Success) because the endpoint is accessible
             # and the mocked validation succeeds
@@ -169,13 +193,19 @@ class TestUserManagement:
 
     def test_validate_llm_key_invalid_backend(self):
         """Test LLM key validation with invalid backend"""
-        response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "invalid_backend"})
+        response = client.post(
+            "/auth/validate-llm-key",
+            json={"api_key": _fake_openai_key(), "backend": "invalid_backend"},
+        )
         assert response.status_code == 400
         assert "Invalid backend" in response.json()["detail"]
 
     def test_validate_llm_key_invalid_format(self):
         """Test LLM key validation with invalid key format"""
-        response = client.post("/auth/validate-llm-key", json={"api_key": "invalid-key", "backend": "openai"})
+        response = client.post(
+            "/auth/validate-llm-key",
+            json={"api_key": "invalid-key", "backend": "openai"},
+        )
         # Should return 401 because key is invalid
         assert response.status_code == 401
 
@@ -220,7 +250,10 @@ class TestUserManagement:
             mock_instance.execute.side_effect = ConnectionError("Network unreachable")
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "openai"})
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={"api_key": _fake_openai_key(), "backend": "openai"},
+            )
 
             # Should return 503 (Service Unavailable) for network errors
             # not 401 (Unauthorized) which would imply invalid credentials
@@ -241,10 +274,15 @@ class TestUserManagement:
             mock_instance = AsyncMock()
             # Simulate an authentication error with "connection" in the message
             fake_proj_key = _fake_openai_key("proj-connection123")
-            mock_instance.execute.side_effect = Exception(f"Error code: 401 - Incorrect API key provided: {fake_proj_key}")
+            mock_instance.execute.side_effect = Exception(
+                f"Error code: 401 - Incorrect API key provided: {fake_proj_key}"
+            )
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": fake_proj_key, "backend": "openai"})
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={"api_key": fake_proj_key, "backend": "openai"},
+            )
 
             # Should return 401 (Unauthorized) for auth errors
             # NOT 503 (Network error) even though message contains "connection"
@@ -260,10 +298,15 @@ class TestUserManagement:
         with patch("app.agents.target.OpenAIBackend") as mock_backend:
             mock_instance = AsyncMock()
             fake_super_secret = _fake_openai_key("super-secret-key-value")
-            mock_instance.execute.side_effect = Exception(f"Error 401 for {fake_super_secret}")
+            mock_instance.execute.side_effect = Exception(
+                f"Error 401 for {fake_super_secret}"
+            )
             mock_backend.return_value = mock_instance
 
-            response = client.post("/auth/validate-llm-key", json={"api_key": _fake_openai_key(), "backend": "openai"})
+            response = client.post(
+                "/auth/validate-llm-key",
+                json={"api_key": _fake_openai_key(), "backend": "openai"},
+            )
 
             assert response.status_code == 401
             joined_logs = "\n".join(r.message for r in caplog.records)
@@ -274,10 +317,18 @@ class TestUserManagement:
         """Failure injection: unexpected register exceptions should return generic 500 detail."""
         from unittest.mock import patch
 
-        with patch("app.api_server.password_hasher.hash_password", side_effect=Exception("db exploded sk-top-secret")):
+        with patch(
+            "app.api_server.password_hasher.hash_password",
+            side_effect=Exception("db exploded sk-top-secret"),
+        ):
             response = client.post(
                 "/auth/register",
-                json={"username": "err_user", "email": "err@example.com", "role": "observer", "password": "test123"},
+                json={
+                    "username": "err_user",
+                    "email": "err@example.com",
+                    "role": "observer",
+                    "password": "test123",
+                },
             )
 
             assert response.status_code == 500
@@ -374,7 +425,9 @@ class TestAPIIntegration:
     def test_complete_workflow(self):
         """Test a complete workflow: login -> save config -> start run"""
         # 1. Login
-        login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
+        login_response = client.post(
+            "/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
+        )
         assert login_response.status_code == 200
 
         # 2. Save a configuration
@@ -403,7 +456,10 @@ class TestCustomPromptExecution:
 
     def test_custom_prompt_no_session(self):
         """Test custom prompt execution with non-existent session"""
-        response = client.post("/prompt/execute", json={"prompt": "What is 2+2?", "session_id": "nonexistent_session"})
+        response = client.post(
+            "/prompt/execute",
+            json={"prompt": "What is 2+2?", "session_id": "nonexistent_session"},
+        )
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
 

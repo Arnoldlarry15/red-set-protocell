@@ -22,12 +22,19 @@ def test_prompt_candidate_initialization():
 def test_structural_hash_uniqueness():
     """Test that different prompt structures produce different hashes."""
     c1 = PromptCandidate("Short prompt", 0.5, "domain1")
-    c2 = PromptCandidate("This is a much longer prompt with many more words", 0.5, "domain2")
+    c2 = PromptCandidate(
+        "This is a much longer prompt with many more words", 0.5, "domain2"
+    )
     c3 = PromptCandidate("UPPERCASE PROMPT!!!", 0.5, "domain3")
     c4 = PromptCandidate("prompt with {special} [characters]", 0.5, "domain4")
 
     # Different structures should have different hashes
-    hashes = {c1.structural_hash, c2.structural_hash, c3.structural_hash, c4.structural_hash}
+    hashes = {
+        c1.structural_hash,
+        c2.structural_hash,
+        c3.structural_hash,
+        c4.structural_hash,
+    }
     assert len(hashes) == 4, "Different structures should produce different hashes"
 
 
@@ -75,7 +82,9 @@ def test_elitism_selection():
         PromptCandidate("Higher score", 0.8, "domain4"),
     ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.ELITISM, num_select=2)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.ELITISM, num_select=2
+    )
 
     assert len(selected) == 2
     # Should select highest scores
@@ -87,9 +96,13 @@ def test_tournament_selection():
     """Test tournament selection strategy."""
     engine = SelectionEngine(tournament_size=2)
 
-    candidates = [PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(10)]
+    candidates = [
+        PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(10)
+    ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.TOURNAMENT, num_select=3)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.TOURNAMENT, num_select=3
+    )
 
     assert len(selected) == 3
     # Tournament should select reasonable candidates (not necessarily best)
@@ -112,7 +125,9 @@ def test_diversity_selection():
         PromptCandidate("Another short", 0.6, "domain5"),  # Similar to first
     ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.DIVERSITY_PRESERVATION, num_select=3)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.DIVERSITY_PRESERVATION, num_select=3
+    )
 
     assert len(selected) == 3
     # Should prefer diverse structures
@@ -136,12 +151,18 @@ def test_novelty_selection():
 
     # Now create candidates including some with same structure
     candidates = [
-        PromptCandidate("High scorer type A", 0.8, "domain3"),  # Same structure as high scorer
-        PromptCandidate("Completely different novel structure!!!", 0.6, "domain4"),  # Novel
+        PromptCandidate(
+            "High scorer type A", 0.8, "domain3"
+        ),  # Same structure as high scorer
+        PromptCandidate(
+            "Completely different novel structure!!!", 0.6, "domain4"
+        ),  # Novel
         PromptCandidate("Another novel with {special} chars", 0.5, "domain5"),  # Novel
     ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.NOVELTY_SEARCH, num_select=1)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.NOVELTY_SEARCH, num_select=1
+    )
 
     assert len(selected) == 1
     # Should prefer novel structure even with lower score
@@ -152,9 +173,13 @@ def test_hybrid_selection():
     """Test hybrid selection strategy."""
     engine = SelectionEngine(elite_fraction=0.3)
 
-    candidates = [PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(10)]
+    candidates = [
+        PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(10)
+    ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=5)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.HYBRID, num_select=5
+    )
 
     assert len(selected) == 5
     # Hybrid should select a mix
@@ -177,7 +202,9 @@ def test_decay_function():
     candidates = [old_candidate, new_candidate]
 
     # Apply decay through selection
-    selected = engine.select(candidates, strategy=SelectionStrategy.ELITISM, num_select=2)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.ELITISM, num_select=2
+    )
 
     # Old candidate's effective score should be decayed
     # decay = 0.9^3 = 0.729, so 1.0 * 0.729 = 0.729
@@ -196,7 +223,9 @@ def test_overfitting_penalties():
     # Simulate usage history
     engine.pattern_usage[candidate1.structural_hash] = 3  # Overused
 
-    selected = engine.select([candidate1, candidate2], strategy=SelectionStrategy.ELITISM, num_select=1)
+    selected = engine.select(
+        [candidate1, candidate2], strategy=SelectionStrategy.ELITISM, num_select=1
+    )
 
     # Should penalize the overused pattern
     assert len(selected) == 1
@@ -215,7 +244,9 @@ def test_novelty_tracking():
     engine.select([candidate], strategy=SelectionStrategy.ELITISM, num_select=1)
 
     # Should now be tracked as high scorer (score >= 0.6)
-    assert len(engine.high_scorer_structures) >= 0  # May or may not be added depending on threshold
+    assert (
+        len(engine.high_scorer_structures) >= 0
+    )  # May or may not be added depending on threshold
 
 
 def test_usage_tracking():
@@ -226,7 +257,9 @@ def test_usage_tracking():
     assert candidate.usage_count == 0
 
     # Select the candidate
-    selected = engine.select([candidate], strategy=SelectionStrategy.ELITISM, num_select=1)
+    selected = engine.select(
+        [candidate], strategy=SelectionStrategy.ELITISM, num_select=1
+    )
 
     # Usage should be incremented
     assert selected[0].usage_count == 1
@@ -250,7 +283,9 @@ def test_single_candidate():
     engine = SelectionEngine()
 
     candidate = PromptCandidate("Only one", 0.5, "domain")
-    selected = engine.select([candidate], strategy=SelectionStrategy.TOURNAMENT, num_select=1)
+    selected = engine.select(
+        [candidate], strategy=SelectionStrategy.TOURNAMENT, num_select=1
+    )
 
     assert len(selected) == 1
     assert selected[0].prompt == candidate.prompt
@@ -310,7 +345,9 @@ def test_diversity_scores_updated():
     candidates = [c1, c2, c3]
 
     # Selection updates diversity scores
-    engine.select(candidates, strategy=SelectionStrategy.DIVERSITY_PRESERVATION, num_select=2)
+    engine.select(
+        candidates, strategy=SelectionStrategy.DIVERSITY_PRESERVATION, num_select=2
+    )
 
     # c1 and c2 should have lower diversity (0.5 each since 2 copies)
     # c3 should have full diversity (1.0)
@@ -341,9 +378,13 @@ def test_hybrid_single_selection():
     """Test hybrid selection with single candidate requested."""
     engine = SelectionEngine()
 
-    candidates = [PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(5)]
+    candidates = [
+        PromptCandidate(f"Prompt {i}", i * 0.1, f"domain{i}") for i in range(5)
+    ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=1)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.HYBRID, num_select=1
+    )
 
     assert len(selected) == 1
 
@@ -352,9 +393,13 @@ def test_large_population_selection():
     """Test selection with large population."""
     engine = SelectionEngine()
 
-    candidates = [PromptCandidate(f"Prompt {i}", (i % 10) * 0.1, f"domain{i}") for i in range(100)]
+    candidates = [
+        PromptCandidate(f"Prompt {i}", (i % 10) * 0.1, f"domain{i}") for i in range(100)
+    ]
 
-    selected = engine.select(candidates, strategy=SelectionStrategy.HYBRID, num_select=10)
+    selected = engine.select(
+        candidates, strategy=SelectionStrategy.HYBRID, num_select=10
+    )
 
     assert len(selected) == 10
     # Check that selected prompts are from original candidates

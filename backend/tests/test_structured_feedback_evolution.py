@@ -36,7 +36,9 @@ def temp_db():
 def state_manager(temp_db):
     """Create a StateManager for testing."""
     return StateManager(
-        database_path=temp_db, zero_retention=False, model_version="test-model-v1"  # Don't delete during tests
+        database_path=temp_db,
+        zero_retention=False,
+        model_version="test-model-v1",  # Don't delete during tests
     )
 
 
@@ -44,7 +46,9 @@ def state_manager(temp_db):
 def sniper():
     """Create a Sniper agent for testing."""
     mutation_engine = MutationEngine(mutation_rate=0.7)
-    selection_engine = SelectionEngine(decay_rate=0.95, novelty_weight=0.3, diversity_weight=0.2)
+    selection_engine = SelectionEngine(
+        decay_rate=0.95, novelty_weight=0.3, diversity_weight=0.2
+    )
     return Sniper(
         mutation_engine=mutation_engine,
         selection_engine=selection_engine,
@@ -53,15 +57,41 @@ def sniper():
     )
 
 
-def create_mock_evaluation(l1_score: float, l2_score: float, l3_score: float) -> Dict[str, Any]:
+def create_mock_evaluation(
+    l1_score: float, l2_score: float, l3_score: float
+) -> Dict[str, Any]:
     """Create a mock evaluation structure from Spotter."""
     return {
-        "l1": {"score": l1_score, "indicators": {"refusal_degradation": {"detected": False}}, "rationale": "L1 evaluation"},
-        "l2": {"score": l2_score, "indicators": {"sql_injection": {"detected": True}}, "rationale": "L2 evaluation"},
-        "l3": {"score": l3_score, "indicators": {"identity_confusion": {"detected": False}}, "rationale": "L3 evaluation"},
-        "axes": {"safety_degradation": 0.5, "exploitation_potential": 0.7, "cognitive_manipulation": 0.3},
-        "mutation_guidance": {"intensify": ["security_exploitation"], "diversify": ["cognitive_tactics"], "abandon": []},
-        "metadata": {"attack_domain": "prompt_injection", "evaluation_id": 1, "confidence_threshold": 0.6},
+        "l1": {
+            "score": l1_score,
+            "indicators": {"refusal_degradation": {"detected": False}},
+            "rationale": "L1 evaluation",
+        },
+        "l2": {
+            "score": l2_score,
+            "indicators": {"sql_injection": {"detected": True}},
+            "rationale": "L2 evaluation",
+        },
+        "l3": {
+            "score": l3_score,
+            "indicators": {"identity_confusion": {"detected": False}},
+            "rationale": "L3 evaluation",
+        },
+        "axes": {
+            "safety_degradation": 0.5,
+            "exploitation_potential": 0.7,
+            "cognitive_manipulation": 0.3,
+        },
+        "mutation_guidance": {
+            "intensify": ["security_exploitation"],
+            "diversify": ["cognitive_tactics"],
+            "abandon": [],
+        },
+        "metadata": {
+            "attack_domain": "prompt_injection",
+            "evaluation_id": 1,
+            "confidence_threshold": 0.6,
+        },
     }
 
 
@@ -77,7 +107,9 @@ class TestStructuredFeedbackFlow:
         structured_feedback = create_mock_evaluation(0.5, 0.7, 0.6)
 
         # Update with structured feedback
-        sniper.update_prompt_score(prompt, score=0.65, structured_feedback=structured_feedback)
+        sniper.update_prompt_score(
+            prompt, score=0.65, structured_feedback=structured_feedback
+        )
 
         # Verify feedback was stored
         for candidate in sniper.evolution_pool:
@@ -95,15 +127,21 @@ class TestStructuredFeedbackFlow:
 
         # Add multiple feedback entries
         for i in range(5):
-            feedback = create_mock_evaluation(0.3 + i * 0.1, 0.4 + i * 0.1, 0.5 + i * 0.1)
-            sniper.update_prompt_score(prompt, score=0.5 + i * 0.05, structured_feedback=feedback)
+            feedback = create_mock_evaluation(
+                0.3 + i * 0.1, 0.4 + i * 0.1, 0.5 + i * 0.1
+            )
+            sniper.update_prompt_score(
+                prompt, score=0.5 + i * 0.05, structured_feedback=feedback
+            )
 
         # Verify only last 3 are kept
         for candidate in sniper.evolution_pool:
             if candidate.prompt == prompt:
                 assert len(candidate.feedback_history) == 3
                 # Most recent should be last
-                assert candidate.feedback_history[-1]["l1"]["score"] == pytest.approx(0.7)
+                assert candidate.feedback_history[-1]["l1"]["score"] == pytest.approx(
+                    0.7
+                )
                 break
 
     def test_backward_compatibility_without_feedback(self, sniper):
@@ -163,7 +201,9 @@ class TestStateManagerEvolutionAnalytics:
             state_manager.save_round(round_result)
 
         # Get high performers (threshold 0.6 means rounds 4-9)
-        high_performers = state_manager.get_high_performing_patterns(threshold=0.6, limit=5)
+        high_performers = state_manager.get_high_performing_patterns(
+            threshold=0.6, limit=5
+        )
 
         assert len(high_performers) == 5  # Limited to 5
         assert all(p["score"] >= 0.6 for p in high_performers)
@@ -173,7 +213,11 @@ class TestStateManagerEvolutionAnalytics:
     def test_get_underexplored_domains(self, state_manager):
         """Test identification of underexplored attack domains."""
         # Create rounds with uneven domain distribution
-        domains_and_counts = [("prompt_injection", 10), ("jailbreak", 5), ("pii_extraction", 2)]
+        domains_and_counts = [
+            ("prompt_injection", 10),
+            ("jailbreak", 5),
+            ("pii_extraction", 2),
+        ]
 
         round_num = 1
         for domain, count in domains_and_counts:

@@ -58,7 +58,9 @@ class StrategyOptimizer:
         # Initialize weights uniformly
         all_strategies = list(MutationStrategy)
         initial_weight = 1.0 / len(all_strategies)
-        self.current_weights: Dict[MutationStrategy, float] = {s: initial_weight for s in all_strategies}
+        self.current_weights: Dict[MutationStrategy, float] = {
+            s: initial_weight for s in all_strategies
+        }
 
         logger.info("Strategy optimizer initialized")
 

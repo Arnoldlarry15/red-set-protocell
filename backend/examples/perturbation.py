@@ -29,7 +29,12 @@ def run_basic_perturbations():
 
     # Create target with perturbations
     # Note: Replace 'YOUR_API_KEY' with actual API key
-    target = create_target("openai", api_key="YOUR_API_KEY", model_name="gpt-3.5-turbo", perturbation_config=perturb_config)
+    target = create_target(
+        "openai",
+        api_key="YOUR_API_KEY",
+        model_name="gpt-3.5-turbo",
+        perturbation_config=perturb_config,
+    )
 
     print(f"\nPerturbations enabled: {perturb_config.enabled}")
     print(f"Active modes: {[mode.value for mode in perturb_config.modes]}")
@@ -65,7 +70,9 @@ def run_selective_perturbations():
 
     # Enable only temperature jitter to test temperature sensitivity
     perturb_config = PerturbationConfig(
-        enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER], temperature_jitter_range=0.2  # Allow ±0.2 variation
+        enabled=True,
+        modes=[PerturbationMode.TEMPERATURE_JITTER],
+        temperature_jitter_range=0.2,  # Allow ±0.2 variation
     )
 
     target = create_target(
@@ -109,7 +116,11 @@ def run_system_prompt_variation():
         "",  # Empty = no system prompt
     ]
 
-    perturb_config = PerturbationConfig(enabled=True, modes=[PerturbationMode.SYSTEM_PROMPT], system_prompts=custom_prompts)
+    perturb_config = PerturbationConfig(
+        enabled=True,
+        modes=[PerturbationMode.SYSTEM_PROMPT],
+        system_prompts=custom_prompts,
+    )
 
     target = create_target(
         "anthropic",  # Works with any backend
@@ -153,7 +164,9 @@ def run_deployment_realism():
         truncation_ratio_range=(0.8, 0.95),  # Keep 80-95% if truncated
     )
 
-    target = create_target("openai", api_key="YOUR_API_KEY", perturbation_config=perturb_config)
+    target = create_target(
+        "openai", api_key="YOUR_API_KEY", perturbation_config=perturb_config
+    )
 
     print("\nDeployment simulation parameters:")
     print("  - Randomized system prompts")
@@ -197,7 +210,11 @@ def run_testing_strategy():
     print("   - Test sensitivity to each perturbation type")
     print("   - Identify which variations cause issues")
 
-    for mode in [PerturbationMode.TEMPERATURE_JITTER, PerturbationMode.SYSTEM_PROMPT, PerturbationMode.RESPONSE_TRUNCATION]:
+    for mode in [
+        PerturbationMode.TEMPERATURE_JITTER,
+        PerturbationMode.SYSTEM_PROMPT,
+        PerturbationMode.RESPONSE_TRUNCATION,
+    ]:
         config = PerturbationConfig(enabled=True, modes=[mode])
         print(f"   - Testing: {mode.value}")
 

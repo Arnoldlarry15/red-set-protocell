@@ -32,7 +32,8 @@ def temp_database():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE rounds (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT NOT NULL,
@@ -47,7 +48,8 @@ def temp_database():
             model_version TEXT DEFAULT 'unknown',
             session_start_time TEXT
         )
-    """)
+    """
+    )
 
     conn.commit()
     conn.close()

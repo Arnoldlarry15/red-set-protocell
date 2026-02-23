@@ -60,9 +60,7 @@ def bind_lifecycle_handlers(
         logger.info("=" * 60)
 
         if manager.active_connections:
-            logger.info(
-                f"Closing {len(manager.active_connections)} active WebSocket connections"
-            )
+            logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
             for ws in list(manager.active_connections):
                 try:
                     await ws.close(code=1001, reason="Server shutting down")

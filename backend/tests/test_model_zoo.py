@@ -82,9 +82,7 @@ def test_get_latest_version():
     """Test getting latest version."""
     v1 = ModelVersion(version_id="v1", release_date="2024-01-01", description="V1")
     v2 = ModelVersion(version_id="v2", release_date="2024-02-01", description="V2")
-    v3 = ModelVersion(
-        version_id="v3", release_date="2024-03-01", description="V3", deprecated=True
-    )
+    v3 = ModelVersion(version_id="v3", release_date="2024-03-01", description="V3", deprecated=True)
 
     model = ModelInfo(
         model_id="test",

@@ -234,9 +234,7 @@ def test_strategy_performance_separation():
     # Perform a mutation
     prompt = "test prompt"
     parent_score = 0.6
-    _ = engine.mutate(
-        prompt, fitness_score=parent_score, strategy=MutationStrategy.LEXICAL_VARIATION
-    )
+    _ = engine.mutate(prompt, fitness_score=parent_score, strategy=MutationStrategy.LEXICAL_VARIATION)
 
     # Mutation should be logged with parent score
     assert len(engine.mutation_history) == 1
@@ -244,19 +242,12 @@ def test_strategy_performance_separation():
 
     # But strategy performance is NOT automatically updated
     # It should be empty until explicitly updated
-    assert (
-        len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 0
-    )
+    assert len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 0
 
     # Later, when child is evaluated, update strategy performance with child's score
     child_score = 0.8  # Child performs better than parent
     engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, child_score)
 
     # Now strategy performance should reflect child's actual score
-    assert (
-        len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 1
-    )
-    assert (
-        engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value][0]
-        == child_score
-    )
+    assert len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 1
+    assert engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value][0] == child_score

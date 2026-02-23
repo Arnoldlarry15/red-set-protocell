@@ -69,38 +69,23 @@ class TestSemanticIntensityEnum:
         random.seed(42)
 
         # Test LOW intensity
-        engine_low = MutationEngine(
-            mutation_rate=1.0, semantic_intensity=SemanticIntensity.LOW
-        )
-        result_low = engine_low.mutate(
-            "test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM
-        )
+        engine_low = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.LOW)
+        result_low = engine_low.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
         # Low intensity should use simple, mechanical transforms
         assert "test prompt" in result_low
-        assert any(
-            word in result_low.lower()
-            for word in ["rephrase", "consider", "address", "respond"]
-        )
+        assert any(word in result_low.lower() for word in ["rephrase", "consider", "address", "respond"])
 
         # Test MEDIUM intensity
         random.seed(42)
-        engine_medium = MutationEngine(
-            mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM
-        )
-        result_medium = engine_medium.mutate(
-            "test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM
-        )
+        engine_medium = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM)
+        result_medium = engine_medium.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
         # Medium intensity should use more complex transforms
         assert isinstance(result_medium, str)
 
         # Test HIGH intensity
         random.seed(42)
-        engine_high = MutationEngine(
-            mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH
-        )
-        result_high = engine_high.mutate(
-            "test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM
-        )
+        engine_high = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH)
+        result_high = engine_high.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM)
         # High intensity should use philosophical transforms
         assert isinstance(result_high, str)
 
@@ -124,9 +109,7 @@ class TestStrategyPerformanceBounds:
 
         # Add more scores than the max size
         for i in range(100):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, float(i)
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, float(i))
 
         # Should be capped at max_size
         assert len(engine.strategy_performance["lexical_variation"]) == max_size
@@ -138,9 +121,7 @@ class TestStrategyPerformanceBounds:
 
         # Add scores 0-19
         for i in range(20):
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, float(i)
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, float(i))
 
         # Should only have the last 10 scores (10-19)
         scores = list(engine.strategy_performance["lexical_variation"])
@@ -190,12 +171,8 @@ class TestStrategyPerformanceBounds:
 
         # Add multidimensional fitness scores
         for i in range(30):
-            fitness = MultidimensionalFitness(
-                effectiveness=i / 30.0, consistency=0.8, novelty=0.5
-            )
-            engine.update_strategy_performance(
-                MutationStrategy.ENCODING_TRANSFORM, fitness
-            )
+            fitness = MultidimensionalFitness(effectiveness=i / 30.0, consistency=0.8, novelty=0.5)
+            engine.update_strategy_performance(MutationStrategy.ENCODING_TRANSFORM, fitness)
 
         # Should be capped at max_size
         scores = engine.strategy_performance["encoding_transform"]
@@ -213,9 +190,7 @@ class TestStrategyPerformanceBounds:
         # Add more scores than max_size
         for i in range(50):
             engine.mutate(f"test prompt {i}", fitness_score=0.5)
-            engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, float(i) / 50.0
-            )
+            engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, float(i) / 50.0)
 
         stats = engine.get_statistics()
 
@@ -240,9 +215,7 @@ class TestEvolvePopulationZeroFitness:
         fitness_scores = [0.0, 0.0, 0.0]
 
         # Should not raise ValueError
-        result = engine.evolve_population(
-            base_prompts, fitness_scores, population_size=5
-        )
+        result = engine.evolve_population(base_prompts, fitness_scores, population_size=5)
 
         assert len(result) == 5
         assert all(isinstance(p, str) for p in result)
@@ -256,9 +229,7 @@ class TestEvolvePopulationZeroFitness:
         fitness_scores = [0.5, 0.0, 0.0]
 
         # Should work without errors
-        result = engine.evolve_population(
-            base_prompts, fitness_scores, population_size=10
-        )
+        result = engine.evolve_population(base_prompts, fitness_scores, population_size=10)
 
         assert len(result) == 10
         assert all(isinstance(p, str) for p in result)
@@ -273,9 +244,7 @@ class TestEvolvePopulationZeroFitness:
         base_prompts = ["prompt 1", "prompt 2", "prompt 3", "prompt 4"]
         fitness_scores = [0.8, 0.3, 0.0, 0.1]
 
-        result = engine.evolve_population(
-            base_prompts, fitness_scores, population_size=8
-        )
+        result = engine.evolve_population(base_prompts, fitness_scores, population_size=8)
 
         assert len(result) == 8
         assert all(isinstance(p, str) for p in result)
@@ -292,9 +261,7 @@ class TestEvolvePopulationZeroFitness:
         fitness_scores = [-0.1, 0.0]
 
         # Should not crash due to epsilon floor
-        result = engine.evolve_population(
-            base_prompts, fitness_scores, population_size=4
-        )
+        result = engine.evolve_population(base_prompts, fitness_scores, population_size=4)
 
         assert len(result) == 4
         assert all(isinstance(p, str) for p in result)
@@ -312,9 +279,7 @@ class TestEvolvePopulationZeroFitness:
         total_runs = 100
 
         for _ in range(total_runs):
-            result = engine.evolve_population(
-                base_prompts, fitness_scores, population_size=5
-            )
+            result = engine.evolve_population(base_prompts, fitness_scores, population_size=5)
             # Count how many times high fitness prompt appears
             high_count += sum(1 for p in result if "high fitness" in p)
 
@@ -338,9 +303,7 @@ class TestEvolvePopulationZeroFitness:
         base_prompts = ["only prompt"]
         fitness_scores = [0.0]
 
-        result = engine.evolve_population(
-            base_prompts, fitness_scores, population_size=3
-        )
+        result = engine.evolve_population(base_prompts, fitness_scores, population_size=3)
 
         assert len(result) == 3
         assert all(isinstance(p, str) for p in result)

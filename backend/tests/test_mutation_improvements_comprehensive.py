@@ -85,9 +85,7 @@ class TestFallbackSafety:
         prompt = "test prompt"
 
         # Mock _lexical_variation to raise exception
-        with patch.object(
-            engine, "_lexical_variation", side_effect=Exception("Test error")
-        ):
+        with patch.object(engine, "_lexical_variation", side_effect=Exception("Test error")):
             result = engine.mutate(prompt, strategy=MutationStrategy.LEXICAL_VARIATION)
 
             # Should fall back to original prompt
@@ -98,9 +96,7 @@ class TestFallbackSafety:
         engine = MutationEngine(mutation_rate=1.0)
         prompt = "another test"
 
-        with patch.object(
-            engine, "_encoding_transform", side_effect=RuntimeError("Transform failed")
-        ):
+        with patch.object(engine, "_encoding_transform", side_effect=RuntimeError("Transform failed")):
             result = engine.mutate(prompt, strategy=MutationStrategy.ENCODING_TRANSFORM)
 
             assert result == prompt
@@ -110,12 +106,8 @@ class TestFallbackSafety:
         engine = MutationEngine(mutation_rate=1.0)
         prompt = "test structural"
 
-        with patch.object(
-            engine, "_structural_recombination", side_effect=ValueError("Bad structure")
-        ):
-            result = engine.mutate(
-                prompt, strategy=MutationStrategy.STRUCTURAL_RECOMBINATION
-            )
+        with patch.object(engine, "_structural_recombination", side_effect=ValueError("Bad structure")):
+            result = engine.mutate(prompt, strategy=MutationStrategy.STRUCTURAL_RECOMBINATION)
 
             assert result == prompt
 
@@ -124,9 +116,7 @@ class TestFallbackSafety:
         engine = MutationEngine(mutation_rate=1.0)
         prompt = "log test"
 
-        with patch.object(
-            engine, "_obfuscation", side_effect=Exception("Obfuscation error")
-        ):
+        with patch.object(engine, "_obfuscation", side_effect=Exception("Obfuscation error")):
             with patch("logging.warning") as mock_log:
                 engine.mutate(prompt, strategy=MutationStrategy.OBFUSCATION)
 
@@ -194,9 +184,7 @@ class TestSemanticIntensityTagging:
 
     def test_mutation_record_includes_semantic_intensity(self):
         """Test that mutation records include semantic_intensity."""
-        engine = MutationEngine(
-            mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH, random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH, random_seed=42)
 
         prompt = "test intensity tagging"
         engine.mutate(prompt)
@@ -209,9 +197,7 @@ class TestSemanticIntensityTagging:
 
     def test_no_op_mutation_includes_semantic_intensity(self):
         """Test that even no-op mutations include semantic intensity."""
-        engine = MutationEngine(
-            mutation_rate=0.0, semantic_intensity=SemanticIntensity.LOW
-        )  # Never mutate
+        engine = MutationEngine(mutation_rate=0.0, semantic_intensity=SemanticIntensity.LOW)  # Never mutate
 
         prompt = "no mutation test"
         engine.mutate(prompt)
@@ -251,9 +237,7 @@ class TestMinSamplesForAdaptive:
     def test_adaptive_selection_respects_min_samples(self):
         """Test that adaptive selection uses min_samples threshold."""
         # Create engine with high threshold
-        engine = MutationEngine(
-            mutation_rate=1.0, min_samples_for_adaptive=100, random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, min_samples_for_adaptive=100, random_seed=42)
         engine.adaptive_mode = True
 
         # Add fewer samples than threshold
@@ -268,9 +252,7 @@ class TestMinSamplesForAdaptive:
 
     def test_low_min_samples_enables_adaptive_early(self):
         """Test that low min_samples enables adaptive behavior earlier."""
-        engine = MutationEngine(
-            mutation_rate=1.0, min_samples_for_adaptive=5, random_seed=42
-        )  # Very low threshold
+        engine = MutationEngine(mutation_rate=1.0, min_samples_for_adaptive=5, random_seed=42)  # Very low threshold
         engine.adaptive_mode = True
 
         # Add just enough samples
@@ -334,9 +316,7 @@ class TestEncodingTransformLogging:
 
     def test_encoding_transform_logs_intensity_level(self):
         """Test that encoding transform logs include intensity level."""
-        engine = MutationEngine(
-            mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH, random_seed=42
-        )
+        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.HIGH, random_seed=42)
 
         prompt = "test high intensity log"
 
@@ -530,9 +510,7 @@ class TestEGGFeedbackIntegration:
         assert engine.strategy_egg_blocks[strategy.value] == 0
 
         # Update with EGG blocked (should not add to performance history)
-        engine.update_strategy_performance(
-            strategy, 0.0, egg_blocked=True, egg_category="test_category"
-        )
+        engine.update_strategy_performance(strategy, 0.0, egg_blocked=True, egg_category="test_category")
 
         # Performance history should not increase (blocked mutations don't get scored)
         assert len(engine.strategy_performance[strategy.value]) == 1
@@ -552,9 +530,7 @@ class TestEGGFeedbackIntegration:
 
         # Add some blocked mutations
         for _ in range(3):
-            engine.update_strategy_performance(
-                strategy, 0.0, egg_blocked=True, egg_category="test"
-            )
+            engine.update_strategy_performance(strategy, 0.0, egg_blocked=True, egg_category="test")
 
         # Block rate should be 3 / (7 + 3) = 0.3
         assert engine.strategy_egg_block_rate[strategy.value] == 0.3
@@ -576,9 +552,7 @@ class TestEGGFeedbackIntegration:
 
         # Add high block rate to risky strategy (50% blocked)
         for _ in range(25):
-            engine.update_strategy_performance(
-                risky_strategy, 0.0, egg_blocked=True, egg_category="test"
-            )
+            engine.update_strategy_performance(risky_strategy, 0.0, egg_blocked=True, egg_category="test")
 
         # Block rate for risky strategy should be 25 / (25 + 25) = 0.5
         assert engine.strategy_egg_block_rate[risky_strategy.value] == 0.5
@@ -658,9 +632,7 @@ class TestObservabilityMetrics:
             egg_blocked=True,
             egg_category="bioweapons",
         )
-        engine.update_strategy_performance(
-            MutationStrategy.COMPETING_GOALS, 0.0, egg_blocked=True, egg_category="csam"
-        )
+        engine.update_strategy_performance(MutationStrategy.COMPETING_GOALS, 0.0, egg_blocked=True, egg_category="csam")
 
         metrics = engine.get_observability_metrics()
         egg_metrics = metrics["egg_block_metrics"]
@@ -805,9 +777,7 @@ class TestAdaptiveSelectorStability:
 
         # Add 6 samples to one strategy
         for _ in range(6):
-            engine_low.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.95
-            )
+            engine_low.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.95)
 
         # High threshold
         engine_high = MutationEngine(min_samples_for_adaptive=50, random_seed=42)
@@ -815,9 +785,7 @@ class TestAdaptiveSelectorStability:
 
         # Add same 6 samples
         for _ in range(6):
-            engine_high.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, 0.95
-            )
+            engine_high.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.95)
 
         # Low threshold engine should be in mature mode
         # High threshold engine should still be in early mode
@@ -831,12 +799,8 @@ class TestAdaptiveSelectorStability:
 
         # Low threshold (mature) should favor high performer more strongly
         # than high threshold (early stage exploration)
-        low_lexical_ratio = selections_low.count("lexical_variation") / len(
-            selections_low
-        )
-        high_lexical_ratio = selections_high.count("lexical_variation") / len(
-            selections_high
-        )
+        low_lexical_ratio = selections_low.count("lexical_variation") / len(selections_low)
+        high_lexical_ratio = selections_high.count("lexical_variation") / len(selections_high)
 
         # With mature mode (low threshold), the high-performing strategy should be
         # selected noticeably more often than in early-stage mode (high threshold)

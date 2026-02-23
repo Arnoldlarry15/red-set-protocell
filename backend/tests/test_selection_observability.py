@@ -41,9 +41,7 @@ class TestSelectionObservability:
                 strategy_name = last_mutation["strategy"]
                 if strategy_name != "no-op":
                     strategy = MutationStrategy(strategy_name)
-                    engine.update_strategy_performance(
-                        strategy, score=0.7, archetypes=["partial_compliance"]
-                    )
+                    engine.update_strategy_performance(strategy, score=0.7, archetypes=["partial_compliance"])
 
         # Verify selection_history exists and is populated
         assert hasattr(engine, "selection_history")
@@ -69,9 +67,7 @@ class TestSelectionObservability:
 
     def test_bias_clamping(self):
         """Test that behavior biases are clamped to documented range."""
-        engine = MutationEngine(
-            random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0
-        )  # Ensure mutations always occur
+        engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0)  # Ensure mutations always occur
         engine.enable_adaptive_mode()
 
         # Build up some performance history first
@@ -114,9 +110,7 @@ class TestSelectionObservability:
 
     def test_weight_decomposition(self):
         """Test that weight_without_behavior is correctly computed."""
-        engine = MutationEngine(
-            random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0
-        )  # Ensure mutations always occur
+        engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0)  # Ensure mutations always occur
         engine.enable_adaptive_mode()
 
         # Build up some performance history first
@@ -154,9 +148,7 @@ class TestSelectionObservability:
 
     def test_probability_sum(self):
         """Test that probabilities sum to 1.0."""
-        engine = MutationEngine(
-            random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0
-        )  # Ensure mutations always occur
+        engine = MutationEngine(random_seed=42, min_samples_for_adaptive=5, mutation_rate=1.0)  # Ensure mutations always occur
         engine.enable_adaptive_mode()
 
         # Run some mutations

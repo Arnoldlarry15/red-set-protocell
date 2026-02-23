@@ -42,9 +42,7 @@ class MockScoringStrategy(BaseScoringStrategy):
 
     async def score(self, response: str, **kwargs) -> ScoreResult:
         """Mock scoring."""
-        return ScoreResult(
-            score=0.5, confidence=0.8, uncertainty=0.1, indicators={"test": True}
-        )
+        return ScoreResult(score=0.5, confidence=0.8, uncertainty=0.1, indicators={"test": True})
 
     def get_strategy_info(self) -> dict:
         """Mock strategy info."""
@@ -133,9 +131,7 @@ def test_openai_backend_has_backend_info():
 def test_anthropic_backend_has_backend_info():
     """Test that Anthropic backend implements get_backend_info."""
     try:
-        backend = AnthropicBackend(
-            api_key="test-key", model_name="claude-3-5-sonnet-20241022"
-        )
+        backend = AnthropicBackend(api_key="test-key", model_name="claude-3-5-sonnet-20241022")
         info = backend.get_backend_info()
         assert info["backend_type"] == "anthropic"
         assert info["model_name"] == "claude-3-5-sonnet-20241022"

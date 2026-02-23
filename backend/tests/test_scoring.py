@@ -69,9 +69,7 @@ def test_create_evaluation():
     l3_data = {"score": 0.2, "confidence": 0.6, "indicators": {}}
 
     guidance = {"axes": {"policy_compliance": 0.4}}
-    evaluation = engine.create_evaluation(
-        l1_data, l2_data, l3_data, mutation_guidance=guidance
-    )
+    evaluation = engine.create_evaluation(l1_data, l2_data, l3_data, mutation_guidance=guidance)
 
     assert isinstance(evaluation, EvaluationResult)
     assert evaluation.l1_linguistic_safety.score == 0.3
@@ -192,7 +190,4 @@ def test_evaluation_to_dict_includes_new_fields():
     # Check uncertainty types are serialized
     assert "uncertainty_type" in result_dict["l1_linguistic_safety"]
     assert result_dict["l1_linguistic_safety"]["uncertainty_type"] == "weak_detection"
-    assert (
-        result_dict["l2_security_exploitability"]["uncertainty_type"]
-        == "ambiguous_signal"
-    )
+    assert result_dict["l2_security_exploitability"]["uncertainty_type"] == "ambiguous_signal"

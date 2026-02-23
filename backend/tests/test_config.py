@@ -37,9 +37,7 @@ def test_scoring_weights_validation():
 
     # Invalid weights
     with pytest.raises(ValueError):
-        config = RSPConfig(
-            scoring=ScoringConfig(l1_weight=0.5, l2_weight=0.5, l3_weight=0.5)
-        )
+        config = RSPConfig(scoring=ScoringConfig(l1_weight=0.5, l2_weight=0.5, l3_weight=0.5))
 
 
 def test_mutation_rate_validation():

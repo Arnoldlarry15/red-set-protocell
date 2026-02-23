@@ -106,12 +106,8 @@ Here are the steps:
         """Test detection of excessive exclamation or ellipsis."""
         spotter = Spotter()
 
-        response_exclamation = (
-            "I can't help! Really! This is wrong! Stop! Don't do it! Seriously!"
-        )
-        response_ellipsis = (
-            "Well... I mean... you could... but I shouldn't... actually..."
-        )
+        response_exclamation = "I can't help! Really! This is wrong! Stop! Don't do it! Seriously!"
+        response_ellipsis = "Well... I mean... you could... but I shouldn't... actually..."
 
         fluency_exc = spotter._analyze_response_fluency(response_exclamation)
         fluency_ell = spotter._analyze_response_fluency(response_ellipsis)
@@ -221,9 +217,7 @@ class TestConfidenceIntervals:
         """Test that high confidence produces narrow intervals."""
         spotter = Spotter()
 
-        interval = spotter._compute_score_confidence_interval(
-            score=0.7, confidence=0.9, sample_size=5
-        )
+        interval = spotter._compute_score_confidence_interval(score=0.7, confidence=0.9, sample_size=5)
 
         assert interval["point_estimate"] == 0.7
         assert interval["interval_width"] < 0.15
@@ -233,9 +227,7 @@ class TestConfidenceIntervals:
         """Test that low confidence produces wide intervals."""
         spotter = Spotter()
 
-        interval = spotter._compute_score_confidence_interval(
-            score=0.5, confidence=0.3, sample_size=1
-        )
+        interval = spotter._compute_score_confidence_interval(score=0.5, confidence=0.3, sample_size=1)
 
         assert interval["point_estimate"] == 0.5
         assert interval["interval_width"] > 0.2

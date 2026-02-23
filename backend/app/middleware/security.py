@@ -43,9 +43,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HTTP Strict Transport Security (HSTS) - Force HTTPS
         # Only add in production with HTTPS enabled
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         # Prevent clickjacking attacks
         response.headers["X-Frame-Options"] = "DENY"
@@ -60,9 +58,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         # Permissions policy - restrict browser features
-        response.headers["Permissions-Policy"] = (
-            "geolocation=(), microphone=(), camera=(), payment=()"
-        )
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), payment=()"
 
         return response
 
@@ -75,9 +71,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Essential for production deployment of compute-heavy AI endpoints.
     """
 
-    def __init__(
-        self, app, requests_per_minute: int = 60, requests_per_hour: int = 1000
-    ):
+    def __init__(self, app, requests_per_minute: int = 60, requests_per_hour: int = 1000):
         super().__init__(app)
         self.requests_per_minute = requests_per_minute
         self.requests_per_hour = requests_per_hour
@@ -175,9 +169,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         response.headers["X-RateLimit-Limit-Hour"] = str(self.requests_per_hour)
 
         # Safely get remaining count
-        remaining = self.requests_per_minute - len(
-            self.minute_buckets.get(client_ip, [])
-        )
+        remaining = self.requests_per_minute - len(self.minute_buckets.get(client_ip, []))
         response.headers["X-RateLimit-Remaining-Minute"] = str(max(0, remaining))
 
         return response

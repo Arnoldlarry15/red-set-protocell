@@ -118,10 +118,7 @@ def validate_production_environment():
     # Require demo password to be set
     demo_password = os.getenv("RSP_DEMO_PASSWORD")
     if not demo_password:
-        errors.append(
-            "RSP_DEMO_PASSWORD environment variable must be set. "
-            "This is a critical security requirement."
-        )
+        errors.append("RSP_DEMO_PASSWORD environment variable must be set. " "This is a critical security requirement.")
 
     # Require at least one real provider API key (no simulation mode)
     openai_key = os.getenv("OPENAI_API_KEY")
@@ -133,9 +130,7 @@ def validate_production_environment():
         )
 
     if errors:
-        error_msg = "Production environment validation failed:\n" + "\n".join(
-            f"  - {err}" for err in errors
-        )
+        error_msg = "Production environment validation failed:\n" + "\n".join(f"  - {err}" for err in errors)
         raise ValueError(error_msg)
 
     logger.info("Production environment validation passed")
@@ -159,9 +154,7 @@ ALLOWED_ORIGINS = [origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",")]
 
 # Log CORS configuration
 if RSP_ENVIRONMENT == "production":
-    logger.info(
-        f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}"
-    )
+    logger.info(f"Production mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}")
     # Validate production doesn't include localhost
     for origin in ALLOWED_ORIGINS:
         if "localhost" in origin or "127.0.0.1" in origin:
@@ -170,18 +163,14 @@ if RSP_ENVIRONMENT == "production":
                 "Use separate backend instance for local development."
             )
 else:
-    logger.info(
-        f"Development mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}"
-    )
+    logger.info(f"Development mode: CORS restricted to {len(ALLOWED_ORIGINS)} origin(s): {ALLOWED_ORIGINS}")
 
 # FastAPI app with production-ready configuration
 app = FastAPI(
     title="Red Set ProtoCell API",
     description="REST API and WebSocket interface for RSP red teaming system",
     version="1.0.0",
-    docs_url=(
-        "/api/docs" if RSP_ENVIRONMENT == "development" else None
-    ),  # Disable docs in production
+    docs_url=("/api/docs" if RSP_ENVIRONMENT == "development" else None),  # Disable docs in production
     redoc_url="/api/redoc" if RSP_ENVIRONMENT == "development" else None,
 )
 
@@ -210,12 +199,7 @@ app.add_middleware(InputValidationMiddleware)
 
 # 6. Authentication (JWT-based session management)
 # Disabled in development by default, enabled in production
-require_auth = (
-    os.getenv(
-        "RSP_REQUIRE_AUTH", "true" if RSP_ENVIRONMENT == "production" else "false"
-    ).lower()
-    == "true"
-)
+require_auth = os.getenv("RSP_REQUIRE_AUTH", "true" if RSP_ENVIRONMENT == "production" else "false").lower() == "true"
 app.add_middleware(AuthenticationMiddleware, require_auth=require_auth)
 
 # 7. CORS middleware - Explicit and defensive (applied last, executed first)
@@ -350,10 +334,7 @@ def estimate_token_cost(
 DEMO_PASSWORD_PLAIN = os.getenv("RSP_DEMO_PASSWORD")
 
 if not DEMO_PASSWORD_PLAIN:
-    raise ValueError(
-        "RSP_DEMO_PASSWORD environment variable must be set. "
-        "This is a critical security requirement."
-    )
+    raise ValueError("RSP_DEMO_PASSWORD environment variable must be set. " "This is a critical security requirement.")
 
 # Initialize users with hashed passwords
 users: Dict[str, Dict[str, Any]] = {}
@@ -395,9 +376,7 @@ class ConnectionManager:
         """Accept and track a new WebSocket connection."""
         # Enforce connection limit to prevent memory exhaustion
         if len(self.active_connections) >= self.MAX_CONNECTIONS:
-            logger.warning(
-                f"Connection limit reached ({self.MAX_CONNECTIONS}), rejecting new connection"
-            )
+            logger.warning(f"Connection limit reached ({self.MAX_CONNECTIONS}), rejecting new connection")
             await websocket.close(code=1008, reason="Server at capacity")
             return False
 
@@ -407,9 +386,7 @@ class ConnectionManager:
             "connected_at": datetime.now(timezone.utc).isoformat(),
             "messages_sent": 0,
         }
-        logger.info(
-            f"WebSocket connected. Total connections: {len(self.active_connections)}"
-        )
+        logger.info(f"WebSocket connected. Total connections: {len(self.active_connections)}")
         return True
 
     def disconnect(self, websocket: WebSocket):
@@ -421,9 +398,7 @@ class ConnectionManager:
         if websocket in self.connection_metadata:
             del self.connection_metadata[websocket]
 
-        logger.info(
-            f"WebSocket disconnected. Total connections: {len(self.active_connections)}"
-        )
+        logger.info(f"WebSocket disconnected. Total connections: {len(self.active_connections)}")
 
     async def broadcast(self, message: dict):
         """
@@ -502,9 +477,7 @@ async def shutdown_event():
 
     # Close all active WebSocket connections
     if manager.active_connections:
-        logger.info(
-            f"Closing {len(manager.active_connections)} active WebSocket connections"
-        )
+        logger.info(f"Closing {len(manager.active_connections)} active WebSocket connections")
         for ws in list(manager.active_connections):
             try:
                 await ws.close(code=1001, reason="Server shutting down")
@@ -673,9 +646,7 @@ async def start_session(config: SessionConfig):
         )
 
         backend_value = (
-            rsp_config.target.backend.value
-            if hasattr(rsp_config.target.backend, "value")
-            else rsp_config.target.backend
+            rsp_config.target.backend.value if hasattr(rsp_config.target.backend, "value") else rsp_config.target.backend
         )
         target = create_target(
             backend_type=str(backend_value),
@@ -743,9 +714,7 @@ async def execute_session(session_id: str):
         session["status"] = "running"
 
         # Run session in background
-        task = asyncio.create_task(
-            run_session_with_websocket(session_id, orchestrator, session)
-        )
+        task = asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
         track_background_task(task, f"session:{session_id}")
 
         return {
@@ -788,9 +757,7 @@ async def execute_custom_prompt(request: CustomPromptRequest):
 
         # Update session cost based on result using utility function
         if result.get("status") == "success":
-            estimated_cost = estimate_token_cost(
-                request.prompt, result.get("response", "")
-            )
+            estimated_cost = estimate_token_cost(request.prompt, result.get("response", ""))
             session["current_cost"] += estimated_cost
 
         return {
@@ -868,9 +835,7 @@ async def get_historical_sessions(db_path: str = "rsp_session.db"):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def compare_model_versions(
-    model_v1: str, model_v2: str, db_path: str = "rsp_session.db"
-):
+async def compare_model_versions(model_v1: str, model_v2: str, db_path: str = "rsp_session.db"):
     """Compare two model versions"""
     try:
         extractor = SessionDataExtractor(db_path)
@@ -902,9 +867,7 @@ async def compare_model_versions(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def export_session_results(
-    session_id: str, format: str = "json", db_path: str = "rsp_session.db"
-):
+async def export_session_results(session_id: str, format: str = "json", db_path: str = "rsp_session.db"):
     """Export session results in CSV or JSON format"""
     try:
         extractor = SessionDataExtractor(db_path)
@@ -940,18 +903,12 @@ async def login(credentials: UserLogin):
         # Step 1: Verify credentials exist
         stored_user = users.get(credentials.username)
         if not stored_user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-            )
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         # Step 2: Verify password using secure hash comparison
         password_hash = stored_user.get("password_hash")
-        if not password_hash or not password_hasher.verify_password(
-            credentials.password, password_hash
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-            )
+        if not password_hash or not password_hasher.verify_password(credentials.password, password_hash):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         # Step 3: Build user_info from stored data only (no credentials access)
         user_info = {
@@ -1024,10 +981,7 @@ async def list_users():
     """List all users (admin only)"""
     try:
         return {
-            "users": [
-                {"username": username, "email": user["email"], "role": user["role"]}
-                for username, user in users.items()
-            ]
+            "users": [{"username": username, "email": user["email"], "role": user["role"]} for username, user in users.items()]
         }
     except Exception as e:
         log_exception_safely("Error listing users", e)
@@ -1150,9 +1104,7 @@ async def validate_llm_key(validation: LLMKeyValidation):
 
         # Log the error with details for debugging
         safe_error_message = redact_sensitive_text(error_message)
-        logger.warning(
-            f"LLM API key validation failed: {error_type} - {safe_error_message[:100]}"
-        )
+        logger.warning(f"LLM API key validation failed: {error_type} - {safe_error_message[:100]}")
 
         # Return appropriate error based on type (check auth first)
         if is_auth_error:
@@ -1279,9 +1231,7 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.info("WebSocket client disconnected")
 
 
-async def run_session_with_websocket(
-    session_id: str, orchestrator: Orchestrator, session: dict
-):
+async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator, session: dict):
     """Run session and broadcast updates via WebSocket"""
     try:
         config = session["config"]
@@ -1296,9 +1246,7 @@ async def run_session_with_websocket(
             result = await orchestrator.run_round(round_num)
 
             # Calculate estimated cost using utility function
-            estimated_round_cost = estimate_token_cost(
-                result.get("prompt", ""), result.get("response", "")
-            )
+            estimated_round_cost = estimate_token_cost(result.get("prompt", ""), result.get("response", ""))
 
             session["current_cost"] += estimated_round_cost
 
@@ -1334,9 +1282,7 @@ async def run_session_with_websocket(
                     "session_id": session_id,
                     "completed_rounds": round_num,
                     "total_rounds": config.max_rounds,
-                    "average_score": stats.get("scores", {}).get(
-                        "average_global_score", 0
-                    ),
+                    "average_score": stats.get("scores", {}).get("average_global_score", 0),
                     "blocked_count": stats.get("scores", {}).get("total_blocked", 0),
                     "api_cost": session["current_cost"],
                     "status": session["status"],
@@ -1383,9 +1329,7 @@ async def run_session_with_websocket(
     except Exception as e:
         log_exception_safely("Error in session execution", e)
         session["status"] = "error"
-        await manager.broadcast(
-            {"type": "error", "data": {"message": "Internal server error"}}
-        )
+        await manager.broadcast({"type": "error", "data": {"message": "Internal server error"}})
 
 
 def get_severity(score: float) -> str:

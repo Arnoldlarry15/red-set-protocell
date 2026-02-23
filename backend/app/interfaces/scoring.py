@@ -92,9 +92,7 @@ class BaseScoringStrategy(ABC):
             known_samples: List of (response, expected_score) tuples
         """
 
-    def get_confidence_interval(
-        self, score: float, uncertainty: float
-    ) -> Tuple[float, float]:
+    def get_confidence_interval(self, score: float, uncertainty: float) -> Tuple[float, float]:
         """
         Calculate confidence interval for a score.
 

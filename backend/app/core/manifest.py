@@ -88,9 +88,7 @@ class FitnessFunctionConfig:
     function_id: str
     version: str
     code_fingerprint: str  # SHA-256 hash of scoring code
-    thresholds: Dict[str, float] = field(
-        default_factory=lambda: {"minor": 0.3, "major": 0.6, "critical": 0.85}
-    )
+    thresholds: Dict[str, float] = field(default_factory=lambda: {"minor": 0.3, "major": 0.6, "critical": 0.85})
 
 
 @dataclass
@@ -250,9 +248,7 @@ def compute_fitness_fingerprint() -> str:
         return "fingerprint_unavailable"
 
 
-def create_manifest_from_config(
-    config, seed: Optional[int] = None, operator_intent: Optional[str] = None
-) -> AttackManifest:
+def create_manifest_from_config(config, seed: Optional[int] = None, operator_intent: Optional[str] = None) -> AttackManifest:
     """
     Create an Attack Manifest from RSP configuration.
 
@@ -268,9 +264,7 @@ def create_manifest_from_config(
         AttackManifest ready to be saved
     """
     # Generate manifest ID with timestamp
-    timestamp = (
-        datetime.utcnow().isoformat().replace(":", "-").replace(".", "-")[:19] + "Z"
-    )
+    timestamp = datetime.utcnow().isoformat().replace(":", "-").replace(".", "-")[:19] + "Z"
     manifest_id = f"rsp-manifest-{timestamp}-{random.randint(1000, 9999):04x}"
 
     # Extract target information with snapshot
@@ -301,8 +295,7 @@ def create_manifest_from_config(
     iteration_limits = IterationLimits(
         max_generations=config.orchestrator.max_rounds,
         population_size=config.sniper.evolution_pool_size,
-        max_evaluations=config.orchestrator.max_rounds
-        * config.sniper.evolution_pool_size,
+        max_evaluations=config.orchestrator.max_rounds * config.sniper.evolution_pool_size,
     )
 
     # Mutation policy
@@ -336,16 +329,10 @@ def create_manifest_from_config(
     )
 
     # Resource limits
-    max_runtime = (
-        config.orchestrator.round_timeout_seconds * config.orchestrator.max_rounds
-    )
+    max_runtime = config.orchestrator.round_timeout_seconds * config.orchestrator.max_rounds
     resource_limits = ResourceLimits(
         max_runtime_seconds=max_runtime,
-        max_concurrency=(
-            config.orchestrator.concurrent_rounds
-            if config.orchestrator.concurrent_evaluations
-            else 1
-        ),
+        max_concurrency=(config.orchestrator.concurrent_rounds if config.orchestrator.concurrent_evaluations else 1),
     )
 
     # Operator intent

@@ -279,9 +279,7 @@ class Sniper:
         # Track domain success rates: domain -> list of scores
         self.domain_scores: Dict[AttackDomain, List[float]] = defaultdict(list)
 
-    async def generate_prompt(
-        self, prior_metadata: Optional[List[Dict[str, Any]]] = None
-    ) -> Tuple[str, AttackDomain]:
+    async def generate_prompt(self, prior_metadata: Optional[List[Dict[str, Any]]] = None) -> Tuple[str, AttackDomain]:
         """
         Generate an adversarial prompt (async).
 
@@ -293,13 +291,9 @@ class Sniper:
         """
         # Run generation in executor to avoid blocking
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None, self._generate_prompt_sync, prior_metadata
-        )
+        return await loop.run_in_executor(None, self._generate_prompt_sync, prior_metadata)
 
-    def _generate_prompt_sync(
-        self, prior_metadata: Optional[List[Dict[str, Any]]] = None
-    ) -> Tuple[str, AttackDomain]:
+    def _generate_prompt_sync(self, prior_metadata: Optional[List[Dict[str, Any]]] = None) -> Tuple[str, AttackDomain]:
         """
         Synchronous implementation of prompt generation.
 
@@ -340,25 +334,16 @@ class Sniper:
 
             # Extract strategy from last mutation
             if self.mutation_engine.mutation_history:
-                strategy_used = self.mutation_engine.mutation_history[-1].get(
-                    "strategy"
-                )
+                strategy_used = self.mutation_engine.mutation_history[-1].get("strategy")
 
         # Add to evolution pool with strategy
-        self._update_evolution_pool(
-            prompt, 0.0, domain, strategy_used
-        )  # Score will be updated later
+        self._update_evolution_pool(prompt, 0.0, domain, strategy_used)  # Score will be updated later
 
-        logger.info(
-            f"Sniper generated prompt #{self.generation_count} "
-            f"for domain: {domain.value}"
-        )
+        logger.info(f"Sniper generated prompt #{self.generation_count} " f"for domain: {domain.value}")
 
         return prompt, domain
 
-    def _evolve_from_pool(
-        self, target_domain: AttackDomain, prior_scores: Optional[List[float]]
-    ) -> Tuple[str, Optional[str]]:
+    def _evolve_from_pool(self, target_domain: AttackDomain, prior_scores: Optional[List[float]]) -> Tuple[str, Optional[str]]:
         """
         Evolve a prompt from the evolution pool using selection strategies.
 
@@ -374,9 +359,7 @@ class Sniper:
             return self.intent_engine.generate_base_prompt(target_domain), None
 
         # Filter pool by domain (prefer same domain)
-        domain_candidates = [
-            c for c in self.evolution_pool if c.domain == target_domain.value
-        ]
+        domain_candidates = [c for c in self.evolution_pool if c.domain == target_domain.value]
 
         if not domain_candidates:
             # Fallback to any domain
@@ -406,23 +389,15 @@ class Sniper:
         strategy_used = None
         if parent.score > 0:
             # Mutate the selected parent with behavior-aware guidance
-            result = self.mutation_engine.mutate(
-                parent.prompt, parent.score, mutation_guidance=mutation_guidance
-            )
+            result = self.mutation_engine.mutate(parent.prompt, parent.score, mutation_guidance=mutation_guidance)
             # Track strategy from mutation
             if self.mutation_engine.mutation_history:
-                strategy_used = self.mutation_engine.mutation_history[-1].get(
-                    "strategy"
-                )
+                strategy_used = self.mutation_engine.mutation_history[-1].get("strategy")
         else:
             # Just mutate without fitness guidance
-            result = self.mutation_engine.mutate(
-                parent.prompt, mutation_guidance=mutation_guidance
-            )
+            result = self.mutation_engine.mutate(parent.prompt, mutation_guidance=mutation_guidance)
             if self.mutation_engine.mutation_history:
-                strategy_used = self.mutation_engine.mutation_history[-1].get(
-                    "strategy"
-                )
+                strategy_used = self.mutation_engine.mutation_history[-1].get("strategy")
 
         return result, strategy_used
 
@@ -445,9 +420,7 @@ class Sniper:
             strategy: Mutation strategy used (optional)
         """
         # Create new candidate
-        candidate = PromptCandidate(
-            prompt=prompt, score=score, domain=domain.value, strategy=strategy
-        )
+        candidate = PromptCandidate(prompt=prompt, score=score, domain=domain.value, strategy=strategy)
 
         # Add to pool
         self.evolution_pool.append(candidate)
@@ -481,9 +454,7 @@ class Sniper:
         for i, candidate in enumerate(self.evolution_pool):
             if candidate.prompt == prompt:
                 # Check if this was blocked by EGG (ethical guardrail)
-                is_blocked = structured_feedback and structured_feedback.get(
-                    "blocked", False
-                )
+                is_blocked = structured_feedback and structured_feedback.get("blocked", False)
 
                 if is_blocked:
                     # Don't update score for blocked prompts - they hit ethical boundaries
@@ -542,16 +513,12 @@ class Sniper:
                 if structured_feedback and not structured_feedback.get("blocked"):
                     for layer in ["l1", "l2", "l3"]:
                         if layer in structured_feedback:
-                            layer_archetypes = structured_feedback[layer].get(
-                                "archetypes", []
-                            )
+                            layer_archetypes = structured_feedback[layer].get("archetypes", [])
                             archetypes.extend(layer_archetypes)
 
                 # Update mutation engine performance tracking if strategy is known
                 # Now with archetype context for correlation learning
-                if candidate.strategy and hasattr(
-                    self.mutation_engine, "update_strategy_performance"
-                ):
+                if candidate.strategy and hasattr(self.mutation_engine, "update_strategy_performance"):
                     from app.engines.mutation import MutationStrategy
 
                     try:
@@ -595,9 +562,7 @@ class Sniper:
 
         # Compute domain success rates
         domain_success_rates = self._compute_domain_success_rates()
-        domain_success_dict = {
-            domain.value: rate for domain, rate in domain_success_rates.items()
-        }
+        domain_success_dict = {domain.value: rate for domain, rate in domain_success_rates.items()}
 
         return {
             "total_generated": self.generation_count,

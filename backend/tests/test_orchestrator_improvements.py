@@ -280,9 +280,7 @@ def test_egg_auditor_suspicious_prompt():
 def test_egg_auditor_blocked_prompt():
     """Test EGG auditor doesn't flag already blocked prompts."""
     auditor = EGGAuditor(enabled=True)
-    result = auditor.audit_decision(
-        "bad prompt", egg_allowed=False, egg_blocked_category="csam"
-    )
+    result = auditor.audit_decision("bad prompt", egg_allowed=False, egg_blocked_category="csam")
 
     assert result.egg_decision is False
     assert result.confidence == 0.0
@@ -378,15 +376,9 @@ def test_zero_retention_cleanup_removes_artifacts(temp_db, temp_artifacts_dir):
             scope="test",
         ),
         determinism=DeterminismConfig(seed=42, rng="pcg64"),
-        iteration_limits=IterationLimits(
-            max_generations=10, population_size=10, max_evaluations=100
-        ),
-        mutation_policy=MutationPolicyConfig(
-            policy_id="test", version="1.0.0", operators=[]
-        ),
-        fitness_function=FitnessFunctionConfig(
-            function_id="test", version="1.0.0", code_fingerprint="test"
-        ),
+        iteration_limits=IterationLimits(max_generations=10, population_size=10, max_evaluations=100),
+        mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+        fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
         agent_boundaries=AgentBoundaries(),
         resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1),
     )
@@ -458,15 +450,9 @@ def test_zero_retention_disabled_preserves_artifacts(temp_db, temp_artifacts_dir
             scope="test",
         ),
         determinism=DeterminismConfig(seed=42, rng="pcg64"),
-        iteration_limits=IterationLimits(
-            max_generations=10, population_size=10, max_evaluations=100
-        ),
-        mutation_policy=MutationPolicyConfig(
-            policy_id="test", version="1.0.0", operators=[]
-        ),
-        fitness_function=FitnessFunctionConfig(
-            function_id="test", version="1.0.0", code_fingerprint="test"
-        ),
+        iteration_limits=IterationLimits(max_generations=10, population_size=10, max_evaluations=100),
+        mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+        fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
         agent_boundaries=AgentBoundaries(),
         resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1),
     )

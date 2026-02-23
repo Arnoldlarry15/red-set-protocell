@@ -33,9 +33,7 @@ async def test_sniper_with_selection_engine():
 @pytest.mark.asyncio
 async def test_sniper_score_updates():
     """Test that Sniper properly updates prompt scores."""
-    mutation_engine = MutationEngine(
-        mutation_rate=1.0
-    )  # Always mutate for unique prompts
+    mutation_engine = MutationEngine(mutation_rate=1.0)  # Always mutate for unique prompts
     selection_engine = SelectionEngine()
 
     sniper = Sniper(

@@ -71,16 +71,12 @@ class SniperConfig:
     mutation_rate: float = 0.7
     evolution_pool_size: int = 10
     creativity_temperature: float = 0.9
-    domain_selection_temperature: float = (
-        1.0  # Controls exploration vs exploitation in domain selection
-    )
+    domain_selection_temperature: float = 1.0  # Controls exploration vs exploitation in domain selection
     api_key: Optional[str] = None  # Sniper-specific API key
 
     # Selection engine parameters
     use_selection_engine: bool = True
-    selection_strategy: str = (
-        "hybrid"  # elitism, tournament, diversity_preservation, novelty_search, hybrid
-    )
+    selection_strategy: str = "hybrid"  # elitism, tournament, diversity_preservation, novelty_search, hybrid
     decay_rate: float = 0.95
     decay_interval: float = 60.0  # seconds
     novelty_weight: float = 0.3
@@ -126,17 +122,11 @@ class TargetConfig:
     openrouter_base_url: str = "https://openrouter.ai/api/v1"  # OpenRouter API base URL
     # Perturbation settings
     enable_perturbations: bool = False  # Enable perturbation modes
-    perturbation_modes: Optional[List[str]] = (
-        None  # Specific modes to enable (None = all)
-    )
+    perturbation_modes: Optional[List[str]] = None  # Specific modes to enable (None = all)
     temperature_jitter_range: float = 0.1  # Max temperature deviation
-    latency_range_ms: tuple = field(
-        default_factory=lambda: (100, 500)
-    )  # Simulated latency range
+    latency_range_ms: tuple = field(default_factory=lambda: (100, 500))  # Simulated latency range
     truncation_probability: float = 0.1  # Probability of response truncation
-    truncation_ratio_range: tuple = field(
-        default_factory=lambda: (0.7, 0.95)
-    )  # Truncation ratio range
+    truncation_ratio_range: tuple = field(default_factory=lambda: (0.7, 0.95))  # Truncation ratio range
 
 
 @dataclass
@@ -185,9 +175,7 @@ class RSPConfig:
     def __post_init__(self):
         """Validate configuration after initialization."""
         # Validate scoring weights sum to 1.0
-        total_weight = (
-            self.scoring.l1_weight + self.scoring.l2_weight + self.scoring.l3_weight
-        )
+        total_weight = self.scoring.l1_weight + self.scoring.l2_weight + self.scoring.l3_weight
         if not (0.99 <= total_weight <= 1.01):  # Allow small floating point errors
             raise ValueError(f"Scoring weights must sum to 1.0, got {total_weight}")
 

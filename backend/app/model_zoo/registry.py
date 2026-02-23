@@ -257,9 +257,7 @@ class ModelRegistry:
             "providers": [m.provider.value for m in models],
             "context_windows": [m.context_window for m in models],
             "capabilities": {m.model_id: m.capabilities for m in models},
-            "baselines": {
-                m.model_id: m.benchmark_baseline for m in models if m.benchmark_baseline
-            },
+            "baselines": {m.model_id: m.benchmark_baseline for m in models if m.benchmark_baseline},
         }
 
         return comparison

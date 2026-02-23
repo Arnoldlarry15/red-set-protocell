@@ -88,27 +88,17 @@ class PromptCandidate:
         """
         # Extract structural features with finer buckets
         features = []
-        features.append(
-            f"length:{len(self.prompt) // 5}"
-        )  # Finer length bucket (was // 10)
-        features.append(
-            f"words:{len(self.prompt.split()) // 3}"
-        )  # Finer word count bucket (was // 5)
+        features.append(f"length:{len(self.prompt) // 5}")  # Finer length bucket (was // 10)
+        features.append(f"words:{len(self.prompt.split()) // 3}")  # Finer word count bucket (was // 5)
 
         # Character composition with more precision
-        upper_ratio = sum(1 for c in self.prompt if c.isupper()) / max(
-            len(self.prompt), 1
-        )
+        upper_ratio = sum(1 for c in self.prompt if c.isupper()) / max(len(self.prompt), 1)
         features.append(f"upper:{int(upper_ratio * 20)}")  # More precision (was * 10)
 
-        lower_ratio = sum(1 for c in self.prompt if c.islower()) / max(
-            len(self.prompt), 1
-        )
+        lower_ratio = sum(1 for c in self.prompt if c.islower()) / max(len(self.prompt), 1)
         features.append(f"lower:{int(lower_ratio * 20)}")
 
-        digit_ratio = sum(1 for c in self.prompt if c.isdigit()) / max(
-            len(self.prompt), 1
-        )
+        digit_ratio = sum(1 for c in self.prompt if c.isdigit()) / max(len(self.prompt), 1)
         features.append(f"digits:{int(digit_ratio * 20)}")
 
         # Punctuation patterns with categories
@@ -222,9 +212,7 @@ class PromptCandidate:
         # Detect common patterns
         if "previous" in normalized and "instruction" in normalized:
             features.append("previous_instruction_pattern")
-        if "new" in normalized and (
-            "instruction" in normalized or "directive" in normalized
-        ):
+        if "new" in normalized and ("instruction" in normalized or "directive" in normalized):
             features.append("new_instruction_pattern")
         if "you are" in normalized or "you're" in normalized:
             features.append("identity_assertion")
@@ -269,9 +257,7 @@ class SelectionEngine:
     """
 
     # Constants for single-selection scoring
-    SINGLE_SELECT_FITNESS_WEIGHT = (
-        0.7  # Weight for fitness in balanced single selection
-    )
+    SINGLE_SELECT_FITNESS_WEIGHT = 0.7  # Weight for fitness in balanced single selection
 
     def __init__(
         self,
@@ -402,24 +388,17 @@ class SelectionEngine:
 
                 # Calculate performance-based decay
                 performance_decay_factor = 1.0
-                if (
-                    candidate.performance_history
-                    and len(candidate.performance_history) >= 2
-                ):
+                if candidate.performance_history and len(candidate.performance_history) >= 2:
                     # Check if performance is declining
                     recent_scores = candidate.performance_history[-3:]
                     recent_avg = sum(recent_scores) / len(recent_scores)
-                    overall_avg = sum(candidate.performance_history) / len(
-                        candidate.performance_history
-                    )
+                    overall_avg = sum(candidate.performance_history) / len(candidate.performance_history)
 
                     MIN_AVG_SCORE = 0.01  # Guard against division by zero
                     if recent_avg < overall_avg:
                         # Performance is declining - apply additional decay
                         decline_ratio = recent_avg / max(overall_avg, MIN_AVG_SCORE)
-                        performance_decay_factor = 0.5 + (
-                            0.5 * decline_ratio
-                        )  # Range: 0.5 to 1.0
+                        performance_decay_factor = 0.5 + (0.5 * decline_ratio)  # Range: 0.5 to 1.0
 
                 # Combine time and performance decay as weighted average
                 combined_decay = (
@@ -431,9 +410,7 @@ class SelectionEngine:
 
         return candidates
 
-    def _update_novelty_scores(
-        self, candidates: List[PromptCandidate]
-    ) -> List[PromptCandidate]:
+    def _update_novelty_scores(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
         Update novelty scores based on structural distance from high scorers.
 
@@ -450,9 +427,7 @@ class SelectionEngine:
                 min_distance = float("inf")
 
                 for high_scorer_hash in self.high_scorer_structures:
-                    distance = self._hash_distance(
-                        candidate.structural_hash, high_scorer_hash
-                    )
+                    distance = self._hash_distance(candidate.structural_hash, high_scorer_hash)
                     min_distance = min(min_distance, distance)
 
                 # Normalize distance to 0-1 range
@@ -480,9 +455,7 @@ class SelectionEngine:
         distance = sum(c1 != c2 for c1, c2 in zip(hash1, hash2))
         return float(distance)
 
-    def _update_diversity_scores(
-        self, candidates: List[PromptCandidate]
-    ) -> List[PromptCandidate]:
+    def _update_diversity_scores(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
         Update diversity scores based on uniqueness within current population.
         """
@@ -498,9 +471,7 @@ class SelectionEngine:
 
         return candidates
 
-    def _apply_overfitting_penalties(
-        self, candidates: List[PromptCandidate]
-    ) -> List[PromptCandidate]:
+    def _apply_overfitting_penalties(self, candidates: List[PromptCandidate]) -> List[PromptCandidate]:
         """
         Penalize patterns that have been used too frequently.
 
@@ -522,9 +493,7 @@ class SelectionEngine:
 
         return candidates
 
-    def _elitism_select(
-        self, candidates: List[PromptCandidate], num_select: int
-    ) -> List[PromptCandidate]:
+    def _elitism_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Elitism selection: Select top performers by score.
 
@@ -533,9 +502,7 @@ class SelectionEngine:
         sorted_candidates = sorted(candidates, key=lambda c: c.score, reverse=True)
         return sorted_candidates[:num_select]
 
-    def _tournament_select(
-        self, candidates: List[PromptCandidate], num_select: int
-    ) -> List[PromptCandidate]:
+    def _tournament_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Tournament selection: Randomly sample and select best.
 
@@ -553,9 +520,7 @@ class SelectionEngine:
 
         return selected
 
-    def _diversity_select(
-        self, candidates: List[PromptCandidate], num_select: int
-    ) -> List[PromptCandidate]:
+    def _diversity_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Diversity selection: Prioritize unique structures.
 
@@ -567,9 +532,7 @@ class SelectionEngine:
 
         return [c for c, _ in scored[:num_select]]
 
-    def _novelty_select(
-        self, candidates: List[PromptCandidate], num_select: int
-    ) -> List[PromptCandidate]:
+    def _novelty_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Novelty selection: Reward structural differences from high scorers.
 
@@ -579,8 +542,7 @@ class SelectionEngine:
         scored = [
             (
                 c,
-                c.score * (1 - self.novelty_weight)
-                + c.novelty_score * self.novelty_weight,
+                c.score * (1 - self.novelty_weight) + c.novelty_score * self.novelty_weight,
             )
             for c in candidates
         ]
@@ -588,9 +550,7 @@ class SelectionEngine:
 
         return [c for c, _ in scored[:num_select]]
 
-    def _hybrid_select(
-        self, candidates: List[PromptCandidate], num_select: int
-    ) -> List[PromptCandidate]:
+    def _hybrid_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Hybrid selection: Combine multiple strategies.
 
@@ -606,8 +566,7 @@ class SelectionEngine:
                 scored = [
                     (
                         c,
-                        c.score * self.SINGLE_SELECT_FITNESS_WEIGHT
-                        + c.novelty_score * novelty_component_weight,
+                        c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * novelty_component_weight,
                     )
                     for c in candidates
                 ]
@@ -650,9 +609,7 @@ class SelectionEngine:
 
         # Diversity selection
         if remaining and num_diverse > 0:
-            diverse = self._diversity_select(
-                remaining, min(num_diverse, len(remaining))
-            )
+            diverse = self._diversity_select(remaining, min(num_diverse, len(remaining)))
             selected.extend(diverse)
 
         return selected[:num_select]
@@ -663,13 +620,9 @@ class SelectionEngine:
             "high_scorer_count": len(self.high_scorer_structures),
             "pattern_usage_count": len(self.pattern_usage),
             "semantic_pattern_usage_count": len(self.semantic_pattern_usage),
-            "most_used_pattern_count": (
-                max(self.pattern_usage.values()) if self.pattern_usage else 0
-            ),
+            "most_used_pattern_count": (max(self.pattern_usage.values()) if self.pattern_usage else 0),
             "most_used_semantic_pattern_count": (
-                max(self.semantic_pattern_usage.values())
-                if self.semantic_pattern_usage
-                else 0
+                max(self.semantic_pattern_usage.values()) if self.semantic_pattern_usage else 0
             ),
             "decay_rate": self.decay_rate,
             "novelty_weight": self.novelty_weight,

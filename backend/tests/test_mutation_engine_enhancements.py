@@ -36,9 +36,7 @@ def test_strategy_performance_with_archetypes():
     engine = MutationEngine()
 
     # Update performance with archetypes
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"]
-    )
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"])
     engine.update_strategy_performance(
         MutationStrategy.LEXICAL_VARIATION,
         0.9,
@@ -46,23 +44,9 @@ def test_strategy_performance_with_archetypes():
     )
 
     # Check tracking
-    assert (
-        len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2
-    )
-    assert (
-        "HIDDEN_COMPLIANCE"
-        in engine.strategy_archetype_performance[
-            MutationStrategy.LEXICAL_VARIATION.value
-        ]
-    )
-    assert (
-        len(
-            engine.strategy_archetype_performance[
-                MutationStrategy.LEXICAL_VARIATION.value
-            ]["HIDDEN_COMPLIANCE"]
-        )
-        == 2
-    )
+    assert len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2
+    assert "HIDDEN_COMPLIANCE" in engine.strategy_archetype_performance[MutationStrategy.LEXICAL_VARIATION.value]
+    assert len(engine.strategy_archetype_performance[MutationStrategy.LEXICAL_VARIATION.value]["HIDDEN_COMPLIANCE"]) == 2
 
 
 def test_strategy_counts_performance():
@@ -148,12 +132,8 @@ def test_archetype_correlation_in_statistics():
     engine = MutationEngine(mutation_rate=1.0)
 
     # Track performance with archetypes
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION, 0.9, archetypes=["HIDDEN_COMPLIANCE"]
-    )
-    engine.update_strategy_performance(
-        MutationStrategy.OBFUSCATION, 0.3, archetypes=["EXPLOIT_RISK"]
-    )
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.9, archetypes=["HIDDEN_COMPLIANCE"])
+    engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.3, archetypes=["EXPLOIT_RISK"])
 
     engine.mutate("test")
 
@@ -299,9 +279,7 @@ def test_performance_with_mixed_archetype_data():
     engine = MutationEngine()
 
     # Mix of with and without archetypes
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"]
-    )
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"])
     engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.7)
     engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.5)
 
@@ -309,6 +287,4 @@ def test_performance_with_mixed_archetype_data():
 
     # Should handle mixed data gracefully
     assert "strategy_archetype_correlations" in stats
-    assert (
-        len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2
-    )
+    assert len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2

@@ -65,9 +65,7 @@ class TestInfraDashboard:
 
     def test_model_comparison(self):
         """Test model version comparison endpoint"""
-        response = client.get(
-            "/dashboard/compare-models?model_v1=gpt-4-v1&model_v2=gpt-4-v2"
-        )
+        response = client.get("/dashboard/compare-models?model_v1=gpt-4-v1&model_v2=gpt-4-v2")
         assert response.status_code in [200, 500]  # May fail if no DB
         if response.status_code == 200:
             data = response.json()
@@ -80,9 +78,7 @@ class TestUserManagement:
 
     def test_login_success(self):
         """Test successful login"""
-        response = client.post(
-            "/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
-        )
+        response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
@@ -94,9 +90,7 @@ class TestUserManagement:
 
     def test_login_failure(self):
         """Test failed login with invalid credentials"""
-        response = client.post(
-            "/auth/login", json={"username": "invalid", "password": "wrong"}
-        )
+        response = client.post("/auth/login", json={"username": "invalid", "password": "wrong"})
         assert response.status_code == 401
 
     def test_list_users(self):
@@ -274,9 +268,7 @@ class TestUserManagement:
             mock_instance = AsyncMock()
             # Simulate an authentication error with "connection" in the message
             fake_proj_key = _fake_openai_key("proj-connection123")
-            mock_instance.execute.side_effect = Exception(
-                f"Error code: 401 - Incorrect API key provided: {fake_proj_key}"
-            )
+            mock_instance.execute.side_effect = Exception(f"Error code: 401 - Incorrect API key provided: {fake_proj_key}")
             mock_backend.return_value = mock_instance
 
             response = client.post(
@@ -298,9 +290,7 @@ class TestUserManagement:
         with patch("app.agents.target.OpenAIBackend") as mock_backend:
             mock_instance = AsyncMock()
             fake_super_secret = _fake_openai_key("super-secret-key-value")
-            mock_instance.execute.side_effect = Exception(
-                f"Error 401 for {fake_super_secret}"
-            )
+            mock_instance.execute.side_effect = Exception(f"Error 401 for {fake_super_secret}")
             mock_backend.return_value = mock_instance
 
             response = client.post(
@@ -425,9 +415,7 @@ class TestAPIIntegration:
     def test_complete_workflow(self):
         """Test a complete workflow: login -> save config -> start run"""
         # 1. Login
-        login_response = client.post(
-            "/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD}
-        )
+        login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
         assert login_response.status_code == 200
 
         # 2. Save a configuration

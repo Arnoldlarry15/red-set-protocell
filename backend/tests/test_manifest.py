@@ -100,15 +100,9 @@ class TestAttackManifest:
                 scope="Test",
             ),
             determinism=DeterminismConfig(seed=42, rng="pcg64"),
-            iteration_limits=IterationLimits(
-                max_generations=10, population_size=5, max_evaluations=50
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test-policy", version="1.0.0", operators=["op1", "op2"]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test-fitness", version="1.0.0", code_fingerprint="test123"
-            ),
+            iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
+            mutation_policy=MutationPolicyConfig(policy_id="test-policy", version="1.0.0", operators=["op1", "op2"]),
+            fitness_function=FitnessFunctionConfig(function_id="test-fitness", version="1.0.0", code_fingerprint="test123"),
             agent_boundaries=AgentBoundaries(),
             resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1),
         )
@@ -134,15 +128,9 @@ class TestAttackManifest:
                 scope="test",
             ),
             determinism=DeterminismConfig(seed=42),
-            iteration_limits=IterationLimits(
-                max_generations=10, population_size=5, max_evaluations=50
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test", version="1.0.0", operators=[]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test", version="1.0.0", code_fingerprint="test"
-            ),
+            iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
+            mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+            fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
             agent_boundaries=AgentBoundaries(),
             resource_limits=ResourceLimits(max_runtime_seconds=60, max_concurrency=1),
         )
@@ -219,15 +207,9 @@ class TestAttackManifest:
                 scope="test",
             ),
             determinism=DeterminismConfig(seed=777),
-            iteration_limits=IterationLimits(
-                max_generations=5, population_size=3, max_evaluations=15
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test", version="1.0.0", operators=[]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test", version="1.0.0", code_fingerprint="test"
-            ),
+            iteration_limits=IterationLimits(max_generations=5, population_size=3, max_evaluations=15),
+            mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+            fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
             agent_boundaries=AgentBoundaries(),
             resource_limits=ResourceLimits(max_runtime_seconds=60, max_concurrency=1),
         )
@@ -260,15 +242,9 @@ class TestAttackManifest:
                 scope="test",
             ),
             determinism=DeterminismConfig(seed=42),
-            iteration_limits=IterationLimits(
-                max_generations=10, population_size=5, max_evaluations=50
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test", version="1.0.0", operators=[]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test", version="1.0.0", code_fingerprint="test"
-            ),
+            iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
+            mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+            fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
             agent_boundaries=AgentBoundaries(),
             resource_limits=ResourceLimits(max_runtime_seconds=60, max_concurrency=1),
         )

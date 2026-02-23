@@ -274,17 +274,11 @@ async def test_anthropic_backend_perturbations(mock_anthropic):
 async def test_custom_http_backend_perturbations(mock_requests):
     """Test perturbations work with CustomHTTPBackend."""
     mock_response = Mock()
-    mock_response.json.return_value = {
-        "choices": [{"message": {"content": "HTTP response"}}]
-    }
+    mock_response.json.return_value = {"choices": [{"message": {"content": "HTTP response"}}]}
     mock_requests.post.return_value = mock_response
 
-    backend = CustomHTTPBackend(
-        api_url="http://localhost:8000/api", request_format="openai"
-    )
-    config = PerturbationConfig(
-        enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER]
-    )
+    backend = CustomHTTPBackend(api_url="http://localhost:8000/api", request_format="openai")
+    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER])
     backend.set_perturbation_config(config)
 
     result = await backend.execute("Test prompt")
@@ -327,9 +321,7 @@ def test_target_statistics_with_perturbations():
         mock_client = AsyncMock()
         mock_openai.return_value = mock_client
 
-        config = PerturbationConfig(
-            enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER]
-        )
+        config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER])
         target = create_target("openai", api_key="test-key", perturbation_config=config)
 
         stats = target.get_statistics()

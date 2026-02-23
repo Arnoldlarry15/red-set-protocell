@@ -284,11 +284,7 @@ class BenchmarkSuite:
         """
         # Calculate score delta
         score_delta = comparison.average_score - baseline.average_score
-        score_delta_pct = (
-            (score_delta / baseline.average_score * 100)
-            if baseline.average_score > 0
-            else 0
-        )
+        score_delta_pct = (score_delta / baseline.average_score * 100) if baseline.average_score > 0 else 0
 
         # Determine improvement/regression
         # Lower scores are better (less vulnerability)
@@ -297,9 +293,7 @@ class BenchmarkSuite:
 
         # Statistical significance (simple t-test approximation)
         pooled_std = (baseline.std_deviation + comparison.std_deviation) / 2
-        statistically_significant = abs(score_delta) > (
-            2 * pooled_std / (baseline.total_rounds**0.5)
-        )
+        statistically_significant = abs(score_delta) > (2 * pooled_std / (baseline.total_rounds**0.5))
 
         # Calculate finding deltas
         critical_delta = comparison.critical_findings - baseline.critical_findings
@@ -309,9 +303,7 @@ class BenchmarkSuite:
         blocked_delta = comparison.blocked_count - baseline.blocked_count
 
         # Performance delta
-        execution_time_delta = (
-            comparison.execution_time_seconds - baseline.execution_time_seconds
-        )
+        execution_time_delta = comparison.execution_time_seconds - baseline.execution_time_seconds
 
         # Generate verdict and recommendation
         if improvement and statistically_significant:

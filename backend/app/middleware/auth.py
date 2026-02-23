@@ -33,9 +33,7 @@ if not JWT_SECRET_KEY and os.getenv("RSP_ENVIRONMENT") == "production":
         "Authentication will not work. Set RSP_JWT_SECRET environment variable."
     )
     JWT_SECRET_KEY = secrets.token_urlsafe(32)  # Temporary fallback
-    logger.warning(
-        "Using temporary auto-generated JWT secret - NOT RECOMMENDED FOR PRODUCTION"
-    )
+    logger.warning("Using temporary auto-generated JWT secret - NOT RECOMMENDED FOR PRODUCTION")
 elif not JWT_SECRET_KEY:
     # Development mode: auto-generate
     JWT_SECRET_KEY = secrets.token_urlsafe(32)
@@ -56,9 +54,7 @@ class TokenManager:
     """Manage JWT tokens for session authentication."""
 
     @staticmethod
-    def create_access_token(
-        data: dict, expires_delta: Optional[timedelta] = None
-    ) -> str:
+    def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
         """
         Create a JWT access token.
 
@@ -118,9 +114,7 @@ class PasswordHasher:
             salt = secrets.token_hex(16)
 
         # Use PBKDF2 with SHA256
-        key = hashlib.pbkdf2_hmac(
-            "sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000
-        )  # 100k iterations
+        key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)  # 100k iterations
 
         return f"{salt}${key.hex()}"
 
@@ -277,8 +271,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         if not RBACManager.has_permission(role, endpoint):
             logger.warning(
-                f"Permission denied: {request.state.user['username']} "
-                f"(role={role}) attempted to access {endpoint}"
+                f"Permission denied: {request.state.user['username']} " f"(role={role}) attempted to access {endpoint}"
             )
             return self._forbidden("Insufficient permissions")
 
@@ -332,10 +325,7 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Skip for public endpoints
-        if any(
-            request.url.path.startswith(ep)
-            for ep in ["/health", "/docs", "/openapi.json"]
-        ):
+        if any(request.url.path.startswith(ep) for ep in ["/health", "/docs", "/openapi.json"]):
             return await call_next(request)
 
         # Check for API key in header

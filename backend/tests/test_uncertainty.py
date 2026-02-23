@@ -318,9 +318,7 @@ class TestSpotterUncertainty:
         spotter = Spotter()
 
         # High confidence, high matches
-        uncertainty = spotter._compute_uncertainty(
-            confidence=0.9, matches=8, total_checks=10
-        )
+        uncertainty = spotter._compute_uncertainty(confidence=0.9, matches=8, total_checks=10)
 
         # Should be low uncertainty
         assert uncertainty < 0.3
@@ -330,9 +328,7 @@ class TestSpotterUncertainty:
         spotter = Spotter()
 
         # Low confidence, few matches
-        uncertainty = spotter._compute_uncertainty(
-            confidence=0.3, matches=2, total_checks=10
-        )
+        uncertainty = spotter._compute_uncertainty(confidence=0.3, matches=2, total_checks=10)
 
         # Should be high uncertainty
         assert uncertainty > 0.5
@@ -462,9 +458,7 @@ class TestIntegrationUncertainty:
         assert multi_pass_result["multi_pass"] is True
 
         # Aggregate with scoring engine
-        aggregated = engine.aggregate_multi_pass_evaluations(
-            multi_pass_result["evaluations"]
-        )
+        aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result["evaluations"])
 
         # Should have agreement score
         assert aggregated.multi_pass_agreement is not None

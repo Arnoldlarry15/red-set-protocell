@@ -252,9 +252,7 @@ class TestFailureSpecimen:
         specimen = FailureSpecimen(
             specimen_id="fsp-summary-test",
             manifest_id="manifest-test",
-            lineage=Lineage(
-                generation=7, parent_ids=[], mutation_operator="role_injection"
-            ),
+            lineage=Lineage(generation=7, parent_ids=[], mutation_operator="role_injection"),
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Test",

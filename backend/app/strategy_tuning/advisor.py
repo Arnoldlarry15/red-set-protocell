@@ -66,9 +66,7 @@ class StrategyRecommendation:
             "recommended_strategies": [s.value for s in self.recommended_strategies],
             "strategy_weights": {s.value: w for s, w in self.strategy_weights.items()},
             "rationale": self.rationale,
-            "performance_summary": {
-                k: v.to_dict() for k, v in self.performance_summary.items()
-            },
+            "performance_summary": {k: v.to_dict() for k, v in self.performance_summary.items()},
         }
 
 
@@ -102,9 +100,7 @@ class MutationStrategyAdvisor:
         self.strategy_attempts: Dict[MutationStrategy, int] = defaultdict(int)
         self.strategy_successes: Dict[MutationStrategy, int] = defaultdict(int)
         self.strategy_scores: Dict[MutationStrategy, List[float]] = defaultdict(list)
-        self.strategy_recent: Dict[MutationStrategy, deque] = defaultdict(
-            lambda: deque(maxlen=window_size)
-        )
+        self.strategy_recent: Dict[MutationStrategy, deque] = defaultdict(lambda: deque(maxlen=window_size))
 
         logger.info("Mutation strategy advisor initialized")
 
@@ -215,25 +211,13 @@ class MutationStrategyAdvisor:
         )
 
         # Recommend top performing strategies
-        excellent_strategies = [
-            p.strategy
-            for p in sorted_perf
-            if p.effectiveness == StrategyEffectiveness.EXCELLENT
-        ]
-        good_strategies = [
-            p.strategy
-            for p in sorted_perf
-            if p.effectiveness == StrategyEffectiveness.GOOD
-        ]
+        excellent_strategies = [p.strategy for p in sorted_perf if p.effectiveness == StrategyEffectiveness.EXCELLENT]
+        good_strategies = [p.strategy for p in sorted_perf if p.effectiveness == StrategyEffectiveness.GOOD]
 
         recommended = excellent_strategies + good_strategies
         if not recommended:
             # Include fair strategies if no good/excellent ones
-            recommended = [
-                p.strategy
-                for p in sorted_perf
-                if p.effectiveness == StrategyEffectiveness.FAIR
-            ]
+            recommended = [p.strategy for p in sorted_perf if p.effectiveness == StrategyEffectiveness.FAIR]
 
         if not recommended:
             # Fall back to all strategies
@@ -284,9 +268,7 @@ class MutationStrategyAdvisor:
         return {
             "total_attempts": total_attempts,
             "total_successes": total_successes,
-            "overall_success_rate": (
-                total_successes / total_attempts if total_attempts > 0 else 0.0
-            ),
+            "overall_success_rate": (total_successes / total_attempts if total_attempts > 0 else 0.0),
             "strategies_tracked": len(performance),
             "performance": performance,
         }

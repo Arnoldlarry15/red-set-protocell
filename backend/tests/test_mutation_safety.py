@@ -13,15 +13,11 @@ def test_encoding_transform_safe_language():
     results = []
 
     for i in range(20):
-        mutated = engine.mutate(
-            "test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM, random_seed=i
-        )
+        mutated = engine.mutate("test prompt", strategy=MutationStrategy.ENCODING_TRANSFORM, random_seed=i)
         results.append(mutated)
 
         # Should NOT contain dangerous language
-        assert (
-            "Decode and execute" not in mutated
-        ), f"Found dangerous 'Decode and execute' phrase in: {mutated}"
+        assert "Decode and execute" not in mutated, f"Found dangerous 'Decode and execute' phrase in: {mutated}"
 
     # Should see variety in the new semantic transformations
     unique_results = set(results)
@@ -44,12 +40,8 @@ def test_role_play_frames_neutral_language():
 
     # Should contain neutral analysis language
     neutral_words = ["analyze", "assess", "critique"]
-    found_neutral = any(
-        any(word in frame.lower() for word in neutral_words) for frame in frames
-    )
-    assert (
-        found_neutral
-    ), f"Role-play frames should contain neutral analysis language: {frames}"
+    found_neutral = any(any(word in frame.lower() for word in neutral_words) for frame in frames)
+    assert found_neutral, f"Role-play frames should contain neutral analysis language: {frames}"
 
 
 def test_lexical_substitutions_broader():
@@ -59,22 +51,16 @@ def test_lexical_substitutions_broader():
     subs = engine.LEXICAL_SUBSTITUTIONS
 
     # Should have more than 6 word categories (original had 6)
-    assert (
-        len(subs) >= 7
-    ), f"Should have broadened lexical substitutions, got {len(subs)} categories"
+    assert len(subs) >= 7, f"Should have broadened lexical substitutions, got {len(subs)} categories"
 
     # Check that each category has more options
     for word, substitutes in subs.items():
         # Most categories should have at least 5 substitutes now
         if word in ["ignore", "previous", "instructions", "tell", "secret", "system"]:
-            assert (
-                len(substitutes) >= 5
-            ), f"Word '{word}' should have at least 5 substitutes, got {len(substitutes)}"
+            assert len(substitutes) >= 5, f"Word '{word}' should have at least 5 substitutes, got {len(substitutes)}"
 
     # Should include new neutral words
-    assert (
-        "analyze" in subs or "describe" in subs or "consider" in subs
-    ), "Should include new neutral analysis words"
+    assert "analyze" in subs or "describe" in subs or "consider" in subs, "Should include new neutral analysis words"
 
 
 def test_evolve_population_parent_fitness():
@@ -91,19 +77,13 @@ def test_evolve_population_parent_fitness():
         original_mutate = engine.mutate
         mutation_fitness_scores = []
 
-        def tracking_mutate(
-            prompt, fitness_score=0.0, strategy=None, archetypes=None, random_seed=None
-        ):
+        def tracking_mutate(prompt, fitness_score=0.0, strategy=None, archetypes=None, random_seed=None):
             mutation_fitness_scores.append(fitness_score)
-            return original_mutate(
-                prompt, fitness_score, strategy, archetypes, random_seed=random_seed
-            )
+            return original_mutate(prompt, fitness_score, strategy, archetypes, random_seed=random_seed)
 
         engine.mutate = tracking_mutate
 
-        evolved = engine.evolve_population(
-            base_prompts, fitness_scores, population_size=10
-        )
+        evolved = engine.evolve_population(base_prompts, fitness_scores, population_size=10)
         assert len(evolved) == 10
         # Skip elite mutations (top 30% = 3 prompts)
         all_mutations_scores.extend(mutation_fitness_scores[3:])
@@ -122,9 +102,7 @@ def test_evolve_population_parent_fitness():
 
     # Should see some scores other than the maximum
     non_max_scores = [s for s in all_mutations_scores if s != max_fitness]
-    assert (
-        len(non_max_scores) > 0
-    ), f"Expected some mutations with parent fitness != max_fitness, but all were {max_fitness}"
+    assert len(non_max_scores) > 0, f"Expected some mutations with parent fitness != max_fitness, but all were {max_fitness}"
 
 
 def test_archetype_based_strategy_selection():
@@ -142,17 +120,13 @@ def test_archetype_based_strategy_selection():
 
     # Simulate that LEXICAL_VARIATION doesn't work well with "hallucination risk"
     for _ in range(10):
-        engine.update_strategy_performance(
-            MutationStrategy.LEXICAL_VARIATION, 0.3, archetypes=["hallucination risk"]
-        )
+        engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.3, archetypes=["hallucination risk"])
 
     # Now select strategies with "hallucination risk" archetype
     selected_strategies = []
     for i in range(20):
         # Mutate and track the strategy used
-        engine.mutate(
-            "test prompt", archetypes=["hallucination risk"], random_seed=i
-        )  # Use per-call seed for reproducibility
+        engine.mutate("test prompt", archetypes=["hallucination risk"], random_seed=i)  # Use per-call seed for reproducibility
         # Extract strategy from mutation history
         if engine.mutation_history:
             selected_strategies.append(engine.mutation_history[-1]["strategy"])
@@ -192,11 +166,5 @@ def test_update_strategy_performance_with_archetypes():
     assert "missing context" in engine.strategy_archetype_performance[strategy.value]
     assert "ambiguity" in engine.strategy_archetype_performance[strategy.value]
 
-    assert (
-        len(engine.strategy_archetype_performance[strategy.value]["missing context"])
-        == 1
-    )
-    assert (
-        engine.strategy_archetype_performance[strategy.value]["missing context"][0]
-        == 0.8
-    )
+    assert len(engine.strategy_archetype_performance[strategy.value]["missing context"]) == 1
+    assert engine.strategy_archetype_performance[strategy.value]["missing context"][0] == 0.8

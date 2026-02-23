@@ -117,15 +117,9 @@ class TestFullCycleRunner:
         assert "target_interactions" in runner.audit_trail["role_separation"]
 
         # Verify these are lists
-        assert isinstance(
-            runner.audit_trail["role_separation"]["sniper_instructions"], list
-        )
-        assert isinstance(
-            runner.audit_trail["role_separation"]["spotter_instructions"], list
-        )
-        assert isinstance(
-            runner.audit_trail["role_separation"]["target_interactions"], list
-        )
+        assert isinstance(runner.audit_trail["role_separation"]["sniper_instructions"], list)
+        assert isinstance(runner.audit_trail["role_separation"]["spotter_instructions"], list)
+        assert isinstance(runner.audit_trail["role_separation"]["target_interactions"], list)
 
         # Verify round_details is a list
         assert isinstance(runner.audit_trail["round_details"], list)

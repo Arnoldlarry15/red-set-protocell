@@ -90,9 +90,7 @@ class EGGAuditor:
 
         logger.info(f"EGGAuditor initialized - Enabled: {enabled}")
 
-    def audit_decision(
-        self, prompt: str, egg_allowed: bool, egg_blocked_category: Optional[str] = None
-    ) -> AuditResult:
+    def audit_decision(self, prompt: str, egg_allowed: bool, egg_blocked_category: Optional[str] = None) -> AuditResult:
         """
         Audit an EGG decision.
 
@@ -181,14 +179,10 @@ class EGGAuditor:
             "enabled": self.enabled,
             "total_audited": self.audit_count,
             "flagged_count": self.flagged_count,
-            "flagged_rate": (
-                self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0
-            ),
+            "flagged_rate": (self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0),
         }
 
-    def get_high_confidence_failures(
-        self, min_confidence: float = 0.5
-    ) -> List[AuditResult]:
+    def get_high_confidence_failures(self, min_confidence: float = 0.5) -> List[AuditResult]:
         """
         Get audit results where we have high confidence EGG may have failed.
 
@@ -198,8 +192,4 @@ class EGGAuditor:
         Returns:
             List of AuditResult with confidence >= min_confidence
         """
-        return [
-            result
-            for result in self.audit_history
-            if result.egg_decision and result.confidence >= min_confidence
-        ]
+        return [result for result in self.audit_history if result.egg_decision and result.confidence >= min_confidence]

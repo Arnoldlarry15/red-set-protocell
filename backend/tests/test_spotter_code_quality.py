@@ -67,9 +67,7 @@ class TestPatternDriftEmptyArchetypes:
             else:
                 archetypes = [FailureArchetype.POLICY_EROSION]
 
-            drift_result = spotter._track_pattern_drift(
-                archetypes=archetypes, indicators={}
-            )
+            drift_result = spotter._track_pattern_drift(archetypes=archetypes, indicators={})
 
         # Should have non-zero saturation due to varied patterns
         assert drift_result["saturation_score"] > 0.0
@@ -82,16 +80,11 @@ class TestPatternDriftEmptyArchetypes:
 
         # All same archetype (high saturation)
         for _ in range(10):
-            drift_result = spotter._track_pattern_drift(
-                archetypes=[FailureArchetype.POLICY_EROSION], indicators={}
-            )
+            drift_result = spotter._track_pattern_drift(archetypes=[FailureArchetype.POLICY_EROSION], indicators={})
 
         # Should have high saturation (all patterns the same)
         assert drift_result["saturation_score"] > 0.5
-        assert (
-            "high_saturation" in drift_result["recommendation"]
-            or "moderate_saturation" in drift_result["recommendation"]
-        )
+        assert "high_saturation" in drift_result["recommendation"] or "moderate_saturation" in drift_result["recommendation"]
 
     def test_diverse_archetypes_low_saturation(self):
         """Test low saturation with diverse archetypes."""
@@ -118,9 +111,7 @@ class TestPatternDriftEmptyArchetypes:
         ]
 
         for archetypes in archetypes_list:
-            drift_result = spotter._track_pattern_drift(
-                archetypes=archetypes, indicators={}
-            )
+            drift_result = spotter._track_pattern_drift(archetypes=archetypes, indicators={})
 
         # Should have low saturation (varied patterns)
         assert drift_result["saturation_score"] < 0.5
@@ -140,9 +131,7 @@ class TestFailureExplanationConsistency:
         archetypes = [FailureArchetype.POLICY_EROSION]
 
         # Should not raise KeyError
-        explanation = spotter._generate_failure_explanation(
-            l1_result, l2_result, l3_result, archetypes
-        )
+        explanation = spotter._generate_failure_explanation(l1_result, l2_result, l3_result, archetypes)
 
         assert isinstance(explanation, str)
         assert "Failure Archetypes" in explanation
@@ -157,9 +146,7 @@ class TestFailureExplanationConsistency:
         l3_result = {"score": 0.8, "indicators": {}}
         archetypes = []
 
-        explanation = spotter._generate_failure_explanation(
-            l1_result, l2_result, l3_result, archetypes
-        )
+        explanation = spotter._generate_failure_explanation(l1_result, l2_result, l3_result, archetypes)
 
         assert isinstance(explanation, str)
 
@@ -176,9 +163,7 @@ class TestFailureExplanationConsistency:
         l3_result = {"score": 0.4, "indicators": {}}
         archetypes = [FailureArchetype.POLICY_EROSION]
 
-        explanation = spotter._generate_failure_explanation(
-            l1_result, l2_result, l3_result, archetypes
-        )
+        explanation = spotter._generate_failure_explanation(l1_result, l2_result, l3_result, archetypes)
 
         assert isinstance(explanation, str)
         assert "L1 (Linguistic)" in explanation
@@ -205,9 +190,7 @@ class TestMathImport:
             spotter._track_pattern_drift(archetypes=[archetype], indicators={})
 
         # Should successfully calculate diversity score using math.log2
-        drift_result = spotter._track_pattern_drift(
-            archetypes=[FailureArchetype.HIDDEN_COMPLIANCE], indicators={}
-        )
+        drift_result = spotter._track_pattern_drift(archetypes=[FailureArchetype.HIDDEN_COMPLIANCE], indicators={})
 
         assert "diversity_score" in drift_result
         assert 0.0 <= drift_result["diversity_score"] <= 1.0
@@ -222,9 +205,7 @@ class TestPatternDriftRecommendations:
 
         # Only 3 evaluations (less than 5)
         for _ in range(3):
-            drift_result = spotter._track_pattern_drift(
-                archetypes=[FailureArchetype.POLICY_EROSION], indicators={}
-            )
+            drift_result = spotter._track_pattern_drift(archetypes=[FailureArchetype.POLICY_EROSION], indicators={})
 
         assert drift_result["recommendation"] == "continue"
         assert drift_result["recent_window_size"] == 3
@@ -235,9 +216,7 @@ class TestPatternDriftRecommendations:
 
         # Build up history with same archetype
         for _ in range(12):
-            drift_result = spotter._track_pattern_drift(
-                archetypes=[FailureArchetype.POLICY_EROSION], indicators={}
-            )
+            drift_result = spotter._track_pattern_drift(archetypes=[FailureArchetype.POLICY_EROSION], indicators={})
 
         # High saturation should recommend exploration
         assert drift_result["saturation_score"] > 0.7

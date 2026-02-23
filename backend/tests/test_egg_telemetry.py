@@ -281,7 +281,5 @@ def test_integration_telemetry_after_multiple_operations():
     assert len(telemetry["category_hits"]) > 0  # Some categories hit
 
     # Coverage should show some patterns used
-    used_pattern_count = sum(
-        m["used_patterns"] for m in telemetry["coverage_metrics"].values()
-    )
+    used_pattern_count = sum(m["used_patterns"] for m in telemetry["coverage_metrics"].values())
     assert used_pattern_count > 0

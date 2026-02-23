@@ -135,6 +135,29 @@ def test_postgres_adapter_import_error_message(monkeypatch):
         asyncio.run(adapter._ensure_pool())
 
 
+def test_postgres_health_check_sync_uses_asyncio_run(monkeypatch):
+    adapter = PostgresStorageAdapter("postgresql://user:pass@localhost:5432/rsp")
+    called = {"count": 0}
+
+    def _fake_run(_coroutine):
+        called["count"] += 1
+        _coroutine.close()
+        return None
+
+    monkeypatch.setattr("app.storage.postgres_adapter.asyncio.run", _fake_run)
+
+    adapter.health_check_sync()
+    assert called["count"] == 1
+
+
+def test_state_manager_defaults_to_sqlite_mode(tmp_path):
+    db_path = str(tmp_path / "state_default.db")
+    manager = StateManager(database_path=db_path)
+
+    assert manager.storage_mode == "sqlite"
+    assert manager.storage_adapter.backend_name == "sqlite"
+
+
 def test_state_manager_rejects_postgres_mode_until_cutover(monkeypatch, tmp_path):
     db_path = str(tmp_path / "test.db")
 

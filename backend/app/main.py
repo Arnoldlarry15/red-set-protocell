@@ -307,7 +307,8 @@ def parse_arguments():
 
 if __name__ == "__main__":
     # Display banner
-    print("""
+    print(
+        """
     ╔═══════════════════════════════════════════════════════════╗
     ║                                                           ║
     ║         RED SET PROTOCELL (RSP)                           ║
@@ -316,7 +317,8 @@ if __name__ == "__main__":
     ║         Defense-Only | Zero-Retention | Ethical           ║
     ║                                                           ║
     ╚═══════════════════════════════════════════════════════════╝
-    """)
+    """
+    )
 
     # Parse arguments
     args = parse_arguments()

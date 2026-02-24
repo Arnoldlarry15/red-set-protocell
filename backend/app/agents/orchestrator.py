@@ -126,6 +126,7 @@ from app.core.manifest import AttackManifest, create_manifest_from_config
 from app.core.security import generate_session_id
 from app.core.specimen import FailureSpecimen, create_specimen_from_evaluation
 from app.engines.scoring import ScoringEngine
+from app.storage import create_storage_adapter
 
 logger = logging.getLogger(__name__)
 
@@ -163,6 +164,8 @@ class StateManager:
         database_path: str = "rsp_session.db",
         zero_retention: bool = True,
         model_version: str = "unknown",
+        storage_mode: Optional[str] = None,
+        postgres_dsn: Optional[str] = None,
     ):
         """
         Initialize state manager.
@@ -177,6 +180,17 @@ class StateManager:
         self.session_id = generate_session_id()
         self.model_version = model_version
         self.session_start_time = datetime.now(timezone.utc).isoformat()
+        self.storage_mode = (storage_mode or os.getenv("RSP_STORAGE_MODE", "sqlite")).strip().lower()
+
+        postgres_uri = postgres_dsn or os.getenv("RSP_POSTGRES_URI", "")
+        self.storage_adapter = create_storage_adapter(self.storage_mode, self.database_path, postgres_uri)
+        self.storage_adapter.health_check_sync()
+
+        if self.storage_mode == "postgres":
+            raise RuntimeError(
+                "Postgres adapter scaffold initialized successfully, but StateManager SQL operations are still "
+                "SQLite-specific in this phase. Set RSP_STORAGE_MODE=sqlite until cutover phase wiring is complete."
+            )
 
         # Initialize database
         self._init_database()
@@ -187,7 +201,8 @@ class StateManager:
         cursor = conn.cursor()
 
         # Create rounds table with model_version and session_start_time
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS rounds (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 session_id TEXT NOT NULL,
@@ -202,17 +217,20 @@ class StateManager:
                 model_version TEXT DEFAULT 'unknown',
                 session_start_time TEXT
             )
-        """)
+        """
+        )
 
         # Create metadata table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS metadata (
                 session_id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL,
                 config TEXT NOT NULL,
                 model_version TEXT DEFAULT 'unknown'
             )
-        """)
+        """
+        )
 
         # Add model_version column if it doesn't exist (migration)
         try:

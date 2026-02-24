@@ -48,6 +48,7 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
+  const [pendingExecutionSessionId, setPendingExecutionSessionId] = useState<string | null>(null);
   
   // Refs to track session state
   const wsConnectionRef = useRef<{
@@ -159,6 +160,41 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
     wsConnectionRef.current = wsConnection;
   }, [wsConnection]);
 
+  useEffect(() => {
+    if (!pendingExecutionSessionId || !wsConnection.isConnected) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const executeSession = async () => {
+      try {
+        await axios.post(`${API_BASE_URL}/session/${pendingExecutionSessionId}/execute`);
+        if (!cancelled) {
+          console.log('[Dashboard] Session execution started');
+          setPendingExecutionSessionId(null);
+          setIsConnecting(false);
+        }
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        console.error('[Dashboard] Error starting session execution:', error);
+        const axiosError = error as { response?: { data?: { detail?: string } }; message?: string };
+        setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to start session');
+        setSessionStats(prev => ({ ...prev, status: 'idle' }));
+        setPendingExecutionSessionId(null);
+        setIsConnecting(false);
+      }
+    };
+
+    void executeSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingExecutionSessionId, wsConnection.isConnected]);
+
   // Start a new session
   const handleStart = useCallback(async () => {
     if (isConnecting) return;
@@ -194,16 +230,14 @@ const Dashboard: React.FC<DashboardProps> = ({ apiKey, backend }) => {
         startTime: new Date().toISOString(),
       }));
 
-      // Step 2: Start execution
-      await axios.post(`${API_BASE_URL}/session/${newSessionId}/execute`);
-      console.log('[Dashboard] Session execution started');
+      // Step 2: defer execution until WebSocket is connected
+      setPendingExecutionSessionId(newSessionId);
       
     } catch (error) {
       console.error('[Dashboard] Error starting session:', error);
       const axiosError = error as { response?: { data?: { detail?: string } }; message?: string };
       setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to start session');
       setSessionStats(prev => ({ ...prev, status: 'idle' }));
-    } finally {
       setIsConnecting(false);
     }
   }, [apiKey, config, isConnecting]);

@@ -7,7 +7,11 @@ Shows mutation strategy tuning capabilities.
 import logging
 
 from app.engines.mutation import MutationStrategy
-from app.strategy_tuning import MutationStrategyAdvisor, OptimizationConfig, StrategyOptimizer
+from app.strategy_tuning import (
+    MutationStrategyAdvisor,
+    OptimizationConfig,
+    StrategyOptimizer,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,7 +50,9 @@ def run_strategy_advisor():
 
     logger.info("\nRecommendation:")
     logger.info(f"  Rationale: {recommendation.rationale}")
-    logger.info(f"  Top strategies: {[s.value for s in recommendation.recommended_strategies[:3]]}")
+    logger.info(
+        f"  Top strategies: {[s.value for s in recommendation.recommended_strategies[:3]]}"
+    )
     logger.info("\nStrategy weights:")
     for strategy, weight in recommendation.strategy_weights.items():
         logger.info(f"  {strategy.value}: {weight:.3f}")
@@ -80,7 +86,10 @@ def run_strategy_optimizer():
     for i in range(30):
         strategy = optimizer.select_strategy()
         # Simulate that LEXICAL_VARIATION and ROLE_PLAY_FRAMING work better
-        if strategy in [MutationStrategy.LEXICAL_VARIATION, MutationStrategy.ROLE_PLAY_FRAMING]:
+        if strategy in [
+            MutationStrategy.LEXICAL_VARIATION,
+            MutationStrategy.ROLE_PLAY_FRAMING,
+        ]:
             score = 0.5
         else:
             score = 0.2

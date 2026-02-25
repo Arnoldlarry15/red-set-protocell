@@ -220,7 +220,11 @@ def create_specimen_from_evaluation(
     specimen_id = f"fsp-{content_hash[:8]}"
 
     # Create lineage
-    lineage = Lineage(generation=generation, parent_ids=parent_ids or [], mutation_operator=mutation_operator)
+    lineage = Lineage(
+        generation=generation,
+        parent_ids=parent_ids or [],
+        mutation_operator=mutation_operator,
+    )
 
     # Create prompt genome
     if genome_structure is None:
@@ -238,7 +242,12 @@ def create_specimen_from_evaluation(
         severity = "minor"
 
     # Create evaluation
-    evaluation = Evaluation(fitness_score=score, failure_class=classification, severity=severity, spotter_rationale=rationale)
+    evaluation = Evaluation(
+        fitness_score=score,
+        failure_class=classification,
+        severity=severity,
+        spotter_rationale=rationale,
+    )
 
     # Create specimen
     specimen = FailureSpecimen(

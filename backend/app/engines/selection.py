@@ -120,7 +120,14 @@ class PromptCandidate:
         features.append(f"brackets:{bracket_count}")
 
         # Domain patterns (keywords)
-        keywords = ["ignore", "bypass", "override", "pretend", "hypothetical", "character"]
+        keywords = [
+            "ignore",
+            "bypass",
+            "override",
+            "pretend",
+            "hypothetical",
+            "character",
+        ]
         keyword_count = sum(1 for kw in keywords if kw.lower() in self.prompt.lower())
         features.append(f"keywords:{keyword_count}")
 
@@ -155,12 +162,39 @@ class PromptCandidate:
         words = normalized.split()
 
         # Semantic keyword categories
-        instruction_keywords = ["ignore", "disregard", "forget", "bypass", "override", "skip"]
-        roleplay_keywords = ["pretend", "act", "character", "role", "persona", "imagine"]
-        hypothetical_keywords = ["hypothetical", "suppose", "assume", "imagine", "what if"]
+        instruction_keywords = [
+            "ignore",
+            "disregard",
+            "forget",
+            "bypass",
+            "override",
+            "skip",
+        ]
+        roleplay_keywords = [
+            "pretend",
+            "act",
+            "character",
+            "role",
+            "persona",
+            "imagine",
+        ]
+        hypothetical_keywords = [
+            "hypothetical",
+            "suppose",
+            "assume",
+            "imagine",
+            "what if",
+        ]
         system_keywords = ["system", "admin", "root", "developer", "mode", "setting"]
         extraction_keywords = ["reveal", "show", "tell", "extract", "display", "output"]
-        encoding_keywords = ["base64", "encode", "decode", "translate", "cipher", "rot13"]
+        encoding_keywords = [
+            "base64",
+            "encode",
+            "decode",
+            "translate",
+            "cipher",
+            "rot13",
+        ]
 
         # Count presence in each semantic category
         for category, keywords in [
@@ -273,7 +307,10 @@ class SelectionEngine:
         self.strategy_stats: Dict[str, List[float]] = defaultdict(list)
 
     def select(
-        self, candidates: List[PromptCandidate], strategy: SelectionStrategy = SelectionStrategy.HYBRID, num_select: int = 1
+        self,
+        candidates: List[PromptCandidate],
+        strategy: SelectionStrategy = SelectionStrategy.HYBRID,
+        num_select: int = 1,
     ) -> List[PromptCandidate]:
         """
         Select candidates using the specified strategy.
@@ -502,7 +539,13 @@ class SelectionEngine:
         Prevents local maxima by exploring different structural patterns.
         """
         # Score combining fitness and novelty
-        scored = [(c, c.score * (1 - self.novelty_weight) + c.novelty_score * self.novelty_weight) for c in candidates]
+        scored = [
+            (
+                c,
+                c.score * (1 - self.novelty_weight) + c.novelty_score * self.novelty_weight,
+            )
+            for c in candidates
+        ]
         scored.sort(key=lambda x: x[1], reverse=True)
 
         return [c for c, _ in scored[:num_select]]
@@ -521,7 +564,10 @@ class SelectionEngine:
                 # Use complementary weights to ensure they sum to 1.0
                 novelty_component_weight = 1.0 - self.SINGLE_SELECT_FITNESS_WEIGHT
                 scored = [
-                    (c, c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * novelty_component_weight)
+                    (
+                        c,
+                        c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * novelty_component_weight,
+                    )
                     for c in candidates
                 ]
                 scored.sort(key=lambda x: x[1], reverse=True)
@@ -574,7 +620,7 @@ class SelectionEngine:
             "high_scorer_count": len(self.high_scorer_structures),
             "pattern_usage_count": len(self.pattern_usage),
             "semantic_pattern_usage_count": len(self.semantic_pattern_usage),
-            "most_used_pattern_count": max(self.pattern_usage.values()) if self.pattern_usage else 0,
+            "most_used_pattern_count": (max(self.pattern_usage.values()) if self.pattern_usage else 0),
             "most_used_semantic_pattern_count": (
                 max(self.semantic_pattern_usage.values()) if self.semantic_pattern_usage else 0
             ),

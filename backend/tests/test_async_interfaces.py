@@ -5,7 +5,12 @@ Tests for async interfaces and abstract base classes.
 import pytest
 
 from app.agents.target import AnthropicBackend, OpenAIBackend, TargetBackend
-from app.interfaces import BaseMutationStrategy, BaseScoringStrategy, BaseTarget, ScoreResult
+from app.interfaces import (
+    BaseMutationStrategy,
+    BaseScoringStrategy,
+    BaseTarget,
+    ScoreResult,
+)
 
 
 class MockAsyncBackend(BaseTarget):
@@ -148,7 +153,11 @@ def test_score_result_dataclass():
 def test_score_result_with_indicators():
     """Test ScoreResult with indicators and metadata."""
     result = ScoreResult(
-        score=0.7, confidence=0.9, uncertainty=0.05, indicators={"hate_speech": True, "pii": False}, metadata={"model": "test"}
+        score=0.7,
+        confidence=0.9,
+        uncertainty=0.05,
+        indicators={"hate_speech": True, "pii": False},
+        metadata={"model": "test"},
     )
 
     assert result.indicators["hate_speech"] is True

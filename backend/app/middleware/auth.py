@@ -232,7 +232,11 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         # Skip auth if not required (development mode)
         if not self.require_auth:
             # Set default user for development
-            request.state.user = {"username": "dev_user", "role": "admin", "email": "dev@example.com"}
+            request.state.user = {
+                "username": "dev_user",
+                "role": "admin",
+                "email": "dev@example.com",
+            }
             return await call_next(request)
 
         # Extract token from Authorization header

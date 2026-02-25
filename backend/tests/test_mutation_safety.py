@@ -112,7 +112,11 @@ def test_archetype_based_strategy_selection():
 
     # Simulate that STRUCTURAL_RECOMBINATION works well with "hallucination risk"
     for _ in range(10):
-        engine.update_strategy_performance(MutationStrategy.STRUCTURAL_RECOMBINATION, 0.9, archetypes=["hallucination risk"])
+        engine.update_strategy_performance(
+            MutationStrategy.STRUCTURAL_RECOMBINATION,
+            0.9,
+            archetypes=["hallucination risk"],
+        )
 
     # Simulate that LEXICAL_VARIATION doesn't work well with "hallucination risk"
     for _ in range(10):

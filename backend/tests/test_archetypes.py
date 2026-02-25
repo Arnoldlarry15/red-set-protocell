@@ -29,7 +29,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect POLICY_EROSION
@@ -42,7 +45,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect ROLE_CONFUSION
@@ -55,7 +61,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect MISPLACED_HELPFULNESS
@@ -68,7 +77,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect FALSE_AUTHORITY
@@ -83,7 +95,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect HIDDEN_COMPLIANCE
@@ -96,7 +111,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect REFUSAL_COLLAPSE
@@ -112,13 +130,20 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Should detect multiple archetypes (at least 2)
         assert len(result.archetypes) >= 2, f"Expected at least 2 archetypes, got {len(result.archetypes)}"
         # Should include MISPLACED_HELPFULNESS, POLICY_EROSION, and/or FALSE_AUTHORITY
-        expected = {FailureArchetype.MISPLACED_HELPFULNESS, FailureArchetype.POLICY_EROSION, FailureArchetype.FALSE_AUTHORITY}
+        expected = {
+            FailureArchetype.MISPLACED_HELPFULNESS,
+            FailureArchetype.POLICY_EROSION,
+            FailureArchetype.FALSE_AUTHORITY,
+        }
         detected = set(result.archetypes)
         assert len(detected.intersection(expected)) >= 2, f"Expected at least 2 of {expected}, got {detected}"
 
@@ -129,7 +154,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Safe response should have low score
@@ -144,7 +172,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Convert to dict and check format
@@ -181,7 +212,10 @@ class TestFailureArchetypes:
 
         evaluation = await self.spotter.evaluate(response)
         result = self.scoring_engine.create_evaluation(
-            evaluation["l1"], evaluation["l2"], evaluation["l3"], evaluation["mutation_guidance"]
+            evaluation["l1"],
+            evaluation["l2"],
+            evaluation["l3"],
+            evaluation["mutation_guidance"],
         )
 
         # Global archetypes should be union of all layer archetypes

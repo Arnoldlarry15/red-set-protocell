@@ -87,7 +87,11 @@ async def test_sniper_pool_size_limit():
     mutation_engine = MutationEngine(mutation_rate=0.7)
     selection_engine = SelectionEngine()
 
-    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5, selection_engine=selection_engine)
+    sniper = Sniper(
+        mutation_engine=mutation_engine,
+        evolution_pool_size=5,
+        selection_engine=selection_engine,
+    )
 
     # Generate more prompts than pool size
     for i in range(10):
@@ -220,7 +224,11 @@ async def test_sniper_overfitting_detection():
     mutation_engine = MutationEngine(mutation_rate=0.7)
     selection_engine = SelectionEngine(overfitting_threshold=2)
 
-    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5, selection_engine=selection_engine)
+    sniper = Sniper(
+        mutation_engine=mutation_engine,
+        evolution_pool_size=5,
+        selection_engine=selection_engine,
+    )
 
     # Generate and score prompts
     for i in range(5):

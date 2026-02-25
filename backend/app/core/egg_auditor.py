@@ -104,7 +104,11 @@ class EGGAuditor:
         """
         if not self.enabled:
             return AuditResult(
-                prompt_fingerprint="", egg_decision=egg_allowed, audit_flags=[], confidence=0.0, notes="Auditor disabled"
+                prompt_fingerprint="",
+                egg_decision=egg_allowed,
+                audit_flags=[],
+                confidence=0.0,
+                notes="Auditor disabled",
             )
 
         self.audit_count += 1
@@ -175,7 +179,7 @@ class EGGAuditor:
             "enabled": self.enabled,
             "total_audited": self.audit_count,
             "flagged_count": self.flagged_count,
-            "flagged_rate": self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0,
+            "flagged_rate": (self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0),
         }
 
     def get_high_confidence_failures(self, min_confidence: float = 0.5) -> List[AuditResult]:

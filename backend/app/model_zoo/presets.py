@@ -63,7 +63,11 @@ def get_openai_models() -> List[ModelInfo]:
             capabilities=["chat", "function-calling", "json-mode", "vision"],
             context_window=8192,
             description="Most capable OpenAI model for complex tasks",
-            recommended_for=["comprehensive-benchmarks", "production-testing", "safety-critical"],
+            recommended_for=[
+                "comprehensive-benchmarks",
+                "production-testing",
+                "safety-critical",
+            ],
         ),
         ModelInfo(
             model_id="openai-gpt-4-turbo",

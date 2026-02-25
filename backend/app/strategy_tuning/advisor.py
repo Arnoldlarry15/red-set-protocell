@@ -268,7 +268,7 @@ class MutationStrategyAdvisor:
         return {
             "total_attempts": total_attempts,
             "total_successes": total_successes,
-            "overall_success_rate": total_successes / total_attempts if total_attempts > 0 else 0.0,
+            "overall_success_rate": (total_successes / total_attempts if total_attempts > 0 else 0.0),
             "strategies_tracked": len(performance),
             "performance": performance,
         }

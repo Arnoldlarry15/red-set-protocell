@@ -516,7 +516,14 @@ class StateManager:
             except (json.JSONDecodeError, TypeError):
                 evaluation = {}
 
-            patterns.append({"domain": row[0], "prompt": row[1], "score": row[2], "evaluation": evaluation})
+            patterns.append(
+                {
+                    "domain": row[0],
+                    "prompt": row[1],
+                    "score": row[2],
+                    "evaluation": evaluation,
+                }
+            )
 
         return patterns
 
@@ -891,14 +898,22 @@ class Orchestrator:
                 mutation_policy=MutationPolicyConfig(
                     policy_id="prompt-mutation-core",
                     version="1.0.0",
-                    operators=["role_injection", "semantic_twist", "instruction_conflict", "context_overload"],
+                    operators=[
+                        "role_injection",
+                        "semantic_twist",
+                        "instruction_conflict",
+                        "context_overload",
+                    ],
                 ),
                 fitness_function=FitnessFunctionConfig(
-                    function_id="failure-severity-v1", version="1.0.0", code_fingerprint=compute_fitness_fingerprint()
+                    function_id="failure-severity-v1",
+                    version="1.0.0",
+                    code_fingerprint=compute_fitness_fingerprint(),
                 ),
                 agent_boundaries=AgentBoundaries(),
                 resource_limits=ResourceLimits(
-                    max_runtime_seconds=self.round_timeout * self.max_rounds, max_concurrency=self.concurrent_rounds
+                    max_runtime_seconds=self.round_timeout * self.max_rounds,
+                    max_concurrency=self.concurrent_rounds,
                 ),
             )
 
@@ -1078,7 +1093,9 @@ class Orchestrator:
 
         # Meta-guardrail: Audit EGG decision (logged internally by auditor)
         _ = self.egg_auditor.audit_decision(
-            prompt=prompt, egg_allowed=is_allowed, egg_blocked_category=blocked_info.category if blocked_info else None
+            prompt=prompt,
+            egg_allowed=is_allowed,
+            egg_blocked_category=blocked_info.category if blocked_info else None,
         )
 
         if not is_allowed:
@@ -1271,9 +1288,9 @@ class Orchestrator:
             "strategy": "unknown",  # Can be extracted from evaluation if needed
             "mutation": "unknown",  # Can be extracted from evaluation if needed
             "global_score": result.global_score,
-            "l1_score": result.evaluation.get("l1", {}).get("score", 0) if result.evaluation else 0,
-            "l2_score": result.evaluation.get("l2", {}).get("score", 0) if result.evaluation else 0,
-            "l3_score": result.evaluation.get("l3", {}).get("score", 0) if result.evaluation else 0,
+            "l1_score": (result.evaluation.get("l1", {}).get("score", 0) if result.evaluation else 0),
+            "l2_score": (result.evaluation.get("l2", {}).get("score", 0) if result.evaluation else 0),
+            "l3_score": (result.evaluation.get("l3", {}).get("score", 0) if result.evaluation else 0),
             "blocked": result.blocked_by_egg,
             "timestamp": result.timestamp,
         }

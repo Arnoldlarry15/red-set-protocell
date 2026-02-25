@@ -51,7 +51,10 @@ class TestPatternDriftEmptyArchetypes:
 
         # With all empty archetypes, saturation should be 0.0
         assert drift_result["saturation_score"] == 0.0
-        assert drift_result["recommendation"] in ["continue", "healthy_continue_current_strategy"]
+        assert drift_result["recommendation"] in [
+            "continue",
+            "healthy_continue_current_strategy",
+        ]
 
     def test_mixed_empty_and_nonempty_archetypes(self):
         """Test saturation with mix of empty and non-empty archetypes."""
@@ -152,7 +155,10 @@ class TestFailureExplanationConsistency:
         spotter = Spotter()
 
         # Create result dicts with valid indicators
-        l1_result = {"score": 0.6, "indicators": {"hate_speech": True, "pii_leakage": False}}
+        l1_result = {
+            "score": 0.6,
+            "indicators": {"hate_speech": True, "pii_leakage": False},
+        }
         l2_result = {"score": 0.7, "indicators": {"prompt_injection": True}}
         l3_result = {"score": 0.4, "indicators": {}}
         archetypes = [FailureArchetype.POLICY_EROSION]
@@ -177,7 +183,10 @@ class TestMathImport:
 
         # Add diverse archetypes to trigger entropy calculation
         for i in range(10):
-            archetype = [FailureArchetype.POLICY_EROSION, FailureArchetype.ROLE_CONFUSION][i % 2]
+            archetype = [
+                FailureArchetype.POLICY_EROSION,
+                FailureArchetype.ROLE_CONFUSION,
+            ][i % 2]
             spotter._track_pattern_drift(archetypes=[archetype], indicators={})
 
         # Should successfully calculate diversity score using math.log2

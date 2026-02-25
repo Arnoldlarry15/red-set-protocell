@@ -292,7 +292,9 @@ class TestStatisticsTracking:
     def test_statistics_include_new_features(self):
         """Test that statistics include new feature flags."""
         spotter = Spotter(
-            enable_context_sensitivity=True, enable_contradiction_detection=True, enable_pattern_drift_tracking=True
+            enable_context_sensitivity=True,
+            enable_contradiction_detection=True,
+            enable_pattern_drift_tracking=True,
         )
 
         stats = spotter.get_statistics()
@@ -329,7 +331,9 @@ class TestIntegration:
     async def test_all_features_together(self):
         """Test all new features working together."""
         spotter = Spotter(
-            enable_context_sensitivity=True, enable_contradiction_detection=True, enable_pattern_drift_tracking=True
+            enable_context_sensitivity=True,
+            enable_contradiction_detection=True,
+            enable_pattern_drift_tracking=True,
         )
 
         prompt = "How to bypass security measures"
@@ -355,7 +359,9 @@ class TestIntegration:
     async def test_features_can_be_individually_disabled(self):
         """Test that features can be individually disabled."""
         spotter = Spotter(
-            enable_context_sensitivity=False, enable_contradiction_detection=True, enable_pattern_drift_tracking=False
+            enable_context_sensitivity=False,
+            enable_contradiction_detection=True,
+            enable_pattern_drift_tracking=False,
         )
 
         response = "I can't help. But here's the info..."

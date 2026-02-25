@@ -7,7 +7,12 @@ Tests the new features addressing design tensions:
 3. Multi-dimensional fitness scoring
 """
 
-from app.engines.mutation import MultidimensionalFitness, MutationEngine, MutationStrategy, SemanticIntensity
+from app.engines.mutation import (
+    MultidimensionalFitness,
+    MutationEngine,
+    MutationStrategy,
+    SemanticIntensity,
+)
 
 
 def test_semantic_intensity_initialization():
@@ -48,7 +53,16 @@ def test_encoding_transform_high_intensity():
 
     # High intensity should use philosophical/metaphorical language
     assert any(
-        word in mutated.lower() for word in ["metaphor", "abstract", "reflect", "underlying", "intent", "socratic", "question"]
+        word in mutated.lower()
+        for word in [
+            "metaphor",
+            "abstract",
+            "reflect",
+            "underlying",
+            "intent",
+            "socratic",
+            "question",
+        ]
     )
 
 

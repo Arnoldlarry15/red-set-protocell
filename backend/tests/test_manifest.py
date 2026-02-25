@@ -68,7 +68,10 @@ class TestManifestDataclasses:
     def test_agent_boundaries(self):
         """Test AgentBoundaries enforces separation."""
         boundaries = AgentBoundaries(
-            sniper_can_generate=True, sniper_can_score=False, spotter_can_generate=False, spotter_can_score=True
+            sniper_can_generate=True,
+            sniper_can_score=False,
+            spotter_can_generate=False,
+            spotter_can_score=True,
         )
 
         assert boundaries.sniper_can_generate is True
@@ -117,7 +120,12 @@ class TestAttackManifest:
             timestamp_utc="2026-01-21T12:00:00Z",
             operator_intent="Test",
             target=TargetDefinition(
-                provider="test", model="test", model_revision="test", endpoint="test", provider_metadata={}, scope="test"
+                provider="test",
+                model="test",
+                model_revision="test",
+                endpoint="test",
+                provider_metadata={},
+                scope="test",
             ),
             determinism=DeterminismConfig(seed=42),
             iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
@@ -151,8 +159,16 @@ class TestAttackManifest:
                 "scope": "test",
             },
             "determinism": {"seed": 99, "rng": "pcg64"},
-            "iteration_limits": {"max_generations": 20, "population_size": 10, "max_evaluations": 200},
-            "mutation_policy": {"policy_id": "test", "version": "1.0.0", "operators": ["op1"]},
+            "iteration_limits": {
+                "max_generations": 20,
+                "population_size": 10,
+                "max_evaluations": 200,
+            },
+            "mutation_policy": {
+                "policy_id": "test",
+                "version": "1.0.0",
+                "operators": ["op1"],
+            },
             "fitness_function": {
                 "function_id": "test",
                 "version": "1.0.0",
@@ -183,7 +199,12 @@ class TestAttackManifest:
             timestamp_utc="2026-01-21T12:00:00Z",
             operator_intent="Test",
             target=TargetDefinition(
-                provider="test", model="test", model_revision="test", endpoint="test", provider_metadata={}, scope="test"
+                provider="test",
+                model="test",
+                model_revision="test",
+                endpoint="test",
+                provider_metadata={},
+                scope="test",
             ),
             determinism=DeterminismConfig(seed=777),
             iteration_limits=IterationLimits(max_generations=5, population_size=3, max_evaluations=15),
@@ -213,7 +234,12 @@ class TestAttackManifest:
             timestamp_utc="2026-01-21T12:00:00Z",
             operator_intent="Test",
             target=TargetDefinition(
-                provider="test", model="test", model_revision="test", endpoint="test", provider_metadata={}, scope="test"
+                provider="test",
+                model="test",
+                model_revision="test",
+                endpoint="test",
+                provider_metadata={},
+                scope="test",
             ),
             determinism=DeterminismConfig(seed=42),
             iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),

@@ -6,7 +6,14 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.agents.target import AnthropicBackend, CustomHTTPBackend, LlamaCppBackend, OpenAIBackend, Target, create_target
+from app.agents.target import (
+    AnthropicBackend,
+    CustomHTTPBackend,
+    LlamaCppBackend,
+    OpenAIBackend,
+    Target,
+    create_target,
+)
 
 # Check if optional packages are available
 try:
@@ -44,7 +51,11 @@ def test_create_target_llama_cpp():
 
 def test_create_target_custom_http():
     """Test creating custom HTTP backend."""
-    target = create_target("custom_http", api_url="http://localhost:8000/v1/completions", api_key="test-key")
+    target = create_target(
+        "custom_http",
+        api_url="http://localhost:8000/v1/completions",
+        api_key="test-key",
+    )
     assert isinstance(target, Target)
     assert isinstance(target.backend, CustomHTTPBackend)
 

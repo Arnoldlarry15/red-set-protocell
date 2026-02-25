@@ -151,7 +151,9 @@ class AdversarialIntentEngine:
     }
 
     def select_domain(
-        self, domain_success_rates: Optional[Dict[AttackDomain, float]] = None, temperature: float = 1.0
+        self,
+        domain_success_rates: Optional[Dict[AttackDomain, float]] = None,
+        temperature: float = 1.0,
     ) -> AttackDomain:
         """
         Select an attack domain with intelligence.
@@ -313,7 +315,8 @@ class Sniper:
 
         # Select attack domain with intelligence
         domain = self.intent_engine.select_domain(
-            domain_success_rates=domain_success_rates, temperature=self.domain_selection_temperature
+            domain_success_rates=domain_success_rates,
+            temperature=self.domain_selection_temperature,
         )
 
         # Generate or evolve prompt
@@ -364,7 +367,9 @@ class Sniper:
 
         # Use selection engine to choose parent(s)
         selected = self.selection_engine.select(
-            domain_candidates, strategy=self.selection_strategy, num_select=min(3, len(domain_candidates))
+            domain_candidates,
+            strategy=self.selection_strategy,
+            num_select=min(3, len(domain_candidates)),
         )
 
         if not selected:
@@ -396,7 +401,13 @@ class Sniper:
 
         return result, strategy_used
 
-    def _update_evolution_pool(self, prompt: str, score: float, domain: AttackDomain, strategy: Optional[str] = None):
+    def _update_evolution_pool(
+        self,
+        prompt: str,
+        score: float,
+        domain: AttackDomain,
+        strategy: Optional[str] = None,
+    ):
         """
         Update the evolution pool with a new prompt.
 
@@ -418,10 +429,17 @@ class Sniper:
         if len(self.evolution_pool) > self.evolution_pool_size:
             # Use selection to keep best candidates
             self.evolution_pool = self.selection_engine.select(
-                self.evolution_pool, strategy=self.selection_strategy, num_select=self.evolution_pool_size
+                self.evolution_pool,
+                strategy=self.selection_strategy,
+                num_select=self.evolution_pool_size,
             )
 
-    def update_prompt_score(self, prompt: str, score: float, structured_feedback: Optional[Dict[str, Any]] = None):
+    def update_prompt_score(
+        self,
+        prompt: str,
+        score: float,
+        structured_feedback: Optional[Dict[str, Any]] = None,
+    ):
         """
         Update the score for a prompt in the evolution pool.
 
@@ -506,7 +524,9 @@ class Sniper:
                     try:
                         strategy_enum = MutationStrategy(candidate.strategy)
                         self.mutation_engine.update_strategy_performance(
-                            strategy_enum, score, archetypes=list(set(archetypes)) if archetypes else None
+                            strategy_enum,
+                            score,
+                            archetypes=list(set(archetypes)) if archetypes else None,
                         )
                     except (ValueError, AttributeError):
                         pass

@@ -74,7 +74,10 @@ def example_3_custom_http_api():
     # Example: Using Ollama local API
     try:
         target = create_target(
-            backend_type="custom_http", api_url="http://localhost:11434/api/generate", request_format="generic", max_tokens=500
+            backend_type="custom_http",
+            api_url="http://localhost:11434/api/generate",
+            request_format="generic",
+            max_tokens=500,
         )
 
         print(f"Configuration:")

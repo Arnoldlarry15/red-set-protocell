@@ -368,7 +368,12 @@ def test_zero_retention_cleanup_removes_artifacts(temp_db, temp_artifacts_dir):
         timestamp_utc="2024-01-01T00:00:00Z",
         operator_intent="test",
         target=TargetDefinition(
-            provider="test", model="test", model_revision="test", endpoint="test", provider_metadata={}, scope="test"
+            provider="test",
+            model="test",
+            model_revision="test",
+            endpoint="test",
+            provider_metadata={},
+            scope="test",
         ),
         determinism=DeterminismConfig(seed=42, rng="pcg64"),
         iteration_limits=IterationLimits(max_generations=10, population_size=10, max_evaluations=100),
@@ -437,7 +442,12 @@ def test_zero_retention_disabled_preserves_artifacts(temp_db, temp_artifacts_dir
         timestamp_utc="2024-01-01T00:00:00Z",
         operator_intent="test",
         target=TargetDefinition(
-            provider="test", model="test", model_revision="test", endpoint="test", provider_metadata={}, scope="test"
+            provider="test",
+            model="test",
+            model_revision="test",
+            endpoint="test",
+            provider_metadata={},
+            scope="test",
         ),
         determinism=DeterminismConfig(seed=42, rng="pcg64"),
         iteration_limits=IterationLimits(max_generations=10, population_size=10, max_evaluations=100),

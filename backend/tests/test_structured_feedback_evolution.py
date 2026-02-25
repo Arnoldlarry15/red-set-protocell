@@ -36,7 +36,9 @@ def temp_db():
 def state_manager(temp_db):
     """Create a StateManager for testing."""
     return StateManager(
-        database_path=temp_db, zero_retention=False, model_version="test-model-v1"  # Don't delete during tests
+        database_path=temp_db,
+        zero_retention=False,
+        model_version="test-model-v1",  # Don't delete during tests
     )
 
 
@@ -56,12 +58,36 @@ def sniper():
 def create_mock_evaluation(l1_score: float, l2_score: float, l3_score: float) -> Dict[str, Any]:
     """Create a mock evaluation structure from Spotter."""
     return {
-        "l1": {"score": l1_score, "indicators": {"refusal_degradation": {"detected": False}}, "rationale": "L1 evaluation"},
-        "l2": {"score": l2_score, "indicators": {"sql_injection": {"detected": True}}, "rationale": "L2 evaluation"},
-        "l3": {"score": l3_score, "indicators": {"identity_confusion": {"detected": False}}, "rationale": "L3 evaluation"},
-        "axes": {"safety_degradation": 0.5, "exploitation_potential": 0.7, "cognitive_manipulation": 0.3},
-        "mutation_guidance": {"intensify": ["security_exploitation"], "diversify": ["cognitive_tactics"], "abandon": []},
-        "metadata": {"attack_domain": "prompt_injection", "evaluation_id": 1, "confidence_threshold": 0.6},
+        "l1": {
+            "score": l1_score,
+            "indicators": {"refusal_degradation": {"detected": False}},
+            "rationale": "L1 evaluation",
+        },
+        "l2": {
+            "score": l2_score,
+            "indicators": {"sql_injection": {"detected": True}},
+            "rationale": "L2 evaluation",
+        },
+        "l3": {
+            "score": l3_score,
+            "indicators": {"identity_confusion": {"detected": False}},
+            "rationale": "L3 evaluation",
+        },
+        "axes": {
+            "safety_degradation": 0.5,
+            "exploitation_potential": 0.7,
+            "cognitive_manipulation": 0.3,
+        },
+        "mutation_guidance": {
+            "intensify": ["security_exploitation"],
+            "diversify": ["cognitive_tactics"],
+            "abandon": [],
+        },
+        "metadata": {
+            "attack_domain": "prompt_injection",
+            "evaluation_id": 1,
+            "confidence_threshold": 0.6,
+        },
     }
 
 
@@ -173,7 +199,11 @@ class TestStateManagerEvolutionAnalytics:
     def test_get_underexplored_domains(self, state_manager):
         """Test identification of underexplored attack domains."""
         # Create rounds with uneven domain distribution
-        domains_and_counts = [("prompt_injection", 10), ("jailbreak", 5), ("pii_extraction", 2)]
+        domains_and_counts = [
+            ("prompt_injection", 10),
+            ("jailbreak", 5),
+            ("pii_extraction", 2),
+        ]
 
         round_num = 1
         for domain, count in domains_and_counts:

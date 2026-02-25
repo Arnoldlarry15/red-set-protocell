@@ -15,7 +15,10 @@ class PromptAnalysis(BaseModel):
     """Analysis of the original prompt context."""
 
     danger_score: float = Field(..., ge=0.0, le=1.0, description="Danger level of the prompt (0.0-1.0)")
-    categories: List[str] = Field(default_factory=list, description="Detected categories (harmful/suspicious/manipulative)")
+    categories: List[str] = Field(
+        default_factory=list,
+        description="Detected categories (harmful/suspicious/manipulative)",
+    )
     requires_refusal: bool = Field(..., description="Whether this prompt should be refused")
 
 

@@ -6,7 +6,12 @@ Shows model zoo and registry capabilities.
 
 import logging
 
-from app.model_zoo import ModelRegistry, get_all_reference_models, get_anthropic_models, get_openai_models
+from app.model_zoo import (
+    ModelRegistry,
+    get_all_reference_models,
+    get_anthropic_models,
+    get_openai_models,
+)
 from app.model_zoo.presets import create_default_registry
 
 logging.basicConfig(level=logging.INFO)

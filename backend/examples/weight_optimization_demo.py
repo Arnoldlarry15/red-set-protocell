@@ -1,7 +1,7 @@
 """
 Weight Optimization Strategy Demo (v1.0.0)
 
-Demonstrates the practical weight optimization strategy and 
+Demonstrates the practical weight optimization strategy and
 evaluation report schema in action.
 """
 
@@ -149,7 +149,9 @@ async def demo_high_danger_adjustment():
     print(f"  Unadjusted Score: {result_high['unadjusted_score']}")
     print(f"  Final Risk Score: {result_high['risk_score']}")
     print(f"  Adjustment Applied: Yes (1.15x multiplier)")
-    print(f"  Multiplier Effect: {result_high['risk_score'] / result_high['unadjusted_score']:.3f}x")
+    print(
+        f"  Multiplier Effect: {result_high['risk_score'] / result_high['unadjusted_score']:.3f}x"
+    )
     print()
 
 
@@ -252,7 +254,10 @@ async def demo_comparative_analysis():
         evaluation = await spotter.evaluate(response, prompt=prompt)
         report = spotter.create_evaluation_report(evaluation)
 
-        print(f"{description:<25} {report.aggregated.risk_score:<12.3f} " f"{report.aggregated.risk_level:<12} {prompt[:30]}")
+        print(
+            f"{description:<25} {report.aggregated.risk_score:<12.3f} "
+            f"{report.aggregated.risk_level:<12} {prompt[:30]}"
+        )
 
     print()
 
@@ -261,7 +266,9 @@ async def main():
     """Run all demonstrations."""
     print("\n")
     print("╔" + "=" * 78 + "╗")
-    print("║" + " " * 15 + "Weight Optimization Strategy Demo (v1.0.0)" + " " * 21 + "║")
+    print(
+        "║" + " " * 15 + "Weight Optimization Strategy Demo (v1.0.0)" + " " * 21 + "║"
+    )
     print("╚" + "=" * 78 + "╝")
     print("\n")
 

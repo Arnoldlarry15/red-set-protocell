@@ -41,7 +41,12 @@ class StructuredLogger:
 
     def log(self, level: str, message: str, **kwargs):
         """Log a structured message with additional fields."""
-        log_data = {"timestamp": datetime.utcnow().isoformat(), "level": level, "message": message, **kwargs}
+        log_data = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": level,
+            "message": message,
+            **kwargs,
+        }
 
         if level == "error":
             self.logger.error(json.dumps(log_data))
@@ -223,7 +228,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
             # Record metrics
             duration_ms = (time.time() - start_time) * 1000
-            self.collector.record_request(endpoint=request.url.path, status_code=response.status_code, duration_ms=duration_ms)
+            self.collector.record_request(
+                endpoint=request.url.path,
+                status_code=response.status_code,
+                duration_ms=duration_ms,
+            )
 
             return response
 
@@ -252,7 +261,11 @@ class HealthCheck:
         """Run all health checks and return results."""
         import inspect
 
-        results = {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "checks": {}}
+        results = {
+            "status": "healthy",
+            "timestamp": datetime.utcnow().isoformat(),
+            "checks": {},
+        }
 
         for name, check_fn in self.checks.items():
             try:

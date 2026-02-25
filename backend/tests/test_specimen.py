@@ -24,7 +24,11 @@ class TestSpecimenDataclasses:
 
     def test_lineage_creation(self):
         """Test Lineage tracks evolutionary history."""
-        lineage = Lineage(generation=5, parent_ids=["fsp-123", "fsp-456"], mutation_operator="instruction_conflict")
+        lineage = Lineage(
+            generation=5,
+            parent_ids=["fsp-123", "fsp-456"],
+            mutation_operator="instruction_conflict",
+        )
 
         assert lineage.generation == 5
         assert len(lineage.parent_ids) == 2
@@ -33,7 +37,10 @@ class TestSpecimenDataclasses:
     def test_prompt_genome_structure(self):
         """Test PromptGenome preserves attack structure."""
         genome = PromptGenome(
-            structure=[{"type": "system", "gene": "authority_shift"}, {"type": "user", "gene": "policy_pressure"}]
+            structure=[
+                {"type": "system", "gene": "authority_shift"},
+                {"type": "user", "gene": "policy_pressure"},
+            ]
         )
 
         assert len(genome.structure) == 2
@@ -63,12 +70,19 @@ class TestFailureSpecimen:
         specimen = FailureSpecimen(
             specimen_id="fsp-test123",
             manifest_id="manifest-456",
-            lineage=Lineage(generation=10, parent_ids=["fsp-parent1"], mutation_operator="semantic_twist"),
+            lineage=Lineage(
+                generation=10,
+                parent_ids=["fsp-parent1"],
+                mutation_operator="semantic_twist",
+            ),
             prompt_genome=PromptGenome(structure=[{"type": "user", "gene": "test"}]),
             rendered_prompt="Test prompt",
             model_response="Test response",
             evaluation=Evaluation(
-                fitness_score=0.7, failure_class="test_failure", severity="major", spotter_rationale="Test reason"
+                fitness_score=0.7,
+                failure_class="test_failure",
+                severity="major",
+                spotter_rationale="Test reason",
             ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
@@ -88,7 +102,12 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Response",
-            evaluation=Evaluation(fitness_score=0.5, failure_class="test", severity="minor", spotter_rationale="Test"),
+            evaluation=Evaluation(
+                fitness_score=0.5,
+                failure_class="test",
+                severity="minor",
+                spotter_rationale="Test",
+            ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
         )
@@ -105,7 +124,11 @@ class TestFailureSpecimen:
         json_data = {
             "specimen_id": "fsp-deserialize",
             "manifest_id": "manifest-test",
-            "lineage": {"generation": 5, "parent_ids": ["fsp-p1", "fsp-p2"], "mutation_operator": "test_op"},
+            "lineage": {
+                "generation": 5,
+                "parent_ids": ["fsp-p1", "fsp-p2"],
+                "mutation_operator": "test_op",
+            },
             "prompt_genome": {"structure": [{"type": "user", "gene": "test"}]},
             "rendered_prompt": "Test prompt",
             "model_response": "Test response",
@@ -135,7 +158,12 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Save test",
             model_response="Load test",
-            evaluation=Evaluation(fitness_score=0.6, failure_class="test", severity="major", spotter_rationale="Test"),
+            evaluation=Evaluation(
+                fitness_score=0.6,
+                failure_class="test",
+                severity="major",
+                spotter_rationale="Test",
+            ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
         )
@@ -161,7 +189,12 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Fingerprint prompt",
             model_response="Fingerprint response",
-            evaluation=Evaluation(fitness_score=0.5, failure_class="test", severity="minor", spotter_rationale="Test"),
+            evaluation=Evaluation(
+                fitness_score=0.5,
+                failure_class="test",
+                severity="minor",
+                spotter_rationale="Test",
+            ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
         )
@@ -183,7 +216,12 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Test",
-            evaluation=Evaluation(fitness_score=0.95, failure_class="test", severity="critical", spotter_rationale="Test"),
+            evaluation=Evaluation(
+                fitness_score=0.95,
+                failure_class="test",
+                severity="critical",
+                spotter_rationale="Test",
+            ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
         )
@@ -197,7 +235,12 @@ class TestFailureSpecimen:
             prompt_genome=PromptGenome(structure=[]),
             rendered_prompt="Test",
             model_response="Test",
-            evaluation=Evaluation(fitness_score=0.4, failure_class="test", severity="minor", spotter_rationale="Test"),
+            evaluation=Evaluation(
+                fitness_score=0.4,
+                failure_class="test",
+                severity="minor",
+                spotter_rationale="Test",
+            ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
         )
@@ -214,7 +257,10 @@ class TestFailureSpecimen:
             rendered_prompt="Test",
             model_response="Test",
             evaluation=Evaluation(
-                fitness_score=0.75, failure_class="policy_violation", severity="major", spotter_rationale="Test"
+                fitness_score=0.75,
+                failure_class="policy_violation",
+                severity="major",
+                spotter_rationale="Test",
             ),
             replayable=True,
             timestamp_utc="2026-01-21T12:00:00Z",
@@ -328,7 +374,10 @@ class TestSpecimenCreation:
             score=0.5,
             classification="test",
             rationale="test",
-            genome_structure=[{"type": "system", "gene": "custom_authority"}, {"type": "user", "gene": "custom_instruction"}],
+            genome_structure=[
+                {"type": "system", "gene": "custom_authority"},
+                {"type": "user", "gene": "custom_instruction"},
+            ],
         )
 
         assert len(specimen.prompt_genome.structure) == 2

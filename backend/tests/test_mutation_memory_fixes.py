@@ -9,7 +9,12 @@ Validates:
 
 import random
 
-from app.engines.mutation import MultidimensionalFitness, MutationEngine, MutationStrategy, SemanticIntensity
+from app.engines.mutation import (
+    MultidimensionalFitness,
+    MutationEngine,
+    MutationStrategy,
+    SemanticIntensity,
+)
 
 
 class TestSemanticIntensityEnum:
@@ -141,7 +146,9 @@ class TestStrategyPerformanceBounds:
         # Add archetype-specific scores
         for i in range(100):
             engine.update_strategy_performance(
-                MutationStrategy.LEXICAL_VARIATION, float(i), archetypes=["manipulation", "evasion"]
+                MutationStrategy.LEXICAL_VARIATION,
+                float(i),
+                archetypes=["manipulation", "evasion"],
             )
 
         # Check archetype tracking is also bounded

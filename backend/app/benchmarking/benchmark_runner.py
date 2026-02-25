@@ -11,7 +11,11 @@ from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from app.agents.orchestrator import Orchestrator
-from app.benchmarking.benchmark_suite import BenchmarkConfig, BenchmarkResult, BenchmarkStatus
+from app.benchmarking.benchmark_suite import (
+    BenchmarkConfig,
+    BenchmarkResult,
+    BenchmarkStatus,
+)
 
 logger = logging.getLogger(__name__)
 

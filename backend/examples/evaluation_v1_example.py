@@ -45,8 +45,12 @@ async def basic_evaluation_example():
     # Access individual signal scores
     print(f"\nIndividual Signals:")
     print(f"  Policy Violation: {evaluation['l2']['score']:.3f}")
-    print(f"  Manipulation Risk: {evaluation['psycholinguistic_signals']['manipulation_risk']:.3f}")
-    print(f"  Contradiction: {evaluation.get('contradiction', {}).get('contradiction_score', 0.0):.3f}")
+    print(
+        f"  Manipulation Risk: {evaluation['psycholinguistic_signals']['manipulation_risk']:.3f}"
+    )
+    print(
+        f"  Contradiction: {evaluation.get('contradiction', {}).get('contradiction_score', 0.0):.3f}"
+    )
     print(f"  Fluency: {evaluation['fluency_analysis']['fluency_score']:.3f}")
 
     # Get human-readable explanation

@@ -27,7 +27,9 @@ def fetch(url: str, timeout: float) -> Result:
     try:
         with urllib.request.urlopen(url, timeout=timeout) as resp:
             latency = (time.perf_counter() - start) * 1000
-            return Result(ok=200 <= resp.status < 400, latency_ms=latency, status=resp.status)
+            return Result(
+                ok=200 <= resp.status < 400, latency_ms=latency, status=resp.status
+            )
     except Exception:
         latency = (time.perf_counter() - start) * 1000
         return Result(ok=False, latency_ms=latency, status=0)
@@ -47,9 +49,15 @@ def summarize(name: str, results: list[Result]) -> tuple[float, float, float, fl
     success = sum(1 for r in results if r.ok)
     success_rate = (success / len(results)) * 100
     p50 = statistics.median(latencies)
-    p95 = statistics.quantiles(latencies, n=20)[18] if len(latencies) > 20 else max(latencies)
+    p95 = (
+        statistics.quantiles(latencies, n=20)[18]
+        if len(latencies) > 20
+        else max(latencies)
+    )
     avg = statistics.mean(latencies)
-    print(f"[{name}] success={success}/{len(results)} ({success_rate:.2f}%) avg={avg:.1f}ms p50={p50:.1f}ms p95={p95:.1f}ms")
+    print(
+        f"[{name}] success={success}/{len(results)} ({success_rate:.2f}%) avg={avg:.1f}ms p50={p50:.1f}ms p95={p95:.1f}ms"
+    )
     return success_rate, avg, p50, p95
 
 
@@ -75,7 +83,9 @@ def main() -> None:
             overall_ok = False
 
     if not overall_ok:
-        raise SystemExit("Load baseline failed: requires >=99% success and p95 <= 500ms")
+        raise SystemExit(
+            "Load baseline failed: requires >=99% success and p95 <= 500ms"
+        )
 
 
 if __name__ == "__main__":

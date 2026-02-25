@@ -21,8 +21,20 @@ async def test_archetype_recommendations_policy_erosion():
         "indicators": {},
         "archetypes": [FailureArchetype.POLICY_EROSION],
     }
-    l2_result = {"score": 0.3, "confidence": 0.6, "uncertainty": 0.4, "indicators": {}, "archetypes": []}
-    l3_result = {"score": 0.2, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l2_result = {
+        "score": 0.3,
+        "confidence": 0.6,
+        "uncertainty": 0.4,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l3_result = {
+        "score": 0.2,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
     guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
@@ -41,7 +53,13 @@ async def test_archetype_recommendations_role_confusion():
     """Test that ROLE_CONFUSION archetype recommends role-play strategies."""
     spotter = Spotter()
 
-    l1_result = {"score": 0.3, "confidence": 0.7, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l1_result = {
+        "score": 0.3,
+        "confidence": 0.7,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
     l2_result = {
         "score": 0.6,
         "confidence": 0.8,
@@ -49,7 +67,13 @@ async def test_archetype_recommendations_role_confusion():
         "indicators": {},
         "archetypes": [FailureArchetype.ROLE_CONFUSION],
     }
-    l3_result = {"score": 0.2, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l3_result = {
+        "score": 0.2,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
     guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
@@ -81,7 +105,13 @@ async def test_multiple_archetypes_combine_strategies():
         "indicators": {},
         "archetypes": [FailureArchetype.HIDDEN_COMPLIANCE],
     }
-    l3_result = {"score": 0.4, "confidence": 0.7, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l3_result = {
+        "score": 0.4,
+        "confidence": 0.7,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
     guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
@@ -102,9 +132,27 @@ async def test_no_archetypes_provides_default_guidance():
     """Test that missing archetypes still provides useful guidance."""
     spotter = Spotter()
 
-    l1_result = {"score": 0.2, "confidence": 0.7, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
-    l2_result = {"score": 0.3, "confidence": 0.8, "uncertainty": 0.2, "indicators": {}, "archetypes": []}
-    l3_result = {"score": 0.1, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l1_result = {
+        "score": 0.2,
+        "confidence": 0.7,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l2_result = {
+        "score": 0.3,
+        "confidence": 0.8,
+        "uncertainty": 0.2,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l3_result = {
+        "score": 0.1,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
     guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)
@@ -127,8 +175,20 @@ async def test_archetype_focus_areas():
         "indicators": {},
         "archetypes": [FailureArchetype.REFUSAL_COLLAPSE],
     }
-    l2_result = {"score": 0.3, "confidence": 0.8, "uncertainty": 0.2, "indicators": {}, "archetypes": []}
-    l3_result = {"score": 0.2, "confidence": 0.6, "uncertainty": 0.3, "indicators": {}, "archetypes": []}
+    l2_result = {
+        "score": 0.3,
+        "confidence": 0.8,
+        "uncertainty": 0.2,
+        "indicators": {},
+        "archetypes": [],
+    }
+    l3_result = {
+        "score": 0.2,
+        "confidence": 0.6,
+        "uncertainty": 0.3,
+        "indicators": {},
+        "archetypes": [],
+    }
 
     axes = {"policy_compliance": 0.5}
     guidance = spotter._generate_mutation_guidance(l1_result, l2_result, l3_result, None, axes)

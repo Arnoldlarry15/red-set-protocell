@@ -4,7 +4,13 @@ Tests for the Scoring Engine
 
 import pytest
 
-from app.engines.scoring import EvaluationResult, FailureArchetype, LayerScore, ScoringEngine, UncertaintyType
+from app.engines.scoring import (
+    EvaluationResult,
+    FailureArchetype,
+    LayerScore,
+    ScoringEngine,
+    UncertaintyType,
+)
 
 
 def test_scoring_engine_initialization():
@@ -144,7 +150,11 @@ def test_evaluation_includes_dominant_layer():
 def test_uncertainty_type_in_layer_score():
     """Test that LayerScore can include uncertainty type."""
     layer = LayerScore(
-        score=0.5, confidence=0.6, indicators={}, uncertainty=0.3, uncertainty_type=UncertaintyType.WEAK_DETECTION
+        score=0.5,
+        confidence=0.6,
+        indicators={},
+        uncertainty=0.3,
+        uncertainty_type=UncertaintyType.WEAK_DETECTION,
     )
 
     assert layer.uncertainty_type == UncertaintyType.WEAK_DETECTION
@@ -161,7 +171,12 @@ def test_evaluation_to_dict_includes_new_fields():
         "uncertainty_type": UncertaintyType.WEAK_DETECTION,
         "archetypes": [FailureArchetype.POLICY_EROSION],
     }
-    l2_data = {"score": 0.5, "confidence": 0.8, "indicators": {}, "uncertainty_type": UncertaintyType.AMBIGUOUS_SIGNAL}
+    l2_data = {
+        "score": 0.5,
+        "confidence": 0.8,
+        "indicators": {},
+        "uncertainty_type": UncertaintyType.AMBIGUOUS_SIGNAL,
+    }
     l3_data = {"score": 0.2, "confidence": 0.6, "indicators": {}}
 
     evaluation = engine.create_evaluation(l1_data, l2_data, l3_data)

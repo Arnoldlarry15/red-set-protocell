@@ -7,7 +7,12 @@ Shows telemetry export capabilities.
 import logging
 from datetime import datetime
 
-from app.telemetry import ExportFormat, SessionMetricsExtractor, TelemetryExporter, create_metrics_snapshot
+from app.telemetry import (
+    ExportFormat,
+    SessionMetricsExtractor,
+    TelemetryExporter,
+    create_metrics_snapshot,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,7 +47,9 @@ def run_csv_export():
     ]
 
     # Export to CSV
-    filepath = exporter.export(data=data, format=ExportFormat.CSV, filename="example_metrics.csv")
+    filepath = exporter.export(
+        data=data, format=ExportFormat.CSV, filename="example_metrics.csv"
+    )
 
     logger.info(f"Exported to: {filepath}")
 
@@ -64,7 +71,9 @@ def run_json_export():
     }
 
     # Export to JSON
-    filepath = exporter.export(data=data, format=ExportFormat.JSON, filename="example_session.json")
+    filepath = exporter.export(
+        data=data, format=ExportFormat.JSON, filename="example_session.json"
+    )
 
     logger.info(f"Exported to: {filepath}")
 

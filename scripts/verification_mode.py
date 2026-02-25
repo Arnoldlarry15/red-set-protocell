@@ -91,9 +91,7 @@ class VerificationMode:
             # Create runner with unique output directory
             output_dir = f"verification_logs/seed_{self.seed}/iteration_{iteration}"
             runner = FullCycleRunner(
-                seed=self.seed,
-                rounds=self.rounds,
-                output_dir=output_dir
+                seed=self.seed, rounds=self.rounds, output_dir=output_dir
             )
 
             # Run full cycle
@@ -107,19 +105,23 @@ class VerificationMode:
 
                 # Save trace to file
                 trace_file = Path(output_dir) / f"trace_iteration_{iteration}.json"
-                with open(trace_file, 'w', encoding='utf-8') as f:
+                with open(trace_file, "w", encoding="utf-8") as f:
                     json.dump(audit, f, indent=2)
 
                 print(f"  Hash: {iteration_hash}")
                 print(f"  Trace: {trace_file}")
-                print(f"  Status: {'✓' if len(set(hashes)) == 1 else '✗ HASH MISMATCH'}\n")
+                print(
+                    f"  Status: {'✓' if len(set(hashes)) == 1 else '✗ HASH MISMATCH'}\n"
+                )
 
-                self.verification_results.append({
-                    "iteration": iteration,
-                    "hash": iteration_hash,
-                    "trace_file": str(trace_file),
-                    "statistics": audit["statistics"]
-                })
+                self.verification_results.append(
+                    {
+                        "iteration": iteration,
+                        "hash": iteration_hash,
+                        "trace_file": str(trace_file),
+                        "statistics": audit["statistics"],
+                    }
+                )
 
             except Exception as e:
                 print(f"  ERROR: {e}\n")
@@ -138,7 +140,9 @@ class VerificationMode:
             print(f"Result: ✓ PASS - All hashes identical")
             print(f"Hash: {hashes[0]}")
             print(f"\nDeterministic behavior confirmed.")
-            print(f"Seed {self.seed} produces identical outputs across {self.iterations} runs.")
+            print(
+                f"Seed {self.seed} produces identical outputs across {self.iterations} runs."
+            )
             verification_passed = True
         else:
             print(f"Result: ✗ FAIL - Hash mismatch detected")
@@ -155,7 +159,9 @@ class VerificationMode:
             verification_passed = False
 
         # Save verification report
-        report_file = Path(f"verification_logs/seed_{self.seed}/verification_report.json")
+        report_file = Path(
+            f"verification_logs/seed_{self.seed}/verification_report.json"
+        )
         report_file.parent.mkdir(parents=True, exist_ok=True)
 
         report = {
@@ -174,7 +180,7 @@ class VerificationMode:
             "iterations": self.verification_results,
         }
 
-        with open(report_file, 'w', encoding='utf-8') as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             json.dump(report, f, indent=2)
 
         print(f"\nVerification report saved: {report_file}")
@@ -198,35 +204,33 @@ Examples:
 
   # Quick verification (3 rounds, 2 iterations)
   python scripts/verification_mode.py --seed 42 --rounds 3 --iterations 2
-        """
+        """,
     )
 
     parser.add_argument(
         "--seed",
         type=int,
         default=42,
-        help="Locked random seed for deterministic execution (default: 42)"
+        help="Locked random seed for deterministic execution (default: 42)",
     )
     parser.add_argument(
         "--rounds",
         type=int,
         default=10,
-        help="Locked number of rounds per iteration (default: 10)"
+        help="Locked number of rounds per iteration (default: 10)",
     )
     parser.add_argument(
         "--iterations",
         type=int,
         default=2,
-        help="Number of verification iterations to run (default: 2)"
+        help="Number of verification iterations to run (default: 2)",
     )
 
     args = parser.parse_args()
 
     # Run verification
     verifier = VerificationMode(
-        seed=args.seed,
-        rounds=args.rounds,
-        iterations=args.iterations
+        seed=args.seed, rounds=args.rounds, iterations=args.iterations
     )
 
     try:
@@ -242,6 +246,7 @@ Examples:
     except Exception as e:
         print(f"\n✗ Verification ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(2)
 

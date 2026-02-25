@@ -149,7 +149,11 @@ class TargetFactory:
     """
 
     @staticmethod
-    def create(backend_type: str, perturbation_config: Optional[PerturbationConfig] = None, **config) -> Target:
+    def create(
+        backend_type: str,
+        perturbation_config: Optional[PerturbationConfig] = None,
+        **config,
+    ) -> Target:
         """
         Create a Target agent with specified backend.
 

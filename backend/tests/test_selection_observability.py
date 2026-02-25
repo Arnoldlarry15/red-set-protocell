@@ -10,7 +10,12 @@ Verifies that:
 import pytest
 
 from app.agents.spotter import TRAIT_CONFIDENCE
-from app.engines.mutation import MAX_NEGATIVE_BIAS, MAX_POSITIVE_BIAS, MutationEngine, MutationStrategy
+from app.engines.mutation import (
+    MAX_NEGATIVE_BIAS,
+    MAX_POSITIVE_BIAS,
+    MutationEngine,
+    MutationStrategy,
+)
 
 
 class TestSelectionObservability:
@@ -120,7 +125,10 @@ class TestSelectionObservability:
                     engine.update_strategy_performance(strategy, score=0.6)
 
         # Create mutation guidance with biases
-        mutation_guidance = {"strategy_biases": {"lexical_variation": 0.2}, "behavioral_traits": {}}
+        mutation_guidance = {
+            "strategy_biases": {"lexical_variation": 0.2},
+            "behavioral_traits": {},
+        }
 
         # Run mutation
         engine.mutate(prompt, mutation_guidance=mutation_guidance)

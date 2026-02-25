@@ -211,7 +211,11 @@ class TestSemanticIntensityTagging:
 
     def test_semantic_intensity_tracks_across_mutations(self):
         """Test that semantic intensity is correctly tracked across multiple mutations."""
-        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM, random_seed=42)
+        engine = MutationEngine(
+            mutation_rate=1.0,
+            semantic_intensity=SemanticIntensity.MEDIUM,
+            random_seed=42,
+        )
 
         prompts = ["prompt 1", "prompt 2", "prompt 3"]
         for p in prompts:
@@ -294,7 +298,11 @@ class TestEncodingTransformLogging:
 
     def test_encoding_transform_logs_choice(self):
         """Test that _encoding_transform logs which transform was chosen."""
-        engine = MutationEngine(mutation_rate=1.0, semantic_intensity=SemanticIntensity.MEDIUM, random_seed=42)
+        engine = MutationEngine(
+            mutation_rate=1.0,
+            semantic_intensity=SemanticIntensity.MEDIUM,
+            random_seed=42,
+        )
 
         prompt = "test encoding log"
 
@@ -618,7 +626,12 @@ class TestObservabilityMetrics:
         """Test that EGG block metrics are reported."""
         engine = MutationEngine()
         # Add some blocks
-        engine.update_strategy_performance(MutationStrategy.ASSUMPTION_FLIP, 0.0, egg_blocked=True, egg_category="bioweapons")
+        engine.update_strategy_performance(
+            MutationStrategy.ASSUMPTION_FLIP,
+            0.0,
+            egg_blocked=True,
+            egg_category="bioweapons",
+        )
         engine.update_strategy_performance(MutationStrategy.COMPETING_GOALS, 0.0, egg_blocked=True, egg_category="csam")
 
         metrics = engine.get_observability_metrics()

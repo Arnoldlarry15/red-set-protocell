@@ -302,7 +302,12 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
     mutation_policy = MutationPolicyConfig(
         policy_id="prompt-mutation-core",
         version="1.0.0",
-        operators=["role_injection", "semantic_twist", "instruction_conflict", "context_overload"],
+        operators=[
+            "role_injection",
+            "semantic_twist",
+            "instruction_conflict",
+            "context_overload",
+        ],
     )
 
     # Fitness function with code fingerprint
@@ -317,14 +322,17 @@ def create_manifest_from_config(config, seed: Optional[int] = None, operator_int
 
     # Agent boundaries
     agent_boundaries = AgentBoundaries(
-        sniper_can_generate=True, sniper_can_score=False, spotter_can_generate=False, spotter_can_score=True
+        sniper_can_generate=True,
+        sniper_can_score=False,
+        spotter_can_generate=False,
+        spotter_can_score=True,
     )
 
     # Resource limits
     max_runtime = config.orchestrator.round_timeout_seconds * config.orchestrator.max_rounds
     resource_limits = ResourceLimits(
         max_runtime_seconds=max_runtime,
-        max_concurrency=config.orchestrator.concurrent_rounds if config.orchestrator.concurrent_evaluations else 1,
+        max_concurrency=(config.orchestrator.concurrent_rounds if config.orchestrator.concurrent_evaluations else 1),
     )
 
     # Operator intent

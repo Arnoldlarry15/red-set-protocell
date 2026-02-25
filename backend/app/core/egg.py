@@ -365,7 +365,10 @@ class EthicalGuardrailGovernor:
         if match_score >= self.shadow_threshold and match_score < 1.0:
             fingerprint = hash_prompt(prompt)
             shadow_match = ShadowModeMatch(
-                pattern=pattern, category=category, match_score=match_score, prompt_fingerprint=fingerprint
+                pattern=pattern,
+                category=category,
+                match_score=match_score,
+                prompt_fingerprint=fingerprint,
             )
             self.shadow_matches.append(shadow_match)
 
@@ -426,7 +429,7 @@ class EthicalGuardrailGovernor:
             coverage_metrics[category] = {
                 "total_patterns": total_patterns,
                 "used_patterns": used_patterns,
-                "coverage_percentage": (used_patterns / total_patterns * 100) if total_patterns > 0 else 0.0,
+                "coverage_percentage": ((used_patterns / total_patterns * 100) if total_patterns > 0 else 0.0),
                 "unused_patterns": [p for p in patterns if p not in self.pattern_usage.get(category, set())],
             }
 
@@ -434,12 +437,16 @@ class EthicalGuardrailGovernor:
             "category_hits": dict(self.category_hits),
             "shadow_matches_count": len(self.shadow_matches),
             "shadow_matches": [
-                {"category": sm.category, "match_score": sm.match_score, "fingerprint": sm.prompt_fingerprint}
+                {
+                    "category": sm.category,
+                    "match_score": sm.match_score,
+                    "fingerprint": sm.prompt_fingerprint,
+                }
                 for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0 else self.shadow_matches)
             ],
             "coverage_metrics": coverage_metrics,
             "total_inspections": self.total_inspections,
-            "block_rate": (self.blocked_count / self.total_inspections * 100) if self.total_inspections > 0 else 0.0,
+            "block_rate": ((self.blocked_count / self.total_inspections * 100) if self.total_inspections > 0 else 0.0),
         }
 
     def get_shadow_mode_suggestions(self) -> Dict[str, List[str]]:

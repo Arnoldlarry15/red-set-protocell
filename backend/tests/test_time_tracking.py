@@ -365,7 +365,18 @@ def test_blocked_rounds_excluded(temp_database):
                 blocked_by_egg, timestamp, model_version
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-            (session_id, i + 1, f"prompt {i}", "injection", f"response {i}", "{}", 0.3, blocked, timestamp, "test"),
+            (
+                session_id,
+                i + 1,
+                f"prompt {i}",
+                "injection",
+                f"response {i}",
+                "{}",
+                0.3,
+                blocked,
+                timestamp,
+                "test",
+            ),
         )
 
     conn.commit()

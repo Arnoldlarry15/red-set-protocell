@@ -27,7 +27,12 @@ def test_structural_hash_uniqueness():
     c4 = PromptCandidate("prompt with {special} [characters]", 0.5, "domain4")
 
     # Different structures should have different hashes
-    hashes = {c1.structural_hash, c2.structural_hash, c3.structural_hash, c4.structural_hash}
+    hashes = {
+        c1.structural_hash,
+        c2.structural_hash,
+        c3.structural_hash,
+        c4.structural_hash,
+    }
     assert len(hashes) == 4, "Different structures should produce different hashes"
 
 

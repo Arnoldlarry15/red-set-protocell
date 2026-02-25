@@ -723,7 +723,8 @@ class CustomHTTPBackend(TargetBackend):
             # Use asyncio to run requests in executor (requests is sync)
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
-                None, lambda: requests.post(self.api_url, json=payload, headers=self.headers, timeout=60)
+                None,
+                lambda: requests.post(self.api_url, json=payload, headers=self.headers, timeout=60),
             )
             response.raise_for_status()
 

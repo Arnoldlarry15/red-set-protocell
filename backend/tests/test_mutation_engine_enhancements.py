@@ -38,7 +38,9 @@ def test_strategy_performance_with_archetypes():
     # Update performance with archetypes
     engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"])
     engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION, 0.9, archetypes=["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"]
+        MutationStrategy.LEXICAL_VARIATION,
+        0.9,
+        archetypes=["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"],
     )
 
     # Check tracking

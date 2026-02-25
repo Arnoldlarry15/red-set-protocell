@@ -37,7 +37,12 @@ def test_perturbation_config_custom():
     custom_prompts = ["Custom prompt 1", "Custom prompt 2"]
     custom_modes = [PerturbationMode.TEMPERATURE_JITTER]
 
-    config = PerturbationConfig(enabled=True, modes=custom_modes, system_prompts=custom_prompts, temperature_jitter_range=0.2)
+    config = PerturbationConfig(
+        enabled=True,
+        modes=custom_modes,
+        system_prompts=custom_prompts,
+        temperature_jitter_range=0.2,
+    )
 
     assert config.enabled is True
     assert config.modes == custom_modes
@@ -128,7 +133,11 @@ async def test_temperature_jitter_perturbation(mock_openai):
     mock_openai.return_value = mock_client
 
     backend = OpenAIBackend(api_key="test-key", temperature=0.7)
-    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER], temperature_jitter_range=0.1)
+    config = PerturbationConfig(
+        enabled=True,
+        modes=[PerturbationMode.TEMPERATURE_JITTER],
+        temperature_jitter_range=0.1,
+    )
     backend.set_perturbation_config(config)
 
     # Run multiple times to check variation
@@ -156,7 +165,11 @@ async def test_simulated_latency_perturbation(mock_openai):
     mock_openai.return_value = mock_client
 
     backend = OpenAIBackend(api_key="test-key")
-    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.SIMULATED_LATENCY], latency_range_ms=(100, 150))
+    config = PerturbationConfig(
+        enabled=True,
+        modes=[PerturbationMode.SIMULATED_LATENCY],
+        latency_range_ms=(100, 150),
+    )
     backend.set_perturbation_config(config)
 
     start_time = time.time()
@@ -212,7 +225,11 @@ async def test_multiple_perturbations_combined(mock_openai):
     backend = OpenAIBackend(api_key="test-key", temperature=0.7)
     config = PerturbationConfig(
         enabled=True,
-        modes=[PerturbationMode.SYSTEM_PROMPT, PerturbationMode.TEMPERATURE_JITTER, PerturbationMode.RESPONSE_TRUNCATION],
+        modes=[
+            PerturbationMode.SYSTEM_PROMPT,
+            PerturbationMode.TEMPERATURE_JITTER,
+            PerturbationMode.RESPONSE_TRUNCATION,
+        ],
         truncation_probability=0.0,  # Disable truncation for easier assertion
     )
     backend.set_perturbation_config(config)
@@ -238,7 +255,10 @@ async def test_anthropic_backend_perturbations(mock_anthropic):
     mock_anthropic.return_value = mock_client
 
     backend = AnthropicBackend(api_key="test-key")
-    config = PerturbationConfig(enabled=True, modes=[PerturbationMode.SYSTEM_PROMPT, PerturbationMode.TEMPERATURE_JITTER])
+    config = PerturbationConfig(
+        enabled=True,
+        modes=[PerturbationMode.SYSTEM_PROMPT, PerturbationMode.TEMPERATURE_JITTER],
+    )
     backend.set_perturbation_config(config)
 
     result = await backend.execute("Test prompt")
@@ -377,7 +397,11 @@ async def test_temperature_bounds_respected():
 
         # Test lower bound
         backend = OpenAIBackend(api_key="test-key", temperature=0.0)
-        config = PerturbationConfig(enabled=True, modes=[PerturbationMode.TEMPERATURE_JITTER], temperature_jitter_range=0.5)
+        config = PerturbationConfig(
+            enabled=True,
+            modes=[PerturbationMode.TEMPERATURE_JITTER],
+            temperature_jitter_range=0.5,
+        )
         backend.set_perturbation_config(config)
 
         for _ in range(10):

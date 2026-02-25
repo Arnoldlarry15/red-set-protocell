@@ -122,11 +122,17 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Check minute limit
         if len(self.minute_buckets[ip]) >= self.requests_per_minute:
-            return False, f"Rate limit exceeded: {self.requests_per_minute} requests per minute"
+            return (
+                False,
+                f"Rate limit exceeded: {self.requests_per_minute} requests per minute",
+            )
 
         # Check hour limit
         if len(self.hour_buckets[ip]) >= self.requests_per_hour:
-            return False, f"Rate limit exceeded: {self.requests_per_hour} requests per hour"
+            return (
+                False,
+                f"Rate limit exceeded: {self.requests_per_hour} requests per hour",
+            )
 
         # Add current request
         self.minute_buckets[ip].append(now)
@@ -149,7 +155,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             logger.warning(f"Rate limit exceeded for IP {client_ip}: {reason}")
             return JSONResponse(
                 status_code=429,
-                content={"error": "Rate limit exceeded", "message": reason, "retry_after": 60},
+                content={
+                    "error": "Rate limit exceeded",
+                    "message": reason,
+                    "retry_after": 60,
+                },
                 headers={"Retry-After": "60"},
             )
 
@@ -215,7 +225,10 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                 logger.warning(f"Dangerous payload detected: {reason}")
                 return JSONResponse(
                     status_code=400,
-                    content={"error": "Invalid request", "message": "Request contains potentially dangerous content"},
+                    content={
+                        "error": "Invalid request",
+                        "message": "Request contains potentially dangerous content",
+                    },
                 )
 
             # Re-create request with original body

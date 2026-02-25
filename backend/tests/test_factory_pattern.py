@@ -4,7 +4,13 @@ Tests for factory pattern implementation.
 
 import pytest
 
-from app.agents.target import AnthropicBackend, OpenAIBackend, OpenRouterBackend, Target, TargetBackend
+from app.agents.target import (
+    AnthropicBackend,
+    OpenAIBackend,
+    OpenRouterBackend,
+    Target,
+    TargetBackend,
+)
 from app.factories import BackendFactory, TargetFactory, create_target
 
 
@@ -140,7 +146,9 @@ def test_factory_pattern_eliminates_coupling():
 
         try:
             backend = BackendFactory.create(
-                backend_type, api_key="test", api_url="http://test.com" if backend_type == "custom_http" else None
+                backend_type,
+                api_key="test",
+                api_url="http://test.com" if backend_type == "custom_http" else None,
             )
             assert isinstance(backend, TargetBackend)
         except ImportError:

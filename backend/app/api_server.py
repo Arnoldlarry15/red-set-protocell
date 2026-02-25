@@ -25,14 +25,28 @@ from app.core.config import get_default_config
 from app.core.egg import EthicalGuardrailGovernor
 from app.engines.mutation import MutationEngine
 from app.engines.scoring import ScoringEngine
-from app.middleware.auth import JWT_EXPIRATION_HOURS, AuthenticationMiddleware, PasswordHasher, TokenManager
-from app.middleware.monitoring import HealthCheck, MetricsMiddleware, RequestLoggingMiddleware, metrics_collector
+from app.middleware.auth import (
+    JWT_EXPIRATION_HOURS,
+    AuthenticationMiddleware,
+    PasswordHasher,
+    TokenManager,
+)
+from app.middleware.monitoring import (
+    HealthCheck,
+    MetricsMiddleware,
+    RequestLoggingMiddleware,
+    metrics_collector,
+)
 from app.auth import log_exception_safely, redact_sensitive_text
 from app.lifecycle import bind_lifecycle_handlers
 from app.routes import register_routes
 
 # Import production-ready middleware
-from app.middleware.security import InputValidationMiddleware, RateLimitMiddleware, SecurityHeadersMiddleware
+from app.middleware.security import (
+    InputValidationMiddleware,
+    RateLimitMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.telemetry.exporter import ExportFormat, TelemetryExporter
 from app.telemetry.extractors import SessionDataExtractor
 
@@ -156,7 +170,7 @@ app = FastAPI(
     title="Red Set ProtoCell API",
     description="REST API and WebSocket interface for RSP red teaming system",
     version="1.0.0",
-    docs_url="/api/docs" if RSP_ENVIRONMENT == "development" else None,  # Disable docs in production
+    docs_url=("/api/docs" if RSP_ENVIRONMENT == "development" else None),  # Disable docs in production
     redoc_url="/api/redoc" if RSP_ENVIRONMENT == "development" else None,
 )
 
@@ -174,7 +188,11 @@ app.add_middleware(MetricsMiddleware, collector=metrics_collector)
 # Configure based on environment
 rate_limit_per_min = int(os.getenv("RSP_RATE_LIMIT_PER_MIN", "60"))
 rate_limit_per_hour = int(os.getenv("RSP_RATE_LIMIT_PER_HOUR", "1000"))
-app.add_middleware(RateLimitMiddleware, requests_per_minute=rate_limit_per_min, requests_per_hour=rate_limit_per_hour)
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=rate_limit_per_min,
+    requests_per_hour=rate_limit_per_hour,
+)
 
 # 5. Input validation (prevent injection attacks)
 app.add_middleware(InputValidationMiddleware)
@@ -254,7 +272,7 @@ class UserLogin(BaseModel):
 
 class LLMKeyValidation(BaseModel):
     api_key: str
-    backend: str  # 'openai' or 'anthropic'
+    backend: str  # 'openai', 'anthropic', or 'openrouter'
 
 
 # Global state
@@ -327,7 +345,11 @@ def _initialize_demo_users():
     # Hash the demo password on startup
     hashed_password = password_hasher.hash_password(DEMO_PASSWORD_PLAIN)
 
-    users["admin"] = {"email": "admin@rsp.com", "role": "admin", "password_hash": hashed_password}  # Store hashed password
+    users["admin"] = {
+        "email": "admin@rsp.com",
+        "role": "admin",
+        "password_hash": hashed_password,
+    }  # Store hashed password
 
 
 # Initialize demo users on module load
@@ -496,7 +518,11 @@ async def shutdown_event():
 
 
 async def root():
-    return {"name": "Red Set ProtoCell API", "version": "1.0.0", "status": "operational"}
+    return {
+        "name": "Red Set ProtoCell API",
+        "version": "1.0.0",
+        "status": "operational",
+    }
 
 
 async def ping():
@@ -608,7 +634,8 @@ async def start_session(config: SessionConfig):
         )
 
         mutation_engine = MutationEngine(
-            mutation_rate=rsp_config.sniper.mutation_rate, semantic_intensity=config.semantic_intensity
+            mutation_rate=rsp_config.sniper.mutation_rate,
+            semantic_intensity=config.semantic_intensity,
         )
 
         sniper = Sniper(
@@ -636,7 +663,8 @@ async def start_session(config: SessionConfig):
         )
 
         state_manager = StateManager(
-            database_path=rsp_config.storage.database_path, zero_retention=rsp_config.storage.zero_retention
+            database_path=rsp_config.storage.database_path,
+            zero_retention=rsp_config.storage.zero_retention,
         )
 
         orchestrator = Orchestrator(
@@ -663,7 +691,11 @@ async def start_session(config: SessionConfig):
 
         logger.info(f"Session {session_id} created successfully")
 
-        return {"session_id": session_id, "status": "initialized", "message": "Session created successfully"}
+        return {
+            "session_id": session_id,
+            "status": "initialized",
+            "message": "Session created successfully",
+        }
 
     except Exception as e:
         log_exception_safely("Error creating session", e)
@@ -685,7 +717,11 @@ async def execute_session(session_id: str):
         task = asyncio.create_task(run_session_with_websocket(session_id, orchestrator, session))
         track_background_task(task, f"session:{session_id}")
 
-        return {"session_id": session_id, "status": "running", "message": "Session execution started"}
+        return {
+            "session_id": session_id,
+            "status": "running",
+            "message": "Session execution started",
+        }
     except Exception as e:
         log_exception_safely("Error executing session", e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -875,7 +911,11 @@ async def login(credentials: UserLogin):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
         # Step 3: Build user_info from stored data only (no credentials access)
-        user_info = {"username": credentials.username, "email": stored_user["email"], "role": stored_user["role"]}
+        user_info = {
+            "username": credentials.username,
+            "email": stored_user["email"],
+            "role": stored_user["role"],
+        }
 
         # Step 4: Generate JWT token using clean data only
         token = token_manager.create_access_token(
@@ -891,7 +931,12 @@ async def login(credentials: UserLogin):
         # Log only the event without sensitive user details to satisfy security scanning
         logger.info("User login event succeeded")
 
-        return {"access_token": token, "token_type": "bearer", "expires_in": JWT_EXPIRATION_HOURS * 3600, "user": user_info}
+        return {
+            "access_token": token,
+            "token_type": "bearer",
+            "expires_in": JWT_EXPIRATION_HOURS * 3600,
+            "user": user_info,
+        }
     except HTTPException:
         raise
     except Exception:
@@ -955,28 +1000,51 @@ async def validate_llm_key(validation: LLMKeyValidation):
         key = validation.api_key.strip()
         if validation.backend.lower() == "openai" and not key.startswith("sk-"):
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         if validation.backend.lower() == "anthropic" and not key.startswith("sk-ant-"):
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
+            )
+        if validation.backend.lower() == "openrouter" and not key.startswith("sk-or-"):
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         # Create a minimal test backend instance
         if validation.backend.lower() == "openai":
             from app.agents.target import OpenAIBackend
 
             test_backend = OpenAIBackend(
-                api_key=validation.api_key, model_name="gpt-3.5-turbo", max_tokens=10, temperature=0.0
+                api_key=validation.api_key,
+                model_name="gpt-4o-mini",
+                max_tokens=10,
+                temperature=0.0,
             )
         elif validation.backend.lower() == "anthropic":
             from app.agents.target import AnthropicBackend
 
             test_backend = AnthropicBackend(  # type: ignore[assignment]
-                api_key=validation.api_key, model_name="claude-3-haiku-20240307", max_tokens=10, temperature=0.0
+                api_key=validation.api_key,
+                model_name="claude-3-haiku-20240307",
+                max_tokens=10,
+                temperature=0.0,
+            )
+        elif validation.backend.lower() == "openrouter":
+            from app.agents.target import OpenRouterBackend
+
+            test_backend = OpenRouterBackend(  # type: ignore[assignment]
+                api_key=validation.api_key,
+                model_name="openai/gpt-4o-mini",
+                max_tokens=10,
+                temperature=0.0,
             )
         else:
             raise HTTPException(
-                status_code=400, detail=f"Invalid backend: {validation.backend}. Must be 'openai' or 'anthropic'"
+                status_code=400,
+                detail=f"Invalid backend: {validation.backend}. Must be 'openai', 'anthropic', or 'openrouter'",
             )
 
         # Make a minimal test call to validate the key
@@ -984,7 +1052,11 @@ async def validate_llm_key(validation: LLMKeyValidation):
         await test_backend.execute(test_prompt)
 
         # If we got here, the key is valid
-        return {"valid": True, "backend": validation.backend, "message": "API key validated successfully"}
+        return {
+            "valid": True,
+            "backend": validation.backend,
+            "message": "API key validated successfully",
+        }
     except HTTPException:
         raise
     except Exception as e:
@@ -1037,7 +1109,8 @@ async def validate_llm_key(validation: LLMKeyValidation):
         # Return appropriate error based on type (check auth first)
         if is_auth_error:
             raise HTTPException(
-                status_code=401, detail="Invalid API key or authentication failed. Please verify your API key is correct."
+                status_code=401,
+                detail="Invalid API key or authentication failed. Please verify your API key is correct.",
             )
         elif is_connection_error:
             raise HTTPException(
@@ -1047,7 +1120,8 @@ async def validate_llm_key(validation: LLMKeyValidation):
         else:
             # Generic error for other cases (no error_type exposure for security)
             raise HTTPException(
-                status_code=500, detail="API validation failed. Please try again or contact support if the issue persists."
+                status_code=500,
+                detail="API validation failed. Please try again or contact support if the issue persists.",
             )
 
 
@@ -1081,7 +1155,11 @@ async def save_experiment_config(config: ExperimentConfig):
         config_id = f"config_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         stored_configs[config_id] = config
 
-        return {"config_id": config_id, "name": config.name, "message": "Configuration saved successfully"}
+        return {
+            "config_id": config_id,
+            "name": config.name,
+            "message": "Configuration saved successfully",
+        }
     except Exception as e:
         log_exception_safely("Error saving config", e)
         raise HTTPException(status_code=500, detail="Internal server error")
@@ -1216,13 +1294,24 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
             if halt_on_critical and attack_data["data"]["severity"] == "critical":  # type: ignore[index]
                 session["status"] = "halted"
                 await manager.broadcast(
-                    {"type": "status", "data": {"status": "halted", "reason": "Critical vulnerability detected"}}
+                    {
+                        "type": "status",
+                        "data": {
+                            "status": "halted",
+                            "reason": "Critical vulnerability detected",
+                        },
+                    }
                 )
                 break
 
             if session["current_cost"] >= max_cost:
                 session["status"] = "halted"
-                await manager.broadcast({"type": "status", "data": {"status": "halted", "reason": "Max API cost reached"}})
+                await manager.broadcast(
+                    {
+                        "type": "status",
+                        "data": {"status": "halted", "reason": "Max API cost reached"},
+                    }
+                )
                 break
 
             # Small delay between rounds
@@ -1230,7 +1319,12 @@ async def run_session_with_websocket(session_id: str, orchestrator: Orchestrator
 
         if session["status"] == "running":
             session["status"] = "completed"
-            await manager.broadcast({"type": "status", "data": {"status": "completed", "reason": "All rounds completed"}})
+            await manager.broadcast(
+                {
+                    "type": "status",
+                    "data": {"status": "completed", "reason": "All rounds completed"},
+                }
+            )
 
     except Exception as e:
         log_exception_safely("Error in session execution", e)

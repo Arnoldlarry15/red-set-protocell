@@ -238,7 +238,10 @@ def test_archetype_deduplication():
     # Create feedback with duplicate archetypes across layers
     feedback = {
         "l1": {"score": 0.7, "archetypes": ["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"]},
-        "l2": {"score": 0.6, "archetypes": ["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"]},  # Duplicates
+        "l2": {
+            "score": 0.6,
+            "archetypes": ["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"],
+        },  # Duplicates
         "l3": {"score": 0.5, "archetypes": ["HIDDEN_COMPLIANCE"]},  # Duplicate
     }
     sniper.update_prompt_score(prompt, 0.7, structured_feedback=feedback)

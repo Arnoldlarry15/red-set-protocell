@@ -109,7 +109,9 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
 
     # Initialize Scoring Engine
     scoring_engine = ScoringEngine(
-        l1_weight=config.scoring.l1_weight, l2_weight=config.scoring.l2_weight, l3_weight=config.scoring.l3_weight
+        l1_weight=config.scoring.l1_weight,
+        l2_weight=config.scoring.l2_weight,
+        l3_weight=config.scoring.l3_weight,
     )
     logger.info("[OK] Scoring Engine initialized")
 
@@ -182,7 +184,9 @@ def setup_system(config: RSPConfig, model_version_override: Optional[str] = None
     # Initialize State Manager
     model_version = model_version_override or config.target.model_name
     state_manager = StateManager(
-        database_path=config.storage.database_path, zero_retention=config.storage.zero_retention, model_version=model_version
+        database_path=config.storage.database_path,
+        zero_retention=config.storage.zero_retention,
+        model_version=model_version,
     )
     logger.info(f"[OK] State Manager initialized (zero_retention={config.storage.zero_retention})")
 
@@ -280,7 +284,12 @@ def parse_arguments():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Red Set ProtoCell - AI Red Teaming System")
 
-    parser.add_argument("--rounds", type=int, default=100, help="Maximum number of rounds to execute (default: 100)")
+    parser.add_argument(
+        "--rounds",
+        type=int,
+        default=100,
+        help="Maximum number of rounds to execute (default: 100)",
+    )
 
     parser.add_argument(
         "--backend",
@@ -290,16 +299,32 @@ def parse_arguments():
         help="Target backend to use (required: openai, anthropic, openrouter, llama_cpp, or custom_http)",
     )
 
-    parser.add_argument("--api-key", type=str, required=True, help="API key for target backend (required)")
+    parser.add_argument(
+        "--api-key",
+        type=str,
+        required=True,
+        help="API key for target backend (required)",
+    )
 
     parser.add_argument("--model", type=str, help="Model name for target backend")
 
-    parser.add_argument("--no-zero-retention", action="store_true", help="Disable zero-retention policy (keep session data)")
-
-    parser.add_argument("--db-path", type=str, default="rsp_session.db", help="Database path (default: rsp_session.db)")
+    parser.add_argument(
+        "--no-zero-retention",
+        action="store_true",
+        help="Disable zero-retention policy (keep session data)",
+    )
 
     parser.add_argument(
-        "--model-version", type=str, help="Model version identifier for tracking (optional, defaults to model name)"
+        "--db-path",
+        type=str,
+        default="rsp_session.db",
+        help="Database path (default: rsp_session.db)",
+    )
+
+    parser.add_argument(
+        "--model-version",
+        type=str,
+        help="Model version identifier for tracking (optional, defaults to model name)",
     )
 
     return parser.parse_args()

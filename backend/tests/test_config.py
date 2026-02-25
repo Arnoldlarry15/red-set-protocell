@@ -6,7 +6,14 @@ import pytest
 
 from app.agents.sniper import Sniper
 from app.agents.spotter import Spotter
-from app.core.config import ModelBackend, RSPConfig, ScoringConfig, StorageMode, get_default_config, load_config_from_env
+from app.core.config import (
+    ModelBackend,
+    RSPConfig,
+    ScoringConfig,
+    StorageMode,
+    get_default_config,
+    load_config_from_env,
+)
 from app.engines.mutation import MutationEngine
 
 
@@ -97,7 +104,10 @@ def test_agent_initialization_with_api_keys():
 
     # Initialize Sniper with API key
     sniper = Sniper(
-        mutation_engine=mutation_engine, evolution_pool_size=10, creativity_temperature=0.9, api_key="sniper-test-key"
+        mutation_engine=mutation_engine,
+        evolution_pool_size=10,
+        creativity_temperature=0.9,
+        api_key="sniper-test-key",
     )
     assert sniper.api_key == "sniper-test-key"
 

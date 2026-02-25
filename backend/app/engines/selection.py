@@ -145,7 +145,7 @@ class PromptCandidate:
 
         # Create hash from structural features
         feature_str = "|".join(sorted(features))
-        return hashlib.md5(feature_str.encode()).hexdigest()[:16]
+        return hashlib.sha256(feature_str.encode()).hexdigest()[:16]
 
     def _compute_semantic_hash(self) -> str:
         """
@@ -232,7 +232,7 @@ class PromptCandidate:
             features.append("neutral")  # Fallback for neutral content
 
         feature_str = "|".join(sorted(features))
-        return hashlib.md5(feature_str.encode()).hexdigest()[:16]
+        return hashlib.sha256(feature_str.encode()).hexdigest()[:16]
 
     def age_in_seconds(self) -> float:
         """Get age of this candidate in seconds."""

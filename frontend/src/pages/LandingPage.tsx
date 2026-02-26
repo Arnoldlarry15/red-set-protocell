@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Zap, Lock, Eye, AlertCircle, ArrowRight } from 'lucide-react';
+import { Shield, Zap, Lock, Eye, AlertCircle, ArrowRight, Github, Users, Mail, Code } from 'lucide-react';
 import NeuralBackground from '../components/NeuralBackground';
 import ArchitectureVisualization from '../components/ArchitectureVisualization';
 import '../styles/LandingPage.css';
@@ -59,6 +59,15 @@ const LandingPage: React.FC = () => {
             An Immune System for AI
           </motion.h1>
 
+          <motion.h2
+            className="hero-benefit-headline"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.3 }}
+          >
+            Uncover hidden vulnerabilities before they become real-world exploits
+          </motion.h2>
+
           <motion.p
             className="hero-subtitle"
             initial={{ opacity: 0, y: 20 }}
@@ -68,18 +77,31 @@ const LandingPage: React.FC = () => {
             Red Set ProtoCell is an open-source AI red-teaming platform designed to detect vulnerabilities in large language models before they cause harm.
           </motion.p>
 
-          <motion.button
-            className="hero-cta"
+          <motion.div
+            className="hero-cta-group"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/early-access')}
           >
-            Request Early Access
-            <ArrowRight size={18} />
-          </motion.button>
+            <motion.button
+              className="hero-cta"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/early-access')}
+            >
+              Request Early Access
+              <ArrowRight size={18} />
+            </motion.button>
+            <motion.button
+              className="hero-cta-secondary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.open('https://github.com', '_blank')}
+            >
+              View on GitHub
+              <Github size={18} />
+            </motion.button>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -159,27 +181,27 @@ const LandingPage: React.FC = () => {
           <motion.div className="solution-details" variants={staggerContainer}>
             <motion.div className="detail-item" variants={fadeInUp}>
               <Zap className="detail-icon" />
-              <h3>Dual-Agent Architecture</h3>
+              <h3>Autonomous Multi-Agent System</h3>
               <p>
-                <strong>Sniper:</strong> Generates adversarial prompts using evolutionary algorithms
+                <strong>Sniper agent</strong> evolves adversarial prompts using evolutionary algorithms — thinking like an attacker, not following scripts.
                 <br />
-                <strong>Spotter:</strong> Evaluates responses and scores failures
+                <strong>Spotter agent</strong> evaluates model failures with precision scoring. Unlike manual red-teaming, this scales infinitely.
               </p>
             </motion.div>
 
             <motion.div className="detail-item" variants={fadeInUp}>
               <Shield className="detail-icon" />
-              <h3>Deterministic & Reproducible</h3>
+              <h3>Transparent & Auditable</h3>
               <p>
-                Every attack is logged. Every finding is verifiable. No black boxes.
+                Every attack is logged. Every vulnerability is reproducible. Build trust through transparency — critical for compliance with emerging AI regulations.
               </p>
             </motion.div>
 
             <motion.div className="detail-item" variants={fadeInUp}>
               <Lock className="detail-icon" />
-              <h3>Ethical by Design</h3>
+              <h3>Ethical Guardrails Built-In</h3>
               <p>
-                Built-in guardrails. Respects rate limits, API policies, and responsible disclosure.
+                Respects rate limits, API policies, and responsible disclosure practices. Red-teaming infrastructure that operates within ethical boundaries — no surprises, no liability.
               </p>
             </motion.div>
           </motion.div>
@@ -227,6 +249,74 @@ const LandingPage: React.FC = () => {
         </motion.div>
       </section>
 
+      {/* Partners Section */}
+      <section className="content-section partners-section">
+        <motion.div
+          className="section-content"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+        >
+          <motion.div variants={fadeInUp}>
+            <h2>Join the Movement</h2>
+            <p className="section-lead">
+              We're building the essential infrastructure for responsible AI. Help shape its future.
+            </p>
+          </motion.div>
+
+          <motion.div className="partners-grid" variants={staggerContainer}>
+            <motion.div className="partner-card" variants={fadeInUp}>
+              <Users className="partner-icon" />
+              <h3>Early Access (Beta Testers)</h3>
+              <p>
+                Be among the first to experience Red Set. Influence product direction and help us find edge cases before general release.
+              </p>
+              <motion.button
+                className="partner-card-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate('/early-access')}
+              >
+                Request Access
+              </motion.button>
+            </motion.div>
+
+            <motion.div className="partner-card" variants={fadeInUp}>
+              <Mail className="partner-icon" />
+              <h3>Investors & Partners</h3>
+              <p>
+                Red Set is at the forefront of responsible AI infrastructure. Join us in building a safer, more transparent AI ecosystem.
+              </p>
+              <motion.button
+                className="partner-card-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.location.href = 'mailto:invest@redset.ai'}
+              >
+                Get in Touch
+              </motion.button>
+            </motion.div>
+
+            <motion.div className="partner-card" variants={fadeInUp}>
+              <Code className="partner-icon" />
+              <h3>Contributors</h3>
+              <p>
+                Build with us. Our open-source platform welcomes developers, researchers, and security engineers to contribute to AI safety.
+              </p>
+              <motion.button
+                className="partner-card-button"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => window.open('https://github.com', '_blank')}
+              >
+                View on GitHub
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      </section>
+
       {/* CTA Section */}
       <section className="cta-section">
         <motion.div
@@ -240,15 +330,28 @@ const LandingPage: React.FC = () => {
           <motion.p variants={fadeInUp}>
             Help build the immune system for AI. Request early access to shape the future of responsible red-teaming.
           </motion.p>
-          <motion.button
-            className="cta-button"
+          <motion.div
+            className="cta-button-group"
             variants={fadeInUp}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => navigate('/early-access')}
           >
-            Get Early Access
-          </motion.button>
+            <motion.button
+              className="cta-button"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => navigate('/early-access')}
+            >
+              Get Early Access
+            </motion.button>
+            <motion.button
+              className="cta-button-secondary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.open('https://github.com', '_blank')}
+            >
+              Explore on GitHub
+              <Github size={16} />
+            </motion.button>
+          </motion.div>
         </motion.div>
       </section>
     </div>

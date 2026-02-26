@@ -57,7 +57,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
       <div className="auth-background">
         <div className="grid-pattern"></div>
       </div>
-      
+
       <div className="auth-content">
         <div className="auth-card glass-panel-dark">
           {/* Logo Section */}

@@ -96,7 +96,7 @@ const LandingPage: React.FC = () => {
               className="hero-cta-secondary"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.open('https://github.com', '_blank')}
+              onClick={() => window.open('https://github.com/Arnoldlarry15/red-set-protocell', '_blank')}
             >
               View on GitHub
               <Github size={18} />
@@ -292,7 +292,7 @@ const LandingPage: React.FC = () => {
                 className="partner-card-button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => window.location.href = 'mailto:invest@redset.ai'}
+                onClick={() => window.location.href = 'mailto:labuilds@proton.me'}
               >
                 Get in Touch
               </motion.button>
@@ -308,7 +308,7 @@ const LandingPage: React.FC = () => {
                 className="partner-card-button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => window.open('https://github.com', '_blank')}
+                onClick={() => window.open('https://github.com/Arnoldlarry15/red-set-protocell', '_blank')}
               >
                 View on GitHub
               </motion.button>
@@ -346,7 +346,7 @@ const LandingPage: React.FC = () => {
               className="cta-button-secondary"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => window.open('https://github.com', '_blank')}
+              onClick={() => window.open('https://github.com/Arnoldlarry15/red-set-protocell', '_blank')}
             >
               Explore on GitHub
               <Github size={16} />

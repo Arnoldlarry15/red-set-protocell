@@ -16,17 +16,18 @@ Key Features:
 This transforms the system from random mutation to directed evolution.
 """
 
-import random
 import hashlib
+import random
 import time
-from typing import List, Dict, Any, Optional, Set
-from enum import Enum
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 
 class SelectionStrategy(Enum):
     """Available selection strategies for evolution."""
+
     ELITISM = "elitism"
     TOURNAMENT = "tournament"
     DIVERSITY_PRESERVATION = "diversity_preservation"
@@ -52,6 +53,7 @@ class PromptCandidate:
         novelty_score: Score for novelty relative to high scorers
         performance_history: List of recent scores for performance-based decay
     """
+
     prompt: str
     score: float
     domain: str
@@ -104,8 +106,8 @@ class PromptCandidate:
         features.append(f"punct:{punct_count // 2}")
 
         # Different punctuation types
-        exclamation_count = self.prompt.count('!')
-        question_count = self.prompt.count('?')
+        exclamation_count = self.prompt.count("!")
+        question_count = self.prompt.count("?")
         features.append(f"exclaim:{exclamation_count}")
         features.append(f"question:{question_count}")
 
@@ -118,16 +120,23 @@ class PromptCandidate:
         features.append(f"brackets:{bracket_count}")
 
         # Domain patterns (keywords)
-        keywords = ["ignore", "bypass", "override", "pretend", "hypothetical", "character"]
+        keywords = [
+            "ignore",
+            "bypass",
+            "override",
+            "pretend",
+            "hypothetical",
+            "character",
+        ]
         keyword_count = sum(1 for kw in keywords if kw.lower() in self.prompt.lower())
         features.append(f"keywords:{keyword_count}")
 
         # Sentence structure
-        sentences = self.prompt.split('.')
+        sentences = self.prompt.split(".")
         features.append(f"sentences:{len(sentences) // 2}")
 
         # Newline patterns (multi-line structure)
-        newline_count = self.prompt.count('\n')
+        newline_count = self.prompt.count("\n")
         features.append(f"newlines:{newline_count}")
 
         # Quote patterns
@@ -136,7 +145,7 @@ class PromptCandidate:
 
         # Create hash from structural features
         feature_str = "|".join(sorted(features))
-        return hashlib.md5(feature_str.encode()).hexdigest()[:16]
+        return hashlib.sha256(feature_str.encode()).hexdigest()[:16]
 
     def _compute_semantic_hash(self) -> str:
         """
@@ -153,12 +162,39 @@ class PromptCandidate:
         words = normalized.split()
 
         # Semantic keyword categories
-        instruction_keywords = ["ignore", "disregard", "forget", "bypass", "override", "skip"]
-        roleplay_keywords = ["pretend", "act", "character", "role", "persona", "imagine"]
-        hypothetical_keywords = ["hypothetical", "suppose", "assume", "imagine", "what if"]
+        instruction_keywords = [
+            "ignore",
+            "disregard",
+            "forget",
+            "bypass",
+            "override",
+            "skip",
+        ]
+        roleplay_keywords = [
+            "pretend",
+            "act",
+            "character",
+            "role",
+            "persona",
+            "imagine",
+        ]
+        hypothetical_keywords = [
+            "hypothetical",
+            "suppose",
+            "assume",
+            "imagine",
+            "what if",
+        ]
         system_keywords = ["system", "admin", "root", "developer", "mode", "setting"]
         extraction_keywords = ["reveal", "show", "tell", "extract", "display", "output"]
-        encoding_keywords = ["base64", "encode", "decode", "translate", "cipher", "rot13"]
+        encoding_keywords = [
+            "base64",
+            "encode",
+            "decode",
+            "translate",
+            "cipher",
+            "rot13",
+        ]
 
         # Count presence in each semantic category
         for category, keywords in [
@@ -167,7 +203,7 @@ class PromptCandidate:
             ("hypothetical", hypothetical_keywords),
             ("system", system_keywords),
             ("extraction", extraction_keywords),
-            ("encoding", encoding_keywords)
+            ("encoding", encoding_keywords),
         ]:
             count = sum(1 for kw in keywords if kw in normalized)
             if count > 0:
@@ -196,7 +232,7 @@ class PromptCandidate:
             features.append("neutral")  # Fallback for neutral content
 
         feature_str = "|".join(sorted(features))
-        return hashlib.md5(feature_str.encode()).hexdigest()[:16]
+        return hashlib.sha256(feature_str.encode()).hexdigest()[:16]
 
     def age_in_seconds(self) -> float:
         """Get age of this candidate in seconds."""
@@ -233,7 +269,7 @@ class SelectionEngine:
         tournament_size: int = 3,
         elite_fraction: float = 0.2,
         performance_decay_weight: float = 0.5,
-        single_select_strategy: str = "balanced"
+        single_select_strategy: str = "balanced",
     ):
         """
         Initialize selection engine.
@@ -274,7 +310,7 @@ class SelectionEngine:
         self,
         candidates: List[PromptCandidate],
         strategy: SelectionStrategy = SelectionStrategy.HYBRID,
-        num_select: int = 1
+        num_select: int = 1,
     ) -> List[PromptCandidate]:
         """
         Select candidates using the specified strategy.
@@ -348,7 +384,7 @@ class SelectionEngine:
 
             if decay_periods > 0:
                 # Apply exponential time-based decay
-                time_decay_factor = self.decay_rate ** decay_periods
+                time_decay_factor = self.decay_rate**decay_periods
 
                 # Calculate performance-based decay
                 performance_decay_factor = 1.0
@@ -388,7 +424,7 @@ class SelectionEngine:
                 candidate.novelty_score = 1.0
             else:
                 # Calculate minimum distance to any high scorer
-                min_distance = float('inf')
+                min_distance = float("inf")
 
                 for high_scorer_hash in self.high_scorer_structures:
                     distance = self._hash_distance(candidate.structural_hash, high_scorer_hash)
@@ -424,7 +460,7 @@ class SelectionEngine:
         Update diversity scores based on uniqueness within current population.
         """
         # Count structural hash occurrences
-        hash_counts = defaultdict(int)
+        hash_counts: dict[Any, int] = defaultdict(int)
         for candidate in candidates:
             hash_counts[candidate.structural_hash] += 1
 
@@ -457,11 +493,7 @@ class SelectionEngine:
 
         return candidates
 
-    def _elitism_select(
-        self,
-        candidates: List[PromptCandidate],
-        num_select: int
-    ) -> List[PromptCandidate]:
+    def _elitism_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Elitism selection: Select top performers by score.
 
@@ -470,11 +502,7 @@ class SelectionEngine:
         sorted_candidates = sorted(candidates, key=lambda c: c.score, reverse=True)
         return sorted_candidates[:num_select]
 
-    def _tournament_select(
-        self,
-        candidates: List[PromptCandidate],
-        num_select: int
-    ) -> List[PromptCandidate]:
+    def _tournament_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Tournament selection: Randomly sample and select best.
 
@@ -492,30 +520,19 @@ class SelectionEngine:
 
         return selected
 
-    def _diversity_select(
-        self,
-        candidates: List[PromptCandidate],
-        num_select: int
-    ) -> List[PromptCandidate]:
+    def _diversity_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Diversity selection: Prioritize unique structures.
 
         Maintains variety in the population to prevent premature convergence.
         """
         # Score combining fitness and diversity
-        scored = [
-            (c, c.score * 0.5 + c.diversity_score * 0.5)
-            for c in candidates
-        ]
+        scored = [(c, c.score * 0.5 + c.diversity_score * 0.5) for c in candidates]
         scored.sort(key=lambda x: x[1], reverse=True)
 
         return [c for c, _ in scored[:num_select]]
 
-    def _novelty_select(
-        self,
-        candidates: List[PromptCandidate],
-        num_select: int
-    ) -> List[PromptCandidate]:
+    def _novelty_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Novelty selection: Reward structural differences from high scorers.
 
@@ -523,18 +540,17 @@ class SelectionEngine:
         """
         # Score combining fitness and novelty
         scored = [
-            (c, c.score * (1 - self.novelty_weight) + c.novelty_score * self.novelty_weight)
+            (
+                c,
+                c.score * (1 - self.novelty_weight) + c.novelty_score * self.novelty_weight,
+            )
             for c in candidates
         ]
         scored.sort(key=lambda x: x[1], reverse=True)
 
         return [c for c, _ in scored[:num_select]]
 
-    def _hybrid_select(
-        self,
-        candidates: List[PromptCandidate],
-        num_select: int
-    ) -> List[PromptCandidate]:
+    def _hybrid_select(self, candidates: List[PromptCandidate], num_select: int) -> List[PromptCandidate]:
         """
         Hybrid selection: Combine multiple strategies.
 
@@ -548,7 +564,10 @@ class SelectionEngine:
                 # Use complementary weights to ensure they sum to 1.0
                 novelty_component_weight = 1.0 - self.SINGLE_SELECT_FITNESS_WEIGHT
                 scored = [
-                    (c, c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * novelty_component_weight)
+                    (
+                        c,
+                        c.score * self.SINGLE_SELECT_FITNESS_WEIGHT + c.novelty_score * novelty_component_weight,
+                    )
                     for c in candidates
                 ]
                 scored.sort(key=lambda x: x[1], reverse=True)
@@ -571,7 +590,7 @@ class SelectionEngine:
             num_diverse = num_select - num_elite - num_novelty
 
         selected = []
-        selected_set = set()  # Track IDs for O(1) lookup
+        selected_set: set[Any] = set()  # Track IDs for O(1) lookup
 
         # Elite selection
         elite = self._elitism_select(candidates, num_elite)
@@ -598,16 +617,18 @@ class SelectionEngine:
     def get_statistics(self) -> Dict[str, Any]:
         """Get selection statistics."""
         return {
-            'high_scorer_count': len(self.high_scorer_structures),
-            'pattern_usage_count': len(self.pattern_usage),
-            'semantic_pattern_usage_count': len(self.semantic_pattern_usage),
-            'most_used_pattern_count': max(self.pattern_usage.values()) if self.pattern_usage else 0,
-            'most_used_semantic_pattern_count': max(self.semantic_pattern_usage.values()) if self.semantic_pattern_usage else 0,
-            'decay_rate': self.decay_rate,
-            'novelty_weight': self.novelty_weight,
-            'diversity_weight': self.diversity_weight,
-            'performance_decay_weight': self.performance_decay_weight,
-            'single_select_strategy': self.single_select_strategy
+            "high_scorer_count": len(self.high_scorer_structures),
+            "pattern_usage_count": len(self.pattern_usage),
+            "semantic_pattern_usage_count": len(self.semantic_pattern_usage),
+            "most_used_pattern_count": (max(self.pattern_usage.values()) if self.pattern_usage else 0),
+            "most_used_semantic_pattern_count": (
+                max(self.semantic_pattern_usage.values()) if self.semantic_pattern_usage else 0
+            ),
+            "decay_rate": self.decay_rate,
+            "novelty_weight": self.novelty_weight,
+            "diversity_weight": self.diversity_weight,
+            "performance_decay_weight": self.performance_decay_weight,
+            "single_select_strategy": self.single_select_strategy,
         }
 
     def reset_pattern_tracking(self):

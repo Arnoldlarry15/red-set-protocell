@@ -9,8 +9,8 @@ Example output:
     After:  "score = 0.62 ± 0.08 (CI: 0.54-0.70)"
 """
 
-from app.engines.scoring import ScoringEngine
 from app.agents.spotter import Spotter
+from app.engines.scoring import ScoringEngine
 
 
 def run_basic_uncertainty():
@@ -33,35 +33,45 @@ def run_basic_uncertainty():
 
     # Create evaluation with uncertainty
     evaluation = engine.create_evaluation(
-        eval_result['l1'],
-        eval_result['l2'],
-        eval_result['l3'],
-        eval_result['mutation_guidance']
+        eval_result["l1"],
+        eval_result["l2"],
+        eval_result["l3"],
+        eval_result["mutation_guidance"],
     )
 
     # Display results with uncertainty
     print(f"\nL1 (Linguistic Safety):")
     print(f"  Score: {evaluation.l1_linguistic_safety.score:.3f}")
     print(f"  Uncertainty: ±{evaluation.l1_linguistic_safety.uncertainty:.3f}")
-    print(f"  Confidence Interval: [{evaluation.l1_linguistic_safety.confidence_interval_lower:.3f}, "
-          f"{evaluation.l1_linguistic_safety.confidence_interval_upper:.3f}]")
+    print(
+        f"  Confidence Interval: [{evaluation.l1_linguistic_safety.confidence_interval_lower:.3f}, "
+        f"{evaluation.l1_linguistic_safety.confidence_interval_upper:.3f}]"
+    )
 
     print(f"\nL2 (Security Exploitability):")
     print(f"  Score: {evaluation.l2_security_exploitability.score:.3f}")
     print(f"  Uncertainty: ±{evaluation.l2_security_exploitability.uncertainty:.3f}")
-    print(f"  Confidence Interval: [{evaluation.l2_security_exploitability.confidence_interval_lower:.3f}, "
-          f"{evaluation.l2_security_exploitability.confidence_interval_upper:.3f}]")
+    print(
+        f"  Confidence Interval: [{evaluation.l2_security_exploitability.confidence_interval_lower:.3f}, "
+        f"{evaluation.l2_security_exploitability.confidence_interval_upper:.3f}]"
+    )
 
     print(f"\nL3 (Cognitive Stability):")
     print(f"  Score: {evaluation.l3_cognitive_stability.score:.3f}")
     print(f"  Uncertainty: ±{evaluation.l3_cognitive_stability.uncertainty:.3f}")
-    print(f"  Confidence Interval: [{evaluation.l3_cognitive_stability.confidence_interval_lower:.3f}, "
-          f"{evaluation.l3_cognitive_stability.confidence_interval_upper:.3f}]")
+    print(
+        f"  Confidence Interval: [{evaluation.l3_cognitive_stability.confidence_interval_lower:.3f}, "
+        f"{evaluation.l3_cognitive_stability.confidence_interval_upper:.3f}]"
+    )
 
     print(f"\n{'='*30}")
-    print(f"GLOBAL SCORE: {evaluation.global_score:.3f} ± {evaluation.global_uncertainty:.3f}")
-    print(f"Confidence Interval: [{evaluation.global_confidence_interval[0]:.3f}, "
-          f"{evaluation.global_confidence_interval[1]:.3f}]")
+    print(
+        f"GLOBAL SCORE: {evaluation.global_score:.3f} ± {evaluation.global_uncertainty:.3f}"
+    )
+    print(
+        f"Confidence Interval: [{evaluation.global_confidence_interval[0]:.3f}, "
+        f"{evaluation.global_confidence_interval[1]:.3f}]"
+    )
     print(f"{'='*30}")
 
     print("\n✓ This provides much richer information than a point estimate!")
@@ -90,10 +100,14 @@ def run_multi_pass_agreement():
     print(f"\nRunning {multi_pass_result['pass_count']} evaluation passes...")
 
     # Aggregate results
-    aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result['evaluations'])
+    aggregated = engine.aggregate_multi_pass_evaluations(
+        multi_pass_result["evaluations"]
+    )
 
     print(f"\nAggregated Results:")
-    print(f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}")
+    print(
+        f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}"
+    )
     print(f"  Multi-Pass Agreement: {aggregated.multi_pass_agreement:.3f}")
 
     if aggregated.multi_pass_agreement > 0.9:
@@ -142,17 +156,17 @@ def run_cross_spotter_evaluation():
 
     # Create evaluations
     eval1 = engine.create_evaluation(
-        cross_result['evaluation_1']['l1'],
-        cross_result['evaluation_1']['l2'],
-        cross_result['evaluation_1']['l3'],
-        cross_result['evaluation_1'].get('mutation_guidance', {})
+        cross_result["evaluation_1"]["l1"],
+        cross_result["evaluation_1"]["l2"],
+        cross_result["evaluation_1"]["l3"],
+        cross_result["evaluation_1"].get("mutation_guidance", {}),
     )
 
     eval2 = engine.create_evaluation(
-        cross_result['evaluation_2']['l1'],
-        cross_result['evaluation_2']['l2'],
-        cross_result['evaluation_2']['l3'],
-        cross_result['evaluation_2'].get('mutation_guidance', {})
+        cross_result["evaluation_2"]["l1"],
+        cross_result["evaluation_2"]["l2"],
+        cross_result["evaluation_2"]["l3"],
+        cross_result["evaluation_2"].get("mutation_guidance", {}),
     )
 
     # Compute delta
@@ -198,25 +212,39 @@ def run_scientific_format():
     response = "I apologize, but I cannot help with that request."
 
     multi_pass_result = spotter.evaluate_with_paraphrase(response)
-    aggregated = engine.aggregate_multi_pass_evaluations(multi_pass_result['evaluations'])
+    aggregated = engine.aggregate_multi_pass_evaluations(
+        multi_pass_result["evaluations"]
+    )
 
     print("\nBEFORE (Traditional Output):")
     print("  Global Score: 0.234")
     print()
 
     print("AFTER (Scientific Output with Uncertainty):")
-    print(f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}")
-    print(f"  95% Confidence Interval: [{aggregated.global_confidence_interval[0]:.3f}, "
-          f"{aggregated.global_confidence_interval[1]:.3f}]")
-    print(f"  Multi-Pass Agreement: {aggregated.multi_pass_agreement:.3f} (n={multi_pass_result['pass_count']})")
+    print(
+        f"  Global Score: {aggregated.global_score:.3f} ± {aggregated.global_uncertainty:.3f}"
+    )
+    print(
+        f"  95% Confidence Interval: [{aggregated.global_confidence_interval[0]:.3f}, "
+        f"{aggregated.global_confidence_interval[1]:.3f}]"
+    )
+    print(
+        f"  Multi-Pass Agreement: {aggregated.multi_pass_agreement:.3f} (n={multi_pass_result['pass_count']})"
+    )
     print()
     print("  Layer Breakdown:")
-    print(f"    L1: {aggregated.l1_linguistic_safety.score:.3f} ± "
-          f"{aggregated.l1_linguistic_safety.uncertainty:.3f}")
-    print(f"    L2: {aggregated.l2_security_exploitability.score:.3f} ± "
-          f"{aggregated.l2_security_exploitability.uncertainty:.3f}")
-    print(f"    L3: {aggregated.l3_cognitive_stability.score:.3f} ± "
-          f"{aggregated.l3_cognitive_stability.uncertainty:.3f}")
+    print(
+        f"    L1: {aggregated.l1_linguistic_safety.score:.3f} ± "
+        f"{aggregated.l1_linguistic_safety.uncertainty:.3f}"
+    )
+    print(
+        f"    L2: {aggregated.l2_security_exploitability.score:.3f} ± "
+        f"{aggregated.l2_security_exploitability.uncertainty:.3f}"
+    )
+    print(
+        f"    L3: {aggregated.l3_cognitive_stability.score:.3f} ± "
+        f"{aggregated.l3_cognitive_stability.uncertainty:.3f}"
+    )
 
     print("\n✓ This format is:")
     print("  - Scientifically rigorous (includes uncertainty quantification)")

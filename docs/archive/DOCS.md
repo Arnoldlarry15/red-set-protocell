@@ -8,91 +8,91 @@ Red Set ProtoCell has comprehensive documentation organized across multiple file
 
 | Document | Purpose | Audience |
 |----------|---------|----------|
-| [README.md](README.md) | Project overview, quick start, comprehensive guide | All users |
-| [rsp-core/README.md](rsp-core/README.md) | Technical deep dive, API reference, deployment | Developers, DevOps |
+| `README.md` (archived reference: README.md) | Project overview, quick start, comprehensive guide | All users |
+| `rsp-core/README.md` (archived reference: rsp-core/README.md) | Technical deep dive, API reference, deployment | Developers, DevOps |
 | [IMPLEMENTATION.md](IMPLEMENTATION.md) | Implementation summary, compliance checklist | Contributors, auditors |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Contribution guidelines, development workflow | Contributors |
-| [SECURITY.md](SECURITY.md) | Security policy, best practices, disclosure | Security researchers, users |
+| `CONTRIBUTING.md` (archived reference: CONTRIBUTING.md) | Contribution guidelines, development workflow | Contributors |
+| `SECURITY.md` (archived reference: SECURITY.md) | Security policy, best practices, disclosure | Security researchers, users |
 
 ## 🎯 Quick Navigation
 
 ### For First-Time Users
 
 **Just getting started?**
-1. Read [README.md § Overview](README.md#overview) to understand what RSP does
-2. Follow [README.md § Quick Start](README.md#quick-start) for 5-minute setup
-3. Review [README.md § Usage Guide](README.md#usage-guide) for basic usage
+1. Read `README.md § Overview` (archived reference: README.md#overview) to understand what RSP does
+2. Follow `README.md § Quick Start` (archived reference: README.md#quick-start) for 5-minute setup
+3. Review `README.md § Usage Guide` (archived reference: README.md#usage-guide) for basic usage
 
 **Want to learn more?**
-1. Explore [README.md § Architecture](README.md#architecture) for system design
-2. Check [README.md § Key Features](README.md#key-features) for capabilities
-3. Read [README.md § FAQ](README.md#faq) for common questions
+1. Explore `README.md § Architecture` (archived reference: README.md#architecture) for system design
+2. Check `README.md § Key Features` (archived reference: README.md#key-features) for capabilities
+3. Read `README.md § FAQ` (archived reference: README.md#faq) for common questions
 
 ### For Developers
 
 **Setting up development environment?**
-1. Read [CONTRIBUTING.md § Getting Started](CONTRIBUTING.md#getting-started)
-2. Follow [rsp-core/README.md § Installation](rsp-core/README.md#installation)
-3. Review [CONTRIBUTING.md § Development Workflow](CONTRIBUTING.md#development-workflow)
+1. Read `CONTRIBUTING.md § Getting Started` (archived reference: CONTRIBUTING.md#getting-started)
+2. Follow `rsp-core/README.md § Installation` (archived reference: rsp-core/README.md#installation)
+3. Review `CONTRIBUTING.md § Development Workflow` (archived reference: CONTRIBUTING.md#development-workflow)
 
 **Working with the codebase?**
-1. Understand [rsp-core/README.md § Component Architecture Details](rsp-core/README.md#component-architecture-details)
-2. Review [rsp-core/README.md § Configuration Reference](rsp-core/README.md#configuration-reference)
+1. Understand `rsp-core/README.md § Component Architecture Details` (archived reference: rsp-core/README.md#component-architecture-details)
+2. Review `rsp-core/README.md § Configuration Reference` (archived reference: rsp-core/README.md#configuration-reference)
 3. Check [IMPLEMENTATION.md § Architecture Components](IMPLEMENTATION.md#architecture-components)
 
 **Adding new features?**
-1. Read [CONTRIBUTING.md § Coding Standards](CONTRIBUTING.md#coding-standards)
-2. Review [README.md § Development](README.md#development)
-3. Follow [rsp-core/README.md § Advanced Topics](rsp-core/README.md#advanced-topics)
+1. Read `CONTRIBUTING.md § Coding Standards` (archived reference: CONTRIBUTING.md#coding-standards)
+2. Review `README.md § Development` (archived reference: README.md#development)
+3. Follow `rsp-core/README.md § Advanced Topics` (archived reference: rsp-core/README.md#advanced-topics)
 
 ### For DevOps/Deployment
 
 **Deploying RSP?**
-1. Review [README.md § Installation](README.md#installation)
-2. Follow [rsp-core/README.md § Deployment Scenarios](rsp-core/README.md#deployment-scenarios)
-3. Check [SECURITY.md § Security Best Practices](SECURITY.md#security-best-practices)
+1. Review `README.md § Installation` (archived reference: README.md#installation)
+2. Follow `rsp-core/README.md § Deployment Scenarios` (archived reference: rsp-core/README.md#deployment-scenarios)
+3. Check `SECURITY.md § Security Best Practices` (archived reference: SECURITY.md#security-best-practices)
 
 **Production deployment?**
-1. Read [README.md § Deployment](README.md#deployment)
-2. Review [rsp-core/README.md § Production Environment](rsp-core/README.md#production-environment)
-3. Follow [SECURITY.md § For Users](SECURITY.md#for-users)
+1. Read `README.md § Deployment` (archived reference: README.md#deployment)
+2. Review `rsp-core/README.md § Production Environment` (archived reference: rsp-core/README.md#production-environment)
+3. Follow `SECURITY.md § For Users` (archived reference: SECURITY.md#for-users)
 
 **Troubleshooting issues?**
-1. Check [README.md § Troubleshooting](README.md#troubleshooting)
-2. Review [rsp-core/README.md § Troubleshooting Guide](rsp-core/README.md#troubleshooting-guide)
+1. Check `README.md § Troubleshooting` (archived reference: README.md#troubleshooting)
+2. Review `rsp-core/README.md § Troubleshooting Guide` (archived reference: rsp-core/README.md#troubleshooting-guide)
 3. Search [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
 
 ### For Security Researchers
 
 **Understanding security model?**
-1. Read [README.md § Core Principles](README.md#core-principles)
-2. Review [SECURITY.md § Security Features](SECURITY.md#security-features)
-3. Check [rsp-core/README.md § Security Best Practices](rsp-core/README.md#security-best-practices)
+1. Read `README.md § Core Principles` (archived reference: README.md#core-principles)
+2. Review `SECURITY.md § Security Features` (archived reference: SECURITY.md#security-features)
+3. Check `rsp-core/README.md § Security Best Practices` (archived reference: rsp-core/README.md#security-best-practices)
 
 **Found a vulnerability?**
-1. Read [SECURITY.md § Reporting a Vulnerability](SECURITY.md#reporting-a-vulnerability)
+1. Read `SECURITY.md § Reporting a Vulnerability` (archived reference: SECURITY.md#reporting-a-vulnerability)
 2. Follow responsible disclosure process
 3. DO NOT open public issues for vulnerabilities
 
 **Contributing security improvements?**
-1. Review [CONTRIBUTING.md § Ethical Guidelines](CONTRIBUTING.md#ethical-guidelines)
-2. Follow [CONTRIBUTING.md § Pull Request Process](CONTRIBUTING.md#pull-request-process)
-3. Check [SECURITY.md § For Developers](SECURITY.md#for-developers)
+1. Review `CONTRIBUTING.md § Ethical Guidelines` (archived reference: CONTRIBUTING.md#ethical-guidelines)
+2. Follow `CONTRIBUTING.md § Pull Request Process` (archived reference: CONTRIBUTING.md#pull-request-process)
+3. Check `SECURITY.md § For Developers` (archived reference: SECURITY.md#for-developers)
 
 ### For Contributors
 
 **Want to contribute?**
-1. Read [CONTRIBUTING.md](CONTRIBUTING.md) in full
-2. Review [README.md § Contributing](README.md#contributing)
-3. Check [CONTRIBUTING.md § How to Contribute](CONTRIBUTING.md#how-to-contribute)
+1. Read `CONTRIBUTING.md` (archived reference: CONTRIBUTING.md) in full
+2. Review `README.md § Contributing` (archived reference: README.md#contributing)
+3. Check `CONTRIBUTING.md § How to Contribute` (archived reference: CONTRIBUTING.md#how-to-contribute)
 
 **Submitting a PR?**
-1. Follow [CONTRIBUTING.md § Pull Request Process](CONTRIBUTING.md#pull-request-process)
-2. Review [CONTRIBUTING.md § Testing Requirements](CONTRIBUTING.md#testing-requirements)
-3. Check [CONTRIBUTING.md § Code Standards](CONTRIBUTING.md#coding-standards)
+1. Follow `CONTRIBUTING.md § Pull Request Process` (archived reference: CONTRIBUTING.md#pull-request-process)
+2. Review `CONTRIBUTING.md § Testing Requirements` (archived reference: CONTRIBUTING.md#testing-requirements)
+3. Check `CONTRIBUTING.md § Code Standards` (archived reference: CONTRIBUTING.md#coding-standards)
 
 **Working on documentation?**
-1. Read [CONTRIBUTING.md § Documentation](CONTRIBUTING.md#documentation)
+1. Read `CONTRIBUTING.md § Documentation` (archived reference: CONTRIBUTING.md#documentation)
 2. Review existing documentation structure
 3. Follow Markdown best practices
 
@@ -256,7 +256,7 @@ All documentation follows these standards:
 Can't find what you need?
 
 1. **Search the docs**: Use Ctrl+F or GitHub search
-2. **Check FAQ**: [README.md § FAQ](README.md#faq)
+2. **Check FAQ**: `README.md § FAQ` (archived reference: README.md#faq)
 3. **Browse issues**: [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
 4. **Ask in discussions**: [GitHub Discussions](https://github.com/Arnoldlarry15/red-set-protocell/discussions)
 5. **Read IMPLEMENTATION.md**: Detailed implementation summary
@@ -270,7 +270,7 @@ Documentation is actively maintained and updated with each release.
 
 To suggest documentation improvements:
 1. Open an issue with label `documentation`
-2. Submit a PR following [CONTRIBUTING.md](CONTRIBUTING.md)
+2. Submit a PR following `CONTRIBUTING.md` (archived reference: CONTRIBUTING.md)
 
 ---
 

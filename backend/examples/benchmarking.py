@@ -8,9 +8,9 @@ import asyncio
 import logging
 
 from app.benchmarking import (
-    BenchmarkSuite,
     BenchmarkConfig,
     BenchmarkRunner,
+    BenchmarkSuite,
     create_standard_benchmarks,
 )
 from app.core.config import load_config_from_env
@@ -29,18 +29,21 @@ async def run_quick_benchmark():
 
     # Get standard benchmark configs
     benchmarks = create_standard_benchmarks()
-    quick_config = benchmarks['quick']
+    quick_config = benchmarks["quick"]
 
     # Setup RSP system - load from environment to respect BACKEND_TYPE and API keys
     config = load_config_from_env()
     config.orchestrator.max_rounds = quick_config.rounds
-    
+
     # Verify API key is available
     import os
+
     if not config.target.api_key:
         logger.error("No API key found in configuration.")
         logger.info("Set appropriate environment variables:")
-        logger.info("  - For OpenRouter: BACKEND_TYPE=openrouter and OPENROUTER_API_KEY")
+        logger.info(
+            "  - For OpenRouter: BACKEND_TYPE=openrouter and OPENROUTER_API_KEY"
+        )
         logger.info("  - For OpenAI: OPENAI_API_KEY (default backend)")
         logger.info("  - For Anthropic: BACKEND_TYPE=anthropic and ANTHROPIC_API_KEY")
         return
@@ -58,7 +61,7 @@ async def run_quick_benchmark():
         config=quick_config,
         model_name=config.target.model_name,
         model_version="latest",
-        backend=backend_name
+        backend=backend_name,
     )
 
     logger.info("Benchmark completed!")
@@ -76,7 +79,7 @@ async def run_model_comparison():
     # Load actual benchmark results for comparison
     import os
     from pathlib import Path
-    
+
     results_dir = Path("example_benchmarks")
     if not results_dir.exists() or len(list(results_dir.glob("*.json"))) < 2:
         logger.warning("Not enough benchmark results found for comparison.")
@@ -88,15 +91,17 @@ async def run_model_comparison():
         logger.info("- Execution time comparison")
         logger.info("- Automated verdict and recommendations")
         return
-    
+
     # Load two most recent results
-    result_files = sorted(results_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)
+    result_files = sorted(
+        results_dir.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True
+    )
     baseline = suite.load_result(result_files[1])
     comparison = suite.load_result(result_files[0])
-    
+
     # Generate comparison report
     report = suite.compare_results(baseline, comparison)
-    
+
     logger.info(f"Baseline: {baseline.model_name} v{baseline.model_version}")
     logger.info(f"Comparison: {comparison.model_name} v{comparison.model_version}")
     logger.info(f"Verdict: {report.verdict}")
@@ -105,12 +110,14 @@ async def run_model_comparison():
 
 def main():
     """Main function."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Red Set ProtoCell - Automated Benchmarking")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     print("This shows the automated benchmarking capabilities:")
-    print("1. Standard benchmark configurations (quick, standard, comprehensive, stress)")
+    print(
+        "1. Standard benchmark configurations (quick, standard, comprehensive, stress)"
+    )
     print("2. Automated benchmark execution and result storage")
     print("3. Model version comparison with statistical analysis")
     print("4. Benchmark report generation")
@@ -120,9 +127,9 @@ def main():
     asyncio.run(run_quick_benchmark())
     asyncio.run(run_model_comparison())
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Examples completed!")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

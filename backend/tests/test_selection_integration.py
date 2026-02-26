@@ -3,7 +3,8 @@ Integration tests for Selection Engine with Sniper Agent
 """
 
 import pytest
-from app.agents.sniper import Sniper, AttackDomain
+
+from app.agents.sniper import AttackDomain, Sniper
 from app.engines.mutation import MutationEngine
 from app.engines.selection import SelectionEngine, SelectionStrategy
 
@@ -18,7 +19,7 @@ async def test_sniper_with_selection_engine():
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.HYBRID
+        selection_strategy=SelectionStrategy.HYBRID,
     )
 
     # Generate some prompts
@@ -39,7 +40,7 @@ async def test_sniper_score_updates():
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.HYBRID
+        selection_strategy=SelectionStrategy.HYBRID,
     )
 
     # Generate prompts and update scores immediately
@@ -65,7 +66,7 @@ async def test_sniper_evolution_with_selection():
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.ELITISM
+        selection_strategy=SelectionStrategy.ELITISM,
     )
 
     # Generate initial prompts
@@ -89,7 +90,7 @@ async def test_sniper_pool_size_limit():
     sniper = Sniper(
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
-        selection_engine=selection_engine
+        selection_engine=selection_engine,
     )
 
     # Generate more prompts than pool size
@@ -111,7 +112,7 @@ async def test_sniper_diversity_selection():
         mutation_engine=mutation_engine,
         evolution_pool_size=10,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.DIVERSITY_PRESERVATION
+        selection_strategy=SelectionStrategy.DIVERSITY_PRESERVATION,
     )
 
     # Generate prompts with varied scores
@@ -133,7 +134,7 @@ async def test_sniper_novelty_selection():
         mutation_engine=mutation_engine,
         evolution_pool_size=10,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.NOVELTY_SEARCH
+        selection_strategy=SelectionStrategy.NOVELTY_SEARCH,
     )
 
     # Generate prompts
@@ -155,7 +156,7 @@ async def test_sniper_statistics_with_selection():
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.HYBRID
+        selection_strategy=SelectionStrategy.HYBRID,
     )
 
     # Generate some prompts
@@ -166,11 +167,11 @@ async def test_sniper_statistics_with_selection():
     # Get statistics
     stats = sniper.get_statistics()
 
-    assert 'total_generated' in stats
-    assert 'evolution_pool_size' in stats
-    assert 'selection_strategy' in stats
-    assert 'selection_stats' in stats
-    assert stats['selection_strategy'] == 'hybrid'
+    assert "total_generated" in stats
+    assert "evolution_pool_size" in stats
+    assert "selection_strategy" in stats
+    assert "selection_stats" in stats
+    assert stats["selection_strategy"] == "hybrid"
 
 
 @pytest.mark.asyncio
@@ -179,10 +180,7 @@ async def test_sniper_without_selection_engine():
     mutation_engine = MutationEngine(mutation_rate=0.7)
 
     # Don't provide selection engine - should use default
-    sniper = Sniper(
-        mutation_engine=mutation_engine,
-        evolution_pool_size=5
-    )
+    sniper = Sniper(mutation_engine=mutation_engine, evolution_pool_size=5)
 
     # Should still work
     prompt, domain = await sniper.generate_prompt()
@@ -202,7 +200,7 @@ async def test_sniper_decay_over_time():
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
         selection_engine=selection_engine,
-        selection_strategy=SelectionStrategy.ELITISM
+        selection_strategy=SelectionStrategy.ELITISM,
     )
 
     # Generate old prompt with high score
@@ -229,7 +227,7 @@ async def test_sniper_overfitting_detection():
     sniper = Sniper(
         mutation_engine=mutation_engine,
         evolution_pool_size=5,
-        selection_engine=selection_engine
+        selection_engine=selection_engine,
     )
 
     # Generate and score prompts
@@ -239,4 +237,4 @@ async def test_sniper_overfitting_detection():
 
     # System should track pattern usage
     stats = sniper.get_statistics()
-    assert 'selection_stats' in stats
+    assert "selection_stats" in stats

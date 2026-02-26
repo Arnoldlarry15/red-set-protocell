@@ -9,15 +9,16 @@ Implements:
 - Error tracking integration points
 """
 
+import json
+import logging
+import sys
+import time
+import traceback
+from datetime import datetime
+from typing import Any, Dict
+
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Dict, Any
-from datetime import datetime
-import time
-import logging
-import json
-import traceback
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class StructuredLogger:
             "timestamp": datetime.utcnow().isoformat(),
             "level": level,
             "message": message,
-            **kwargs
+            **kwargs,
         }
 
         if level == "error":
@@ -70,10 +71,10 @@ class JSONFormatter(logging.Formatter):
 
         # Add exception info if present
         if record.exc_info:
-            log_data["exception"] = {
-                "type": record.exc_info[0].__name__,
+            log_data["exception"] = {  # type: ignore[assignment]
+                "type": record.exc_info[0].__name__ if record.exc_info[0] else "Unknown",  # type: ignore[union-attr]
                 "message": str(record.exc_info[1]),
-                "traceback": traceback.format_exception(*record.exc_info)
+                "traceback": traceback.format_exception(*record.exc_info),
             }
 
         return json.dumps(log_data)
@@ -173,12 +174,10 @@ class MetricsCollector:
 
         # By status code
         status_key = str(status_code)
-        self.metrics["requests_by_status"][status_key] = \
-            self.metrics["requests_by_status"].get(status_key, 0) + 1
+        self.metrics["requests_by_status"][status_key] = self.metrics["requests_by_status"].get(status_key, 0) + 1
 
         # By endpoint
-        self.metrics["requests_by_endpoint"][endpoint] = \
-            self.metrics["requests_by_endpoint"].get(endpoint, 0) + 1
+        self.metrics["requests_by_endpoint"][endpoint] = self.metrics["requests_by_endpoint"].get(endpoint, 0) + 1
 
         # Track errors
         if status_code >= 500:
@@ -194,10 +193,8 @@ class MetricsCollector:
 
         # Calculate derived metrics
         if metrics["requests_total"] > 0:
-            metrics["average_duration_ms"] = \
-                metrics["total_duration_ms"] / metrics["requests_total"]
-            metrics["error_rate"] = \
-                metrics["errors_total"] / metrics["requests_total"]
+            metrics["average_duration_ms"] = metrics["total_duration_ms"] / metrics["requests_total"]
+            metrics["error_rate"] = metrics["errors_total"] / metrics["requests_total"]
         else:
             metrics["average_duration_ms"] = 0
             metrics["error_rate"] = 0
@@ -234,7 +231,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             self.collector.record_request(
                 endpoint=request.url.path,
                 status_code=response.status_code,
-                duration_ms=duration_ms
+                duration_ms=duration_ms,
             )
 
             return response
@@ -242,11 +239,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         except Exception:
             # Record error
             duration_ms = (time.time() - start_time) * 1000
-            self.collector.record_request(
-                endpoint=request.url.path,
-                status_code=500,
-                duration_ms=duration_ms
-            )
+            self.collector.record_request(endpoint=request.url.path, status_code=500, duration_ms=duration_ms)
             raise
 
 
@@ -271,7 +264,7 @@ class HealthCheck:
         results = {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
-            "checks": {}
+            "checks": {},
         }
 
         for name, check_fn in self.checks.items():
@@ -285,19 +278,13 @@ class HealthCheck:
                     # Not a function, use as-is (e.g., boolean value)
                     check_result = check_fn
 
-                results["checks"][name] = {
-                    "status": "pass" if check_result else "fail",
-                    "details": check_result
-                }
+                results["checks"][name] = {"status": "pass" if check_result else "fail", "details": check_result}  # type: ignore[index]
 
                 if not check_result:
                     results["status"] = "degraded"
 
             except Exception as e:
-                results["checks"][name] = {
-                    "status": "fail",
-                    "error": str(e)
-                }
+                results["checks"][name] = {"status": "fail", "error": str(e)}  # type: ignore[index]
                 results["status"] = "unhealthy"
 
         return results

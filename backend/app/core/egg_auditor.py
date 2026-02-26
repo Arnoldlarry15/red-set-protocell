@@ -28,10 +28,10 @@ Examples of what EGGAuditor looks for:
 - Context that suggests harmful intent despite pattern evasion
 """
 
-import re
 import logging
-from typing import List, Dict, Optional
+import re
 from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AuditResult:
     """Result of EGG audit."""
+
     prompt_fingerprint: str
     egg_decision: bool  # True = allowed, False = blocked
     audit_flags: List[str]  # List of suspicious characteristics detected
@@ -55,21 +56,21 @@ class EGGAuditor:
 
     # Suspicious patterns that suggest evasion attempts
     EVASION_INDICATORS = {
-        'leet_speak': r'[l1][e3]{2}[t]|[h4][a@][c]{1,2}[k]|[p][w][n]',  # Matches l33t, h4ck, pwn
+        "leet_speak": r"[l1][e3]{2}[t]|[h4][a@][c]{1,2}[k]|[p][w][n]",  # Matches l33t, h4ck, pwn
         # Note: Only detects Cyrillic homoglyphs that look like Latin characters.
         # Other Unicode homoglyphs exist (Greek, mathematical symbols) but are less common.
-        'homoglyphs': r'[а-яА-Я]',  # Cyrillic characters that look like Latin
-        'excessive_spacing': r'\b[a-z]\s+[a-z]\s+[a-z]',  # C h a r a c t e r  s p a c i n g
-        'unicode_tricks': r'[\u200b-\u200f\u2060-\u2069]',  # Zero-width and invisible chars
-        'base64_like': r'[A-Za-z0-9+/]{16,}={0,2}',  # Base64 encoded content
-        'rot13_like': r'\b[nopqrstuvwxyzabcdefghijklm]{8,}\b',  # ROT13 obfuscation
+        "homoglyphs": r"[а-яА-Я]",  # Cyrillic characters that look like Latin
+        "excessive_spacing": r"\b[a-z]\s+[a-z]\s+[a-z]",  # C h a r a c t e r  s p a c i n g
+        "unicode_tricks": r"[\u200b-\u200f\u2060-\u2069]",  # Zero-width and invisible chars
+        "base64_like": r"[A-Za-z0-9+/]{16,}={0,2}",  # Base64 encoded content
+        "rot13_like": r"\b[nopqrstuvwxyzabcdefghijklm]{8,}\b",  # ROT13 obfuscation
     }
 
     # High-risk keywords (more generic than EGG patterns)
     RISK_KEYWORDS = {
-        'exploit': ['vulnerability', 'exploit', 'payload', 'shellcode', 'overflow'],
-        'harmful': ['weapon', 'harm', 'attack', 'illegal', 'unauthorized'],
-        'csam': ['child', 'minor', 'underage'],
+        "exploit": ["vulnerability", "exploit", "payload", "shellcode", "overflow"],
+        "harmful": ["weapon", "harm", "attack", "illegal", "unauthorized"],
+        "csam": ["child", "minor", "underage"],
     }
 
     def __init__(self, enabled: bool = True, log_audit_failures: bool = True):
@@ -89,12 +90,7 @@ class EGGAuditor:
 
         logger.info(f"EGGAuditor initialized - Enabled: {enabled}")
 
-    def audit_decision(
-        self,
-        prompt: str,
-        egg_allowed: bool,
-        egg_blocked_category: Optional[str] = None
-    ) -> AuditResult:
+    def audit_decision(self, prompt: str, egg_allowed: bool, egg_blocked_category: Optional[str] = None) -> AuditResult:
         """
         Audit an EGG decision.
 
@@ -112,13 +108,14 @@ class EGGAuditor:
                 egg_decision=egg_allowed,
                 audit_flags=[],
                 confidence=0.0,
-                notes="Auditor disabled"
+                notes="Auditor disabled",
             )
 
         self.audit_count += 1
 
         # Compute fingerprint (same as EGG)
         from app.core.security import hash_prompt
+
         fingerprint = hash_prompt(prompt)
 
         # Only audit prompts that EGG allowed through
@@ -128,7 +125,7 @@ class EGGAuditor:
                 egg_decision=egg_allowed,
                 audit_flags=[],
                 confidence=0.0,
-                notes=f"EGG correctly blocked (category: {egg_blocked_category})"
+                notes=f"EGG correctly blocked (category: {egg_blocked_category})",
             )
 
         # Check for evasion indicators
@@ -166,7 +163,7 @@ class EGGAuditor:
             egg_decision=egg_allowed,
             audit_flags=flags,
             confidence=confidence,
-            notes=f"Audited {len(flags)} suspicious characteristics"
+            notes=f"Audited {len(flags)} suspicious characteristics",
         )
 
         # Store in history (keep last 100)
@@ -179,10 +176,10 @@ class EGGAuditor:
     def get_statistics(self) -> Dict:
         """Get audit statistics."""
         return {
-            'enabled': self.enabled,
-            'total_audited': self.audit_count,
-            'flagged_count': self.flagged_count,
-            'flagged_rate': self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0,
+            "enabled": self.enabled,
+            "total_audited": self.audit_count,
+            "flagged_count": self.flagged_count,
+            "flagged_rate": (self.flagged_count / self.audit_count if self.audit_count > 0 else 0.0),
         }
 
     def get_high_confidence_failures(self, min_confidence: float = 0.5) -> List[AuditResult]:
@@ -195,7 +192,4 @@ class EGGAuditor:
         Returns:
             List of AuditResult with confidence >= min_confidence
         """
-        return [
-            result for result in self.audit_history
-            if result.egg_decision and result.confidence >= min_confidence
-        ]
+        return [result for result in self.audit_history if result.egg_decision and result.confidence >= min_confidence]

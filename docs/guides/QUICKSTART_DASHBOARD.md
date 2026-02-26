@@ -13,7 +13,7 @@ This guide will help you quickly get started with the new Unified Infrastructure
 ### Install Dependencies
 
 ```bash
-cd rsp-core/backend
+cd backend
 pip install -r requirements.txt
 ```
 
@@ -209,7 +209,7 @@ curl -X POST http://localhost:8000/api/remote/start-run \
 Run the test suite to verify everything works:
 
 ```bash
-cd rsp-core/backend
+cd backend
 python -m pytest tests/test_api_endpoints.py -v
 ```
 
@@ -351,7 +351,7 @@ Before deploying to production:
 
 ## 10. Next Steps
 
-- Read the full documentation: [DASHBOARD_FEATURES.md](DASHBOARD_FEATURES.md)
+- Read the full documentation: [Dashboard Features (archive)](../archive/DASHBOARD_FEATURES.md)
 - Explore the API reference
 - Set up automated benchmarking
 - Configure custom mutation strategies
@@ -359,8 +359,8 @@ Before deploying to production:
 
 ## Support
 
-- Documentation: [README.md](README.md)
-- API Reference: [DASHBOARD_FEATURES.md](DASHBOARD_FEATURES.md)
+- Documentation: [Project README](../../README.md)
+- API Reference: [Dashboard Features (archive)](../archive/DASHBOARD_FEATURES.md)
 - Issues: [GitHub Issues](https://github.com/Arnoldlarry15/red-set-protocell/issues)
 
 ---

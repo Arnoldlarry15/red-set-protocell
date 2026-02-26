@@ -15,14 +15,15 @@ import logging
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, Any
 from enum import Enum
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
 
 class DriftDirection(Enum):
     """Direction of score drift over time."""
+
     IMPROVING = "improving"  # Scores decreasing (better)
     DEGRADING = "degrading"  # Scores increasing (worse)
     STABLE = "stable"  # No significant change
@@ -36,6 +37,7 @@ class TimeSeriesMetrics:
 
     Provides statistical measures of model behavior over time.
     """
+
     mean_score: float
     std_deviation: float
     trend_slope: float  # Positive = degrading, Negative = improving
@@ -50,16 +52,16 @@ class TimeSeriesMetrics:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'mean_score': self.mean_score,
-            'std_deviation': self.std_deviation,
-            'trend_slope': self.trend_slope,
-            'variance': self.variance,
-            'min_score': self.min_score,
-            'max_score': self.max_score,
-            'score_range': self.score_range,
-            'total_rounds': self.total_rounds,
-            'time_span_seconds': self.time_span_seconds,
-            'drift_direction': self.drift_direction.value
+            "mean_score": self.mean_score,
+            "std_deviation": self.std_deviation,
+            "trend_slope": self.trend_slope,
+            "variance": self.variance,
+            "min_score": self.min_score,
+            "max_score": self.max_score,
+            "score_range": self.score_range,
+            "total_rounds": self.total_rounds,
+            "time_span_seconds": self.time_span_seconds,
+            "drift_direction": self.drift_direction.value,
         }
 
 
@@ -70,6 +72,7 @@ class FatigueReport:
 
     Tracks whether model performance degrades with continued pressure.
     """
+
     is_fatigued: bool
     fatigue_score: float  # 0.0 = no fatigue, 1.0 = severe fatigue
     degradation_rate: float  # Score increase per round
@@ -82,14 +85,14 @@ class FatigueReport:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'is_fatigued': self.is_fatigued,
-            'fatigue_score': self.fatigue_score,
-            'degradation_rate': self.degradation_rate,
-            'early_mean': self.early_mean,
-            'late_mean': self.late_mean,
-            'rounds_analyzed': self.rounds_analyzed,
-            'time_span_seconds': self.time_span_seconds,
-            'recommendation': self.recommendation
+            "is_fatigued": self.is_fatigued,
+            "fatigue_score": self.fatigue_score,
+            "degradation_rate": self.degradation_rate,
+            "early_mean": self.early_mean,
+            "late_mean": self.late_mean,
+            "rounds_analyzed": self.rounds_analyzed,
+            "time_span_seconds": self.time_span_seconds,
+            "recommendation": self.recommendation,
         }
 
 
@@ -100,6 +103,7 @@ class RegressionReport:
 
     Determines if a new version improved, regressed, or shifted failure modes.
     """
+
     baseline_version: str
     comparison_version: str
     is_regression: bool
@@ -114,16 +118,16 @@ class RegressionReport:
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for serialization."""
         return {
-            'baseline_version': self.baseline_version,
-            'comparison_version': self.comparison_version,
-            'is_regression': self.is_regression,
-            'score_delta': self.score_delta,
-            'baseline_mean': self.baseline_mean,
-            'comparison_mean': self.comparison_mean,
-            'statistical_significance': self.statistical_significance,
-            'failure_mode_shift': self.failure_mode_shift,
-            'verdict': self.verdict,
-            'details': self.details
+            "baseline_version": self.baseline_version,
+            "comparison_version": self.comparison_version,
+            "is_regression": self.is_regression,
+            "score_delta": self.score_delta,
+            "baseline_mean": self.baseline_mean,
+            "comparison_mean": self.comparison_mean,
+            "statistical_significance": self.statistical_significance,
+            "failure_mode_shift": self.failure_mode_shift,
+            "verdict": self.verdict,
+            "details": self.details,
         }
 
 
@@ -150,11 +154,7 @@ class FatigueTracker:
         """
         self.database_path = database_path
 
-    def analyze_fatigue(
-        self,
-        session_id: str,
-        fatigue_threshold: float = 0.15
-    ) -> FatigueReport:
+    def analyze_fatigue(self, session_id: str, fatigue_threshold: float = 0.15) -> FatigueReport:
         """
         Analyze fatigue for a session.
 
@@ -171,12 +171,15 @@ class FatigueTracker:
         cursor = conn.cursor()
 
         # Get all rounds for this session, ordered by time
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT round_number, global_score, timestamp
             FROM rounds
             WHERE session_id = ? AND blocked_by_egg = 0
             ORDER BY round_number ASC
-        ''', (session_id,))
+        """,
+            (session_id,),
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -191,13 +194,13 @@ class FatigueTracker:
                 late_mean=0.0,
                 rounds_analyzed=len(rows),
                 time_span_seconds=0.0,
-                recommendation="Insufficient data for fatigue analysis"
+                recommendation="Insufficient data for fatigue analysis",
             )
 
         # Split into quartiles
         n = len(rows)
-        first_quartile = rows[:n // 4] if n >= 4 else rows[:1]
-        last_quartile = rows[-(n // 4):] if n >= 4 else rows[-1:]
+        first_quartile = rows[: n // 4] if n >= 4 else rows[:1]
+        last_quartile = rows[-(n // 4) :] if n >= 4 else rows[-1:]
 
         # Calculate means
         early_scores = [r[1] for r in first_quartile]
@@ -207,7 +210,7 @@ class FatigueTracker:
 
         # Calculate degradation rate (linear trend)
         all_scores = [r[1] for r in rows]
-        rounds = list(range(1, len(all_scores) + 1))
+        rounds = [float(i) for i in range(1, len(all_scores) + 1)]
         degradation_rate = self._calculate_trend(rounds, all_scores)
 
         # Calculate time span
@@ -242,7 +245,7 @@ class FatigueTracker:
             late_mean=late_mean,
             rounds_analyzed=len(rows),
             time_span_seconds=time_span,
-            recommendation=recommendation
+            recommendation=recommendation,
         )
 
     def _calculate_trend(self, x: List[float], y: List[float]) -> float:
@@ -298,12 +301,7 @@ class RegressionDetector:
         """
         self.database_path = database_path
 
-    def compare_versions(
-        self,
-        baseline: str,
-        comparison: str,
-        significance_threshold: float = 0.05
-    ) -> RegressionReport:
+    def compare_versions(self, baseline: str, comparison: str, significance_threshold: float = 0.05) -> RegressionReport:
         """
         Compare two model versions.
 
@@ -329,7 +327,7 @@ class RegressionDetector:
                 statistical_significance=0.0,
                 failure_mode_shift=False,
                 verdict="INSUFFICIENT_DATA",
-                details={'error': 'Insufficient data for comparison'}
+                details={"error": "Insufficient data for comparison"},
             )
 
         # Calculate means
@@ -374,11 +372,11 @@ class RegressionDetector:
             failure_mode_shift=failure_mode_shift,
             verdict=verdict,
             details={
-                'baseline_rounds': len(baseline_scores),
-                'comparison_rounds': len(comparison_scores),
-                'baseline_variance': baseline_var,
-                'comparison_variance': comparison_var
-            }
+                "baseline_rounds": len(baseline_scores),
+                "comparison_rounds": len(comparison_scores),
+                "baseline_variance": baseline_var,
+                "comparison_variance": comparison_var,
+            },
         )
 
     def _get_scores_for_version(self, version: str) -> List[float]:
@@ -386,11 +384,14 @@ class RegressionDetector:
         conn = sqlite3.connect(self.database_path)
         cursor = conn.cursor()
 
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT global_score
             FROM rounds
             WHERE model_version = ? AND blocked_by_egg = 0
-        ''', (version,))
+        """,
+            (version,),
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -427,10 +428,7 @@ class ScoreDriftAnalyzer:
         """
         self.database_path = database_path
 
-    def analyze_drift(
-        self,
-        session_id: str
-    ) -> TimeSeriesMetrics:
+    def analyze_drift(self, session_id: str) -> TimeSeriesMetrics:
         """
         Analyze score drift for a session.
 
@@ -444,12 +442,15 @@ class ScoreDriftAnalyzer:
         cursor = conn.cursor()
 
         # Get all rounds for this session
-        cursor.execute('''
+        cursor.execute(
+            """
             SELECT global_score, timestamp
             FROM rounds
             WHERE session_id = ? AND blocked_by_egg = 0
             ORDER BY round_number ASC
-        ''', (session_id,))
+        """,
+            (session_id,),
+        )
 
         rows = cursor.fetchall()
         conn.close()
@@ -466,7 +467,7 @@ class ScoreDriftAnalyzer:
                 score_range=0.0,
                 total_rounds=len(rows),
                 time_span_seconds=0.0,
-                drift_direction=DriftDirection.STABLE
+                drift_direction=DriftDirection.STABLE,
             )
 
         # Extract scores
@@ -475,13 +476,13 @@ class ScoreDriftAnalyzer:
         # Calculate statistics
         mean_score = sum(scores) / len(scores)
         variance = sum((s - mean_score) ** 2 for s in scores) / len(scores)
-        std_deviation = variance ** 0.5
+        std_deviation = variance**0.5
         min_score = min(scores)
         max_score = max(scores)
         score_range = max_score - min_score
 
         # Calculate trend
-        rounds = list(range(1, len(scores) + 1))
+        rounds = [float(i) for i in range(1, len(scores) + 1)]
         trend_slope = self._calculate_trend(rounds, scores)
 
         # Calculate time span
@@ -505,13 +506,10 @@ class ScoreDriftAnalyzer:
             score_range=score_range,
             total_rounds=len(scores),
             time_span_seconds=time_span,
-            drift_direction=drift_direction
+            drift_direction=drift_direction,
         )
 
-    def analyze_session_comparison(
-        self,
-        session_ids: List[str]
-    ) -> Dict[str, TimeSeriesMetrics]:
+    def analyze_session_comparison(self, session_ids: List[str]) -> Dict[str, TimeSeriesMetrics]:
         """
         Compare drift across multiple sessions.
 
@@ -543,11 +541,7 @@ class ScoreDriftAnalyzer:
 
         return numerator / denominator
 
-    def _classify_drift(
-        self,
-        trend_slope: float,
-        std_deviation: float
-    ) -> DriftDirection:
+    def _classify_drift(self, trend_slope: float, std_deviation: float) -> DriftDirection:
         """
         Classify drift direction based on trend and variance.
 

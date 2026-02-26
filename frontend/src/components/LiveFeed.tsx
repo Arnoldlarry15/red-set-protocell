@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Activity, AlertTriangle, Shield, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { safeAsync } from '../utils/async';
 import { Attack } from '../types';
 import '../styles/Components.css';
 
@@ -71,7 +72,8 @@ Scores:
 - L2 (Security): ${(attack.score.l2_security * 100).toFixed(1)}%
 - L3 (Cognitive): ${(attack.score.l3_cognitive * 100).toFixed(1)}%`;
 
-    navigator.clipboard.writeText(redactedContent).then(() => {
+    safeAsync(async () => {
+      await navigator.clipboard.writeText(redactedContent);
       setCopiedId(attack.id);
       setTimeout(() => setCopiedId(null), 2000);
     });

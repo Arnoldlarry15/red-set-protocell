@@ -106,7 +106,7 @@ The factory is **case-insensitive**, so these all work:
 ```bash
 cd backend
 export BACKEND_TYPE=openrouter
-export OPENROUTER_API_KEY="sk-or-v1-your-key"
+export OPENROUTER_API_KEY="<OPENROUTER_API_KEY>"
 python -c "
 from app.core.config import load_config_from_env
 from app.main import setup_system
@@ -122,7 +122,7 @@ except Exception as e:
 ### Test OpenAI (default):
 ```bash
 cd backend
-export OPENAI_API_KEY="sk-your-key"
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 # BACKEND_TYPE not set - should default to openai
 python -c "
 from app.core.config import load_config_from_env
@@ -136,7 +136,7 @@ print(f'Backend: {config.target.backend.value}')
 ```bash
 cd backend
 export BACKEND_TYPE=anthropic
-export ANTHROPIC_API_KEY="sk-ant-your-key"
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 python -c "
 from app.core.config import load_config_from_env
 from app.main import setup_system

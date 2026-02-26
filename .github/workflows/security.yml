@@ -55,10 +55,10 @@ jobs:
     - name: Run safety check
       working-directory: ./backend
       run: |
-        safety check --file requirements.txt --json || true
+        safety check --file requirements.txt --json
     
     - name: Check for known vulnerabilities
       working-directory: ./backend
       run: |
         pip install pip-audit
-        pip-audit -r requirements.txt || true
+        pip-audit -r requirements.txt

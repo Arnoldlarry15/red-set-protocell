@@ -3,8 +3,14 @@ Tests for async interfaces and abstract base classes.
 """
 
 import pytest
-from app.interfaces import BaseTarget, BaseMutationStrategy, BaseScoringStrategy, ScoreResult
-from app.agents.target import OpenAIBackend, AnthropicBackend, TargetBackend
+
+from app.agents.target import AnthropicBackend, OpenAIBackend, TargetBackend
+from app.interfaces import (
+    BaseMutationStrategy,
+    BaseScoringStrategy,
+    BaseTarget,
+    ScoreResult,
+)
 
 
 class MockAsyncBackend(BaseTarget):
@@ -36,12 +42,7 @@ class MockScoringStrategy(BaseScoringStrategy):
 
     async def score(self, response: str, **kwargs) -> ScoreResult:
         """Mock scoring."""
-        return ScoreResult(
-            score=0.5,
-            confidence=0.8,
-            uncertainty=0.1,
-            indicators={"test": True}
-        )
+        return ScoreResult(score=0.5, confidence=0.8, uncertainty=0.1, indicators={"test": True})
 
     def get_strategy_info(self) -> dict:
         """Mock strategy info."""
@@ -156,7 +157,7 @@ def test_score_result_with_indicators():
         confidence=0.9,
         uncertainty=0.05,
         indicators={"hate_speech": True, "pii": False},
-        metadata={"model": "test"}
+        metadata={"model": "test"},
     )
 
     assert result.indicators["hate_speech"] is True

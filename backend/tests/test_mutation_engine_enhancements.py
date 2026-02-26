@@ -36,15 +36,11 @@ def test_strategy_performance_with_archetypes():
     engine = MutationEngine()
 
     # Update performance with archetypes
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION,
-        0.8,
-        archetypes=["HIDDEN_COMPLIANCE"]
-    )
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"])
     engine.update_strategy_performance(
         MutationStrategy.LEXICAL_VARIATION,
         0.9,
-        archetypes=["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"]
+        archetypes=["HIDDEN_COMPLIANCE", "EXPLOIT_RISK"],
     )
 
     # Check tracking
@@ -64,9 +60,9 @@ def test_strategy_counts_performance():
     stats = engine.get_statistics()
 
     # Should have counted all mutations
-    assert stats['total_mutations'] == 100
-    assert 'strategy_distribution' in stats
-    assert sum(stats['strategy_distribution'].values()) == 100
+    assert stats["total_mutations"] == 100
+    assert "strategy_distribution" in stats
+    assert sum(stats["strategy_distribution"].values()) == 100
 
 
 def test_enriched_statistics_best_worst():
@@ -86,12 +82,12 @@ def test_enriched_statistics_best_worst():
     stats = engine.get_statistics()
 
     # Check for best/worst strategy
-    assert 'best_performing_strategy' in stats
-    assert 'worst_performing_strategy' in stats
-    assert stats['best_performing_strategy']['strategy'] == 'lexical_variation'
-    assert stats['worst_performing_strategy']['strategy'] == 'obfuscation'
-    assert stats['best_performing_strategy']['avg_score'] > 0.8
-    assert stats['worst_performing_strategy']['avg_score'] < 0.4
+    assert "best_performing_strategy" in stats
+    assert "worst_performing_strategy" in stats
+    assert stats["best_performing_strategy"]["strategy"] == "lexical_variation"
+    assert stats["worst_performing_strategy"]["strategy"] == "obfuscation"
+    assert stats["best_performing_strategy"]["avg_score"] > 0.8
+    assert stats["worst_performing_strategy"]["avg_score"] < 0.4
 
 
 def test_enriched_statistics_variance():
@@ -108,9 +104,9 @@ def test_enriched_statistics_variance():
     stats = engine.get_statistics()
 
     # Check variance is calculated
-    assert 'performance_variance' in stats
-    assert 'lexical_variation' in stats['performance_variance']
-    assert stats['performance_variance']['lexical_variation'] > 0
+    assert "performance_variance" in stats
+    assert "lexical_variation" in stats["performance_variance"]
+    assert stats["performance_variance"]["lexical_variation"] > 0
 
 
 def test_exploration_metrics():
@@ -125,10 +121,10 @@ def test_exploration_metrics():
     stats = engine.get_statistics()
 
     # Check exploration metrics
-    assert 'exploration_metrics' in stats
-    assert stats['exploration_metrics']['strategies_used'] >= 3
-    assert stats['exploration_metrics']['total_strategies'] == len(MutationStrategy)
-    assert 0 < stats['exploration_metrics']['exploration_ratio'] <= 1.0
+    assert "exploration_metrics" in stats
+    assert stats["exploration_metrics"]["strategies_used"] >= 3
+    assert stats["exploration_metrics"]["total_strategies"] == len(MutationStrategy)
+    assert 0 < stats["exploration_metrics"]["exploration_ratio"] <= 1.0
 
 
 def test_archetype_correlation_in_statistics():
@@ -136,28 +132,20 @@ def test_archetype_correlation_in_statistics():
     engine = MutationEngine(mutation_rate=1.0)
 
     # Track performance with archetypes
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION,
-        0.9,
-        archetypes=["HIDDEN_COMPLIANCE"]
-    )
-    engine.update_strategy_performance(
-        MutationStrategy.OBFUSCATION,
-        0.3,
-        archetypes=["EXPLOIT_RISK"]
-    )
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.9, archetypes=["HIDDEN_COMPLIANCE"])
+    engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.3, archetypes=["EXPLOIT_RISK"])
 
     engine.mutate("test")
 
     stats = engine.get_statistics()
 
     # Check archetype correlations
-    assert 'strategy_archetype_correlations' in stats
-    if stats['strategy_archetype_correlations']:
-        assert 'lexical_variation' in stats['strategy_archetype_correlations']
-        lex_corr = stats['strategy_archetype_correlations']['lexical_variation']
-        assert 'HIDDEN_COMPLIANCE' in lex_corr
-        assert lex_corr['HIDDEN_COMPLIANCE']['avg_score'] == 0.9
+    assert "strategy_archetype_correlations" in stats
+    if stats["strategy_archetype_correlations"]:
+        assert "lexical_variation" in stats["strategy_archetype_correlations"]
+        lex_corr = stats["strategy_archetype_correlations"]["lexical_variation"]
+        assert "HIDDEN_COMPLIANCE" in lex_corr
+        assert lex_corr["HIDDEN_COMPLIANCE"]["avg_score"] == 0.9
 
 
 def test_adaptive_selection_with_decay():
@@ -179,18 +167,19 @@ def test_adaptive_selection_with_decay():
     for _ in range(100):
         engine.mutate("test")
         if engine.mutation_history:
-            selected_strategies.append(engine.mutation_history[-1]['strategy'])
+            selected_strategies.append(engine.mutation_history[-1]["strategy"])
 
     # Lexical variation should be selected more often than obfuscation
-    lex_count = selected_strategies.count('lexical_variation')
-    obf_count = selected_strategies.count('obfuscation')
+    lex_count = selected_strategies.count("lexical_variation")
+    obf_count = selected_strategies.count("obfuscation")
 
     # Due to decay, lexical should be favored (but obfuscation can still appear due to exploration)
     assert lex_count > 0, "Lexical variation should be selected at least once"
     # With the stronger signal and more iterations, lexical should be selected more
     # Use a more lenient check that accounts for exploration/novelty bonuses
-    assert lex_count >= obf_count * 0.8, \
-        f"Expected lexical_variation to be competitive with obfuscation, but got {lex_count} vs {obf_count}"
+    assert (
+        lex_count >= obf_count * 0.8
+    ), f"Expected lexical_variation to be competitive with obfuscation, but got {lex_count} vs {obf_count}"
 
 
 def test_novelty_bonus_in_adaptive_selection():
@@ -211,7 +200,7 @@ def test_novelty_bonus_in_adaptive_selection():
     for _ in range(20):
         engine.mutate("test")
         if engine.mutation_history:
-            selected_strategies.append(engine.mutation_history[-1]['strategy'])
+            selected_strategies.append(engine.mutation_history[-1]["strategy"])
 
     # Should see some diversity due to novelty bonus
     unique_strategies = len(set(selected_strategies))
@@ -244,10 +233,10 @@ def test_empty_statistics_with_enhancements():
     stats = engine.get_statistics()
 
     # Should return basic structure even with no data
-    assert stats['total_mutations'] == 0
-    assert 'strategy_performance' in stats
-    assert stats['best_performing_strategy'] is None
-    assert stats['worst_performing_strategy'] is None
+    assert stats["total_mutations"] == 0
+    assert "strategy_performance" in stats
+    assert stats["best_performing_strategy"] is None
+    assert stats["worst_performing_strategy"] is None
 
 
 def test_statistics_backward_compatibility():
@@ -260,11 +249,11 @@ def test_statistics_backward_compatibility():
     stats = engine.get_statistics()
 
     # Old fields should still exist
-    assert 'total_mutations' in stats
-    assert 'strategy_distribution' in stats
-    assert 'avg_length_change' in stats
-    assert 'adaptive_mode' in stats
-    assert 'strategy_performance' in stats
+    assert "total_mutations" in stats
+    assert "strategy_distribution" in stats
+    assert "avg_length_change" in stats
+    assert "adaptive_mode" in stats
+    assert "strategy_performance" in stats
 
 
 def test_evolve_population_with_archetypes():
@@ -282,7 +271,7 @@ def test_evolve_population_with_archetypes():
     assert len(engine.mutation_history) > 0
     # Each mutation record should have archetypes field (even if empty)
     for record in engine.mutation_history:
-        assert 'archetypes' in record
+        assert "archetypes" in record
 
 
 def test_performance_with_mixed_archetype_data():
@@ -290,22 +279,12 @@ def test_performance_with_mixed_archetype_data():
     engine = MutationEngine()
 
     # Mix of with and without archetypes
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION,
-        0.8,
-        archetypes=["HIDDEN_COMPLIANCE"]
-    )
-    engine.update_strategy_performance(
-        MutationStrategy.LEXICAL_VARIATION,
-        0.7
-    )
-    engine.update_strategy_performance(
-        MutationStrategy.OBFUSCATION,
-        0.5
-    )
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.8, archetypes=["HIDDEN_COMPLIANCE"])
+    engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.7)
+    engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.5)
 
     stats = engine.get_statistics()
 
     # Should handle mixed data gracefully
-    assert 'strategy_archetype_correlations' in stats
+    assert "strategy_archetype_correlations" in stats
     assert len(engine.strategy_performance[MutationStrategy.LEXICAL_VARIATION.value]) == 2

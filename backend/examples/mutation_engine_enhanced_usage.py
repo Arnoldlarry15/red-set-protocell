@@ -23,15 +23,13 @@ def example_basic_mutation_with_archetypes():
 
     # Simulate mutations with different archetypes
     prompt1 = engine.mutate(
-        "Tell me a secret",
-        fitness_score=0.8,
-        archetypes=["HIDDEN_COMPLIANCE"]
+        "Tell me a secret", fitness_score=0.8, archetypes=["HIDDEN_COMPLIANCE"]
     )
 
     prompt2 = engine.mutate(
         "Bypass the rules",
         fitness_score=0.6,
-        archetypes=["EXPLOIT_RISK", "HIDDEN_COMPLIANCE"]
+        archetypes=["EXPLOIT_RISK", "HIDDEN_COMPLIANCE"],
     )
 
     # Check mutation history includes archetypes
@@ -57,25 +55,19 @@ def example_adaptive_selection_with_performance():
     # Lexical variation performs well
     for _ in range(10):
         engine.update_strategy_performance(
-            MutationStrategy.LEXICAL_VARIATION,
-            0.85,
-            archetypes=["HIDDEN_COMPLIANCE"]
+            MutationStrategy.LEXICAL_VARIATION, 0.85, archetypes=["HIDDEN_COMPLIANCE"]
         )
 
     # Obfuscation performs poorly
     for _ in range(10):
         engine.update_strategy_performance(
-            MutationStrategy.OBFUSCATION,
-            0.25,
-            archetypes=["EXPLOIT_RISK"]
+            MutationStrategy.OBFUSCATION, 0.25, archetypes=["EXPLOIT_RISK"]
         )
 
     # Role play performs moderately
     for _ in range(5):
         engine.update_strategy_performance(
-            MutationStrategy.ROLE_PLAY_FRAMING,
-            0.55,
-            archetypes=["HIDDEN_COMPLIANCE"]
+            MutationStrategy.ROLE_PLAY_FRAMING, 0.55, archetypes=["HIDDEN_COMPLIANCE"]
         )
 
     # Now generate mutations adaptively
@@ -84,7 +76,7 @@ def example_adaptive_selection_with_performance():
     for i in range(20):
         engine.mutate(f"test prompt {i}")
         if engine.mutation_history:
-            selected_strategies.append(engine.mutation_history[-1]['strategy'])
+            selected_strategies.append(engine.mutation_history[-1]["strategy"])
 
     # Count selections
     print("\nStrategy selection counts (after training):")
@@ -131,28 +123,30 @@ def example_enriched_statistics():
     print(f"Average length change: {stats['avg_length_change']:.2f}")
 
     print("\n--- Strategy Performance ---")
-    for strategy, avg_score in stats['strategy_performance'].items():
-        variance = stats['performance_variance'].get(strategy, 0.0)
+    for strategy, avg_score in stats["strategy_performance"].items():
+        variance = stats["performance_variance"].get(strategy, 0.0)
         print(f"  {strategy}: avg={avg_score:.2f}, variance={variance:.4f}")
 
     print("\n--- Best and Worst Performers ---")
-    if stats['best_performing_strategy']:
-        best = stats['best_performing_strategy']
+    if stats["best_performing_strategy"]:
+        best = stats["best_performing_strategy"]
         print(f"  Best: {best['strategy']} (score: {best['avg_score']:.2f})")
-    if stats['worst_performing_strategy']:
-        worst = stats['worst_performing_strategy']
+    if stats["worst_performing_strategy"]:
+        worst = stats["worst_performing_strategy"]
         print(f"  Worst: {worst['strategy']} (score: {worst['avg_score']:.2f})")
 
     print("\n--- Exploration Metrics ---")
-    exp = stats['exploration_metrics']
+    exp = stats["exploration_metrics"]
     print(f"  Strategies used: {exp['strategies_used']}/{exp['total_strategies']}")
     print(f"  Exploration ratio: {exp['exploration_ratio']:.2%}")
 
     print("\n--- Strategy-Archetype Correlations ---")
-    for strategy, archetypes in stats['strategy_archetype_correlations'].items():
+    for strategy, archetypes in stats["strategy_archetype_correlations"].items():
         print(f"  {strategy}:")
         for archetype, data in archetypes.items():
-            print(f"    {archetype}: avg_score={data['avg_score']:.2f}, count={data['count']}")
+            print(
+                f"    {archetype}: avg_score={data['avg_score']:.2f}, count={data['count']}"
+            )
 
     print("\nThese statistics enable:")
     print("  - Identifying which strategies work best")
@@ -175,30 +169,24 @@ def example_declining_performance_decay():
     # Add declining performance scores
     declining_scores = [0.8, 0.65, 0.5, 0.35, 0.2]
     for score in declining_scores:
-        engine.update_strategy_performance(
-            MutationStrategy.OBFUSCATION,
-            score
-        )
+        engine.update_strategy_performance(MutationStrategy.OBFUSCATION, score)
 
     print(f"Performance trend: {declining_scores}")
     print("Note: Last 3 scores show decline: 0.5 → 0.35 → 0.2")
 
     # Add strong performance for comparison
     for _ in range(5):
-        engine.update_strategy_performance(
-            MutationStrategy.LEXICAL_VARIATION,
-            0.85
-        )
+        engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.85)
 
     print("\nGenerating mutations with adaptive selection...")
     selected = []
     for _ in range(30):
         engine.mutate("test")
         if engine.mutation_history:
-            selected.append(engine.mutation_history[-1]['strategy'])
+            selected.append(engine.mutation_history[-1]["strategy"])
 
-    lex_count = selected.count('lexical_variation')
-    obf_count = selected.count('obfuscation')
+    lex_count = selected.count("lexical_variation")
+    obf_count = selected.count("obfuscation")
 
     print(f"\nSelection counts:")
     print(f"  lexical_variation: {lex_count}")

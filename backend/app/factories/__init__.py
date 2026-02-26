@@ -5,19 +5,18 @@ Industry-grade factory implementations for creating components
 without tight coupling to concrete implementations.
 """
 
-import logging
-from typing import Dict, Type, Any, Optional
 from abc import ABC
+from typing import Any, Dict, Optional, Type
 
 from app.agents.target import (
-    OpenAIBackend,
     AnthropicBackend,
-    LlamaCppBackend,
     CustomHTTPBackend,
+    LlamaCppBackend,
+    OpenAIBackend,
     OpenRouterBackend,
-    TargetBackend,
-    Target,
     PerturbationConfig,
+    Target,
+    TargetBackend,
 )
 
 
@@ -57,22 +56,13 @@ class BackendFactory(ABC):
         Raises:
             ValueError: If backend type is not registered
         """
-        # DEBUG: Log what backend is being requested
-        logger = logging.getLogger(__name__)
-        logger.info("DEBUG BackendFactory.create() called:")
-        logger.info(f"  backend_type (raw) = {backend_type!r}")
-        logger.info(f"  type = {type(backend_type)}")
-
         backend_type_lower = backend_type.lower()
-        logger.info(f"  backend_type_lower = {backend_type_lower!r}")
-        logger.info(f"  Registered backends = {list(cls._registry.keys())}")
 
         if backend_type_lower not in cls._registry:
             available = ", ".join(cls._registry.keys())
             raise ValueError(f"Unknown backend type: {backend_type}. " f"Available backends: {available}")
 
         backend_class = cls._registry[backend_type_lower]
-        logger.info(f"  Selected backend_class = {backend_class.__name__}")
 
         # Extract backend-specific config
         return cls._instantiate_backend(backend_class, config)
@@ -159,7 +149,11 @@ class TargetFactory:
     """
 
     @staticmethod
-    def create(backend_type: str, perturbation_config: Optional[PerturbationConfig] = None, **config) -> Target:
+    def create(
+        backend_type: str,
+        perturbation_config: Optional[PerturbationConfig] = None,
+        **config,
+    ) -> Target:
         """
         Create a Target agent with specified backend.
 

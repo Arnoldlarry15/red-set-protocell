@@ -9,9 +9,10 @@ This script shows the new improvements:
 """
 
 import asyncio
-from app.core.config import RSPConfig, ModelBackend
-from app.engines.mutation import MutationEngine
+
 from app.agents.target import create_target
+from app.core.config import ModelBackend, RSPConfig
+from app.engines.mutation import MutationEngine
 
 
 def example_1_parallel_execution():
@@ -73,10 +74,10 @@ def example_3_custom_http_api():
     # Example: Using Ollama local API
     try:
         target = create_target(
-            backend_type='custom_http',
-            api_url='http://localhost:11434/api/generate',
-            request_format='generic',
-            max_tokens=500
+            backend_type="custom_http",
+            api_url="http://localhost:11434/api/generate",
+            request_format="generic",
+            max_tokens=500,
         )
 
         print(f"Configuration:")
@@ -121,24 +122,15 @@ def example_4_adaptive_mutations():
 
     # Train with performance data
     for i in range(5):
-        engine.update_strategy_performance(
-            MutationStrategy.LEXICAL_VARIATION,
-            0.85
-        )
-        engine.update_strategy_performance(
-            MutationStrategy.ROLE_PLAY_FRAMING,
-            0.65
-        )
-        engine.update_strategy_performance(
-            MutationStrategy.OBFUSCATION,
-            0.45
-        )
+        engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.85)
+        engine.update_strategy_performance(MutationStrategy.ROLE_PLAY_FRAMING, 0.65)
+        engine.update_strategy_performance(MutationStrategy.OBFUSCATION, 0.45)
 
     # Get statistics
     stats = engine.get_statistics()
 
     print("\nStrategy Performance:")
-    for strategy, score in stats['strategy_performance'].items():
+    for strategy, score in stats["strategy_performance"].items():
         print(f"  {strategy}: {score:.2f}")
 
     print("\nBenefit: System learns which strategies work best")
@@ -160,8 +152,8 @@ def example_5_combined():
 
     # Local model (or custom API)
     config.target.backend = ModelBackend.CUSTOM_HTTP
-    config.target.api_url = 'http://localhost:8000/v1/completions'
-    config.target.request_format = 'openai'
+    config.target.api_url = "http://localhost:8000/v1/completions"
+    config.target.request_format = "openai"
 
     print("Combined Configuration:")
     print(f"  Parallelism: {config.orchestrator.concurrent_rounds} concurrent rounds")

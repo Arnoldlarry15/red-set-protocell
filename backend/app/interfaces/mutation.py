@@ -6,7 +6,7 @@ Establishes the contract for all prompt mutation techniques.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class BaseMutationStrategy(ABC):

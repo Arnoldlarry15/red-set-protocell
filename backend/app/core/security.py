@@ -117,7 +117,7 @@ def hash_prompt(prompt: str) -> str:
     Returns:
         Hexadecimal hash string
     """
-    return hashlib.sha256(prompt.encode('utf-8')).hexdigest()
+    return hashlib.sha256(prompt.encode("utf-8")).hexdigest()
 
 
 def generate_session_id() -> str:
@@ -140,11 +140,8 @@ def sanitize_metadata(metadata: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Sanitized metadata dictionary
     """
-    sensitive_fields = {'api_key', 'api_secret', 'password', 'token'}
-    return {
-        k: v for k, v in metadata.items()
-        if k.lower() not in sensitive_fields
-    }
+    sensitive_fields = {"api_key", "api_secret", "password", "token"}
+    return {k: v for k, v in metadata.items() if k.lower() not in sensitive_fields}
 
 
 def validate_prompt_length(prompt: str, max_length: int = 10000) -> bool:
@@ -179,11 +176,7 @@ class TrustBoundary:
         Returns:
             Dictionary with untrusted marker
         """
-        return {
-            'data': data,
-            'trusted': False,
-            'requires_validation': True
-        }
+        return {"data": data, "trusted": False, "requires_validation": True}
 
     @staticmethod
     def verify_agent_output(output: Any) -> bool:
@@ -201,6 +194,5 @@ class TrustBoundary:
         """
         # Basic validation: ensure output is not None and has content
         return output is not None and (
-            isinstance(output, str) and len(output) > 0
-            or isinstance(output, dict) and len(output) > 0
+            isinstance(output, str) and len(output) > 0 or isinstance(output, dict) and len(output) > 0
         )

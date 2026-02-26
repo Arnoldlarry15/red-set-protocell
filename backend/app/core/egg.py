@@ -59,15 +59,14 @@ This is release-worthy because:
 [OK] Limitations are documented and understood
 """
 
-import re
 import logging
 import random
-from typing import Tuple, Optional, List, Dict, Set
-from dataclasses import dataclass
+import re
 from collections import defaultdict
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Set, Tuple
 
 from app.core.security import hash_prompt
-
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +74,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BlockedContent:
     """Information about blocked content."""
+
     reason: str
     category: str
     fingerprint: str
@@ -83,6 +83,7 @@ class BlockedContent:
 @dataclass
 class ShadowModeMatch:
     """Information about prompts that almost triggered blocks."""
+
     pattern: str
     category: str
     match_score: float  # 0.0 to 1.0, where 1.0 is exact match
@@ -98,7 +99,7 @@ class EthicalGuardrailGovernor:
     """
 
     # Class constants
-    STOPWORDS = {'this', 'that', 'with', 'from', 'have', 'the', 'and', 'for'}
+    STOPWORDS = {"this", "that", "with", "from", "have", "the", "and", "for"}
     DEFAULT_SHADOW_MATCH_LIMIT = 10
     DEFAULT_TEST_COUNT = 50
     MIN_HIGH_CONFIDENCE_MATCHES = 3  # Threshold for suggesting pattern review
@@ -106,34 +107,41 @@ class EthicalGuardrailGovernor:
 
     # Patterns for content that must be blocked
     BLOCKED_PATTERNS = {
-        'csam': [
-            r'\b(child|minor|underage).{0,20}(sexual|explicit|nude)',
-            r'\b(cp|child porn)',
+        "csam": [
+            r"\b(child|minor|underage).{0,20}(sexual|explicit|nude)",
+            r"\b(cp|child porn)",
         ],
-        'bioweapons': [
-            r'\b(weaponi[sz]e).{0,30}(anthrax|ricin|botulinum)',
-            r'\banthrax.{0,30}weaponi[sz]e',
-            r'\b(bioweapon|biological weapon).{0,30}(create|make|build)',
-            r'\b(pathogen|virus|bacteria).{0,30}(engineer|modify).{0,30}(lethal|deadly)',
-            r'weaponize anthrax',
+        "bioweapons": [
+            r"\b(weaponi[sz]e).{0,30}(anthrax|ricin|botulinum)",
+            r"\banthrax.{0,30}weaponi[sz]e",
+            r"\b(bioweapon|biological weapon).{0,30}(create|make|build)",
+            r"\b(pathogen|virus|bacteria).{0,30}(engineer|modify).{0,30}(lethal|deadly)",
+            r"weaponize anthrax",
         ],
-        'real_exploits': [
-            r'\b(exploit|payload).{0,30}(execute|run).{0,30}(system|server)',
-            r'\b(shell|cmd|bash).{0,30}(injection|execution).{0,30}(real|actual|live)',
-            r'\bzero.?day.{0,30}(actual|real|working|code)',
-            r'\bactual zero.?day',
-            r'\b(malware|ransomware|trojan).{0,30}(code|implementation|actual)',
+        "real_exploits": [
+            r"\b(exploit|payload).{0,30}(execute|run).{0,30}(system|server)",
+            r"\b(shell|cmd|bash).{0,30}(injection|execution).{0,30}(real|actual|live)",
+            r"\bzero.?day.{0,30}(actual|real|working|code)",
+            r"\bactual zero.?day",
+            r"\b(malware|ransomware|trojan).{0,30}(code|implementation|actual)",
         ],
-        'real_hacking': [
-            r'\b(hack|breach|penetrate).{0,30}(actual|real).{0,30}(system|network|server)',
-            r'\b(credit card|ssn|social security).{0,30}(steal|extract|harvest).{0,30}(actual|real)',
-        ]
+        "real_hacking": [
+            r"\b(hack|breach|penetrate).{0,30}(actual|real).{0,30}(system|network|server)",
+            r"\b(credit card|ssn|social security).{0,30}(steal|extract|harvest).{0,30}(actual|real)",
+        ],
     }
 
-    def __init__(self, enabled: bool = True, log_fingerprints: bool = True,
-                 block_csam: bool = True, block_bioweapons: bool = True,
-                 block_real_exploits: bool = True, block_real_hacking: bool = True,
-                 shadow_mode: bool = False, shadow_threshold: float = 0.6):
+    def __init__(
+        self,
+        enabled: bool = True,
+        log_fingerprints: bool = True,
+        block_csam: bool = True,
+        block_bioweapons: bool = True,
+        block_real_exploits: bool = True,
+        block_real_hacking: bool = True,
+        shadow_mode: bool = False,
+        shadow_threshold: float = 0.6,
+    ):
         """
         Initialize the Ethical Guardrail Governor.
 
@@ -167,10 +175,10 @@ class EthicalGuardrailGovernor:
 
         # Coverage metrics: Track which patterns are used
         self.pattern_usage: Dict[str, Set[str]] = {
-            'csam': set(),
-            'bioweapons': set(),
-            'real_exploits': set(),
-            'real_hacking': set()
+            "csam": set(),
+            "bioweapons": set(),
+            "real_exploits": set(),
+            "real_hacking": set(),
         }
 
         # Track total inspections
@@ -195,7 +203,7 @@ class EthicalGuardrailGovernor:
                 except re.error as e:
                     # Log the malformed pattern but don't crash
                     self.malformed_patterns[category].append(pattern)
-                    pattern_display = pattern[:50] + ('...' if len(pattern) > 50 else '')
+                    pattern_display = pattern[:50] + ("..." if len(pattern) > 50 else "")
                     logger.error(
                         f"EGG pattern validation failed - Category: {category}, "
                         f"Pattern: {pattern_display}, Error: {e}. "
@@ -230,71 +238,63 @@ class EthicalGuardrailGovernor:
 
         # Check each category
         if self.block_csam:
-            for pattern in self.BLOCKED_PATTERNS['csam']:
+            for pattern in self.BLOCKED_PATTERNS["csam"]:
                 # Skip malformed patterns (fail-open)
-                if pattern in self.malformed_patterns.get('csam', []):
+                if pattern in self.malformed_patterns.get("csam", []):
                     continue
                 try:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
-                        self.pattern_usage['csam'].add(pattern)
-                        return False, self._block_prompt(
-                            prompt, 'csam', 'CSAM content detected'
-                        )
+                        self.pattern_usage["csam"].add(pattern)
+                        return False, self._block_prompt(prompt, "csam", "CSAM content detected")
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, 'csam', prompt_lower)
+                        self._check_shadow_mode(prompt, pattern, "csam", prompt_lower)
                 except re.error as e:
                     # Runtime regex error - log and continue (fail-open)
                     logger.error(f"EGG runtime pattern error in csam: {e}")
                     continue
 
         if self.block_bioweapons:
-            for pattern in self.BLOCKED_PATTERNS['bioweapons']:
-                if pattern in self.malformed_patterns.get('bioweapons', []):
+            for pattern in self.BLOCKED_PATTERNS["bioweapons"]:
+                if pattern in self.malformed_patterns.get("bioweapons", []):
                     continue
                 try:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
-                        self.pattern_usage['bioweapons'].add(pattern)
-                        return False, self._block_prompt(
-                            prompt, 'bioweapons', 'Bioweapon instructions detected'
-                        )
+                        self.pattern_usage["bioweapons"].add(pattern)
+                        return False, self._block_prompt(prompt, "bioweapons", "Bioweapon instructions detected")
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, 'bioweapons', prompt_lower)
+                        self._check_shadow_mode(prompt, pattern, "bioweapons", prompt_lower)
                 except re.error as e:
                     logger.error(f"EGG runtime pattern error in bioweapons: {e}")
                     continue
 
         if self.block_real_exploits:
-            for pattern in self.BLOCKED_PATTERNS['real_exploits']:
-                if pattern in self.malformed_patterns.get('real_exploits', []):
+            for pattern in self.BLOCKED_PATTERNS["real_exploits"]:
+                if pattern in self.malformed_patterns.get("real_exploits", []):
                     continue
                 try:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
-                        self.pattern_usage['real_exploits'].add(pattern)
-                        return False, self._block_prompt(
-                            prompt, 'real_exploits', 'Real exploit payload detected'
-                        )
+                        self.pattern_usage["real_exploits"].add(pattern)
+                        return False, self._block_prompt(prompt, "real_exploits", "Real exploit payload detected")
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, 'real_exploits', prompt_lower)
+                        self._check_shadow_mode(prompt, pattern, "real_exploits", prompt_lower)
                 except re.error as e:
                     logger.error(f"EGG runtime pattern error in real_exploits: {e}")
                     continue
 
         if self.block_real_hacking:
-            for pattern in self.BLOCKED_PATTERNS['real_hacking']:
-                if pattern in self.malformed_patterns.get('real_hacking', []):
+            for pattern in self.BLOCKED_PATTERNS["real_hacking"]:
+                if pattern in self.malformed_patterns.get("real_hacking", []):
                     continue
                 try:
                     match = re.search(pattern, prompt_lower, re.IGNORECASE)
                     if match:
-                        self.pattern_usage['real_hacking'].add(pattern)
-                        return False, self._block_prompt(
-                            prompt, 'real_hacking', 'Real hacking attempt detected'
-                        )
+                        self.pattern_usage["real_hacking"].add(pattern)
+                        return False, self._block_prompt(prompt, "real_hacking", "Real hacking attempt detected")
                     elif self.shadow_mode:
-                        self._check_shadow_mode(prompt, pattern, 'real_hacking', prompt_lower)
+                        self._check_shadow_mode(prompt, pattern, "real_hacking", prompt_lower)
                 except re.error as e:
                     logger.error(f"EGG runtime pattern error in real_hacking: {e}")
                     continue
@@ -320,18 +320,11 @@ class EthicalGuardrailGovernor:
 
         if self.log_fingerprints:
             self.blocked_fingerprints.append(fingerprint)
-            logger.warning(
-                f"EGG blocked prompt - Category: {category}, "
-                f"Reason: {reason}, Fingerprint: {fingerprint}"
-            )
+            logger.warning(f"EGG blocked prompt - Category: {category}, " f"Reason: {reason}, Fingerprint: {fingerprint}")
 
         self.blocked_count += 1
 
-        return BlockedContent(
-            reason=reason,
-            category=category,
-            fingerprint=fingerprint
-        )
+        return BlockedContent(reason=reason, category=category, fingerprint=fingerprint)
 
     def get_blocked_replacement(self) -> str:
         """
@@ -350,13 +343,12 @@ class EthicalGuardrailGovernor:
             Dictionary with blocking statistics
         """
         return {
-            'total_blocked': self.blocked_count,
-            'enabled': self.enabled,
-            'fingerprints_logged': len(self.blocked_fingerprints)
+            "total_blocked": self.blocked_count,
+            "enabled": self.enabled,
+            "fingerprints_logged": len(self.blocked_fingerprints),
         }
 
-    def _check_shadow_mode(self, prompt: str, pattern: str, category: str,
-                           prompt_lower: str) -> None:
+    def _check_shadow_mode(self, prompt: str, pattern: str, category: str, prompt_lower: str) -> None:
         """
         Check if a prompt almost matched a pattern (shadow mode).
 
@@ -376,7 +368,7 @@ class EthicalGuardrailGovernor:
                 pattern=pattern,
                 category=category,
                 match_score=match_score,
-                prompt_fingerprint=fingerprint
+                prompt_fingerprint=fingerprint,
             )
             self.shadow_matches.append(shadow_match)
 
@@ -399,7 +391,7 @@ class EthicalGuardrailGovernor:
         """
         # Extract keywords from the pattern (simplified approach)
         # Remove regex special chars and split on word boundaries
-        keywords = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        keywords = re.findall(r"\b\w+\b", pattern.replace("\\b", ""))
         keywords = [k.lower() for k in keywords if len(k) > 3 and k not in self.STOPWORDS]
 
         if not keywords:
@@ -435,30 +427,26 @@ class EthicalGuardrailGovernor:
             total_patterns = len(patterns)
             used_patterns = len(self.pattern_usage.get(category, set()))
             coverage_metrics[category] = {
-                'total_patterns': total_patterns,
-                'used_patterns': used_patterns,
-                'coverage_percentage': (used_patterns / total_patterns * 100)
-                if total_patterns > 0 else 0.0,
-                'unused_patterns': [p for p in patterns
-                                    if p not in self.pattern_usage.get(category, set())]
+                "total_patterns": total_patterns,
+                "used_patterns": used_patterns,
+                "coverage_percentage": ((used_patterns / total_patterns * 100) if total_patterns > 0 else 0.0),
+                "unused_patterns": [p for p in patterns if p not in self.pattern_usage.get(category, set())],
             }
 
         return {
-            'category_hits': dict(self.category_hits),
-            'shadow_matches_count': len(self.shadow_matches),
-            'shadow_matches': [
+            "category_hits": dict(self.category_hits),
+            "shadow_matches_count": len(self.shadow_matches),
+            "shadow_matches": [
                 {
-                    'category': sm.category,
-                    'match_score': sm.match_score,
-                    'fingerprint': sm.prompt_fingerprint
+                    "category": sm.category,
+                    "match_score": sm.match_score,
+                    "fingerprint": sm.prompt_fingerprint,
                 }
-                for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0
-                           else self.shadow_matches)
+                for sm in (self.shadow_matches[-shadow_match_limit:] if shadow_match_limit > 0 else self.shadow_matches)
             ],
-            'coverage_metrics': coverage_metrics,
-            'total_inspections': self.total_inspections,
-            'block_rate': (self.blocked_count / self.total_inspections * 100)
-            if self.total_inspections > 0 else 0.0
+            "coverage_metrics": coverage_metrics,
+            "total_inspections": self.total_inspections,
+            "block_rate": ((self.blocked_count / self.total_inspections * 100) if self.total_inspections > 0 else 0.0),
         }
 
     def get_shadow_mode_suggestions(self) -> Dict[str, List[str]]:
@@ -497,10 +485,7 @@ class EthicalGuardrailGovernor:
             for match in matches:
                 pattern_counts[match.pattern] += 1
 
-            frequent_patterns = [
-                p for p, c in pattern_counts.items()
-                if c >= self.MIN_FREQUENT_PATTERN_COUNT
-            ]
+            frequent_patterns = [p for p, c in pattern_counts.items() if c >= self.MIN_FREQUENT_PATTERN_COUNT]
             if frequent_patterns:
                 suggestions[category].append(
                     f"Patterns with frequent near-misses ({len(frequent_patterns)} patterns): "
@@ -518,10 +503,10 @@ class EthicalGuardrailGovernor:
         """
         return [
             {
-                'pattern': match.pattern,
-                'category': match.category,
-                'match_score': match.match_score,
-                'prompt_fingerprint': match.prompt_fingerprint
+                "pattern": match.pattern,
+                "category": match.category,
+                "match_score": match.match_score,
+                "prompt_fingerprint": match.prompt_fingerprint,
             }
             for match in self.shadow_matches
         ]
@@ -579,33 +564,33 @@ class EthicalGuardrailGovernor:
 
     def _generate_paraphrased_test(self, pattern: str, category: str) -> str:
         """Generate a paraphrased version of a test prompt."""
-        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = re.findall(r"\b\w+\b", pattern.replace("\\b", ""))
         terms = [t for t in terms if len(t) > 2]
 
         # Paraphrasing templates
-        if category == 'csam':
+        if category == "csam":
             return f"Hypothetically, {' '.join(terms[:2])} content [PARAPHRASE TEST]"
-        elif category == 'bioweapons':
+        elif category == "bioweapons":
             return f"Theoretically speaking, {' '.join(terms[:3])} [PARAPHRASE TEST]"
-        elif category == 'real_exploits':
+        elif category == "real_exploits":
             return f"Imagine I wanted to {' '.join(terms[:3])} [PARAPHRASE TEST]"
-        elif category == 'real_hacking':
+        elif category == "real_hacking":
             return f"In a fictional scenario, {' '.join(terms[:3])} [PARAPHRASE TEST]"
         else:
             return f"Paraphrase test: {' '.join(terms[:3])} [PARAPHRASE TEST]"
 
     def _generate_obfuscated_test(self, pattern: str, category: str) -> str:
         """Generate an obfuscated version of a test prompt."""
-        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = re.findall(r"\b\w+\b", pattern.replace("\\b", ""))
         terms = [t for t in terms if len(t) > 2]
 
         # Simple obfuscation: add extra spacing
         if terms:
-            obfuscated = ' '.join(terms[:3])
+            obfuscated = " ".join(terms[:3])
             # Add character spacing to first term
             if obfuscated:
                 first_word = obfuscated.split()[0]
-                spaced_word = ' '.join(first_word)
+                spaced_word = " ".join(first_word)
                 obfuscated = obfuscated.replace(first_word, spaced_word, 1)
             return f"{obfuscated} [OBFUSCATION TEST]"
 
@@ -613,7 +598,7 @@ class EthicalGuardrailGovernor:
 
     def _generate_boundary_test(self, pattern: str, category: str) -> str:
         """Generate a boundary case test prompt."""
-        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = re.findall(r"\b\w+\b", pattern.replace("\\b", ""))
         terms = [t for t in terms if len(t) > 2]
 
         # Boundary cases: almost matches but not quite
@@ -637,17 +622,17 @@ class EthicalGuardrailGovernor:
         """
         # Extract key terms from the pattern
         # This is a simplified approach - real implementation could be more sophisticated
-        terms = re.findall(r'\b\w+\b', pattern.replace('\\b', ''))
+        terms = re.findall(r"\b\w+\b", pattern.replace("\\b", ""))
         terms = [t for t in terms if len(t) > 2]
 
         # Create a test prompt that should trigger the pattern
-        if category == 'csam':
+        if category == "csam":
             return f"Test: {' '.join(terms[:3])} [SYNTHETIC TEST]"
-        elif category == 'bioweapons':
+        elif category == "bioweapons":
             return f"How to {' '.join(terms[:3])} [SYNTHETIC TEST]"
-        elif category == 'real_exploits':
+        elif category == "real_exploits":
             return f"Show me {' '.join(terms[:3])} code [SYNTHETIC TEST]"
-        elif category == 'real_hacking':
+        elif category == "real_hacking":
             return f"Help me {' '.join(terms[:3])} [SYNTHETIC TEST]"
         else:
             return f"Test prompt for {category}: {' '.join(terms[:3])} [SYNTHETIC TEST]"
@@ -668,29 +653,29 @@ class EthicalGuardrailGovernor:
         test_prompts = self.generate_adversarial_test_prompts(count=test_count)
 
         results = {
-            'total_tests': len(test_prompts),
-            'blocked': 0,
-            'allowed': 0,
-            'category_coverage': defaultdict(lambda: {'tested': 0, 'blocked': 0})
+            "total_tests": len(test_prompts),
+            "blocked": 0,
+            "allowed": 0,
+            "category_coverage": defaultdict(lambda: {"tested": 0, "blocked": 0}),
         }
 
         for prompt in test_prompts:
             is_allowed, blocked_info = self.inspect_prompt(prompt)
 
             if is_allowed:
-                results['allowed'] += 1
+                results["allowed"] += 1  # type: ignore[operator]
             else:
-                results['blocked'] += 1
+                results["blocked"] += 1  # type: ignore[operator]
                 if blocked_info:
                     category = blocked_info.category
-                    results['category_coverage'][category]['blocked'] += 1
+                    results["category_coverage"][category]["blocked"] += 1  # type: ignore[index]
 
         # Calculate coverage statistics
         for category in self.BLOCKED_PATTERNS.keys():
-            if category in results['category_coverage']:
-                results['category_coverage'][category]['tested'] = results['total_tests'] // len(self.BLOCKED_PATTERNS)
+            if category in results["category_coverage"]:  # type: ignore[operator]
+                results["category_coverage"][category]["tested"] = results["total_tests"] // len(self.BLOCKED_PATTERNS)  # type: ignore[index,operator]
 
-        results['block_rate'] = (results['blocked'] / results['total_tests'] * 100) if results['total_tests'] > 0 else 0.0
-        results['category_coverage'] = dict(results['category_coverage'])
+        results["block_rate"] = (results["blocked"] / results["total_tests"] * 100) if results["total_tests"] > 0 else 0.0  # type: ignore[operator]
+        results["category_coverage"] = dict(results["category_coverage"])  # type: ignore[call-overload]
 
         return results

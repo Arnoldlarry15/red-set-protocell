@@ -5,22 +5,22 @@ Verifies immutable experiment contract generation and validation.
 """
 
 import json
-import tempfile
 import os
+import tempfile
 
+from app.core.config import get_default_config
 from app.core.manifest import (
+    AgentBoundaries,
     AttackManifest,
-    TargetDefinition,
     DeterminismConfig,
+    FitnessFunctionConfig,
     IterationLimits,
     MutationPolicyConfig,
-    FitnessFunctionConfig,
-    AgentBoundaries,
     ResourceLimits,
-    create_manifest_from_config,
+    TargetDefinition,
     compute_fitness_fingerprint,
+    create_manifest_from_config,
 )
-from app.core.config import get_default_config
 
 
 class TestManifestDataclasses:
@@ -34,7 +34,7 @@ class TestManifestDataclasses:
             model_revision="observed-2026-01-21",
             endpoint="chat.completions",
             provider_metadata={"api_version": "v1"},
-            scope="Test scope"
+            scope="Test scope",
         )
 
         assert target.provider == "openai"
@@ -57,7 +57,7 @@ class TestManifestDataclasses:
             function_id="failure-severity-v1",
             version="1.0.0",
             code_fingerprint="abc123",
-            thresholds={"minor": 0.3, "major": 0.6, "critical": 0.85}
+            thresholds={"minor": 0.3, "major": 0.6, "critical": 0.85},
         )
 
         assert fitness.function_id == "failure-severity-v1"
@@ -71,7 +71,7 @@ class TestManifestDataclasses:
             sniper_can_generate=True,
             sniper_can_score=False,
             spotter_can_generate=False,
-            spotter_can_score=True
+            spotter_can_score=True,
         )
 
         assert boundaries.sniper_can_generate is True
@@ -97,29 +97,14 @@ class TestAttackManifest:
                 model_revision="observed-2026-01-21",
                 endpoint="chat.completions",
                 provider_metadata={},
-                scope="Test"
+                scope="Test",
             ),
             determinism=DeterminismConfig(seed=42, rng="pcg64"),
-            iteration_limits=IterationLimits(
-                max_generations=10,
-                population_size=5,
-                max_evaluations=50
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test-policy",
-                version="1.0.0",
-                operators=["op1", "op2"]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test-fitness",
-                version="1.0.0",
-                code_fingerprint="test123"
-            ),
+            iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
+            mutation_policy=MutationPolicyConfig(policy_id="test-policy", version="1.0.0", operators=["op1", "op2"]),
+            fitness_function=FitnessFunctionConfig(function_id="test-fitness", version="1.0.0", code_fingerprint="test123"),
             agent_boundaries=AgentBoundaries(),
-            resource_limits=ResourceLimits(
-                max_runtime_seconds=3600,
-                max_concurrency=1
-            )
+            resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1),
         )
 
         assert manifest.manifest_id == "test-manifest-123"
@@ -140,29 +125,14 @@ class TestAttackManifest:
                 model_revision="test",
                 endpoint="test",
                 provider_metadata={},
-                scope="test"
+                scope="test",
             ),
             determinism=DeterminismConfig(seed=42),
-            iteration_limits=IterationLimits(
-                max_generations=10,
-                population_size=5,
-                max_evaluations=50
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test",
-                version="1.0.0",
-                operators=[]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test",
-                version="1.0.0",
-                code_fingerprint="test"
-            ),
+            iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
+            mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+            fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
             agent_boundaries=AgentBoundaries(),
-            resource_limits=ResourceLimits(
-                max_runtime_seconds=60,
-                max_concurrency=1
-            )
+            resource_limits=ResourceLimits(max_runtime_seconds=60, max_concurrency=1),
         )
 
         json_str = manifest.to_json()
@@ -186,35 +156,32 @@ class TestAttackManifest:
                 "model_revision": "test",
                 "endpoint": "test",
                 "provider_metadata": {},
-                "scope": "test"
+                "scope": "test",
             },
             "determinism": {"seed": 99, "rng": "pcg64"},
             "iteration_limits": {
                 "max_generations": 20,
                 "population_size": 10,
-                "max_evaluations": 200
+                "max_evaluations": 200,
             },
             "mutation_policy": {
                 "policy_id": "test",
                 "version": "1.0.0",
-                "operators": ["op1"]
+                "operators": ["op1"],
             },
             "fitness_function": {
                 "function_id": "test",
                 "version": "1.0.0",
                 "code_fingerprint": "test",
-                "thresholds": {"minor": 0.3, "major": 0.6, "critical": 0.85}
+                "thresholds": {"minor": 0.3, "major": 0.6, "critical": 0.85},
             },
             "agent_boundaries": {
                 "sniper_can_generate": True,
                 "sniper_can_score": False,
                 "spotter_can_generate": False,
-                "spotter_can_score": True
+                "spotter_can_score": True,
             },
-            "resource_limits": {
-                "max_runtime_seconds": 120,
-                "max_concurrency": 2
-            }
+            "resource_limits": {"max_runtime_seconds": 120, "max_concurrency": 2},
         }
 
         manifest = AttackManifest.from_dict(json_data)
@@ -237,32 +204,17 @@ class TestAttackManifest:
                 model_revision="test",
                 endpoint="test",
                 provider_metadata={},
-                scope="test"
+                scope="test",
             ),
             determinism=DeterminismConfig(seed=777),
-            iteration_limits=IterationLimits(
-                max_generations=5,
-                population_size=3,
-                max_evaluations=15
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test",
-                version="1.0.0",
-                operators=[]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test",
-                version="1.0.0",
-                code_fingerprint="test"
-            ),
+            iteration_limits=IterationLimits(max_generations=5, population_size=3, max_evaluations=15),
+            mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+            fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
             agent_boundaries=AgentBoundaries(),
-            resource_limits=ResourceLimits(
-                max_runtime_seconds=60,
-                max_concurrency=1
-            )
+            resource_limits=ResourceLimits(max_runtime_seconds=60, max_concurrency=1),
         )
 
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             temp_path = f.name
             manifest.save(temp_path)
 
@@ -287,29 +239,14 @@ class TestAttackManifest:
                 model_revision="test",
                 endpoint="test",
                 provider_metadata={},
-                scope="test"
+                scope="test",
             ),
             determinism=DeterminismConfig(seed=42),
-            iteration_limits=IterationLimits(
-                max_generations=10,
-                population_size=5,
-                max_evaluations=50
-            ),
-            mutation_policy=MutationPolicyConfig(
-                policy_id="test",
-                version="1.0.0",
-                operators=[]
-            ),
-            fitness_function=FitnessFunctionConfig(
-                function_id="test",
-                version="1.0.0",
-                code_fingerprint="test"
-            ),
+            iteration_limits=IterationLimits(max_generations=10, population_size=5, max_evaluations=50),
+            mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
+            fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
             agent_boundaries=AgentBoundaries(),
-            resource_limits=ResourceLimits(
-                max_runtime_seconds=60,
-                max_concurrency=1
-            )
+            resource_limits=ResourceLimits(max_runtime_seconds=60, max_concurrency=1),
         )
 
         fingerprint = manifest.get_fingerprint()

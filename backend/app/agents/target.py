@@ -96,17 +96,28 @@ This Will Age Well Because:
 [OK] Clear separation of concerns
 """
 
+import asyncio
 import logging
 import random
-import time
-import asyncio
-from typing import Optional, Dict, Any, List
 from abc import abstractmethod
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 from app.interfaces.target import BaseTarget
+from app.auth import redact_sensitive_text, log_exception_safely
 
 logger = logging.getLogger(__name__)
+
+
+def _redact_sensitive_text(text: str) -> str:
+    """Redact credential-like tokens in error/log messages using shared auth utilities."""
+    return redact_sensitive_text(text)
+
+
+def _log_exception_safely(context: str, exc: Exception) -> None:
+    """Log redacted exception details and traceback for internal debugging using shared auth utilities."""
+    return log_exception_safely(context, exc)
+
 
 # Import requests for CustomHTTPBackend
 try:
@@ -269,7 +280,7 @@ class TargetBackend(BaseTarget):
 
         return modified_prompt, modified_temperature, modified_messages
 
-    def _apply_post_perturbations(self, response: str) -> str:
+    async def _apply_post_perturbations(self, response: str) -> str:
         """
         Apply perturbations to response after execution.
 
@@ -287,8 +298,7 @@ class TargetBackend(BaseTarget):
         # Apply simulated latency
         if PerturbationMode.SIMULATED_LATENCY in self.perturbation_config.modes:
             latency_ms = random.uniform(*self.perturbation_config.latency_range_ms)
-            # This runs synchronously as it's a post-processing step
-            time.sleep(latency_ms / 1000.0)
+            await asyncio.sleep(latency_ms / 1000.0)
             logger.debug(f"Simulated latency: {latency_ms:.0f}ms")
 
         # Apply response truncation
@@ -360,12 +370,12 @@ class OpenAIBackend(TargetBackend):
             result = response.choices[0].message.content
 
             # Apply post-execution perturbations
-            result = self._apply_post_perturbations(result)
+            result = await self._apply_post_perturbations(result)
 
             return result
 
         except Exception as e:
-            logger.error(f"OpenAI API call failed: {e}")
+            log_exception_safely("OpenAI API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -450,12 +460,12 @@ class AnthropicBackend(TargetBackend):
             result = response.content[0].text
 
             # Apply post-execution perturbations
-            result = self._apply_post_perturbations(result)
+            result = await self._apply_post_perturbations(result)
 
             return result
 
         except Exception as e:
-            logger.error(f"Anthropic API call failed: {e}")
+            log_exception_safely("Anthropic API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -533,12 +543,12 @@ class OpenRouterBackend(TargetBackend):
             result = response.choices[0].message.content
 
             # Apply post-execution perturbations
-            result = self._apply_post_perturbations(result)
+            result = await self._apply_post_perturbations(result)
 
             return result
 
         except Exception as e:
-            logger.error(f"OpenRouter API call failed: {e}")
+            log_exception_safely("OpenRouter API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -619,12 +629,12 @@ class LlamaCppBackend(TargetBackend):
             result = response["choices"][0]["text"]
 
             # Apply post-execution perturbations
-            result = self._apply_post_perturbations(result)
+            result = await self._apply_post_perturbations(result)
 
             return result
 
         except Exception as e:
-            logger.error(f"LlamaCpp execution failed: {e}")
+            log_exception_safely("LlamaCpp execution failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -713,7 +723,8 @@ class CustomHTTPBackend(TargetBackend):
             # Use asyncio to run requests in executor (requests is sync)
             loop = asyncio.get_event_loop()
             response = await loop.run_in_executor(
-                None, lambda: requests.post(self.api_url, json=payload, headers=self.headers, timeout=60)
+                None,
+                lambda: requests.post(self.api_url, json=payload, headers=self.headers, timeout=60),
             )
             response.raise_for_status()
 
@@ -729,12 +740,12 @@ class CustomHTTPBackend(TargetBackend):
                 result = data.get("response", data.get("text", str(data)))
 
             # Apply post-execution perturbations
-            result = self._apply_post_perturbations(result)
+            result = await self._apply_post_perturbations(result)
 
             return result
 
         except Exception as e:
-            logger.error(f"Custom HTTP API call failed: {e}")
+            log_exception_safely("Custom HTTP API call failed", e)
             raise
 
     def get_backend_info(self) -> Dict[str, Any]:
@@ -808,7 +819,7 @@ class Target:
             return response
 
         except Exception as e:
-            logger.error(f"Target execution failed: {e}")
+            log_exception_safely("Target execution failed", e)
             raise  # Re-raise the exception instead of returning error string
 
     def get_statistics(self) -> Dict[str, Any]:

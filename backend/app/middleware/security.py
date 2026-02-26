@@ -7,13 +7,14 @@ Implements production-ready security features:
 - Request validation and sanitization
 """
 
+import logging
+import re
+from datetime import datetime, timedelta
+from typing import Dict, Tuple
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Dict, Tuple
-from datetime import datetime, timedelta
-import logging
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +43,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # HTTP Strict Transport Security (HSTS) - Force HTTPS
         # Only add in production with HTTPS enabled
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
         # Prevent clickjacking attacks
         response.headers["X-Frame-Options"] = "DENY"
@@ -59,9 +58,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
         # Permissions policy - restrict browser features
-        response.headers["Permissions-Policy"] = (
-            "geolocation=(), microphone=(), camera=(), payment=()"
-        )
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), payment=()"
 
         return response
 
@@ -120,20 +117,22 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             self.hour_buckets[ip] = []
 
         # Clean old requests
-        self.minute_buckets[ip] = self._clean_old_requests(
-            self.minute_buckets[ip], 60
-        )
-        self.hour_buckets[ip] = self._clean_old_requests(
-            self.hour_buckets[ip], 3600
-        )
+        self.minute_buckets[ip] = self._clean_old_requests(self.minute_buckets[ip], 60)
+        self.hour_buckets[ip] = self._clean_old_requests(self.hour_buckets[ip], 3600)
 
         # Check minute limit
         if len(self.minute_buckets[ip]) >= self.requests_per_minute:
-            return False, f"Rate limit exceeded: {self.requests_per_minute} requests per minute"
+            return (
+                False,
+                f"Rate limit exceeded: {self.requests_per_minute} requests per minute",
+            )
 
         # Check hour limit
         if len(self.hour_buckets[ip]) >= self.requests_per_hour:
-            return False, f"Rate limit exceeded: {self.requests_per_hour} requests per hour"
+            return (
+                False,
+                f"Rate limit exceeded: {self.requests_per_hour} requests per hour",
+            )
 
         # Add current request
         self.minute_buckets[ip].append(now)
@@ -159,9 +158,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 content={
                     "error": "Rate limit exceeded",
                     "message": reason,
-                    "retry_after": 60
+                    "retry_after": 60,
                 },
-                headers={"Retry-After": "60"}
+                headers={"Retry-After": "60"},
             )
 
         # Add rate limit headers to response
@@ -228,8 +227,8 @@ class InputValidationMiddleware(BaseHTTPMiddleware):
                     status_code=400,
                     content={
                         "error": "Invalid request",
-                        "message": "Request contains potentially dangerous content"
-                    }
+                        "message": "Request contains potentially dangerous content",
+                    },
                 )
 
             # Re-create request with original body

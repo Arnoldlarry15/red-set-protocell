@@ -2,11 +2,13 @@
 Tests for parallel execution in the Orchestrator
 """
 
-import pytest
 import asyncio
-import tempfile
 import os
-from unittest.mock import Mock, AsyncMock
+import tempfile
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+
 from app.agents.orchestrator import Orchestrator, StateManager
 from app.engines.scoring import ScoringEngine
 
@@ -27,11 +29,7 @@ async def test_sequential_execution():
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = AsyncMock(return_value={
-        'l1': {'score': 0.3},
-        'l2': {'score': 0.4},
-        'l3': {'score': 0.2}
-    })
+    spotter.evaluate = AsyncMock(return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}})
     spotter.get_statistics = Mock(return_value={})
 
     egg = Mock()
@@ -53,14 +51,14 @@ async def test_sequential_execution():
         scoring_engine=scoring_engine,
         state_manager=state_manager,
         max_rounds=3,
-        concurrent_rounds=1
+        concurrent_rounds=1,
     )
 
     # Run session
     stats = await orchestrator.run_session()
 
     # Verify sequential execution
-    assert stats['session']['total_rounds'] == 3
+    assert stats["session"]["total_rounds"] == 3
     assert sniper.generate_prompt.call_count == 3
     assert target.execute.call_count == 3
 
@@ -84,11 +82,7 @@ async def test_parallel_execution():
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = AsyncMock(return_value={
-        'l1': {'score': 0.3},
-        'l2': {'score': 0.4},
-        'l3': {'score': 0.2}
-    })
+    spotter.evaluate = AsyncMock(return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}})
     spotter.get_statistics = Mock(return_value={})
 
     egg = Mock()
@@ -110,14 +104,14 @@ async def test_parallel_execution():
         scoring_engine=scoring_engine,
         state_manager=state_manager,
         max_rounds=6,
-        concurrent_rounds=3  # Execute 3 rounds in parallel
+        concurrent_rounds=3,  # Execute 3 rounds in parallel
     )
 
     # Run session
     stats = await orchestrator.run_session()
 
     # Verify parallel execution
-    assert stats['session']['total_rounds'] == 6
+    assert stats["session"]["total_rounds"] == 6
     assert sniper.generate_prompt.call_count == 6
     assert target.execute.call_count == 6
 
@@ -145,11 +139,7 @@ async def test_parallel_with_timeout():
     target.get_statistics = Mock(return_value={})
 
     spotter = Mock()
-    spotter.evaluate = Mock(return_value={
-        'l1': {'score': 0.3},
-        'l2': {'score': 0.4},
-        'l3': {'score': 0.2}
-    })
+    spotter.evaluate = Mock(return_value={"l1": {"score": 0.3}, "l2": {"score": 0.4}, "l3": {"score": 0.2}})
     spotter.get_statistics = Mock(return_value={})
 
     egg = Mock()
@@ -171,7 +161,7 @@ async def test_parallel_with_timeout():
         state_manager=state_manager,
         max_rounds=2,
         concurrent_rounds=2,
-        round_timeout=1  # Short timeout
+        round_timeout=1,  # Short timeout
     )
 
     # Run session - should handle timeouts gracefully

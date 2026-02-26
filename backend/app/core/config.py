@@ -31,10 +31,10 @@ If a configuration is invalid, the system raises an exception immediately
 at initialization rather than silently using unsafe defaults.
 """
 
+import os
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional, Dict, List
-import os
+from typing import Dict, List, Optional
 
 
 class StorageMode(Enum):

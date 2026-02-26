@@ -12,6 +12,9 @@ import { User } from './types';
 import './styles/globals.css';
 
 function App() {
+  // NOTE: Auth state is intentionally in-memory only for now.
+  // TODO(production-auth): Add persistent token lifecycle (access + refresh,
+  // expiry tracking, and refresh-on-401) when multi-user production auth is introduced.
   const [authenticated, setAuthenticated] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [backend, setBackend] = useState('openai');

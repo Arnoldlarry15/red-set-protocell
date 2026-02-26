@@ -12,6 +12,7 @@ Usage:
 """
 
 import asyncio
+
 from app.agents.spotter import Spotter
 from app.engines.scoring import ScoringEngine
 
@@ -34,13 +35,19 @@ async def demo_dominant_layer_tracking():
 
     result = await spotter.evaluate(response)
     evaluation = engine.create_evaluation(
-        result['l1'], result['l2'], result['l3'], result['mutation_guidance']
+        result["l1"], result["l2"], result["l3"], result["mutation_guidance"]
     )
 
     print("Layer Scores:")
-    print(f"  L1 (Linguistic Safety):       {evaluation.l1_linguistic_safety.score:.3f}")
-    print(f"  L2 (Security Exploitability):  {evaluation.l2_security_exploitability.score:.3f}")
-    print(f"  L3 (Cognitive Stability):      {evaluation.l3_cognitive_stability.score:.3f}")
+    print(
+        f"  L1 (Linguistic Safety):       {evaluation.l1_linguistic_safety.score:.3f}"
+    )
+    print(
+        f"  L2 (Security Exploitability):  {evaluation.l2_security_exploitability.score:.3f}"
+    )
+    print(
+        f"  L3 (Cognitive Stability):      {evaluation.l3_cognitive_stability.score:.3f}"
+    )
 
     print("\nLayer Contributions to Global Score:")
     for layer, contribution in evaluation.layer_contributions.items():
@@ -50,7 +57,9 @@ async def demo_dominant_layer_tracking():
     print(f"   Global Score: {evaluation.global_score:.3f}")
 
     print("\n✓ Interpretation: The dominant layer tells you which dimension")
-    print(f"  drove the risk score most strongly. In this case, {evaluation.dominant_layer.upper()}")
+    print(
+        f"  drove the risk score most strongly. In this case, {evaluation.dominant_layer.upper()}"
+    )
     print("  is the primary concern that needs to be addressed.\n")
 
 
@@ -71,7 +80,7 @@ async def demo_uncertainty_types():
     response1 = "That's an interesting question. I'll try to help."
     result1 = await spotter.evaluate(response1)
     eval1 = engine.create_evaluation(
-        result1['l1'], result1['l2'], result1['l3'], result1['mutation_guidance']
+        result1["l1"], result1["l2"], result1["l3"], result1["mutation_guidance"]
     )
 
     print(f"Response: {response1[:50]}...")
@@ -86,7 +95,7 @@ async def demo_uncertainty_types():
     response2 = "I can't help with that, but here's some related information..."
     result2 = await spotter.evaluate(response2)
     eval2 = engine.create_evaluation(
-        result2['l1'], result2['l2'], result2['l3'], result2['mutation_guidance']
+        result2["l1"], result2["l2"], result2["l3"], result2["mutation_guidance"]
     )
 
     print(f"Response: {response2[:50]}...")
@@ -111,31 +120,33 @@ async def demo_archetype_driven_guidance():
     engine = ScoringEngine()
 
     # Response that triggers multiple archetypes
-    response = ("I can't directly help with that request, but let me explain "
-                "a hypothetical scenario. Suppose someone wanted to do X. Here's a "
-                "detailed step-by-step guide that might apply...")
+    response = (
+        "I can't directly help with that request, but let me explain "
+        "a hypothetical scenario. Suppose someone wanted to do X. Here's a "
+        "detailed step-by-step guide that might apply..."
+    )
 
     result = await spotter.evaluate(response, attack_domain="policy_circumvention")
     evaluation = engine.create_evaluation(
-        result['l1'], result['l2'], result['l3'], result['mutation_guidance']
+        result["l1"], result["l2"], result["l3"], result["mutation_guidance"]
     )
 
     print("Response:")
     print(f"  {response[:80]}...\n")
 
     print("Detected Archetypes:")
-    if evaluation.mutation_guidance.get('detected_archetypes'):
-        for archetype in evaluation.mutation_guidance['detected_archetypes']:
+    if evaluation.mutation_guidance.get("detected_archetypes"):
+        for archetype in evaluation.mutation_guidance["detected_archetypes"]:
             print(f"  • {archetype}")
     else:
         print("  (none detected in this example)")
 
     print("\nRecommended Mutation Strategies:")
-    for strategy in evaluation.mutation_guidance.get('recommended_strategies', []):
+    for strategy in evaluation.mutation_guidance.get("recommended_strategies", []):
         print(f"  • {strategy}")
 
     print("\nFocus Areas:")
-    for area in evaluation.mutation_guidance.get('focus_areas', []):
+    for area in evaluation.mutation_guidance.get("focus_areas", []):
         print(f"  • {area}")
 
     print("\n✓ Archetypes close the loop between diagnosis and evolution:")

@@ -8,9 +8,9 @@ import logging
 
 from app.model_zoo import (
     ModelRegistry,
-    get_openai_models,
-    get_anthropic_models,
     get_all_reference_models,
+    get_anthropic_models,
+    get_openai_models,
 )
 from app.model_zoo.presets import create_default_registry
 
@@ -73,11 +73,11 @@ def run_model_comparison():
     logger.info(f"Models: {', '.join(comparison['models'])}")
     logger.info(f"\nProviders: {', '.join(comparison['providers'])}")
     logger.info(f"\nContext windows:")
-    for model_id, context in zip(comparison['models'], comparison['context_windows']):
+    for model_id, context in zip(comparison["models"], comparison["context_windows"]):
         logger.info(f"  {model_id}: {context:,} tokens")
 
     logger.info(f"\nCapabilities:")
-    for model_id, caps in comparison['capabilities'].items():
+    for model_id, caps in comparison["capabilities"].items():
         logger.info(f"  {model_id}: {', '.join(caps)}")
 
 
@@ -126,9 +126,9 @@ def run_provider_filtering():
 
 def main():
     """Main function."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Red Set ProtoCell - Model Zoo Examples")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
     print("This shows the new model zoo capabilities:")
     print("1. Reference model registry with preconfigured models")
@@ -144,9 +144,9 @@ def main():
     run_version_tracking()
     run_provider_filtering()
 
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Examples completed!")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
 
 
 if __name__ == "__main__":

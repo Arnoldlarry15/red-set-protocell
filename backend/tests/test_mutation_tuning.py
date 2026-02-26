@@ -46,10 +46,10 @@ def test_adaptive_strategy_selection():
     for _ in range(20):
         engine.mutate("test prompt")
         if engine.mutation_history:
-            selected_strategies.append(engine.mutation_history[-1]['strategy'])
+            selected_strategies.append(engine.mutation_history[-1]["strategy"])
 
     # Should favor lexical variation more than obfuscation
-    assert selected_strategies.count('lexical_variation') > 0
+    assert selected_strategies.count("lexical_variation") > 0
 
 
 def test_mutation_statistics_includes_performance():
@@ -65,9 +65,9 @@ def test_mutation_statistics_includes_performance():
 
     stats = engine.get_statistics()
 
-    assert 'strategy_performance' in stats
-    assert 'adaptive_mode' in stats
-    assert stats['total_mutations'] == 2
+    assert "strategy_performance" in stats
+    assert "adaptive_mode" in stats
+    assert stats["total_mutations"] == 2
 
 
 def test_adaptive_mode_with_no_data():
@@ -103,8 +103,8 @@ def test_strategy_performance_empty_scores():
     stats = engine.get_statistics()
 
     # Should handle empty performance data
-    assert 'strategy_performance' in stats
-    assert isinstance(stats['strategy_performance'], dict)
+    assert "strategy_performance" in stats
+    assert isinstance(stats["strategy_performance"], dict)
 
 
 def test_all_strategies_trackable():
@@ -119,7 +119,7 @@ def test_all_strategies_trackable():
     stats = engine.get_statistics()
 
     # All strategies should be in statistics
-    assert len(stats['strategy_distribution']) <= len(MutationStrategy)
+    assert len(stats["strategy_distribution"]) <= len(MutationStrategy)
 
 
 def test_mutation_with_fitness_score():
@@ -135,8 +135,8 @@ def test_mutation_with_fitness_score():
     assert isinstance(result2, str)
 
     # History should track fitness scores
-    assert engine.mutation_history[0]['fitness_score'] == 0.1
-    assert engine.mutation_history[1]['fitness_score'] == 0.9
+    assert engine.mutation_history[0]["fitness_score"] == 0.1
+    assert engine.mutation_history[1]["fitness_score"] == 0.9
 
 
 def test_edge_case_empty_prompt():

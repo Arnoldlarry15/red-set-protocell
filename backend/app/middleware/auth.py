@@ -7,16 +7,17 @@ Implements:
 - Role-based access control (RBAC)
 """
 
+import hashlib
+import logging
+import os
+import secrets
+from datetime import datetime, timedelta
+from typing import Dict, Optional
+
+import jwt
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Optional, Dict
-from datetime import datetime, timedelta
-import jwt
-import secrets
-import hashlib
-import os
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +94,7 @@ class TokenManager:
         except jwt.ExpiredSignatureError:
             logger.warning("Token expired")
             return None
-        except jwt.JWTError as e:
+        except jwt.PyJWTError as e:
             logger.warning(f"Token validation failed: {e}")
             return None
 
@@ -113,12 +114,7 @@ class PasswordHasher:
             salt = secrets.token_hex(16)
 
         # Use PBKDF2 with SHA256
-        key = hashlib.pbkdf2_hmac(
-            'sha256',
-            password.encode('utf-8'),
-            salt.encode('utf-8'),
-            100000  # 100k iterations
-        )
+        key = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), 100000)  # 100k iterations
 
         return f"{salt}${key.hex()}"
 
@@ -126,7 +122,7 @@ class PasswordHasher:
     def verify_password(password: str, hashed: str) -> bool:
         """Verify a password against its hash."""
         try:
-            salt, key = hashed.split('$')
+            salt, key = hashed.split("$")
             expected = PasswordHasher.hash_password(password, salt)
             return expected == hashed
         except Exception as e:
@@ -139,9 +135,9 @@ class RBACManager:
 
     # Define role hierarchy (higher number = more permissions)
     ROLES = {
-        "observer": 1,    # Read-only access
+        "observer": 1,  # Read-only access
         "researcher": 2,  # Can run experiments
-        "admin": 3,       # Full access
+        "admin": 3,  # Full access
     }
 
     # Define endpoint permissions
@@ -239,7 +235,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             request.state.user = {
                 "username": "dev_user",
                 "role": "admin",
-                "email": "dev@example.com"
+                "email": "dev@example.com",
             }
             return await call_next(request)
 
@@ -275,8 +271,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         if not RBACManager.has_permission(role, endpoint):
             logger.warning(
-                f"Permission denied: {request.state.user['username']} "
-                f"(role={role}) attempted to access {endpoint}"
+                f"Permission denied: {request.state.user['username']} " f"(role={role}) attempted to access {endpoint}"
             )
             return self._forbidden("Insufficient permissions")
 
@@ -285,6 +280,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     def _unauthorized(self, message: str):
         """Return 401 Unauthorized response."""
         from fastapi.responses import JSONResponse
+
         return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
             content={"error": "Unauthorized", "message": message},
@@ -294,6 +290,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     def _forbidden(self, message: str):
         """Return 403 Forbidden response."""
         from fastapi.responses import JSONResponse
+
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
             content={"error": "Forbidden", "message": message},

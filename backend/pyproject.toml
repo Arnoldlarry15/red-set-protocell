@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 127
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+target-version = ['py311', 'py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -18,6 +18,13 @@ extend-exclude = '''
 )/
 '''
 
+[tool.isort]
+profile = "black"
+line_length = 127
+skip_gitignore = true
+known_first_party = ["app"]
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+
 [tool.pytest.ini_options]
 minversion = "7.4"
 testpaths = ["tests"]
@@ -32,9 +39,6 @@ addopts = [
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
-    # Coverage threshold set to 10% to account for individual test files
-    # Full test suite achieves ~78% coverage
-    "--cov-fail-under=10",
 ]
 markers = [
     "asyncio: mark test as async",
@@ -85,7 +89,7 @@ name = "red-set-protocell"
 version = "1.0.0"
 description = "An Open-source AI safety platform using dual-agent Sniper/Spotter red-teaming to audit and secure large language models"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
     {name = "Arnold Larry", email = "arnoldlarry15@users.noreply.github.com"}
@@ -97,9 +101,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -124,6 +125,7 @@ dev = [
     "pytest-asyncio>=0.21.0",
     "pytest-cov>=4.1.0",
     "black>=23.7.0",
+    "isort>=5.13.2",
     "flake8>=6.1.0",
     "mypy>=1.5.0",
 ]

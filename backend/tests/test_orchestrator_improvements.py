@@ -3,13 +3,15 @@ Tests for orchestrator improvements: async StateManager, evolution modes,
 EGG auditor, and zero-retention cleanup.
 """
 
-import pytest
-import tempfile
 import os
 import shutil
-from app.agents.orchestrator import Orchestrator, StateManager, RoundResult
-from app.engines.scoring import ScoringEngine
+import tempfile
+
+import pytest
+
+from app.agents.orchestrator import Orchestrator, RoundResult, StateManager
 from app.core.egg_auditor import EGGAuditor
+from app.engines.scoring import ScoringEngine
 
 
 @pytest.fixture
@@ -109,6 +111,7 @@ class MockEGG(MockAgent):
 
 # Test Issue 1: Async StateManager
 
+
 @pytest.mark.asyncio
 async def test_state_manager_async_save_round(temp_db):
     """Test async save_round method."""
@@ -124,7 +127,7 @@ async def test_state_manager_async_save_round(temp_db):
         blocked_by_egg=False,
         timestamp="2024-01-01T00:00:00Z",
         model_version="test",
-        session_start_time="2024-01-01T00:00:00Z"
+        session_start_time="2024-01-01T00:00:00Z",
     )
 
     # Should not raise
@@ -149,7 +152,7 @@ async def test_state_manager_async_get_prior_rounds(temp_db):
         evaluation={},
         global_score=0.5,
         blocked_by_egg=False,
-        timestamp="2024-01-01T00:00:00Z"
+        timestamp="2024-01-01T00:00:00Z",
     )
     await state_manager.save_round_async(round_result)
 
@@ -161,6 +164,7 @@ async def test_state_manager_async_get_prior_rounds(temp_db):
 
 
 # Test Issue 2: Evolution Modes
+
 
 def test_orchestrator_sequential_evolution_mode(temp_db):
     """Test orchestrator with sequential evolution mode."""
@@ -179,7 +183,7 @@ def test_orchestrator_sequential_evolution_mode(temp_db):
         scoring_engine=scoring_engine,
         state_manager=state_manager,
         evolution_mode="sequential",
-        concurrent_rounds=4  # Even with concurrent_rounds > 1, should use sequential
+        concurrent_rounds=4,  # Even with concurrent_rounds > 1, should use sequential
     )
 
     assert orchestrator.evolution_mode == "sequential"
@@ -203,7 +207,7 @@ def test_orchestrator_batched_evolution_mode(temp_db):
         scoring_engine=scoring_engine,
         state_manager=state_manager,
         evolution_mode="batched",
-        concurrent_rounds=4
+        concurrent_rounds=4,
     )
 
     assert orchestrator.evolution_mode == "batched"
@@ -226,11 +230,12 @@ def test_orchestrator_invalid_evolution_mode(temp_db):
             egg=egg,
             scoring_engine=scoring_engine,
             state_manager=state_manager,
-            evolution_mode="invalid_mode"
+            evolution_mode="invalid_mode",
         )
 
 
 # Test Issue 3: EGG Auditor
+
 
 def test_egg_auditor_initialization():
     """Test EGG auditor initializes correctly."""
@@ -315,7 +320,7 @@ def test_orchestrator_with_egg_auditor(temp_db):
         egg=egg,
         scoring_engine=scoring_engine,
         state_manager=state_manager,
-        egg_auditor=egg_auditor
+        egg_auditor=egg_auditor,
     )
 
     assert orchestrator.egg_auditor is not None
@@ -323,6 +328,7 @@ def test_orchestrator_with_egg_auditor(temp_db):
 
 
 # Test Issue 4: Zero-Retention Cleanup
+
 
 def test_zero_retention_cleanup_removes_artifacts(temp_db, temp_artifacts_dir):
     """Test that zero-retention cleanup removes artifacts directory."""
@@ -340,11 +346,20 @@ def test_zero_retention_cleanup_removes_artifacts(temp_db, temp_artifacts_dir):
         egg=egg,
         scoring_engine=scoring_engine,
         state_manager=state_manager,
-        artifacts_dir=temp_artifacts_dir
+        artifacts_dir=temp_artifacts_dir,
     )
 
     # Create a manifest directory to simulate a run
-    from app.core.manifest import AttackManifest, TargetDefinition, IterationLimits, FitnessFunctionConfig, DeterminismConfig, MutationPolicyConfig, ResourceLimits, AgentBoundaries
+    from app.core.manifest import (
+        AgentBoundaries,
+        AttackManifest,
+        DeterminismConfig,
+        FitnessFunctionConfig,
+        IterationLimits,
+        MutationPolicyConfig,
+        ResourceLimits,
+        TargetDefinition,
+    )
 
     orchestrator.current_manifest = AttackManifest(
         manifest_id="test-manifest-123",
@@ -358,14 +373,14 @@ def test_zero_retention_cleanup_removes_artifacts(temp_db, temp_artifacts_dir):
             model_revision="test",
             endpoint="test",
             provider_metadata={},
-            scope="test"
+            scope="test",
         ),
         determinism=DeterminismConfig(seed=42, rng="pcg64"),
         iteration_limits=IterationLimits(max_generations=10, population_size=10, max_evaluations=100),
         mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
         fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
         agent_boundaries=AgentBoundaries(),
-        resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1)
+        resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1),
     )
 
     run_dir = os.path.join(temp_artifacts_dir, "test-manifest-123")
@@ -405,11 +420,20 @@ def test_zero_retention_disabled_preserves_artifacts(temp_db, temp_artifacts_dir
         egg=egg,
         scoring_engine=scoring_engine,
         state_manager=state_manager,
-        artifacts_dir=temp_artifacts_dir
+        artifacts_dir=temp_artifacts_dir,
     )
 
     # Create a manifest directory to simulate a run
-    from app.core.manifest import AttackManifest, TargetDefinition, IterationLimits, FitnessFunctionConfig, DeterminismConfig, MutationPolicyConfig, ResourceLimits, AgentBoundaries
+    from app.core.manifest import (
+        AgentBoundaries,
+        AttackManifest,
+        DeterminismConfig,
+        FitnessFunctionConfig,
+        IterationLimits,
+        MutationPolicyConfig,
+        ResourceLimits,
+        TargetDefinition,
+    )
 
     orchestrator.current_manifest = AttackManifest(
         manifest_id="test-manifest-456",
@@ -423,14 +447,14 @@ def test_zero_retention_disabled_preserves_artifacts(temp_db, temp_artifacts_dir
             model_revision="test",
             endpoint="test",
             provider_metadata={},
-            scope="test"
+            scope="test",
         ),
         determinism=DeterminismConfig(seed=42, rng="pcg64"),
         iteration_limits=IterationLimits(max_generations=10, population_size=10, max_evaluations=100),
         mutation_policy=MutationPolicyConfig(policy_id="test", version="1.0.0", operators=[]),
         fitness_function=FitnessFunctionConfig(function_id="test", version="1.0.0", code_fingerprint="test"),
         agent_boundaries=AgentBoundaries(),
-        resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1)
+        resource_limits=ResourceLimits(max_runtime_seconds=3600, max_concurrency=1),
     )
 
     run_dir = os.path.join(temp_artifacts_dir, "test-manifest-456")

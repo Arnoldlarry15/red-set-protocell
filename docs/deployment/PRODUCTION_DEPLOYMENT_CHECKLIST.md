@@ -89,6 +89,10 @@ Use this checklist before deploying Red Set ProtoCell to production.
 
 ### Deployment
 
+- [ ] **Hardened Compose Path Verified**
+  - [ ] `docker compose -f docker-compose.production.yml config` succeeds
+  - [ ] Required env vars validated before deploy
+
 - [ ] **Deployment Method**
   - [ ] Docker image built and tested
   - [ ] OR: Systemd service configured
@@ -114,19 +118,19 @@ Use this checklist before deploying Red Set ProtoCell to production.
   - [ ] Runbook updated
 
 - [ ] **Monitoring Docs**
-  - [ ] [MONITORING_GUIDE.md](MONITORING_GUIDE.md) reviewed
+  - [ ] [MONITORING_GUIDE.md](../guides/MONITORING_GUIDE.md) reviewed
   - [ ] Alert thresholds documented
   - [ ] Dashboard URLs documented
 
 - [ ] **Incident Response**
-  - [ ] [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) reviewed
+  - [ ] [INCIDENT_RESPONSE.md](../guides/INCIDENT_RESPONSE.md) reviewed
   - [ ] On-call schedule created
   - [ ] Emergency contacts updated
 
 ### Testing
 
 - [ ] **Smoke Tests**
-  - [ ] Health check: `curl https://api.your-domain.com/api/health`
+  - [ ] Health checks: `curl https://api.your-domain.com/health` and `curl https://api.your-domain.com/api/health`
   - [ ] Login works
   - [ ] Session start works
   - [ ] Metrics endpoint works (internal)
@@ -136,6 +140,7 @@ Use this checklist before deploying Red Set ProtoCell to production.
   - [ ] Performance acceptable under load
   - [ ] No memory leaks detected
   - [ ] Example: `hey -n 1000 -c 10 https://api.your-domain.com/api/health`
+  - [ ] Baseline script pass: `python scripts/load_test_baseline.py --base-url https://api.your-domain.com --requests 200 --concurrency 20`
 
 - [ ] **Security Testing**
   - [ ] Penetration test completed (if required)
@@ -287,12 +292,12 @@ Calculate your score:
 Before deploying, review:
 
 1. [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Deployment procedures
-2. [MONITORING_GUIDE.md](MONITORING_GUIDE.md) - Monitoring setup
-3. [INCIDENT_RESPONSE.md](INCIDENT_RESPONSE.md) - Incident procedures
-4. [SECURITY.md](SECURITY.md) - Security practices
-5. [SLO_DOCUMENTATION.md](SLO_DOCUMENTATION.md) - SLO framework
-6. [API_DOCUMENTATION.md](API_DOCUMENTATION.md) - API reference
-7. [COMPLIANCE_GUIDE.md](COMPLIANCE_GUIDE.md) - Privacy & compliance
+2. [MONITORING_GUIDE.md](../guides/MONITORING_GUIDE.md) - Monitoring setup
+3. [INCIDENT_RESPONSE.md](../guides/INCIDENT_RESPONSE.md) - Incident procedures
+4. [SECURITY.md](../../SECURITY.md) - Security practices
+5. [SLO_DOCUMENTATION.md](../archive/SLO_DOCUMENTATION.md) - SLO framework
+6. [API_DOCUMENTATION.md](../guides/API_DOCUMENTATION.md) - API reference
+7. [COMPLIANCE_GUIDE.md](../guides/COMPLIANCE_GUIDE.md) - Privacy & compliance
 
 ## 🆘 Emergency Contacts
 

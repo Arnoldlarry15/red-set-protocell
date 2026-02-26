@@ -8,12 +8,12 @@ from app.analytics.time_tracking import (
     FatigueTracker,
     RegressionDetector,
     ScoreDriftAnalyzer,
-    TimeSeriesMetrics
+    TimeSeriesMetrics,
 )
 
 __all__ = [
-    'FatigueTracker',
-    'RegressionDetector',
-    'ScoreDriftAnalyzer',
-    'TimeSeriesMetrics'
+    "FatigueTracker",
+    "RegressionDetector",
+    "ScoreDriftAnalyzer",
+    "TimeSeriesMetrics",
 ]

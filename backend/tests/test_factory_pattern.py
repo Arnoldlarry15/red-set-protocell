@@ -3,8 +3,15 @@ Tests for factory pattern implementation.
 """
 
 import pytest
+
+from app.agents.target import (
+    AnthropicBackend,
+    OpenAIBackend,
+    OpenRouterBackend,
+    Target,
+    TargetBackend,
+)
 from app.factories import BackendFactory, TargetFactory, create_target
-from app.agents.target import OpenAIBackend, OpenRouterBackend, AnthropicBackend, TargetBackend, Target
 
 
 def test_backend_factory_registration():
@@ -21,11 +28,7 @@ def test_backend_factory_registration():
 
 def test_backend_factory_create_openai():
     """Test creating OpenAI backend via factory."""
-    backend = BackendFactory.create(
-        "openai",
-        api_key="test-key",
-        model_name="gpt-4"
-    )
+    backend = BackendFactory.create("openai", api_key="test-key", model_name="gpt-4")
 
     assert isinstance(backend, OpenAIBackend)
     assert backend.model_name == "gpt-4"
@@ -37,11 +40,7 @@ def test_backend_factory_create_openai():
 
 def test_backend_factory_create_anthropic():
     """Test creating Anthropic backend via factory."""
-    backend = BackendFactory.create(
-        "anthropic",
-        api_key="test-key",
-        model_name="claude-3-opus-20240229"
-    )
+    backend = BackendFactory.create("anthropic", api_key="test-key", model_name="claude-3-opus-20240229")
 
     assert isinstance(backend, AnthropicBackend)
     assert backend.model_name == "claude-3-opus-20240229"
@@ -52,11 +51,7 @@ def test_backend_factory_create_anthropic():
 
 def test_backend_factory_create_openrouter():
     """Test creating OpenRouter backend via factory."""
-    backend = BackendFactory.create(
-        "openrouter",
-        api_key="test-key",
-        model_name="anthropic/claude-3-opus"
-    )
+    backend = BackendFactory.create("openrouter", api_key="test-key", model_name="anthropic/claude-3-opus")
 
     assert isinstance(backend, OpenRouterBackend)
     assert backend.model_name == "anthropic/claude-3-opus"
@@ -71,12 +66,7 @@ def test_backend_factory_create_openrouter():
 def test_backend_factory_create_openrouter_custom_url():
     """Test creating OpenRouter backend with custom base URL."""
     custom_url = "https://custom.openrouter.ai/api/v1"
-    backend = BackendFactory.create(
-        "openrouter",
-        api_key="test-key",
-        model_name="openai/gpt-4",
-        base_url=custom_url
-    )
+    backend = BackendFactory.create("openrouter", api_key="test-key", model_name="openai/gpt-4", base_url=custom_url)
 
     assert isinstance(backend, OpenRouterBackend)
     assert backend.base_url == custom_url
@@ -107,11 +97,7 @@ def test_backend_factory_case_insensitive():
 
 def test_target_factory_create():
     """Test creating Target via TargetFactory."""
-    target = TargetFactory.create(
-        "openai",
-        api_key="test-key",
-        model_name="gpt-3.5-turbo"
-    )
+    target = TargetFactory.create("openai", api_key="test-key", model_name="gpt-3.5-turbo")
 
     assert isinstance(target, Target)
     assert isinstance(target.backend, OpenAIBackend)
@@ -126,7 +112,7 @@ def test_target_factory_with_config():
         model_name="claude-3-5-sonnet-20241022",
         fresh_context=False,
         max_tokens=2000,
-        temperature=0.9
+        temperature=0.9,
     )
 
     assert isinstance(target, Target)
@@ -137,11 +123,7 @@ def test_target_factory_with_config():
 
 def test_create_target_backward_compatibility():
     """Test that create_target function still works (backward compatibility)."""
-    target = create_target(
-        "openai",
-        api_key="test-key",
-        model_name="gpt-4"
-    )
+    target = create_target("openai", api_key="test-key", model_name="gpt-4")
 
     assert isinstance(target, Target)
     assert isinstance(target.backend, OpenAIBackend)
@@ -166,7 +148,7 @@ def test_factory_pattern_eliminates_coupling():
             backend = BackendFactory.create(
                 backend_type,
                 api_key="test",
-                api_url="http://test.com" if backend_type == "custom_http" else None
+                api_url="http://test.com" if backend_type == "custom_http" else None,
             )
             assert isinstance(backend, TargetBackend)
         except ImportError:
@@ -176,6 +158,7 @@ def test_factory_pattern_eliminates_coupling():
 
 def test_custom_backend_registration():
     """Test that custom backends can be registered."""
+
     # Create a mock custom backend
     class MockCustomBackend(TargetBackend):
         def __init__(self, api_key: str, **kwargs):

@@ -4,8 +4,8 @@ import { Lock } from 'lucide-react';
 import axios from 'axios';
 import { User } from '../types';
 import '../styles/Auth.css';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { getUserFriendlyApiError } from '../utils/apiErrors';
+import { API_BASE_URL } from '../utils/config';
 
 interface LoginPageProps {
   onAuth: (apiKey: string, backend: string, userData?: User) => void;
@@ -13,7 +13,7 @@ interface LoginPageProps {
 
 const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
   const [apiKey, setApiKey] = useState('');
-  const [backend, setBackend] = useState<'openai' | 'anthropic'>('openai');
+  const [backend, setBackend] = useState<'openai' | 'anthropic' | 'openrouter'>('openai');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -47,8 +47,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
         navigate('/admin'); // Navigate to admin dashboard
       }
     } catch (err) {
-      const axiosError = err as { response?: { data?: { detail?: string } }; message?: string };
-      setError(axiosError.response?.data?.detail || axiosError.message || 'Failed to validate API key');
+      setError(getUserFriendlyApiError(err));
       setLoading(false);
     }
   };
@@ -81,11 +80,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
               <select
                 id="backend"
                 value={backend}
-                onChange={(e) => setBackend(e.target.value as 'openai' | 'anthropic')}
+                onChange={(e) => setBackend(e.target.value as 'openai' | 'anthropic' | 'openrouter')}
                 className="form-control"
               >
                 <option value="openai">OpenAI</option>
                 <option value="anthropic">Anthropic</option>
+                <option value="openrouter">OpenRouter</option>
               </select>
             </div>
 
@@ -96,7 +96,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onAuth }) => {
                 <input
                   id="apiKey"
                   type="password"
-                  placeholder={backend === 'openai' ? 'sk-...' : 'sk-ant-...'}
+                  placeholder={backend === 'anthropic' ? 'sk-ant-...' : backend === 'openrouter' ? 'sk-or-...' : 'sk-...'}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   className="form-control with-icon"

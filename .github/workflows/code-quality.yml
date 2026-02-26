@@ -55,8 +55,7 @@ jobs:
     - name: Check formatting with black (informational)
       working-directory: ./backend
       run: |
-        black --check --diff app/ tests/ || echo "::warning::Code formatting issues detected. Run 'black app/ tests/' to fix."
-      continue-on-error: true
+        black --check --diff app/ tests/
 
   typecheck:
     name: Type check with mypy
@@ -81,5 +80,4 @@ jobs:
     - name: Type check with mypy
       working-directory: ./backend
       run: |
-        mypy app/ --ignore-missing-imports --no-strict-optional || echo "::warning::Type checking issues detected. Please review and address mypy errors."
-      continue-on-error: true
+        mypy app/ --ignore-missing-imports --no-strict-optional

@@ -90,7 +90,7 @@ The system now supports pluggable backends beyond OpenAI and Anthropic, enabling
 ```python
 target = create_target(
     backend_type='openai',
-    api_key='sk-...',
+    api_key='<OPENAI_API_KEY>',
     model_name='gpt-4',
     max_tokens=1000,
     temperature=0.7
@@ -101,7 +101,7 @@ target = create_target(
 ```python
 target = create_target(
     backend_type='anthropic',
-    api_key='sk-ant-...',
+    api_key='<ANTHROPIC_API_KEY>',
     model_name='claude-3-5-sonnet-20241022',
     max_tokens=1000,
     temperature=0.7

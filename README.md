@@ -1,7 +1,7 @@
 # Red Set ProtoCell (RSP)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/ci.yml)
 [![Code Quality](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/code-quality.yml)
 [![Security](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml/badge.svg)](https://github.com/Arnoldlarry15/red-set-protocell/actions/workflows/security.yml)
@@ -33,6 +33,21 @@ Red Set ProtoCell now includes a modern, glassmorphism-styled web interface feat
 - 🔧 **Advanced**: See [DEPLOYMENT.md](DEPLOYMENT.md) for production configuration
 
 Local setup: [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md)
+
+**Live local watch mode (backend + UI):**
+```bash
+./scripts/watch_live_testing.sh
+```
+
+**Production-hardened compose template:**
+```bash
+docker compose -f docker-compose.production.yml up --build
+```
+
+**Nightly real-provider smoke (staging):**
+- Workflow: `.github/workflows/nightly-real-backend-smoke.yml`
+- Requires staging secrets: `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
+
 
 ---
 
@@ -197,14 +212,14 @@ Most AI risk comes from unknown failure modes. Static test suites, manual red te
 ### 🔌 Production-Ready Integrations
 - **OpenAI API**: Full GPT-3.5, GPT-4, and GPT-4 Turbo support
 - **Anthropic API**: Claude models (Claude 3 Opus, Sonnet, Haiku)
-- **Local Models**: GGUF models via llama-cpp-python
+- **Local Models**: Planned/experimental (not currently available in the production API server)
 - **Custom APIs**: Generic HTTP endpoint support for any LLM
 - **Extensible Backend System**: Easy to add new LLM providers
 
 ### ⚡ Performance & Scalability
 - **Parallel Execution**: Concurrent round processing (5-10x speedup)
 - **Adaptive Learning**: Mutation strategies improve over time
-- **Zero API Costs**: Run completely offline with local models
+- **Cost Controls**: Configure round limits and API cost caps for predictable spend
 - **Comprehensive Testing**: 50+ tests including uncertainty tracking
 
 ### 🆕 v1.1.0 Enhancements (Latest)
@@ -426,7 +441,7 @@ Round N:
 
 ### Prerequisites
 
-- **Python 3.8+**
+- **Python 3.11+**
 - **API Key** from OpenAI or Anthropic
   - OpenAI: https://platform.openai.com/api-keys
   - Anthropic: https://console.anthropic.com/
@@ -443,7 +458,7 @@ cd backend
 pip install -r requirements.txt
 
 # 3. Set your API key
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 
 # 4. Run a 10-round session
 python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
@@ -698,14 +713,14 @@ cd red-set-protocell/backend
 docker-compose build
 
 # Run with environment variable
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 docker-compose run rsp-backend python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
 ### System Requirements
 
 - **OS**: Linux, macOS, Windows (with WSL recommended)
-- **Python**: 3.8 or higher
+- **Python**: 3.11 or higher
 - **RAM**: 2GB minimum, 4GB recommended
 - **Disk**: 500MB for code, variable for session data
 - **Network**: Internet connection for API calls
@@ -737,7 +752,7 @@ docker-compose run rsp-backend python -m app.main --backend openai --api-key $OP
 
 ```bash
 cd backend
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 ```
 
@@ -745,7 +760,7 @@ python -m app.main --backend openai --api-key $OPENAI_API_KEY --rounds 10
 
 ```bash
 cd backend
-export ANTHROPIC_API_KEY="sk-ant-..."
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 ```
 
@@ -753,7 +768,7 @@ python -m app.main --backend anthropic --api-key $ANTHROPIC_API_KEY --rounds 10
 
 ```bash
 cd backend
-export OPENROUTER_API_KEY="sk-or-v1-..."
+export OPENROUTER_API_KEY="<OPENROUTER_API_KEY>"
 python -m app.main --backend openrouter --api-key $OPENROUTER_API_KEY --rounds 10
 ```
 
@@ -764,7 +779,7 @@ OpenRouter can also be configured via environment variables for easier setup:
 ```bash
 cd backend
 export BACKEND_TYPE=openrouter
-export OPENROUTER_API_KEY="sk-or-v1-..."
+export OPENROUTER_API_KEY="<OPENROUTER_API_KEY>"
 python -m app.main --rounds 10
 ```
 
@@ -833,7 +848,7 @@ python -m app.main \
 ```bash
 # Using Docker Compose
 cd backend
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
 docker-compose run rsp-backend python -m app.main \
   --backend openai \
   --api-key $OPENAI_API_KEY \
@@ -1108,7 +1123,7 @@ config = RSPConfig()
 # Customize target
 config.target.backend = "anthropic"
 config.target.model_name = "claude-3-opus-20240229"
-config.target.api_key = "sk-ant-..."
+config.target.api_key = "<ANTHROPIC_API_KEY>"
 
 # Adjust scoring weights
 config.scoring.l1_weight = 0.30  # Reduce linguistic weight
@@ -1188,32 +1203,78 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 # Install dependencies (including dev tools)
 pip install -r requirements.txt
 
-# Install pre-commit hooks (if available)
-# pre-commit install
+# Install pre-commit hooks (recommended)
+pip install pre-commit
+pre-commit install
 ```
 
 ### Code Style and Quality
 
-#### Formatting with Black
+#### Quick Validation (Recommended)
+
+Use the validation script to run all checks at once:
+
+```bash
+# From repository root, run all checks (format, lint, test)
+./validate.sh
+```
+
+This script automatically:
+1. ✅ Formats code with Black
+2. ✅ Sorts imports with isort
+3. ✅ Lints with flake8
+4. ✅ Runs tests with pytest
+
+The script fails fast on errors, making it easy to identify issues.
+
+#### Pre-commit Hooks (Automated)
+
+Pre-commit hooks automatically format and lint before each commit:
+
+```bash
+# One-time setup
+pip install pre-commit
+pre-commit install
+
+# Now every git commit will automatically run checks!
+# You can also run manually:
+pre-commit run --all-files
+```
+
+#### Manual Commands
+
+From the `backend/` directory:
+
+**Formatting with Black:**
 
 ```bash
 # Format all Python files
-black app/ tests/
+python -m black app/ tests/ --line-length 127
 
 # Check formatting without making changes
-black --check app/ tests/
+python -m black --check app/ tests/
 ```
 
-#### Linting with Flake8
+**Import Sorting with isort:**
+
+```bash
+# Sort imports
+python -m isort app/ tests/ --profile black --line-length 127
+
+# Check without making changes
+python -m isort --check-only app/ tests/
+```
+
+**Linting with Flake8:**
 
 ```bash
 # Lint all Python files
-flake8 app/ tests/
+python -m flake8 app/ tests/
 
-# Common flake8 configuration (.flake8):
+# Configuration (.flake8):
 [flake8]
-max-line-length = 88
-extend-ignore = E203, W503
+max-line-length = 127
+extend-ignore = E203, W503, C901
 exclude = .git,__pycache__,venv
 ```
 
@@ -1225,7 +1286,7 @@ mypy app/
 
 # Common mypy configuration (mypy.ini):
 [mypy]
-python_version = 3.8
+python_version = 3.11
 warn_return_any = True
 warn_unused_configs = True
 disallow_untyped_defs = True
@@ -1335,17 +1396,16 @@ tests/
 ```bash
 cd backend
 
-# Run all unit tests
-pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_scoring.py -v
+# Local development (no coverage gate)
+make test
 
-# Run specific test file
+# Fast local runs when iterating on one file
+make test-no-cov
 pytest tests/test_egg.py -v
-
-# Run specific test function
 pytest tests/test_egg.py::test_egg_blocks_csam -v
 
-# Run with coverage
-pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_scoring.py --cov=app --cov-report=html
+# CI-equivalent run (enforces coverage >= 70%)
+make test-ci
 ```
 
 #### Integration Tests (Requires API Keys)
@@ -1354,8 +1414,8 @@ pytest tests/test_config.py tests/test_egg.py tests/test_mutation.py tests/test_
 
 ```bash
 # Set environment variables
-export OPENAI_API_KEY="sk-..."
-export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENAI_API_KEY="<OPENAI_API_KEY>"
+export ANTHROPIC_API_KEY="<ANTHROPIC_API_KEY>"
 
 # Run integration tests
 pytest tests/test_real_backends.py -v
@@ -1364,6 +1424,8 @@ pytest tests/test_real_backends.py -v
 ```
 
 ### Test Coverage
+
+Coverage enforcement (`--cov-fail-under=70`) is applied in CI via `make test-ci`, while local `pytest`/`make test` runs are intentionally ungated for faster iteration.
 
 Current test coverage:
 
@@ -1519,8 +1581,8 @@ The backend lives in `backend/` and runs as a Docker container.
    
 3. **Set Environment Variables**
    ```
-   OPENAI_API_KEY=sk-...
-   ANTHROPIC_API_KEY=sk-ant-...
+   OPENAI_API_KEY=<OPENAI_API_KEY>
+   ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
    RSP_DEMO_PASSWORD=your-secure-password
    RSP_ENVIRONMENT=production
    RSP_ALLOWED_ORIGINS=https://your-frontend.vercel.app
@@ -1567,8 +1629,8 @@ cd backend
 fly launch
 
 # Set secrets
-fly secrets set OPENAI_API_KEY=sk-...
-fly secrets set ANTHROPIC_API_KEY=sk-ant-...
+fly secrets set OPENAI_API_KEY=<OPENAI_API_KEY>
+fly secrets set ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 fly secrets set RSP_DEMO_PASSWORD=your-password
 
 # Deploy
@@ -1588,7 +1650,7 @@ docker build -t rsp-backend:latest .
 # Run backend API server
 docker run -d \
   -p 8000:8000 \
-  -e OPENAI_API_KEY="sk-..." \
+  -e OPENAI_API_KEY="<OPENAI_API_KEY>" \
   -e RSP_DEMO_PASSWORD="changeme" \
   rsp-backend:latest
 
@@ -1670,12 +1732,12 @@ All configuration is done via the `.env` file. Required variables:
 
 ```bash
 # API Keys (at least one required)
-OPENAI_API_KEY=sk-your-key-here
-ANTHROPIC_API_KEY=sk-ant-your-key-here
+OPENAI_API_KEY=<OPENAI_API_KEY>
+ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 
 # Agent-specific API Keys (optional, for independent agent operations)
-SNIPER_ANTHROPIC_API_KEY=sk-ant-your-sniper-key-here
-SPOTTER_ANTHROPIC_API_KEY=sk-ant-your-spotter-key-here
+SNIPER_ANTHROPIC_API_KEY=<SNIPER_ANTHROPIC_API_KEY>
+SPOTTER_ANTHROPIC_API_KEY=<SPOTTER_ANTHROPIC_API_KEY>
 
 # Security
 RSP_DEMO_PASSWORD=your-secure-password
@@ -1716,8 +1778,8 @@ VITE_API_BASE_URL=https://your-backend.railway.app
 
 ```bash
 # Required: At least one API key
-OPENAI_API_KEY=sk-...
-ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=<OPENAI_API_KEY>
+ANTHROPIC_API_KEY=<ANTHROPIC_API_KEY>
 
 # Required: Security
 RSP_DEMO_PASSWORD=your-secure-password
@@ -1744,7 +1806,7 @@ Before deploying to production:
 - [ ] **CORS configured** - `RSP_ALLOWED_ORIGINS` includes your Vercel domain
 - [ ] **Secrets secured** - Never commit API keys to git
 - [ ] **Monitoring enabled** - Check platform dashboards
-- [ ] **Health checks working** - Test `/api/health` endpoint
+- [ ] **Health checks working** - Test `/health` and `/api/health` endpoints
 - [ ] **WebSocket connection tested** - Verify real-time features work
 
 ---
@@ -1887,7 +1949,7 @@ echo $OPENAI_API_KEY
 
 # Check key format
 # OpenAI: starts with "sk-"
-# Anthropic: starts with "sk-ant-"
+# Anthropic: starts with provider-specific anthropic key prefix
 
 # Test key directly
 curl https://api.openai.com/v1/models \
@@ -1981,7 +2043,7 @@ A: Yes. RSP requires real API keys from OpenAI or Anthropic. No mock/simulation 
 A: Costs depend on your API provider and usage. A 100-round session with GPT-3.5-turbo typically costs $0.50-$2.00. Use `--rounds 10` for testing to minimize costs.
 
 **Q: Can I run RSP offline?**
-A: No. RSP requires internet access to communicate with LLM APIs. Local model support is not currently available.
+A: No for the current production API server. RSP currently requires internet access to communicate with LLM APIs.
 
 **Q: Is my data kept private?**
 A: Yes. RSP uses hashed fingerprinting for logging, and zero-retention mode (enabled by default) destroys all session data after completion. No data is sent to third parties except the target LLM API.
@@ -1989,7 +2051,7 @@ A: Yes. RSP uses hashed fingerprinting for logging, and zero-retention mode (ena
 ### Technical Questions
 
 **Q: What Python version is required?**
-A: Python 3.8 or higher. Python 3.10+ is recommended.
+A: Python 3.11 or higher.
 
 **Q: Can I add support for other LLMs?**
 A: Yes! Implement the `TargetBackend` abstract class in `app/agents/target.py`. See [Development](#development) section for details.
@@ -2008,6 +2070,19 @@ A: Modify the configuration programmatically or edit defaults in `app/core/confi
 
 **Q: What's the difference between Sniper and Spotter?**
 A: Sniper generates adversarial prompts (attacker), while Spotter evaluates responses (defender). They operate independently under Orchestrator control.
+
+
+#### Production Release Gates (GA)
+
+Before GA, require all of the following:
+
+- Nightly real-provider smoke green for 7 consecutive days
+- Load baseline pass (>=99% success, p95 <= 500ms):
+  ```bash
+  python scripts/load_test_baseline.py --base-url http://localhost:8000 --requests 200 --concurrency 20
+  ```
+- Incident response runbook reviewed and on-call rota confirmed
+- Backup/restore drill completed and documented
 
 ### Deployment Questions
 

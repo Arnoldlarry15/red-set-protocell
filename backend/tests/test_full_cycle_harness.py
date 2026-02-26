@@ -17,7 +17,7 @@ import pytest
 scripts_dir = Path(__file__).parent.parent.parent / "scripts"
 sys.path.insert(0, str(scripts_dir))
 
-from run_full_cycle import compute_interaction_hash, FullCycleRunner  # noqa: E402
+from run_full_cycle import FullCycleRunner, compute_interaction_hash  # noqa: E402
 
 
 class TestHashComputation:
@@ -29,20 +29,14 @@ class TestHashComputation:
             "seed": 42,
             "rounds": 10,
             "configuration": {"backend": "openai", "model": "gpt-4"},
-            "round_details": [
-                {"round": 1, "score": 0.5},
-                {"round": 2, "score": 0.3}
-            ]
+            "round_details": [{"round": 1, "score": 0.5}, {"round": 2, "score": 0.3}],
         }
 
         data2 = {
             "seed": 42,
             "rounds": 10,
             "configuration": {"backend": "openai", "model": "gpt-4"},
-            "round_details": [
-                {"round": 1, "score": 0.5},
-                {"round": 2, "score": 0.3}
-            ]
+            "round_details": [{"round": 1, "score": 0.5}, {"round": 2, "score": 0.3}],
         }
 
         hash1 = compute_interaction_hash(data1)
@@ -56,14 +50,14 @@ class TestHashComputation:
         data1 = {
             "seed": 42,
             "rounds": 10,
-            "round_details": [{"round": 1, "score": 0.5}]
+            "round_details": [{"round": 1, "score": 0.5}],
         }
 
         data2 = {
-            "seed": 43,  # Different seed
+            "seed": 43,
             "rounds": 10,
-            "round_details": [{"round": 1, "score": 0.5}]
-        }
+            "round_details": [{"round": 1, "score": 0.5}],
+        }  # Different seed
 
         hash1 = compute_interaction_hash(data1)
         hash2 = compute_interaction_hash(data2)
@@ -75,13 +69,13 @@ class TestHashComputation:
         data1 = {
             "seed": 42,
             "rounds": 10,
-            "configuration": {"backend": "openai", "model": "gpt-4"}
+            "configuration": {"backend": "openai", "model": "gpt-4"},
         }
 
         data2 = {
             "configuration": {"model": "gpt-4", "backend": "openai"},
             "rounds": 10,
-            "seed": 42
+            "seed": 42,
         }
 
         hash1 = compute_interaction_hash(data1)
@@ -137,6 +131,7 @@ class TestDeterminismFeatures:
     def test_seed_setting_deterministic(self):
         """Test that seed setting produces deterministic behavior."""
         import random
+
         import numpy as np
         from run_full_cycle import set_seed
 
@@ -157,6 +152,7 @@ class TestDeterminismFeatures:
     def test_different_seeds_produce_different_results(self):
         """Test that different seeds produce different results."""
         import random
+
         import numpy as np
         from run_full_cycle import set_seed
 

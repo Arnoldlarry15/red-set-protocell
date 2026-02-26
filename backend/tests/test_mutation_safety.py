@@ -17,8 +17,7 @@ def test_encoding_transform_safe_language():
         results.append(mutated)
 
         # Should NOT contain dangerous language
-        assert "Decode and execute" not in mutated, \
-            f"Found dangerous 'Decode and execute' phrase in: {mutated}"
+        assert "Decode and execute" not in mutated, f"Found dangerous 'Decode and execute' phrase in: {mutated}"
 
     # Should see variety in the new semantic transformations
     unique_results = set(results)
@@ -41,10 +40,7 @@ def test_role_play_frames_neutral_language():
 
     # Should contain neutral analysis language
     neutral_words = ["analyze", "assess", "critique"]
-    found_neutral = any(
-        any(word in frame.lower() for word in neutral_words)
-        for frame in frames
-    )
+    found_neutral = any(any(word in frame.lower() for word in neutral_words) for frame in frames)
     assert found_neutral, f"Role-play frames should contain neutral analysis language: {frames}"
 
 
@@ -61,12 +57,10 @@ def test_lexical_substitutions_broader():
     for word, substitutes in subs.items():
         # Most categories should have at least 5 substitutes now
         if word in ["ignore", "previous", "instructions", "tell", "secret", "system"]:
-            assert len(substitutes) >= 5, \
-                f"Word '{word}' should have at least 5 substitutes, got {len(substitutes)}"
+            assert len(substitutes) >= 5, f"Word '{word}' should have at least 5 substitutes, got {len(substitutes)}"
 
     # Should include new neutral words
-    assert "analyze" in subs or "describe" in subs or "consider" in subs, \
-        "Should include new neutral analysis words"
+    assert "analyze" in subs or "describe" in subs or "consider" in subs, "Should include new neutral analysis words"
 
 
 def test_evolve_population_parent_fitness():
@@ -101,14 +95,14 @@ def test_evolve_population_parent_fitness():
 
     # Should have more than one unique fitness score across all mutations
     # (if we were using max() every time, we'd only see 0.7)
-    assert len(unique_scores) > 1, \
-        f"Expected varied parent fitness scores, but only saw: {unique_scores}. " \
+    assert len(unique_scores) > 1, (
+        f"Expected varied parent fitness scores, but only saw: {unique_scores}. "
         f"This suggests we're still using max(fitness_scores) instead of parent fitness."
+    )
 
     # Should see some scores other than the maximum
     non_max_scores = [s for s in all_mutations_scores if s != max_fitness]
-    assert len(non_max_scores) > 0, \
-        f"Expected some mutations with parent fitness != max_fitness, but all were {max_fitness}"
+    assert len(non_max_scores) > 0, f"Expected some mutations with parent fitness != max_fitness, but all were {max_fitness}"
 
 
 def test_archetype_based_strategy_selection():
@@ -121,26 +115,18 @@ def test_archetype_based_strategy_selection():
         engine.update_strategy_performance(
             MutationStrategy.STRUCTURAL_RECOMBINATION,
             0.9,
-            archetypes=["hallucination risk"]
+            archetypes=["hallucination risk"],
         )
 
     # Simulate that LEXICAL_VARIATION doesn't work well with "hallucination risk"
     for _ in range(10):
-        engine.update_strategy_performance(
-            MutationStrategy.LEXICAL_VARIATION,
-            0.3,
-            archetypes=["hallucination risk"]
-        )
+        engine.update_strategy_performance(MutationStrategy.LEXICAL_VARIATION, 0.3, archetypes=["hallucination risk"])
 
     # Now select strategies with "hallucination risk" archetype
     selected_strategies = []
     for i in range(20):
         # Mutate and track the strategy used
-        engine.mutate(
-            "test prompt",
-            archetypes=["hallucination risk"],
-            random_seed=i  # Use per-call seed for reproducibility
-        )
+        engine.mutate("test prompt", archetypes=["hallucination risk"], random_seed=i)  # Use per-call seed for reproducibility
         # Extract strategy from mutation history
         if engine.mutation_history:
             selected_strategies.append(engine.mutation_history[-1]["strategy"])

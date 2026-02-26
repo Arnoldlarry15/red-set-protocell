@@ -8,9 +8,7 @@ Perturbation modes help you test not just "can this model fail?" but
 "how brittle is this model to deployment noise?"
 """
 
-from app.agents.target import (
-    PerturbationMode, PerturbationConfig, create_target
-)
+from app.agents.target import PerturbationConfig, PerturbationMode, create_target
 
 
 def run_basic_perturbations():
@@ -32,10 +30,10 @@ def run_basic_perturbations():
     # Create target with perturbations
     # Note: Replace 'YOUR_API_KEY' with actual API key
     target = create_target(
-        'openai',
-        api_key='YOUR_API_KEY',
-        model_name='gpt-3.5-turbo',
-        perturbation_config=perturb_config
+        "openai",
+        api_key="YOUR_API_KEY",
+        model_name="gpt-3.5-turbo",
+        perturbation_config=perturb_config,
     )
 
     print(f"\nPerturbations enabled: {perturb_config.enabled}")
@@ -56,7 +54,7 @@ def run_basic_perturbations():
     print(f"\n--- Target Statistics ---")
     print(f"Total executions: {stats['total_executions']}")
     print(f"Perturbations enabled: {stats.get('perturbations_enabled', False)}")
-    if stats.get('perturbations_enabled'):
+    if stats.get("perturbations_enabled"):
         print(f"Active modes: {stats.get('perturbation_modes', [])}")
 
 
@@ -74,15 +72,15 @@ def run_selective_perturbations():
     perturb_config = PerturbationConfig(
         enabled=True,
         modes=[PerturbationMode.TEMPERATURE_JITTER],
-        temperature_jitter_range=0.2  # Allow ±0.2 variation
+        temperature_jitter_range=0.2,  # Allow ±0.2 variation
     )
 
     target = create_target(
-        'openai',
-        api_key='YOUR_API_KEY',
-        model_name='gpt-3.5-turbo',
+        "openai",
+        api_key="YOUR_API_KEY",
+        model_name="gpt-3.5-turbo",
         temperature=0.7,  # Base temperature
-        perturbation_config=perturb_config
+        perturbation_config=perturb_config,
     )
 
     print("\nConfiguration:")
@@ -115,25 +113,25 @@ def run_system_prompt_variation():
         "You are an AI designed to assist users.",
         "You are a knowledgeable assistant.",
         "You provide helpful and accurate information.",
-        ""  # Empty = no system prompt
+        "",  # Empty = no system prompt
     ]
 
     perturb_config = PerturbationConfig(
         enabled=True,
         modes=[PerturbationMode.SYSTEM_PROMPT],
-        system_prompts=custom_prompts
+        system_prompts=custom_prompts,
     )
 
     target = create_target(
-        'anthropic',  # Works with any backend
-        api_key='YOUR_API_KEY',
-        model_name='claude-3-5-sonnet-20241022',
-        perturbation_config=perturb_config
+        "anthropic",  # Works with any backend
+        api_key="YOUR_API_KEY",
+        model_name="claude-3-5-sonnet-20241022",
+        perturbation_config=perturb_config,
     )
 
     print("\nCustom system prompts:")
     for i, prompt in enumerate(custom_prompts, 1):
-        print(f"  {i}. \"{prompt}\"")
+        print(f'  {i}. "{prompt}"')
 
     print("\n--- Each execution randomly selects a system prompt ---")
     prompt = "What are the benefits of exercise?"
@@ -158,18 +156,16 @@ def run_deployment_realism():
             PerturbationMode.POLICY_REWORDING,
             PerturbationMode.TEMPERATURE_JITTER,
             PerturbationMode.SIMULATED_LATENCY,
-            PerturbationMode.RESPONSE_TRUNCATION
+            PerturbationMode.RESPONSE_TRUNCATION,
         ],
         temperature_jitter_range=0.15,
         latency_range_ms=(50, 300),  # 50-300ms latency
-        truncation_probability=0.2,   # 20% chance of truncation
-        truncation_ratio_range=(0.8, 0.95)  # Keep 80-95% if truncated
+        truncation_probability=0.2,  # 20% chance of truncation
+        truncation_ratio_range=(0.8, 0.95),  # Keep 80-95% if truncated
     )
 
     target = create_target(
-        'openai',
-        api_key='YOUR_API_KEY',
-        perturbation_config=perturb_config
+        "openai", api_key="YOUR_API_KEY", perturbation_config=perturb_config
     )
 
     print("\nDeployment simulation parameters:")
@@ -204,8 +200,8 @@ def run_testing_strategy():
     print("   - Establish baseline model behavior")
 
     baseline_target = create_target(
-        'openai',
-        api_key='YOUR_API_KEY',
+        "openai",
+        api_key="YOUR_API_KEY",
         # No perturbation_config = perturbations disabled
     )
     print(f"   Perturbations: {baseline_target.backend.perturbation_config.enabled}")
@@ -214,9 +210,11 @@ def run_testing_strategy():
     print("   - Test sensitivity to each perturbation type")
     print("   - Identify which variations cause issues")
 
-    for mode in [PerturbationMode.TEMPERATURE_JITTER,
-                 PerturbationMode.SYSTEM_PROMPT,
-                 PerturbationMode.RESPONSE_TRUNCATION]:
+    for mode in [
+        PerturbationMode.TEMPERATURE_JITTER,
+        PerturbationMode.SYSTEM_PROMPT,
+        PerturbationMode.RESPONSE_TRUNCATION,
+    ]:
         config = PerturbationConfig(enabled=True, modes=[mode])
         print(f"   - Testing: {mode.value}")
 
@@ -246,32 +244,25 @@ def run_custom_configuration():
     # Highly customized configuration
     perturb_config = PerturbationConfig(
         enabled=True,
-        modes=[
-            PerturbationMode.TEMPERATURE_JITTER,
-            PerturbationMode.SIMULATED_LATENCY
-        ],
+        modes=[PerturbationMode.TEMPERATURE_JITTER, PerturbationMode.SIMULATED_LATENCY],
         # Fine-tune temperature variation
         temperature_jitter_range=0.05,  # Small variation: ±0.05
-
         # Simulate slow network conditions
         latency_range_ms=(200, 1000),  # 200ms to 1s latency
-
         # Custom system prompts for specific use case
         system_prompts=[
             "You are a medical information assistant.",
             "You are a healthcare AI assistant.",
         ],
-
         # Custom policy rewordings
         policy_rewordings=[
             "Note: This is for informational purposes only.",
             "Reminder: Consult a healthcare professional.",
-            ""  # Sometimes no policy note
+            "",  # Sometimes no policy note
         ],
-
         # Aggressive truncation for edge case testing
         truncation_probability=0.5,  # 50% chance
-        truncation_ratio_range=(0.5, 0.7)  # Keep only 50-70%
+        truncation_ratio_range=(0.5, 0.7),  # Keep only 50-70%
     )
 
     print("\nCustom configuration:")

@@ -180,24 +180,64 @@ git checkout -b docs/what-you-are-documenting
 2. **Follow coding standards** (see below)
 3. **Write tests** for new functionality
 4. **Update documentation** as needed
-5. **Run tests** to ensure nothing breaks
+5. **Run validation script** to ensure code quality
+
+#### Using the Validation Script
+
+We provide a comprehensive validation script that runs all code quality checks:
 
 ```bash
-# Run tests
-pytest tests/ -v
+# Run all checks (format, lint, test) in one command
+./validate.sh
+```
 
-# Run with coverage
-pytest tests/ --cov=app --cov-report=html
+This script will:
+1. ✅ **Format code** with Black
+2. ✅ **Sort imports** with isort
+3. ✅ **Lint code** with flake8
+4. ✅ **Run tests** with pytest
 
+The script fails fast on the first error, making it easy to identify issues.
+
+#### Manual Commands
+
+You can also run checks individually from the `backend/` directory:
+
+```bash
 # Format code
-black app/ tests/
+python -m black app/ tests/ --line-length 127
+
+# Sort imports
+python -m isort app/ tests/ --profile black --line-length 127
 
 # Lint code
-flake8 app/ tests/
+python -m flake8 app/ tests/ --max-line-length 127
+
+# Run tests
+python -m pytest tests/ -v
+
+# Run with coverage
+python -m pytest tests/ --cov=app --cov-report=html
 
 # Type check
-mypy app/
+python -m mypy app/
 ```
+
+#### Pre-commit Hooks (Recommended)
+
+Install pre-commit hooks to automatically format and lint before each commit:
+
+```bash
+# Install pre-commit (one-time setup)
+pip install pre-commit
+
+# Install hooks from .pre-commit-config.yaml
+pre-commit install
+
+# Now git commit will automatically run formatting and linting!
+```
+
+With pre-commit hooks installed, code will be automatically formatted and checked before each commit, preventing broken builds.
 
 ### Committing Changes
 
@@ -304,21 +344,33 @@ cat templates/README.md
 
 We follow **PEP 8** with some modifications:
 
-- **Line length**: 88 characters (Black default)
+- **Line length**: 127 characters (configured in pyproject.toml)
 - **Indentation**: 4 spaces
 - **Quotes**: Double quotes for strings (Black default)
-- **Imports**: Organized in groups (stdlib, third-party, local)
+- **Imports**: Organized in groups (stdlib, third-party, local) using isort
 
 ### Code Formatting
 
 Use **Black** for automatic formatting:
 
 ```bash
-# Format all files
-black app/ tests/
+# Format all files (from backend/ directory)
+python -m black app/ tests/ --line-length 127
 
 # Check without modifying
-black --check app/ tests/
+python -m black --check app/ tests/ --line-length 127
+```
+
+### Import Sorting
+
+Use **isort** to organize imports:
+
+```bash
+# Sort imports (from backend/ directory)
+python -m isort app/ tests/ --profile black --line-length 127
+
+# Check without modifying
+python -m isort --check-only app/ tests/
 ```
 
 ### Linting
@@ -326,12 +378,12 @@ black --check app/ tests/
 Use **Flake8** for linting:
 
 ```bash
-# Lint all files
-flake8 app/ tests/
+# Lint all files (from backend/ directory)
+python -m flake8 app/ tests/
 
 # Configuration (.flake8):
 [flake8]
-max-line-length = 88
+max-line-length = 127
 extend-ignore = E203, W503
 exclude = .git,__pycache__,venv,.pytest_cache
 ```

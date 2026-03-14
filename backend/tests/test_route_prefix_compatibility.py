@@ -37,6 +37,9 @@ def _minimal_deps():
         "list_experiment_configs": _json_response({}),
         "get_experiment_config": _json_response({}),
         "delete_experiment_config": _json_response({}),
+        "list_github_prs": _json_response({"pull_requests": [], "count": 0}),
+        "close_github_pr": _json_response({}),
+        "merge_github_pr": _json_response({}),
         "websocket_endpoint": lambda websocket: None,
     }
 

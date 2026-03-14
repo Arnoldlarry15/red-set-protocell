@@ -29,6 +29,9 @@ def register_routes(app, deps):
         ("/remote/config/list", deps["list_experiment_configs"], ["GET"]),
         ("/remote/config/{config_id}", deps["get_experiment_config"], ["GET"]),
         ("/remote/config/{config_id}", deps["delete_experiment_config"], ["DELETE"]),
+        ("/github/prs", deps["list_github_prs"], ["POST"]),
+        ("/github/prs/{pr_number}/close", deps["close_github_pr"], ["POST"]),
+        ("/github/prs/{pr_number}/merge", deps["merge_github_pr"], ["POST"]),
     ]
 
     # Backward-compatible API contract:

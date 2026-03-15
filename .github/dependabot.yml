@@ -8,8 +8,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    labels:
-      - "python"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -41,8 +39,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    labels:
-      - "npm"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -60,8 +56,6 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
-    labels:
-      - "github-actions"
     commit-message:
       prefix: "ci"
       include: "scope"

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Shield, LogOut } from 'lucide-react';
+import { Home, Shield, GitPullRequest, LogOut } from 'lucide-react';
 import { User } from '../types';
 
 interface NavigationProps {
@@ -45,6 +45,15 @@ const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
             <span>Admin</span>
           </button>
         )}
+
+        <button
+          className={`nav-link ${isActive('/pull-requests') ? 'active' : ''}`}
+          onClick={() => navigate('/pull-requests')}
+          aria-label="Pull Requests"
+        >
+          <GitPullRequest size={20} />
+          <span>Pull Requests</span>
+        </button>
       </div>
 
       <div className="nav-user">

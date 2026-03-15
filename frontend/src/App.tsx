@@ -7,6 +7,7 @@ import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import PRManagement from './pages/PRManagement';
 import Navigation from './components/Navigation';
 import { User } from './types';
 import './styles/globals.css';
@@ -82,6 +83,15 @@ function App() {
               <AdminDashboard user={user} apiKey={apiKey} /> : 
               <Navigate to="/login" replace />
           } 
+        />
+
+        <Route
+          path="/pull-requests"
+          element={
+            authenticated ?
+              <PRManagement /> :
+              <Navigate to="/login" replace />
+          }
         />
 
         {/* Catch-all redirect */}

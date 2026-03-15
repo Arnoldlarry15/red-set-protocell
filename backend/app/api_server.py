@@ -38,6 +38,7 @@ from app.middleware.monitoring import (
     metrics_collector,
 )
 from app.auth import log_exception_safely, redact_sensitive_text
+import app.github_pr as github_pr_module
 from app.lifecycle import bind_lifecycle_handlers
 from app.routes import register_routes
 
@@ -273,6 +274,30 @@ class UserLogin(BaseModel):
 class LLMKeyValidation(BaseModel):
     api_key: str
     backend: str  # 'openai', 'anthropic', or 'openrouter'
+
+
+class GitHubPRListRequest(BaseModel):
+    owner: str
+    repo: str
+    github_token: str
+    state: str = "open"  # 'open', 'closed', 'all'
+    per_page: int = 30
+    page: int = 1
+
+
+class GitHubPRActionRequest(BaseModel):
+    owner: str
+    repo: str
+    github_token: str
+
+
+class GitHubMergePRRequest(BaseModel):
+    owner: str
+    repo: str
+    github_token: str
+    commit_title: Optional[str] = None
+    commit_message: Optional[str] = None
+    merge_method: str = "merge"  # 'merge', 'squash', 'rebase'
 
 
 # Global state
@@ -1212,6 +1237,65 @@ async def delete_experiment_config(config_id: str):
         raise
     except Exception as e:
         log_exception_safely("Error deleting config", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# GitHub Pull Request management endpoints
+
+
+async def list_github_prs(request: GitHubPRListRequest):
+    """List pull requests for a GitHub repository."""
+    try:
+        prs = github_pr_module.list_pull_requests(
+            owner=request.owner,
+            repo=request.repo,
+            token=request.github_token,
+            state=request.state,
+            per_page=request.per_page,
+            page=request.page,
+        )
+        return {"pull_requests": prs, "count": len(prs)}
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        log_exception_safely("Error listing pull requests", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def close_github_pr(pr_number: int, request: GitHubPRActionRequest):
+    """Close a pull request without merging."""
+    try:
+        result = github_pr_module.close_pull_request(
+            owner=request.owner,
+            repo=request.repo,
+            pr_number=pr_number,
+            token=request.github_token,
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        log_exception_safely(f"Error closing PR #{pr_number}", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def merge_github_pr(pr_number: int, request: GitHubMergePRRequest):
+    """Merge a pull request."""
+    try:
+        result = github_pr_module.merge_pull_request(
+            owner=request.owner,
+            repo=request.repo,
+            pr_number=pr_number,
+            token=request.github_token,
+            commit_title=request.commit_title,
+            commit_message=request.commit_message,
+            merge_method=request.merge_method,
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        log_exception_safely(f"Error merging PR #{pr_number}", e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.11', '3.12']
+        python-version: ['3.11', '3.12', '3.13']
     
     steps:
     - uses: actions/checkout@v4
@@ -52,7 +52,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       uses: codecov/codecov-action@v5
       with:
-        file: ./backend/coverage.xml
+        files: ./backend/coverage.xml
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
@@ -63,12 +63,12 @@ jobs:
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
       working-directory: ./backend
       run: |
-        # Full test suite achieves ~78% coverage
-        coverage report --fail-under=75
+        # Full test suite must achieve >=85% coverage
+        coverage report --fail-under=85
     
     - name: Archive coverage HTML report
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report-html
         path: backend/htmlcov/

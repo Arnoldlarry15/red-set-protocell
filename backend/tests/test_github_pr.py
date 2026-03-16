@@ -108,7 +108,35 @@ class TestGitHubPRModule:
         with pytest.raises(ValueError, match="Invalid merge_method"):
             github_pr_module.merge_pull_request(FAKE_OWNER, FAKE_REPO, 1, FAKE_TOKEN, merge_method="invalid")
 
-    def test_merge_pull_request_api_error_raises(self):
+    def test_raise_for_github_error_json_decode_fails(self):
+        """_raise_for_github_error uses response.text when json() fails."""
+        resp = MagicMock()
+        resp.ok = False
+        resp.status_code = 500
+        resp.json.side_effect = ValueError("not JSON")
+        resp.text = "Internal Server Error"
+        with pytest.raises(ValueError, match="Internal Server Error"):
+            github_pr_module._raise_for_github_error(resp, "testing")
+
+    def test_merge_pull_request_with_commit_title_and_message(self):
+        """merge_pull_request includes commit_title and commit_message in payload."""
+        raw_result = {"sha": "abc", "merged": True, "message": "merged"}
+        mock_resp = self._make_response(200, raw_result)
+        with patch("app.github_pr.requests.put", return_value=mock_resp) as mock_put:
+            github_pr_module.merge_pull_request(
+                FAKE_OWNER,
+                FAKE_REPO,
+                10,
+                FAKE_TOKEN,
+                commit_title="Custom title",
+                commit_message="Custom message",
+                merge_method="squash",
+            )
+        _, kwargs = mock_put.call_args
+        payload = kwargs["json"]
+        assert payload["commit_title"] == "Custom title"
+        assert payload["commit_message"] == "Custom message"
+
         """merge_pull_request raises ValueError on 4xx response."""
         mock_resp = self._make_response(405, {"message": "Pull Request is not mergeable"})
         with patch("app.github_pr.requests.put", return_value=mock_resp):

@@ -169,3 +169,86 @@ def test_optimization_config_validation():
     with pytest.raises(AssertionError):
         bad_config = OptimizationConfig(exploration_rate=1.5)
         bad_config.validate()
+
+
+def test_strategy_performance_to_dict():
+    """Test StrategyPerformance.to_dict() serialization."""
+    advisor = MutationStrategyAdvisor(min_samples=3)
+
+    for _ in range(5):
+        advisor.record_attempt(MutationStrategy.LEXICAL_VARIATION, 0.5)
+
+    perf = advisor.get_strategy_performance(MutationStrategy.LEXICAL_VARIATION)
+    assert perf is not None
+    d = perf.to_dict()
+    assert d["strategy"] == MutationStrategy.LEXICAL_VARIATION.value
+    assert "success_rate" in d
+    assert "effectiveness" in d
+
+
+def test_strategy_recommendation_to_dict():
+    """Test StrategyRecommendation.to_dict() serialization."""
+    advisor = MutationStrategyAdvisor(min_samples=3)
+
+    for _ in range(6):
+        advisor.record_attempt(MutationStrategy.LEXICAL_VARIATION, 0.6)
+
+    rec = advisor.get_recommendation()
+    d = rec.to_dict()
+    assert "recommended_strategies" in d
+    assert "strategy_weights" in d
+    assert "rationale" in d
+    assert "performance_summary" in d
+
+
+def test_recommendation_no_data():
+    """Test recommendation with no data returns uniform weights."""
+    advisor = MutationStrategyAdvisor(min_samples=100)  # High min_samples means no data qualifies
+
+    rec = advisor.get_recommendation()
+    assert "Insufficient data" in rec.rationale
+    assert len(rec.recommended_strategies) > 0
+
+
+def test_strategy_effectiveness_fair():
+    """Test FAIR effectiveness classification (0.3 - 0.5)."""
+    advisor = MutationStrategyAdvisor(min_samples=3)
+
+    # 4 successes out of 10 → success_rate 0.4 → FAIR
+    for _ in range(4):
+        advisor.record_attempt(MutationStrategy.STRUCTURAL_RECOMBINATION, 0.5)
+    for _ in range(6):
+        advisor.record_attempt(MutationStrategy.STRUCTURAL_RECOMBINATION, 0.1)
+
+    perf = advisor.get_strategy_performance(MutationStrategy.STRUCTURAL_RECOMBINATION)
+    assert perf is not None
+    assert perf.effectiveness == StrategyEffectiveness.FAIR
+
+
+def test_recommendation_only_poor_strategies():
+    """Test recommendation falls back to all strategies when only POOR strategies exist."""
+    advisor = MutationStrategyAdvisor(min_samples=3)
+
+    # All strategies POOR - 0% success rate
+    for strategy in list(MutationStrategy)[:2]:
+        for _ in range(5):
+            advisor.record_attempt(strategy, 0.0)
+
+    rec = advisor.get_recommendation()
+    # Should fall back to all strategies
+    assert len(rec.recommended_strategies) > 0
+
+
+def test_get_statistics():
+    """Test get_statistics() returns overall metrics."""
+    advisor = MutationStrategyAdvisor(min_samples=3)
+
+    for _ in range(5):
+        advisor.record_attempt(MutationStrategy.LEXICAL_VARIATION, 0.5)
+    for _ in range(3):
+        advisor.record_attempt(MutationStrategy.ENCODING_TRANSFORM, 0.2)
+
+    stats = advisor.get_statistics()
+    assert stats["total_attempts"] == 8
+    assert "total_successes" in stats
+    assert isinstance(stats.get("performance"), dict)

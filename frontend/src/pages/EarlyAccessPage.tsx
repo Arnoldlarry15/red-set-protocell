@@ -43,7 +43,7 @@ const EarlyAccessPage: React.FC = () => {
       setTimeout(() => {
         setSubmitted(false);
       }, 5000);
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);

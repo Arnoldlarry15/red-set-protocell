@@ -19,7 +19,6 @@ from app.middleware.monitoring import (
     StructuredLogger,
 )
 
-
 # ── JSONFormatter ─────────────────────────────────────────────────────────────
 
 
@@ -267,7 +266,6 @@ class TestRequestLoggingMiddleware:
         client = TestClient(app)
         response = client.get("/test", headers={"X-Request-ID": "my-req-id"})
         assert response.headers["X-Request-ID"] == "my-req-id"
-
 
     def test_request_logs_exception(self):
         """RequestLoggingMiddleware logs and re-raises exceptions from endpoints."""

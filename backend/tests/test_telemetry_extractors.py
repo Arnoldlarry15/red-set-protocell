@@ -20,8 +20,7 @@ def _create_test_db(path: str) -> None:
     conn = sqlite3.connect(path)
     cursor = conn.cursor()
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE sessions (
             session_id TEXT PRIMARY KEY,
             timestamp TEXT,
@@ -29,11 +28,9 @@ def _create_test_db(path: str) -> None:
             zero_retention INTEGER,
             model_version TEXT
         )
-    """
-    )
+    """)
 
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE rounds (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id TEXT,
@@ -47,8 +44,7 @@ def _create_test_db(path: str) -> None:
             evaluation TEXT,
             model_version TEXT
         )
-    """
-    )
+    """)
 
     # Insert test session
     cursor.execute(
@@ -158,9 +154,9 @@ class TestSessionMetricsExtractor:
         metrics = extractor.extract_session_metrics("sess_001")
         # sess_001 has scores: 0.85, 0.45, 0.95, 0.25
         assert metrics["critical_findings"] == 2  # 0.85, 0.95 >= 0.8
-        assert metrics["high_findings"] == 0      # none in [0.6, 0.8)
-        assert metrics["medium_findings"] == 1    # 0.45 in [0.4, 0.6)
-        assert metrics["low_findings"] == 1       # 0.25 in [0.2, 0.4)
+        assert metrics["high_findings"] == 0  # none in [0.6, 0.8)
+        assert metrics["medium_findings"] == 1  # 0.45 in [0.4, 0.6)
+        assert metrics["low_findings"] == 1  # 0.25 in [0.2, 0.4)
 
     def test_session_metrics_with_no_rounds(self, tmp_path):
         """Test session metrics when a session has no rounds (round_stats is empty)."""

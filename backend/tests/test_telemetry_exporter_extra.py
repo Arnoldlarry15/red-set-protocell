@@ -140,6 +140,7 @@ class TestExporterMissingBranches:
         exporter = TelemetryExporter(output_dir=str(tmp_path))
         # Create a fake format value that doesn't match any case
         import enum
+
         FakeFormat = enum.Enum("FakeFormat", {"UNKNOWN": "unknown"})
         with pytest.raises((ValueError, AttributeError)):
             exporter.export([{"x": 1}], FakeFormat.UNKNOWN, filename="test.unknown")
@@ -148,6 +149,7 @@ class TestExporterMissingBranches:
         """export_to_string() with unknown format raises ValueError."""
         exporter = TelemetryExporter()
         import enum
+
         FakeFormat = enum.Enum("FakeFormat", {"UNKNOWN": "unknown"})
         with pytest.raises((ValueError, AttributeError)):
             exporter.export_to_string([{"x": 1}], FakeFormat.UNKNOWN)

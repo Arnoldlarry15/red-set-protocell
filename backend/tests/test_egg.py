@@ -236,3 +236,121 @@ def test_egg_improved_adversarial_tests():
     assert results["total_tests"] == 20
     assert "blocked" in results
     assert "allowed" in results
+
+
+def test_shadow_mode_suggestions_empty():
+    """Test get_shadow_mode_suggestions returns empty dict when no shadow matches."""
+    egg = EthicalGuardrailGovernor(shadow_mode=False)
+    suggestions = egg.get_shadow_mode_suggestions()
+    assert suggestions == {}
+
+
+def test_adversarial_tests_default_count():
+    """Test generate_adversarial_test_prompts with default count (None -> 10)."""
+    egg = EthicalGuardrailGovernor()
+    prompts = egg.generate_adversarial_test_prompts(count=None)
+    assert len(prompts) == 10
+
+
+def test_paraphrased_test_all_categories():
+    """Test _generate_paraphrased_test covers all category branches."""
+    egg = EthicalGuardrailGovernor()
+    pattern = r"\btest\b"
+    for category in ("csam", "bioweapons", "real_exploits", "real_hacking", "other"):
+        result = egg._generate_paraphrased_test(pattern, category)
+        assert isinstance(result, str)
+        assert "PARAPHRASE TEST" in result
+
+
+def test_obfuscated_test_no_terms():
+    """Test _generate_obfuscated_test falls back to category name when no terms."""
+    egg = EthicalGuardrailGovernor()
+    # Use a pattern with only very short words (length <= 2) so no terms survive filter
+    result = egg._generate_obfuscated_test(r"\ba\b", "real_hacking")
+    assert "OBFUSCATION TEST" in result
+
+
+def test_boundary_test_no_terms():
+    """Test _generate_boundary_test falls back when pattern yields no long terms."""
+    egg = EthicalGuardrailGovernor()
+    result = egg._generate_boundary_test(r"\ba\b", "csam")
+    assert "BOUNDARY TEST" in result
+
+
+def test_generate_test_prompt_all_categories():
+    """Test _generate_test_prompt_from_pattern covers all category branches."""
+    egg = EthicalGuardrailGovernor()
+    pattern = r"\bexploit\b"
+    for category in ("csam", "bioweapons", "real_exploits", "real_hacking", "other"):
+        result = egg._generate_test_prompt_from_pattern(pattern, category)
+        assert isinstance(result, str)
+
+
+def test_shadow_suggestions_with_high_confidence_and_frequent():
+    """Test shadow mode suggestions when high-confidence and frequent near-misses exist."""
+    from app.core.egg import ShadowModeMatch
+
+    egg = EthicalGuardrailGovernor(shadow_mode=True)
+    pattern = r"\btest_pattern\b"
+    # Add enough high-confidence matches (>= MIN_HIGH_CONFIDENCE_MATCHES=3)
+    for _ in range(4):
+        match = ShadowModeMatch(
+            pattern=pattern,
+            category="csam",
+            match_score=0.9,
+            prompt_fingerprint="fp123",
+        )
+        egg.shadow_matches.append(match)
+    # Add enough frequent pattern occurrences (>= MIN_FREQUENT_PATTERN_COUNT=5)
+    for _ in range(5):
+        match = ShadowModeMatch(
+            pattern=pattern,
+            category="csam",
+            match_score=0.5,
+            prompt_fingerprint="fp456",
+        )
+        egg.shadow_matches.append(match)
+
+    suggestions = egg.get_shadow_mode_suggestions()
+    assert "csam" in suggestions
+    assert len(suggestions["csam"]) >= 1
+
+
+def test_calculate_match_score_no_keywords():
+    """Test _calculate_match_score returns 0.0 when pattern yields no long keywords."""
+    egg = EthicalGuardrailGovernor()
+    # Pattern with only very short words (< 4 chars) and stopwords
+    score = egg._calculate_match_score("some text", r"\ba\b")
+    assert score == 0.0
+
+
+def test_malformed_patterns_skipped_in_inspect():
+    """Test that patterns listed in malformed_patterns are skipped (continue branch)."""
+    egg = EthicalGuardrailGovernor()
+    # Add a pattern to malformed_patterns so the continue branch is hit
+    dummy_pattern = "dummy_malformed_pattern_xyz"
+    egg.BLOCKED_PATTERNS["bioweapons"] = [dummy_pattern] + list(egg.BLOCKED_PATTERNS["bioweapons"])
+    egg.malformed_patterns["bioweapons"] = [dummy_pattern]
+    egg.BLOCKED_PATTERNS["real_exploits"] = [dummy_pattern] + list(egg.BLOCKED_PATTERNS["real_exploits"])
+    egg.malformed_patterns["real_exploits"] = [dummy_pattern]
+    egg.BLOCKED_PATTERNS["real_hacking"] = [dummy_pattern] + list(egg.BLOCKED_PATTERNS["real_hacking"])
+    egg.malformed_patterns["real_hacking"] = [dummy_pattern]
+
+    # Should still work normally (the malformed pattern is skipped)
+    allowed, _ = egg.inspect_prompt("a safe prompt about nothing suspicious")
+    assert allowed is True
+
+
+def test_re_error_patterns_handled():
+    """Test that invalid regex patterns are caught and skipped gracefully."""
+    egg = EthicalGuardrailGovernor()
+    # Add an invalid regex pattern to each category
+    bad_pattern = r"[invalid regex ("
+    egg.BLOCKED_PATTERNS["csam"] = [bad_pattern] + list(egg.BLOCKED_PATTERNS["csam"])
+    egg.BLOCKED_PATTERNS["bioweapons"] = [bad_pattern] + list(egg.BLOCKED_PATTERNS["bioweapons"])
+    egg.BLOCKED_PATTERNS["real_exploits"] = [bad_pattern] + list(egg.BLOCKED_PATTERNS["real_exploits"])
+    egg.BLOCKED_PATTERNS["real_hacking"] = [bad_pattern] + list(egg.BLOCKED_PATTERNS["real_hacking"])
+
+    # Should not raise, should fail-open (allow)
+    allowed, _ = egg.inspect_prompt("a safe prompt")
+    assert allowed is True

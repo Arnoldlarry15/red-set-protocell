@@ -9,7 +9,6 @@ import pytest
 
 from app.lifecycle import background_tasks, background_tasks_lock, track_background_task
 
-
 # ── track_background_task ─────────────────────────────────────────────────────
 
 

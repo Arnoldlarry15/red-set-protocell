@@ -210,3 +210,103 @@ def test_backend_type_case_insensitive(monkeypatch):
 
     # Verify backend was set correctly
     assert config.target.backend == ModelBackend.OPENROUTER
+
+
+def test_confidence_threshold_validation():
+    """Test that invalid confidence_threshold raises ValueError."""
+    from app.core.config import SpotterConfig
+
+    with pytest.raises(ValueError, match="Confidence threshold"):
+        RSPConfig(spotter=SpotterConfig(confidence_threshold=1.5))
+
+
+def test_backend_type_explicit_openai(monkeypatch):
+    """Test that BACKEND_TYPE=openai explicitly sets OpenAI backend."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("BACKEND_TYPE", "openai")
+    monkeypatch.setenv("OPENAI_API_KEY", "openai-key")
+
+    config = load_config_from_env()
+
+    assert config.target.backend == ModelBackend.OPENAI
+    assert config.target.api_key == "openai-key"
+
+
+def test_backend_type_anthropic(monkeypatch):
+    """Test that BACKEND_TYPE=anthropic sets Anthropic backend and loads key."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("BACKEND_TYPE", "anthropic")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "anthropic-key")
+
+    config = load_config_from_env()
+
+    assert config.target.backend == ModelBackend.ANTHROPIC
+    assert config.target.api_key == "anthropic-key"
+
+
+def test_backend_type_llama_cpp(monkeypatch):
+    """Test that BACKEND_TYPE=llama_cpp sets llama_cpp backend."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("BACKEND_TYPE", "llama_cpp")
+
+    config = load_config_from_env()
+
+    assert config.target.backend == ModelBackend.LLAMA_CPP
+
+
+def test_backend_type_custom_http(monkeypatch):
+    """Test that BACKEND_TYPE=custom_http sets custom_http backend."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("BACKEND_TYPE", "custom_http")
+
+    config = load_config_from_env()
+
+    assert config.target.backend == ModelBackend.CUSTOM_HTTP
+
+
+def test_fallback_uses_anthropic_key_for_other_backends(monkeypatch):
+    """Test fallback logic sets api_key from ANTHROPIC_API_KEY for non-standard backends."""
+    monkeypatch.setenv("BACKEND_TYPE", "llama_cpp")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fallback-anthropic-key")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    config = load_config_from_env()
+
+    assert config.target.api_key == "fallback-anthropic-key"
+
+
+def test_fallback_uses_openai_key_when_no_anthropic_key(monkeypatch):
+    """Test fallback logic falls through to OPENAI_API_KEY when ANTHROPIC_API_KEY absent."""
+    monkeypatch.setenv("BACKEND_TYPE", "llama_cpp")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "fallback-openai-key")
+
+    config = load_config_from_env()
+
+    assert config.target.api_key == "fallback-openai-key"
+
+
+def test_openai_api_base_loaded_from_env(monkeypatch):
+    """Test that OPENAI_API_BASE is loaded into config.target.api_base."""
+    monkeypatch.delenv("BACKEND_TYPE", raising=False)
+    monkeypatch.setenv("OPENAI_API_BASE", "https://my-proxy.example.com/v1")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    config = load_config_from_env()
+
+    assert config.target.api_base == "https://my-proxy.example.com/v1"
+
+
+def test_openrouter_without_api_key(monkeypatch):
+    """Test openrouter backend when OPENROUTER_API_KEY is not set (no backcompat alias)."""
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.setenv("BACKEND_TYPE", "openrouter")
+
+    config = load_config_from_env()
+
+    assert config.target.backend == ModelBackend.OPENROUTER
+    assert config.target.openrouter_api_key is None

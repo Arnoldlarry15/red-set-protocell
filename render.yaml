@@ -15,9 +15,10 @@ services:
         value: production
       
       # CORS Configuration - REQUIRED
-      # Set this to your Vercel frontend URL after deployment
+      # Exact origin of the Vercel frontend; no wildcards, no localhost.
+      # Update this value in the Render Dashboard if your frontend URL differs.
       - key: RSP_ALLOWED_ORIGINS
-        sync: false  # Must be set manually in Render Dashboard
+        value: https://red-set-protocell.vercel.app
       
       # API Keys - REQUIRED
       # Add these in Render Dashboard -> Environment

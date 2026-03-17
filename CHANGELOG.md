@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed (connectivity fix – 2026-03-17)
+- **Production Front-end / Back-end Connectivity**: Resolved a startup crash in the
+  Render-hosted backend and a misconfigured API URL in the Vercel-hosted frontend.
+
+  **Root cause**: `render.yaml` left `RSP_ALLOWED_ORIGINS` as `sync: false` (manually
+  managed), which allowed it to be accidentally set to `http://localhost:5173`. The
+  production backend correctly rejects any localhost origin, so it crashed on every
+  worker startup with:
+  ```
+  ValueError: FATAL: Production backend cannot trust localhost origin: http://localhost:5173
+  Use separate backend instance for local development.
+  ```
+  Separately, `vercel.json` had no `VITE_API_BASE_URL` env var, so the Vercel build
+  fell back to `http://localhost:8000` and the frontend could not reach the backend
+  at all.
+
+  **Changes**:
+  - `render.yaml`: Replaced `sync: false` on `RSP_ALLOWED_ORIGINS` with the correct
+    production value (`https://red-set-protocell.vercel.app`). The Render Blueprint now
+    deploys with a valid CORS origin automatically, preventing this class of
+    misconfiguration. The value can still be overridden in the Render Dashboard if
+    your frontend URL differs.
+  - `vercel.json`: Added `env.VITE_API_BASE_URL=https://red-set-protocell-api.onrender.com`
+    so that every Vercel build bakes in the correct backend URL, enabling the frontend
+    to reach the Render-deployed API.
+
 ### Added (v1.2.0)
 - **Memory Leak Fix**: Bounded `strategy_performance` to prevent unbounded memory growth
   - Changed from unlimited `List[float]` to bounded `Deque[float]` with configurable max size

@@ -6,8 +6,61 @@ This guide covers deploying Red Set ProtoCell in production environments.
 
 Red Set ProtoCell uses a **clean separation** between frontend and backend:
 
-- **Frontend**: Static React/Vite app → Deploy on **Vercel**
-- **Backend**: FastAPI server in container → Deploy on **Railway/Render/Fly.io**
+- **Migration target (current phase)**
+  - **Frontend**: Firebase Hosting at `https://redset.app`
+  - **Backend**: Cloud Run at `https://api.redset.app`
+  - **Secrets**: Google Secret Manager, injected into Cloud Run environment variables
+  - **Database**: keep current storage in this phase; Cloud SQL PostgreSQL is a later phase
+
+### Target architecture summary (migration phase)
+
+| Layer | Target platform | Domain | Notes |
+|---|---|---|---|
+| Frontend SPA | Firebase Hosting | `redset.app` | Static Vite build from `frontend/dist` |
+| Backend API | Cloud Run | `api.redset.app` | Container from `backend/Dockerfile` |
+| Secrets | Secret Manager | n/a | Inject into Cloud Run as env vars |
+| Database | Future Cloud SQL PostgreSQL | n/a | Explicitly out of scope for current migration phase |
+
+### Secret Manager mapping (Cloud Run)
+
+| Secret (recommended name) | Env var in Cloud Run | Required now |
+|---|---|---|
+| `rsp-openai-api-key` | `OPENAI_API_KEY` | Optional (at least one provider key required) |
+| `rsp-anthropic-api-key` | `ANTHROPIC_API_KEY` | Optional (at least one provider key required) |
+| `rsp-openrouter-api-key` | `OPENROUTER_API_KEY` | Optional |
+| `rsp-sniper-anthropic-api-key` | `SNIPER_ANTHROPIC_API_KEY` | Optional |
+| `rsp-spotter-anthropic-api-key` | `SPOTTER_ANTHROPIC_API_KEY` | Optional |
+| `rsp-jwt-secret` | `RSP_JWT_SECRET` | Required in production |
+| `rsp-demo-password` | `RSP_DEMO_PASSWORD` | Required in production |
+| `rsp-api-keys` | `RSP_API_KEYS` | Optional |
+| `rsp-postgres-uri` | `RSP_POSTGRES_URI` | Future phase (Cloud SQL cutover) |
+| `rsp-sentry-dsn` | `SENTRY_DSN` | Optional |
+| `rsp-rollbar-token` | `ROLLBAR_TOKEN` | Optional |
+
+### Cloud Run non-secret environment variables
+
+| Env var | Recommended value | Notes |
+|---|---|---|
+| `RSP_ENVIRONMENT` | `production` | Enables production checks |
+| `RSP_ALLOWED_ORIGINS` | `https://redset.app` | Exact frontend origin |
+| `RSP_REQUIRE_AUTH` | `true` | Must remain true in production |
+| `RSP_JWT_EXPIRATION_HOURS` | `24` | Policy setting |
+| `RSP_RATE_LIMIT_PER_MIN` | `60` | Tune as needed |
+| `RSP_RATE_LIMIT_PER_HOUR` | `1000` | Tune as needed |
+| `BACKEND_TYPE` | `openai` / `anthropic` / `openrouter` | Match provider configuration |
+| `WORKERS` | platform-dependent | Optional gunicorn tuning |
+| `WORKER_CONNECTIONS` | `1000` | Optional gunicorn tuning |
+
+### Domain plan
+
+- Frontend primary domain: `redset.app`
+- Backend API domain: `api.redset.app`
+- CORS in backend should allow only `https://redset.app` for production.
+
+### Legacy references
+
+- Existing Render/Vercel docs and configs are retained during migration for rollback safety.
+- Treat Render/Vercel instructions in this file as legacy transition references.
 
 ## Table of Contents
 
@@ -15,6 +68,8 @@ Red Set ProtoCell uses a **clean separation** between frontend and backend:
 - [Frontend Deployment (Vercel)](#frontend-deployment-vercel)
 - [Backend Deployment (Container Platforms)](#backend-deployment-container-platforms)
 - [Security Checklist](#security-checklist)
+
+> **Legacy notice:** Vercel/Render/Railway/Fly.io sections below are retained as legacy references during migration.
 
 ## Prerequisites
 

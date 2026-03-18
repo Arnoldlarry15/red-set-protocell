@@ -13,11 +13,13 @@ Red Set ProtoCell is an offensive security tool for AI systems—a red-teaming e
 
 ## 🎨 Web UI Available!
 
-**🚀 [Try the Live Demo](https://red-set-protocell.vercel.app)**
+**🚀 Migration target frontend**: https://redset.app
 
-**Backend API**: https://red-set-protocell.onrender.com
+**Migration target backend API**: https://api.redset.app
 
-**📦 Easy Deployment**: One-click deploy to Render + Vercel - see [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+**📦 Migration docs**: Firebase Hosting + Cloud Run + Secret Manager - see [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
+
+**Legacy references**: Existing Render/Vercel configs and docs are intentionally kept during transition for rollback safety.
 
 Red Set ProtoCell now includes a modern, glassmorphism-styled web interface featuring:
 - **Live Attack Feed**: Real-time stream of red teaming attacks
@@ -28,9 +30,10 @@ Red Set ProtoCell now includes a modern, glassmorphism-styled web interface feat
 - **Auto-Halt**: Stops on critical vulnerabilities or cost limits
 
 **Deployment Options:**
-- 🔵 **One-Click**: Use `render.yaml` for automated Render deployment
-- 📖 **Step-by-Step**: Follow [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for detailed instructions
-- 🔧 **Advanced**: See [DEPLOYMENT.md](DEPLOYMENT.md) for production configuration
+- ✅ **Current migration target**: Firebase Hosting (`redset.app`) + Cloud Run (`api.redset.app`)
+- 🔐 **Secrets**: Inject via Secret Manager into Cloud Run
+- 🗄️ **Future phase**: Cloud SQL PostgreSQL cutover later (not now)
+- 🧭 **Legacy fallback**: Existing Render/Vercel docs/config remain for transition safety
 
 Local setup: [docs/guides/WEB_UI_SETUP.md](docs/guides/WEB_UI_SETUP.md)
 

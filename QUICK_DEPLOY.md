@@ -1,6 +1,66 @@
 # Quick Deployment Guide - Red Set ProtoCell
 
-This guide provides step-by-step instructions for deploying Red Set ProtoCell to Render (backend) and Vercel (frontend).
+This guide provides step-by-step instructions for migration-ready deployment.
+
+## Migration target (current phase)
+
+- **Frontend**: Firebase Hosting on `redset.app`
+- **Backend**: Cloud Run on `api.redset.app`
+- **Secrets**: Secret Manager injected into Cloud Run env vars
+- **Database**: keep current storage in this phase (Cloud SQL PostgreSQL is later)
+
+## Domain plan
+
+- `redset.app` → Firebase Hosting (frontend)
+- `api.redset.app` → Cloud Run service (backend)
+
+## Cloud Run environment model
+
+### Secret Manager → Cloud Run (secrets)
+
+| Env var | Secret Manager |
+|---|---|
+| `OPENAI_API_KEY` | `rsp-openai-api-key` |
+| `ANTHROPIC_API_KEY` | `rsp-anthropic-api-key` |
+| `OPENROUTER_API_KEY` | `rsp-openrouter-api-key` |
+| `SNIPER_ANTHROPIC_API_KEY` | `rsp-sniper-anthropic-api-key` |
+| `SPOTTER_ANTHROPIC_API_KEY` | `rsp-spotter-anthropic-api-key` |
+| `RSP_JWT_SECRET` | `rsp-jwt-secret` |
+| `RSP_DEMO_PASSWORD` | `rsp-demo-password` |
+| `RSP_API_KEYS` | `rsp-api-keys` |
+| `RSP_POSTGRES_URI` | `rsp-postgres-uri` (future Cloud SQL phase) |
+
+### Standard Cloud Run env vars (non-secret)
+
+| Env var | Example value |
+|---|---|
+| `RSP_ENVIRONMENT` | `production` |
+| `RSP_ALLOWED_ORIGINS` | `https://redset.app` |
+| `RSP_REQUIRE_AUTH` | `true` |
+| `RSP_JWT_EXPIRATION_HOURS` | `24` |
+| `RSP_RATE_LIMIT_PER_MIN` | `60` |
+| `RSP_RATE_LIMIT_PER_HOUR` | `1000` |
+| `BACKEND_TYPE` | `openai` |
+| `WORKERS` | `2` |
+| `WORKER_CONNECTIONS` | `1000` |
+
+## Recommended quick path (Firebase + Cloud Run)
+
+1. Build and deploy backend container to Cloud Run from `backend/Dockerfile`.
+2. Configure Cloud Run env vars:
+   - non-secrets via standard env vars
+   - secrets via Secret Manager references
+3. Map Cloud Run custom domain to `api.redset.app`.
+4. Build and deploy frontend to Firebase Hosting (`frontend/dist`).
+5. Configure frontend `VITE_API_BASE_URL=https://api.redset.app`.
+6. Map Firebase Hosting custom domain to `redset.app`.
+7. Validate:
+   - `https://api.redset.app/health`
+   - frontend can call backend without CORS errors
+
+## Legacy Render/Vercel flow (kept during transition)
+
+The sections below are legacy deployment instructions retained for rollback/transition safety.
 
 ## Prerequisites
 
@@ -9,7 +69,7 @@ This guide provides step-by-step instructions for deploying Red Set ProtoCell to
 - Vercel account (free tier available at https://vercel.com)
 - OpenAI API key and/or Anthropic API key
 
-## Option 1: One-Click Deployment (Recommended)
+## Option 1: One-Click Deployment (Legacy Render/Vercel)
 
 ### Step 1: Deploy Backend to Render
 

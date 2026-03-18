@@ -49,18 +49,21 @@ The application requires environment variables for proper configuration:
 
 2. **Configure your environment**:
    - For local development, the default `http://localhost:8000` works fine
-   - For production deployment, set `VITE_API_BASE_URL` to your backend API URL
+   - For migration target production, use Firebase Hosting frontend (`redset.app`) with Cloud Run backend (`api.redset.app`)
+   - Set `VITE_API_BASE_URL` to your backend API URL
 
 Example `.env.local` file:
 ```env
 # For local development
 VITE_API_BASE_URL=http://localhost:8000
 
-# For production (set in Vercel/deployment platform)
-# VITE_API_BASE_URL=https://your-backend-api.com
+# For production (Firebase Hosting)
+# VITE_API_BASE_URL=https://api.redset.app
 ```
 
 **Important**: Environment variables prefixed with `VITE_` are exposed to the client-side code.
+
+**Security**: Do not place secrets in frontend env files. Only public configuration should use `VITE_` variables.
 
 ### Development
 

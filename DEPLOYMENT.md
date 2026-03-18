@@ -2,6 +2,54 @@
 
 This document provides the production deployment configuration for Red Set ProtoCell v1.0.0.
 
+## Migration target (current phase)
+
+- **Frontend**: Firebase Hosting at `https://redset.app`
+- **Backend**: Cloud Run at `https://api.redset.app`
+- **Secrets**: Secret Manager injected into Cloud Run environment variables
+- **Database**: Cloud SQL PostgreSQL is a later phase (not part of this migration step)
+
+### Target architecture summary
+
+| Layer | Platform | Domain |
+|---|---|---|
+| Frontend | Firebase Hosting | `redset.app` |
+| Backend | Cloud Run | `api.redset.app` |
+| Secrets | Secret Manager | injected into Cloud Run |
+| Database | Future Cloud SQL PostgreSQL | later phase |
+
+### Secret Manager mapping table
+
+| Env var | Secret Manager secret |
+|---|---|
+| `OPENAI_API_KEY` | `rsp-openai-api-key` |
+| `ANTHROPIC_API_KEY` | `rsp-anthropic-api-key` |
+| `OPENROUTER_API_KEY` | `rsp-openrouter-api-key` |
+| `SNIPER_ANTHROPIC_API_KEY` | `rsp-sniper-anthropic-api-key` |
+| `SPOTTER_ANTHROPIC_API_KEY` | `rsp-spotter-anthropic-api-key` |
+| `RSP_JWT_SECRET` | `rsp-jwt-secret` |
+| `RSP_DEMO_PASSWORD` | `rsp-demo-password` |
+| `RSP_API_KEYS` | `rsp-api-keys` |
+| `RSP_POSTGRES_URI` | `rsp-postgres-uri` (future Cloud SQL phase) |
+
+### Cloud Run non-secret env vars
+
+| Env var | Example |
+|---|---|
+| `RSP_ENVIRONMENT` | `production` |
+| `RSP_ALLOWED_ORIGINS` | `https://redset.app` |
+| `RSP_REQUIRE_AUTH` | `true` |
+| `RSP_JWT_EXPIRATION_HOURS` | `24` |
+| `RSP_RATE_LIMIT_PER_MIN` | `60` |
+| `RSP_RATE_LIMIT_PER_HOUR` | `1000` |
+| `BACKEND_TYPE` | `openai` |
+| `WORKERS` | `2` |
+| `WORKER_CONNECTIONS` | `1000` |
+
+### Legacy note
+
+Render/Vercel references in this document are retained during migration as legacy rollback guidance.
+
 > 🚀 **Quick Start:** For step-by-step deployment instructions, see [QUICK_DEPLOY.md](QUICK_DEPLOY.md)
 
 > 🔵 **One-Click Deploy:** Use `render.yaml` for automated Render deployment

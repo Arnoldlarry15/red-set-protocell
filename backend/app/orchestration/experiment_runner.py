@@ -234,3 +234,166 @@ class IterativeAttackLoopEngine:
         l2 = float(evaluation.get("l2", {}).get("score", 0.0))
         l3 = float(evaluation.get("l3", {}).get("score", 0.0))
         return max(0.0, min(1.0, (l1 + l2 + l3) / 3.0))
+
+
+@dataclass(slots=True)
+class ExperimentRunRecord:
+    """Record for one executed experiment run.
+
+    Stores metadata and computed summary values to support cross-run comparison.
+    """
+
+    experiment_id: str
+    run_index: int
+    started_at: str
+    ended_at: str
+    status: str
+    iteration_count: int
+    average_score: float
+    max_score: float
+    min_score: float
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+class ExperimentBatchRunner:
+    """Batch runner for executing and comparing multiple experiment runs.
+
+    Supports:
+    - config input as dict or JSON string
+    - batch execution across experiments
+    - result aggregation for run comparison
+    - metadata persistence in-memory via ``history``
+    """
+
+    def __init__(self):
+        self.history: List[ExperimentRunRecord] = []
+
+    @staticmethod
+    def parse_config(config_input: Any) -> List[ExperimentConfig]:
+        """Parse experiment config from dict/JSON into config objects."""
+        import json
+
+        if isinstance(config_input, str):
+            payload = json.loads(config_input)
+        elif isinstance(config_input, Mapping):
+            payload = dict(config_input)
+        else:
+            raise TypeError("config_input must be dict-like or JSON string")
+
+        if "experiments" in payload:
+            entries = payload["experiments"]
+        else:
+            entries = [payload]
+
+        configs: List[ExperimentConfig] = []
+        for entry in entries:
+            configs.append(
+                ExperimentConfig(
+                    experiment_id=str(entry["experiment_id"]),
+                    max_iterations=int(entry.get("max_iterations", 100)),
+                    stop_on_error=bool(entry.get("stop_on_error", True)),
+                    tags=list(entry.get("tags", [])),
+                    parameters=dict(entry.get("parameters", {})),
+                )
+            )
+        return configs
+
+    async def run_batch(self, config_input: Any, run_callable) -> Dict[str, Any]:
+        """Execute a batch of configured experiments with aggregation.
+
+        Args:
+            config_input: Experiment config as dict or JSON string.
+            run_callable: Async callable with signature ``run_callable(config)``
+                returning ``List[IterationResult]``.
+        """
+        configs = self.parse_config(config_input)
+        run_results: List[ExperimentRunRecord] = []
+
+        for idx, cfg in enumerate(configs, start=1):
+            started_at = datetime.now(timezone.utc).isoformat()
+            logger.info("batch.run.start experiment_id=%s run_index=%s", cfg.experiment_id, idx)
+
+            results = await run_callable(cfg)
+            ended_at = datetime.now(timezone.utc).isoformat()
+
+            scores = [float(r.metrics.get("global_score", 0.0)) for r in results if isinstance(r.metrics, Mapping)]
+            avg_score = sum(scores) / len(scores) if scores else 0.0
+            max_score = max(scores) if scores else 0.0
+            min_score = min(scores) if scores else 0.0
+            status = "completed" if all(r.status != "failed" for r in results) else "completed_with_failures"
+
+            record = ExperimentRunRecord(
+                experiment_id=cfg.experiment_id,
+                run_index=idx,
+                started_at=started_at,
+                ended_at=ended_at,
+                status=status,
+                iteration_count=len(results),
+                average_score=avg_score,
+                max_score=max_score,
+                min_score=min_score,
+                metadata={"tags": cfg.tags, "parameters": cfg.parameters},
+            )
+            self.history.append(record)
+            run_results.append(record)
+            logger.info("batch.run.complete experiment_id=%s avg_score=%.3f", cfg.experiment_id, avg_score)
+
+        return self.aggregate_results(run_results)
+
+    @staticmethod
+    def aggregate_results(records: List[ExperimentRunRecord]) -> Dict[str, Any]:
+        """Aggregate run records for cross-run comparison."""
+        if not records:
+            return {"total_runs": 0, "best_run": None, "worst_run": None, "runs": []}
+
+        best = max(records, key=lambda r: r.average_score)
+        worst = min(records, key=lambda r: r.average_score)
+
+        return {
+            "total_runs": len(records),
+            "best_run": {
+                "experiment_id": best.experiment_id,
+                "run_index": best.run_index,
+                "average_score": best.average_score,
+            },
+            "worst_run": {
+                "experiment_id": worst.experiment_id,
+                "run_index": worst.run_index,
+                "average_score": worst.average_score,
+            },
+            "runs": [
+                {
+                    "experiment_id": rec.experiment_id,
+                    "run_index": rec.run_index,
+                    "status": rec.status,
+                    "iteration_count": rec.iteration_count,
+                    "average_score": rec.average_score,
+                    "max_score": rec.max_score,
+                    "min_score": rec.min_score,
+                    "metadata": rec.metadata,
+                }
+                for rec in records
+            ],
+        }
+
+
+def get_example_experiment_config() -> Dict[str, Any]:
+    """Return an example batch experiment configuration (dict format)."""
+    return {
+        "experiments": [
+            {
+                "experiment_id": "batch_exp_1",
+                "max_iterations": 5,
+                "stop_on_error": True,
+                "tags": ["baseline", "prompt_injection"],
+                "parameters": {"exploit_score_threshold": 0.85, "failure_threshold": 3},
+            },
+            {
+                "experiment_id": "batch_exp_2",
+                "max_iterations": 8,
+                "stop_on_error": True,
+                "tags": ["comparison", "jailbreak"],
+                "parameters": {"exploit_score_threshold": 0.9, "failure_threshold": 2},
+            },
+        ]
+    }

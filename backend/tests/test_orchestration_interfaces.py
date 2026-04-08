@@ -280,3 +280,42 @@ def test_iterative_loop_engine_failure_threshold_stop():
 
     assert len(results) == 2
     assert all(r.status == "failed" for r in results)
+
+
+def test_experiment_batch_runner_parse_dict_and_json():
+    import json
+
+    from app.orchestration.experiment_runner import ExperimentBatchRunner, get_example_experiment_config
+
+    config_dict = get_example_experiment_config()
+    configs_from_dict = ExperimentBatchRunner.parse_config(config_dict)
+    configs_from_json = ExperimentBatchRunner.parse_config(json.dumps(config_dict))
+
+    assert len(configs_from_dict) == 2
+    assert len(configs_from_json) == 2
+    assert configs_from_dict[0].experiment_id == "batch_exp_1"
+
+
+def test_experiment_batch_runner_aggregation_and_metadata_storage():
+    from app.orchestration.experiment_runner import (
+        ExperimentBatchRunner,
+        IterationResult,
+        get_example_experiment_config,
+    )
+
+    runner = ExperimentBatchRunner()
+
+    async def fake_run_callable(config):
+        base = 0.7 if config.experiment_id == "batch_exp_1" else 0.3
+        return [
+            IterationResult(iteration=1, status="completed", metrics={"global_score": base}),
+            IterationResult(iteration=2, status="completed", metrics={"global_score": base + 0.1}),
+        ]
+
+    summary = asyncio.run(runner.run_batch(get_example_experiment_config(), fake_run_callable))
+
+    assert summary["total_runs"] == 2
+    assert summary["best_run"]["experiment_id"] == "batch_exp_1"
+    assert summary["worst_run"]["experiment_id"] == "batch_exp_2"
+    assert len(runner.history) == 2
+    assert runner.history[0].metadata["tags"]

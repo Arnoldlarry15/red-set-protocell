@@ -6,6 +6,9 @@ from app.orchestration.experiment_runner import (
     ExperimentRunner,
     IterationResult,
     IterativeAttackLoopEngine,
+    ExperimentBatchRunner,
+    ExperimentRunRecord,
+    get_example_experiment_config,
 )
 from app.orchestration.orchestrator import ModularOrchestrator, OrchestratorContext
 
@@ -17,6 +20,9 @@ __all__ = [
     "ExperimentRunner",
     "IterationResult",
     "IterativeAttackLoopEngine",
+    "ExperimentBatchRunner",
+    "ExperimentRunRecord",
+    "get_example_experiment_config",
     "ModularOrchestrator",
     "OrchestratorContext",
 ]

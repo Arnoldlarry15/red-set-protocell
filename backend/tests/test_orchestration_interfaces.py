@@ -390,3 +390,49 @@ def test_mock_environment_unsupported_action_is_safe():
 
     assert result["status"] == "unsupported_action"
     assert result["state"]["data"]["counter"] == 1
+
+
+def test_iterative_loop_engine_records_replay_log_and_json_output():
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    sniper = DummySniper()
+    target = DummyTarget()
+    spotter = DummySpotter(score=0.4)
+
+    engine = IterativeAttackLoopEngine(sniper=sniper, target=target, spotter=spotter)
+    engine.configure(
+        ExperimentConfig(
+            experiment_id="exp-replay-1",
+            max_iterations=2,
+            parameters={"exploit_score_threshold": 0.95, "failure_threshold": 5},
+        )
+    )
+
+    _ = asyncio.run(engine.run())
+
+    replay_log = engine.get_attack_log()
+    replay_json = engine.get_attack_log_json()
+
+    assert len(replay_log) == 2
+    assert "inputs" in replay_log[0]
+    assert "outputs" in replay_log[0]
+    assert "decision" in replay_log[0]
+    assert "score" in replay_log[0]
+    assert replay_json.startswith("[")
+
+
+def test_iterative_loop_engine_replay_attack_sequence():
+    from app.orchestration.experiment_runner import IterativeAttackLoopEngine
+
+    events = [
+        {"iteration": 2, "timestamp": "2026-01-01T00:00:02+00:00", "status": "completed", "score": 0.2},
+        {"iteration": 1, "timestamp": "2026-01-01T00:00:01+00:00", "status": "completed", "score": 0.4},
+    ]
+
+    replayed = IterativeAttackLoopEngine.replay_attack_sequence(events)
+    assert [e["iteration"] for e in replayed] == [1, 2]
+
+    replayed_from_json = IterativeAttackLoopEngine.replay_attack_sequence(
+        '[{"iteration": 1, "timestamp": "2026-01-01T00:00:01+00:00", "status": "completed", "score": 0.4}]'
+    )
+    assert replayed_from_json[0]["iteration"] == 1

@@ -16,6 +16,7 @@ No Sniper/Spotter internal logic is modified.
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -113,6 +114,7 @@ class IterativeAttackLoopEngine:
         self.config: Optional[ExperimentConfig] = None
         self._stopped = False
         self._prior_metadata: List[Dict[str, Any]] = []
+        self._attack_log: List[Dict[str, Any]] = []
 
     def configure(self, config: ExperimentConfig) -> None:
         """Persist validated experiment configuration."""
@@ -135,6 +137,7 @@ class IterativeAttackLoopEngine:
 
         self._stopped = False
         self._prior_metadata = []
+        self._attack_log = []
         consecutive_failures = 0
         results: List[IterationResult] = []
 
@@ -198,6 +201,14 @@ class IterativeAttackLoopEngine:
                 "response": response,
             }
             self._prior_metadata.append(round_context)
+            self._record_attack_event(
+                iteration=iteration,
+                status="completed",
+                inputs={"prior_metadata": prior_metadata, "prompt": prompt, "attack_domain": str(attack_domain)},
+                outputs={"response": response, "evaluation": evaluation},
+                decision={"stop_candidate": global_score, "reason": "score_evaluated"},
+                score=global_score,
+            )
 
             return IterationResult(
                 iteration=iteration,
@@ -215,6 +226,15 @@ class IterativeAttackLoopEngine:
 
         except Exception as exc:
             logger.error("loop.iteration.failed iteration=%s error=%s", iteration, exc)
+            self._record_attack_event(
+                iteration=iteration,
+                status="failed",
+                inputs={"prior_metadata": prior_metadata},
+                outputs={},
+                decision={"reason": "exception"},
+                score=0.0,
+                error=str(exc),
+            )
             return IterationResult(
                 iteration=iteration,
                 status="failed",
@@ -223,6 +243,59 @@ class IterativeAttackLoopEngine:
                 metrics={},
                 error=str(exc),
             )
+
+    def _record_attack_event(
+        self,
+        iteration: int,
+        status: str,
+        inputs: Dict[str, Any],
+        outputs: Dict[str, Any],
+        decision: Dict[str, Any],
+        score: float,
+        error: Optional[str] = None,
+    ) -> None:
+        """Record a replayable JSON-friendly attack event."""
+        event = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "iteration": iteration,
+            "status": status,
+            "inputs": inputs,
+            "outputs": outputs,
+            "decision": decision,
+            "score": float(score),
+            "error": error,
+        }
+        self._attack_log.append(event)
+        logger.info("loop.replay_log.recorded iteration=%s status=%s score=%.3f", iteration, status, float(score))
+
+    def get_attack_log(self) -> List[Dict[str, Any]]:
+        """Return in-memory replay log entries for this run."""
+        return list(self._attack_log)
+
+    def get_attack_log_json(self) -> str:
+        """Return replay log as JSON string for simple storage/transport."""
+        return json.dumps(self._attack_log, indent=2)
+
+    @staticmethod
+    def replay_attack_sequence(log_payload: Any) -> List[Dict[str, Any]]:
+        """Replay attack sequence from JSON string or event list.
+
+        Returns normalized event list in replay order.
+        """
+        if isinstance(log_payload, str):
+            events = json.loads(log_payload)
+        else:
+            events = list(log_payload)
+
+        normalized = sorted(events, key=lambda e: (int(e.get("iteration", 0)), e.get("timestamp", "")))
+        for event in normalized:
+            logger.info(
+                "loop.replay iteration=%s status=%s score=%.3f",
+                event.get("iteration"),
+                event.get("status"),
+                float(event.get("score", 0.0)),
+            )
+        return normalized
 
     @staticmethod
     def _extract_global_score(evaluation: Mapping[str, Any]) -> float:

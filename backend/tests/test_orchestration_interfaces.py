@@ -356,3 +356,37 @@ def test_evolution_engine_reruns_mutations_and_records_results():
 
     mutation_examples = get_example_mutation_logic("test prompt")
     assert mutation_examples
+
+
+def test_mock_environment_basic_actions_and_state_reset():
+    from app.orchestration.environment_interface import get_example_mock_environment
+
+    env = get_example_mock_environment()
+
+    state = env.get_state()
+    assert state["data"]["step"] == 0
+    assert state["data"]["status"] == "ready"
+
+    result_set = env.execute_action({"type": "set", "key": "mode", "value": "attack"})
+    assert result_set["status"] == "ok"
+    assert result_set["state"]["data"]["mode"] == "attack"
+
+    result_inc = env.execute_action({"type": "increment", "key": "step", "value": 2})
+    assert result_inc["state"]["data"]["step"] == 2
+
+    result_delete = env.execute_action({"type": "delete", "key": "mode"})
+    assert "mode" not in result_delete["state"]["data"]
+
+    reset = env.reset_environment()
+    assert reset["data"]["step"] == 0
+    assert reset["data"]["status"] == "ready"
+
+
+def test_mock_environment_unsupported_action_is_safe():
+    from app.orchestration.environment_interface import MockEnvironment
+
+    env = MockEnvironment(initial_state={"counter": 1})
+    result = env.execute_action({"type": "unknown", "key": "counter", "value": 99})
+
+    assert result["status"] == "unsupported_action"
+    assert result["state"]["data"]["counter"] == 1

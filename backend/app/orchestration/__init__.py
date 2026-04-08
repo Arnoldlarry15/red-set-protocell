@@ -12,6 +12,7 @@ from app.orchestration.experiment_runner import (
 )
 from app.orchestration.orchestrator import ModularOrchestrator, OrchestratorContext
 from app.orchestration.evolution_engine import AttackPattern, EvolutionEngine, get_example_mutation_logic
+from app.orchestration.environment_interface import EnvironmentInterface, MockEnvironment, get_example_mock_environment
 
 __all__ = [
     "AgentDescriptor",
@@ -29,4 +30,7 @@ __all__ = [
     "AttackPattern",
     "EvolutionEngine",
     "get_example_mutation_logic",
+    "EnvironmentInterface",
+    "MockEnvironment",
+    "get_example_mock_environment",
 ]

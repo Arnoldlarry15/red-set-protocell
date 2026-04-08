@@ -182,3 +182,101 @@ def test_sniper_lifecycle_manager_per_agent_iterations_and_example_usage():
     example = get_sniper_lifecycle_example_usage()
     assert "spawn_snipers" in example
     assert "run_all_agents" in example
+
+
+class DummyTarget:
+    """Minimal Target-compatible async stub."""
+
+    async def execute(self, prompt, **kwargs):
+        _ = kwargs
+        return f"response-for:{prompt}"
+
+
+class DummySpotter:
+    """Minimal Spotter-compatible async stub with call tracking."""
+
+    def __init__(self, score=0.3):
+        self.score = score
+        self.calls = 0
+
+    async def evaluate(self, response, attack_domain, prompt):
+        _ = response
+        _ = attack_domain
+        _ = prompt
+        self.calls += 1
+        return {
+            "l1": {"score": self.score},
+            "l2": {"score": self.score},
+            "l3": {"score": self.score},
+            "global_score": self.score,
+        }
+
+
+def test_iterative_loop_engine_max_iterations_and_output_passing(caplog):
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    caplog.set_level("INFO")
+
+    sniper = DummySniper()
+    target = DummyTarget()
+    spotter = DummySpotter(score=0.2)
+
+    engine = IterativeAttackLoopEngine(sniper=sniper, target=target, spotter=spotter)
+    engine.configure(
+        ExperimentConfig(
+            experiment_id="exp-loop-1",
+            max_iterations=3,
+            parameters={"exploit_score_threshold": 0.9, "failure_threshold": 5},
+        )
+    )
+
+    results = asyncio.run(engine.run())
+
+    assert len(results) == 3
+    assert all(r.status == "completed" for r in results)
+    assert spotter.calls == 3
+    assert "loop.iteration.spotter_evaluated" in caplog.text
+
+
+def test_iterative_loop_engine_successful_exploit_stop():
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    sniper = DummySniper()
+    target = DummyTarget()
+    spotter = DummySpotter(score=0.95)
+
+    engine = IterativeAttackLoopEngine(sniper=sniper, target=target, spotter=spotter)
+    engine.configure(
+        ExperimentConfig(
+            experiment_id="exp-loop-2",
+            max_iterations=10,
+            parameters={"exploit_score_threshold": 0.8, "failure_threshold": 5},
+        )
+    )
+
+    results = asyncio.run(engine.run())
+
+    assert len(results) == 1
+    assert results[0].metrics["global_score"] == 0.95
+
+
+def test_iterative_loop_engine_failure_threshold_stop():
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    failing_sniper = DummySniper(should_fail=True)
+    target = DummyTarget()
+    spotter = DummySpotter(score=0.1)
+
+    engine = IterativeAttackLoopEngine(sniper=failing_sniper, target=target, spotter=spotter)
+    engine.configure(
+        ExperimentConfig(
+            experiment_id="exp-loop-3",
+            max_iterations=10,
+            parameters={"exploit_score_threshold": 0.99, "failure_threshold": 2},
+        )
+    )
+
+    results = asyncio.run(engine.run())
+
+    assert len(results) == 2
+    assert all(r.status == "failed" for r in results)

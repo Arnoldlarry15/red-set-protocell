@@ -4,6 +4,8 @@ These tests keep coverage for the newly-added orchestration interface modules
 without introducing business logic implementations.
 """
 
+import asyncio
+
 from app.orchestration import (
     AgentDescriptor,
     AgentState,
@@ -11,6 +13,7 @@ from app.orchestration import (
     IterationResult,
     OrchestratorContext,
 )
+from app.orchestration.agent_manager import SniperLifecycleManager, get_sniper_lifecycle_example_usage
 
 
 class DummyAgentManager:
@@ -123,3 +126,59 @@ def test_dummy_agent_manager_lifecycle_flow():
 
     manager.teardown_all()
     assert manager.get_snapshot() == {}
+
+
+class DummySniper:
+    """Minimal Sniper-compatible async stub."""
+
+    def __init__(self, should_fail=False):
+        self.should_fail = should_fail
+        self.calls = 0
+
+    async def generate_prompt(self, prior_metadata=None):
+        _ = prior_metadata
+        self.calls += 1
+        if self.should_fail:
+            raise RuntimeError("boom")
+        return f"prompt-{self.calls}", "domain"
+
+
+def test_sniper_lifecycle_manager_spawn_and_iterations():
+    manager = SniperLifecycleManager(default_iterations=2)
+
+    names = manager.spawn_snipers(lambda: DummySniper(), count=3, name_prefix="sniper")
+    assert names == ["sniper_1", "sniper_2", "sniper_3"]
+
+    manager.initialize_all()
+    results = asyncio.run(manager.run_all_agents(prior_metadata=[]))
+
+    assert all(snapshot.state == AgentState.COMPLETED for snapshot in manager.get_snapshot().values())
+    assert results["sniper_1"]["iterations_requested"] == 2
+    assert results["sniper_1"]["iterations_completed"] == 2
+
+
+def test_sniper_lifecycle_manager_failure_state_tracking():
+    manager = SniperLifecycleManager(default_iterations=1)
+    manager.register("sniper_bad", DummySniper(should_fail=True))
+    manager.initialize_all()
+
+    result = asyncio.run(manager.run_agent("sniper_bad", prior_metadata=[]))
+
+    assert manager.get_snapshot()["sniper_bad"].state == AgentState.FAILED
+    assert result["error"] == "boom"
+
+
+def test_sniper_lifecycle_manager_per_agent_iterations_and_example_usage():
+    manager = SniperLifecycleManager(default_iterations=1)
+    manager.register("sniper_custom", DummySniper())
+    manager.initialize_all()
+    manager.set_iterations("sniper_custom", 4)
+
+    result = asyncio.run(manager.run_agent("sniper_custom", prior_metadata=[]))
+
+    assert result["iterations_requested"] == 4
+    assert result["iterations_completed"] == 4
+
+    example = get_sniper_lifecycle_example_usage()
+    assert "spawn_snipers" in example
+    assert "run_all_agents" in example

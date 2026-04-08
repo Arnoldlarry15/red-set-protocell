@@ -319,3 +319,40 @@ def test_experiment_batch_runner_aggregation_and_metadata_storage():
     assert summary["worst_run"]["experiment_id"] == "batch_exp_2"
     assert len(runner.history) == 2
     assert runner.history[0].metadata["tags"]
+
+
+def test_evolution_engine_tracks_top_patterns_and_generates_variants():
+    from app.orchestration.evolution_engine import EvolutionEngine
+
+    engine = EvolutionEngine(max_patterns=3)
+    engine.record_attack("prompt a", "baseline", 0.2)
+    engine.record_attack("prompt b", "baseline", 0.9)
+    engine.record_attack("prompt c", "baseline", 0.5)
+    engine.record_attack("prompt d", "baseline", 0.8)
+
+    top = engine.top_patterns(limit=3)
+    assert [p.prompt for p in top] == ["prompt b", "prompt d", "prompt c"]
+
+    variants = engine.generate_variants(limit=1)
+    assert variants
+    assert variants[0]["source_prompt"] == "prompt b"
+
+
+def test_evolution_engine_reruns_mutations_and_records_results():
+    from app.orchestration.evolution_engine import EvolutionEngine, get_example_mutation_logic
+
+    engine = EvolutionEngine(max_patterns=10)
+    engine.record_attack("initial prompt", "seed", 0.6)
+
+    async def fake_evaluator(prompt):
+        # Simple deterministic scoring for test purposes
+        return {"score": 0.7 if "hypothetical" in prompt.lower() else 0.4}
+
+    recorded = asyncio.run(engine.rerun_variants(fake_evaluator, limit=1, strategy="mutated"))
+
+    assert recorded
+    assert all(p.strategy == "mutated" for p in recorded)
+    assert any("source_prompt" in p.metadata for p in recorded)
+
+    mutation_examples = get_example_mutation_logic("test prompt")
+    assert mutation_examples

@@ -11,6 +11,7 @@ from app.orchestration.experiment_runner import (
     get_example_experiment_config,
 )
 from app.orchestration.orchestrator import ModularOrchestrator, OrchestratorContext
+from app.orchestration.evolution_engine import AttackPattern, EvolutionEngine, get_example_mutation_logic
 
 __all__ = [
     "AgentDescriptor",
@@ -25,4 +26,7 @@ __all__ = [
     "get_example_experiment_config",
     "ModularOrchestrator",
     "OrchestratorContext",
+    "AttackPattern",
+    "EvolutionEngine",
+    "get_example_mutation_logic",
 ]

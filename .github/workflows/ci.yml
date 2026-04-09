@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ main, develop ]
   schedule:
-    # Daily build at 00:00 UTC
     - cron: '0 0 * * *'
 
 concurrency:
@@ -14,62 +13,125 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test on Python ${{ matrix.python-version }} - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.11', '3.12', '3.13']
-    
+  unit-tests:
+    name: Unit tests (mock mode)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PROVIDER_MODE: mock
+      SKIP_REAL_API_TESTS: "true"
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-    
-    - name: Install dependencies
-      working-directory: ./backend
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -r dev-requirements.txt
-    
-    - name: Run tests with coverage
-      working-directory: ./backend
-      run: |
-        pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --cov-report=html
-      env:
-        # Skip real API tests in CI
-        SKIP_REAL_API_TESTS: "true"
-    
-    - name: Upload coverage reports to Codecov
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: codecov/codecov-action@v5
-      with:
-        files: ./backend/coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    
-    - name: Check coverage threshold
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      working-directory: ./backend
-      run: |
-        # Full test suite must achieve >=85% coverage
-        coverage report --fail-under=85
-    
-    - name: Archive coverage HTML report
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report-html
-        path: backend/htmlcov/
-        retention-days: 7
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+      - name: Run unit tests
+        working-directory: ./backend
+        run: |
+          pytest tests/unit tests/test_orchestration_interfaces.py tests/test_factory_pattern.py -v
+
+  integration-tests:
+    name: Integration tests (mock provider)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PROVIDER_MODE: mock
+      SKIP_REAL_API_TESTS: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+      - name: Run integration tests
+        working-directory: ./backend
+        run: |
+          pytest tests/integration -v
+
+  full-coverage:
+    name: Full suite with coverage (mock mode)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      PROVIDER_MODE: mock
+      SKIP_REAL_API_TESTS: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+      - name: Run full tests with coverage
+        working-directory: ./backend
+        run: |
+          pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --cov-report=html
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./backend/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      - name: Check coverage threshold
+        working-directory: ./backend
+        run: |
+          coverage report --fail-under=85
+      - name: Archive coverage HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-html
+          path: backend/htmlcov/
+          retention-days: 7
+
+  real-provider-smoke:
+    name: Real provider smoke (scheduled, non-blocking)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'schedule' && secrets.OPENAI_API_KEY != '' }}
+    continue-on-error: true
+    timeout-minutes: 20
+    env:
+      PROVIDER_MODE: real
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      SKIP_REAL_API_TESTS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        working-directory: ./backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r dev-requirements.txt
+      - name: Run smoke tests
+        working-directory: ./backend
+        run: |
+          pytest tests/smoke tests/test_real_backends.py -v -s

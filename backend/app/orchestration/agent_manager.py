@@ -140,10 +140,10 @@ class SniperLifecycleManager:
             desc.state = AgentState.INITIALIZED
 
     def start_all(self) -> None:
-        """Set all initialized agents to active execution state."""
+        """Set all initialized agents to running state."""
         for desc in self._agents.values():
             if desc.state in (AgentState.INITIALIZED, AgentState.STOPPED):
-                desc.state = AgentState.ACTIVE
+                desc.state = AgentState.RUNNING
 
     def stop_all(self) -> None:
         """Stop all running/active agents."""

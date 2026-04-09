@@ -17,15 +17,18 @@ jobs:
     name: Unit tests (mock mode)
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
     env:
       PROVIDER_MODE: mock
       SKIP_REAL_API_TESTS: "true"
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
       - name: Install dependencies
         working-directory: ./backend
@@ -42,15 +45,18 @@ jobs:
     name: Integration tests (mock provider)
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
     env:
       PROVIDER_MODE: mock
       SKIP_REAL_API_TESTS: "true"
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.11
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
       - name: Install dependencies
         working-directory: ./backend

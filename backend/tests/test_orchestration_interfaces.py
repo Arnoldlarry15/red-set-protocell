@@ -272,6 +272,7 @@ def test_iterative_loop_engine_failure_threshold_stop():
         ExperimentConfig(
             experiment_id="exp-loop-3",
             max_iterations=10,
+            stop_on_error=False,
             parameters={"exploit_score_threshold": 0.99, "failure_threshold": 2},
         )
     )

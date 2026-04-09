@@ -23,11 +23,16 @@ def _is_valid_api_key(key: Optional[str]) -> bool:
 
 
 def _real_mode_enabled() -> bool:
-    return os.environ.get("PROVIDER_MODE", "mock").lower() == "real" and os.environ.get("SKIP_REAL_API_TESTS", "").lower() != "true"
+    return (
+        os.environ.get("PROVIDER_MODE", "mock").lower() == "real"
+        and os.environ.get("SKIP_REAL_API_TESTS", "").lower() != "true"
+    )
 
 
 async def _call_with_retry(coro_factory, max_attempts: int = 3, base_delay: float = 1.0, timeout_seconds: float = 30.0):
     """Execute async provider call with retries and timeout."""
+    if max_attempts < 1:
+        raise ValueError("max_attempts must be >= 1")
     last_error = None
     for attempt in range(max_attempts):
         try:
@@ -62,9 +67,7 @@ def test_openai_real_execution():
     api_key = os.environ.get("OPENAI_API_KEY")
     backend = OpenAIBackend(api_key=api_key, model_name="gpt-3.5-turbo")
 
-    response = asyncio.get_event_loop().run_until_complete(
-        _call_with_retry(lambda: backend.execute("Say 'test' in one word"))
-    )
+    response = asyncio.get_event_loop().run_until_complete(_call_with_retry(lambda: backend.execute("Say 'test' in one word")))
 
     assert isinstance(response, str)
     assert len(response) > 0
@@ -78,9 +81,7 @@ def test_anthropic_real_execution():
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     backend = AnthropicBackend(api_key=api_key)
 
-    response = asyncio.get_event_loop().run_until_complete(
-        _call_with_retry(lambda: backend.execute("Say 'test' in one word"))
-    )
+    response = asyncio.get_event_loop().run_until_complete(_call_with_retry(lambda: backend.execute("Say 'test' in one word")))
 
     assert isinstance(response, str)
     assert len(response) > 0
@@ -94,9 +95,7 @@ def test_target_with_openai():
     api_key = os.environ.get("OPENAI_API_KEY")
     target = create_target("openai", api_key=api_key, model_name="gpt-3.5-turbo")
 
-    response = asyncio.get_event_loop().run_until_complete(
-        _call_with_retry(lambda: target.execute("Say 'hello' in one word"))
-    )
+    response = asyncio.get_event_loop().run_until_complete(_call_with_retry(lambda: target.execute("Say 'hello' in one word")))
 
     assert isinstance(response, str)
     assert len(response) > 0
@@ -111,9 +110,7 @@ def test_target_with_anthropic():
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     target = create_target("anthropic", api_key=api_key)
 
-    response = asyncio.get_event_loop().run_until_complete(
-        _call_with_retry(lambda: target.execute("Say 'hello' in one word"))
-    )
+    response = asyncio.get_event_loop().run_until_complete(_call_with_retry(lambda: target.execute("Say 'hello' in one word")))
 
     assert isinstance(response, str)
     assert len(response) > 0

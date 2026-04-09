@@ -75,21 +75,27 @@ class AgentManager(Protocol):
 
     def register(self, name: str, instance: Any, metadata: Optional[Mapping[str, Any]] = None) -> None:
         """Register an agent instance for lifecycle management."""
+        ...
 
     def initialize_all(self) -> None:
         """Initialize all registered agents (non-business lifecycle step)."""
+        ...
 
     def start_all(self) -> None:
         """Transition all initialized agents into running state."""
+        ...
 
     def stop_all(self) -> None:
         """Stop all running agents gracefully."""
+        ...
 
     def teardown_all(self) -> None:
         """Release all manager-held lifecycle resources for managed agents."""
+        ...
 
     def get_snapshot(self) -> Dict[str, AgentDescriptor]:
         """Return a point-in-time view of tracked agents and states."""
+        ...
 
 
 class SniperLifecycleManager:

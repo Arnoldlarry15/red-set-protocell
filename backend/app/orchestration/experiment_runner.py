@@ -64,15 +64,19 @@ class ExperimentRunner(Protocol):
 
     def configure(self, config: ExperimentConfig) -> None:
         """Store and validate experiment configuration for subsequent runs."""
+        ...
 
     async def run(self) -> List[IterationResult]:
         """Execute iterative loop according to the active configuration."""
+        ...
 
     async def run_iteration(self, iteration: int, context: Optional[Mapping[str, Any]] = None) -> IterationResult:
         """Execute exactly one iteration and return a typed result envelope."""
+        ...
 
     def stop(self) -> None:
         """Request cooperative stop for an in-flight experiment run."""
+        ...
 
 
 class SniperRunner(Protocol):

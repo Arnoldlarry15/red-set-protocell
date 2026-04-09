@@ -349,8 +349,6 @@ class ExperimentBatchRunner:
     @staticmethod
     def parse_config(config_input: Any) -> List[ExperimentConfig]:
         """Parse experiment config from dict/JSON into config objects."""
-        import json
-
         if isinstance(config_input, str):
             payload = json.loads(config_input)
         elif isinstance(config_input, Mapping):

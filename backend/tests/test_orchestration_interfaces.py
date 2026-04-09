@@ -146,7 +146,7 @@ class DummySniper:
 def test_sniper_lifecycle_manager_spawn_and_iterations():
     manager = SniperLifecycleManager(default_iterations=2)
 
-    names = manager.spawn_snipers(lambda: DummySniper(), count=3, name_prefix="sniper")
+    names = manager.spawn_snipers(DummySniper, count=3, name_prefix="sniper")
     assert names == ["sniper_1", "sniper_2", "sniper_3"]
 
     manager.initialize_all()

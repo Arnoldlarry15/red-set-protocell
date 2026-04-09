@@ -34,7 +34,9 @@ class EvolutionEngine:
         self.max_patterns = max(1, int(max_patterns))
         self._patterns: List[AttackPattern] = []
 
-    def record_attack(self, prompt: str, strategy: str, score: float, metadata: Optional[Dict[str, Any]] = None) -> AttackPattern:
+    def record_attack(
+        self, prompt: str, strategy: str, score: float, metadata: Optional[Dict[str, Any]] = None
+    ) -> AttackPattern:
         """Store a scored attack pattern and keep bounded history."""
         pattern = AttackPattern(prompt=prompt, strategy=strategy, score=float(score), metadata=dict(metadata or {}))
         self._patterns.append(pattern)

@@ -64,19 +64,15 @@ class ExperimentRunner(Protocol):
 
     def configure(self, config: ExperimentConfig) -> None:
         """Store and validate experiment configuration for subsequent runs."""
-        ...
 
     async def run(self) -> List[IterationResult]:
         """Execute iterative loop according to the active configuration."""
-        ...
 
     async def run_iteration(self, iteration: int, context: Optional[Mapping[str, Any]] = None) -> IterationResult:
         """Execute exactly one iteration and return a typed result envelope."""
-        ...
 
     def stop(self) -> None:
         """Request cooperative stop for an in-flight experiment run."""
-        ...
 
 
 class SniperRunner(Protocol):
@@ -136,8 +132,8 @@ class IterativeAttackLoopEngine:
         if self.config is None:
             raise ValueError("Engine must be configured before run()")
 
-        exploit_threshold = float(self.config.parameters.get("exploit_score_threshold", 0.8))
-        failure_threshold = int(self.config.parameters.get("failure_threshold", 3))
+        exploit_threshold = max(0.0, min(1.0, float(self.config.parameters.get("exploit_score_threshold", 0.8))))
+        failure_threshold = max(1, int(self.config.parameters.get("failure_threshold", 3)))
 
         self._stopped = False
         self._prior_metadata = []
@@ -163,6 +159,9 @@ class IterativeAttackLoopEngine:
 
             if result.status == "failed":
                 consecutive_failures += 1
+                if self.config.stop_on_error:
+                    logger.info("loop.stop stop_on_error iteration=%s", iteration)
+                    break
             else:
                 consecutive_failures = 0
 

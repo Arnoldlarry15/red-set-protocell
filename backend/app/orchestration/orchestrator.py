@@ -33,12 +33,9 @@ class ModularOrchestrator(Protocol):
 
     def boot(self) -> None:
         """Initialize and start managed agents for orchestration readiness."""
-        ...
 
     async def execute(self, config: ExperimentConfig):
         """Run an experiment using configured iterative execution semantics."""
-        ...
 
     def shutdown(self) -> None:
         """Stop managed agents and release orchestration resources safely."""
-        ...

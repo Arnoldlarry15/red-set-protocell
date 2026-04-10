@@ -183,6 +183,9 @@ class SniperLifecycleManager:
 
         descriptor.state = AgentState.ACTIVE
         stats["iterations_requested"] = iterations
+        stats["iterations_completed"] = 0
+        stats["last_prompt"] = None
+        stats["error"] = None
 
         try:
             for _ in range(iterations):

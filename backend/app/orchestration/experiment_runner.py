@@ -137,8 +137,8 @@ class IterativeAttackLoopEngine:
         if self.config is None:
             raise ValueError("Engine must be configured before run()")
 
-        exploit_threshold = float(self.config.parameters.get("exploit_score_threshold", 0.8))
-        failure_threshold = int(self.config.parameters.get("failure_threshold", 3))
+        exploit_threshold = max(0.0, min(1.0, float(self.config.parameters.get("exploit_score_threshold", 0.8))))
+        failure_threshold = max(1, int(self.config.parameters.get("failure_threshold", 3)))
 
         self._stopped = False
         self._prior_metadata = []

@@ -17,6 +17,8 @@ jobs:
     name: Unit tests (mock mode) - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ['3.11', '3.13']
@@ -45,6 +47,8 @@ jobs:
     name: Integration tests (mock provider) - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ['3.11', '3.13']

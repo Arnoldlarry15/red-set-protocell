@@ -93,15 +93,6 @@ function App() {
           }
         />
 
-        <Route
-          path="/pull-requests"
-          element={
-            authenticated ?
-              <PRManagement /> :
-              <Navigate to="/login" replace />
-          }
-        />
-
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

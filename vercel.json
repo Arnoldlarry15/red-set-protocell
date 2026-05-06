@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "installCommand": "cd frontend && npm install",
+  "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "framework": "vite",
   "env": {
     "VITE_API_BASE_URL": "https://red-set-protocell-api.onrender.com"
   },

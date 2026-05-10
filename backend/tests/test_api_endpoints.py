@@ -8,8 +8,10 @@ Tests for the new API endpoints:
 import os
 import logging
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 
@@ -364,6 +366,15 @@ class TestEarlyAccess:
             json={"email": "invalid-email", "role": "researcher"},
         )
         assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_list_early_access_requires_admin_role(self):
+        from app.api_server import list_early_access_signups
+
+        request = SimpleNamespace(state=SimpleNamespace(user={"role": "observer"}))
+        with pytest.raises(HTTPException) as exc_info:
+            await list_early_access_signups(request)
+        assert exc_info.value.status_code == 403
 
 
 class TestRemoteControl:

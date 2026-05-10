@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
@@ -392,7 +392,7 @@ def estimate_token_cost(
     return input_cost + output_cost
 
 
-def _persist_early_access_signup(entry: Dict[str, str]) -> None:
+def _persist_early_access_signup(entry: Dict[str, Any]) -> None:
     """Persist one early-access signup entry as JSONL."""
     EARLY_ACCESS_STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
     with early_access_lock:
@@ -400,12 +400,12 @@ def _persist_early_access_signup(entry: Dict[str, str]) -> None:
             file.write(json.dumps(entry) + "\n")
 
 
-def _load_early_access_signups() -> List[Dict[str, str]]:
+def _load_early_access_signups() -> List[Dict[str, Any]]:
     """Load early-access signups from JSONL storage."""
     if not EARLY_ACCESS_STORAGE_PATH.exists():
         return []
 
-    signups: List[Dict[str, str]] = []
+    signups: List[Dict[str, Any]] = []
     with early_access_lock:
         with EARLY_ACCESS_STORAGE_PATH.open("r", encoding="utf-8") as file:
             for line in file:
@@ -1001,15 +1001,23 @@ async def submit_early_access(request: EarlyAccessRequest):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def list_early_access_signups():
+async def list_early_access_signups(request: Request):
     """List stored early access requests."""
     try:
+        user = getattr(request.state, "user", None)
+        if not user and not require_auth:
+            user = {"role": "admin"}
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
         signups = _load_early_access_signups()
         return {
             "count": len(signups),
             "signups": signups,
             "storage_path": str(EARLY_ACCESS_STORAGE_PATH),
         }
+    except HTTPException:
+        raise
     except Exception as e:
         log_exception_safely("Error reading early access requests", e)
         raise HTTPException(status_code=500, detail="Internal server error")

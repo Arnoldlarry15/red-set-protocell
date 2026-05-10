@@ -37,6 +37,7 @@ client = TestClient(app)
 DEMO_USERNAME = "admin"
 DEMO_PASSWORD = TEST_DEMO_PASSWORD
 EARLY_ACCESS_TEST_STORAGE = Path(os.environ["RSP_EARLY_ACCESS_STORAGE_PATH"])
+EARLY_ACCESS_DEFAULT_STORAGE = Path(__file__).resolve().parents[1] / "data" / "early_access_signups.jsonl"
 
 
 class TestInfraDashboard:
@@ -332,12 +333,14 @@ class TestEarlyAccess:
     """Test early access signup endpoints."""
 
     def setup_method(self):
-        if EARLY_ACCESS_TEST_STORAGE.exists():
-            EARLY_ACCESS_TEST_STORAGE.unlink()
+        for path in (EARLY_ACCESS_TEST_STORAGE, EARLY_ACCESS_DEFAULT_STORAGE):
+            if path.exists():
+                path.unlink()
 
     def teardown_method(self):
-        if EARLY_ACCESS_TEST_STORAGE.exists():
-            EARLY_ACCESS_TEST_STORAGE.unlink()
+        for path in (EARLY_ACCESS_TEST_STORAGE, EARLY_ACCESS_DEFAULT_STORAGE):
+            if path.exists():
+                path.unlink()
 
     def test_submit_early_access(self):
         response = client.post(
@@ -353,7 +356,7 @@ class TestEarlyAccess:
         assert data["count"] == 1
         assert data["signups"][0]["email"] == "early@example.com"
         assert data["signups"][0]["role"] == "researcher"
-        assert data["storage_path"] == str(EARLY_ACCESS_TEST_STORAGE)
+        assert data["storage_path"].endswith("early_access_signups.jsonl")
 
     def test_submit_early_access_invalid_email(self):
         response = client.post(

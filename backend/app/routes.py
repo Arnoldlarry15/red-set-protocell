@@ -20,6 +20,8 @@ def register_routes(app, deps):
         ("/dashboard/historical-sessions", deps["get_historical_sessions"], ["GET"]),
         ("/dashboard/compare-models", deps["compare_model_versions"], ["GET"]),
         ("/dashboard/export/{session_id}", deps["export_session_results"], ["GET"]),
+        ("/early-access", deps["submit_early_access"], ["POST"]),
+        ("/admin/early-access-signups", deps["list_early_access_signups"], ["GET"]),
         ("/auth/login", deps["login"], ["POST"]),
         ("/auth/register", deps["register"], ["POST"]),
         ("/auth/users", deps["list_users"], ["GET"]),

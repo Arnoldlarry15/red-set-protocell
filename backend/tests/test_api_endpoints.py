@@ -7,6 +7,7 @@ Tests for the new API endpoints:
 
 import os
 import logging
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -26,6 +27,7 @@ os.environ["RSP_DEMO_PASSWORD"] = TEST_DEMO_PASSWORD
 os.environ["RSP_ALLOWED_ORIGINS"] = "http://localhost:3000"
 # Provide a provider key to satisfy production validation (tests run with production check)
 os.environ["OPENAI_API_KEY"] = _fake_openai_key()
+os.environ["RSP_EARLY_ACCESS_STORAGE_PATH"] = "/tmp/rsp_test_early_access_signups.jsonl"
 
 from app.api_server import app  # noqa: E402
 
@@ -34,6 +36,7 @@ client = TestClient(app)
 # Demo credentials for tests
 DEMO_USERNAME = "admin"
 DEMO_PASSWORD = TEST_DEMO_PASSWORD
+EARLY_ACCESS_TEST_STORAGE = Path(os.environ["RSP_EARLY_ACCESS_STORAGE_PATH"])
 
 
 class TestInfraDashboard:
@@ -323,6 +326,41 @@ class TestUserManagement:
 
             assert response.status_code == 500
             assert response.json()["detail"] == "Internal server error"
+
+
+class TestEarlyAccess:
+    """Test early access signup endpoints."""
+
+    def setup_method(self):
+        if EARLY_ACCESS_TEST_STORAGE.exists():
+            EARLY_ACCESS_TEST_STORAGE.unlink()
+
+    def teardown_method(self):
+        if EARLY_ACCESS_TEST_STORAGE.exists():
+            EARLY_ACCESS_TEST_STORAGE.unlink()
+
+    def test_submit_early_access(self):
+        response = client.post(
+            "/early-access",
+            json={"email": "early@example.com", "role": "researcher"},
+        )
+        assert response.status_code == 200
+        assert response.json()["message"] == "Early access request submitted successfully"
+
+        list_response = client.get("/admin/early-access-signups")
+        assert list_response.status_code == 200
+        data = list_response.json()
+        assert data["count"] == 1
+        assert data["signups"][0]["email"] == "early@example.com"
+        assert data["signups"][0]["role"] == "researcher"
+        assert data["storage_path"] == str(EARLY_ACCESS_TEST_STORAGE)
+
+    def test_submit_early_access_invalid_email(self):
+        response = client.post(
+            "/early-access",
+            json={"email": "invalid-email", "role": "researcher"},
+        )
+        assert response.status_code == 422
 
 
 class TestRemoteControl:

@@ -991,7 +991,7 @@ async def submit_early_access(request: EarlyAccessRequest):
         signup = {
             "submitted_at": datetime.now(timezone.utc).isoformat(),
             "email": request.email,
-            "role": request.role or "not specified",
+            "role": request.role,
         }
         _persist_early_access_signup(signup)
         logger.info("Early access request submitted")

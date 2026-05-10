@@ -336,7 +336,11 @@ background_tasks_lock = threading.Lock()
 early_access_lock = threading.Lock()
 
 # Early access signup storage
-EARLY_ACCESS_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+EARLY_ACCESS_EMAIL_RE = re.compile(
+    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+    r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$"
+)
 EARLY_ACCESS_ROLES = {"developer", "researcher", "security", "investor", "other"}
 EARLY_ACCESS_STORAGE_PATH = Path(
     os.getenv(
@@ -987,7 +991,7 @@ async def submit_early_access(request: EarlyAccessRequest):
         signup = {
             "submitted_at": datetime.now(timezone.utc).isoformat(),
             "email": request.email,
-            "role": request.role or "other",
+            "role": request.role or "not specified",
         }
         _persist_early_access_signup(signup)
         logger.info("Early access request submitted")

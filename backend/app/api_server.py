@@ -408,7 +408,7 @@ def _load_early_access_signups() -> List[Dict[str, Any]]:
     signups: List[Dict[str, Any]] = []
     with early_access_lock:
         with EARLY_ACCESS_STORAGE_PATH.open("r", encoding="utf-8") as file:
-            for line in file:
+            for line_number, line in enumerate(file, start=1):
                 stripped = line.strip()
                 if not stripped:
                     continue
@@ -417,8 +417,33 @@ def _load_early_access_signups() -> List[Dict[str, Any]]:
                     if isinstance(parsed, dict):
                         signups.append(parsed)
                 except json.JSONDecodeError:
-                    logger.warning("Skipping malformed early access signup record")
+                    logger.warning(f"Skipping malformed early access signup record at line {line_number}")
     return signups
+
+
+def _resolve_request_user(request: Request) -> Optional[Dict[str, Any]]:
+    """Resolve user context from middleware state or Authorization header."""
+    state_user = getattr(request.state, "user", None)
+    if isinstance(state_user, dict):
+        return state_user
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    token = auth_header.removeprefix("Bearer ").strip()
+    if not token:
+        return None
+
+    payload = token_manager.verify_token(token)
+    if not payload:
+        return None
+
+    return {
+        "username": payload.get("sub"),
+        "role": payload.get("role"),
+        "email": payload.get("email"),
+    }
 
 
 # SECURITY WARNING: Demo authentication system
@@ -1004,9 +1029,7 @@ async def submit_early_access(request: EarlyAccessRequest):
 async def list_early_access_signups(request: Request):
     """List stored early access requests."""
     try:
-        user = getattr(request.state, "user", None)
-        if not user and not require_auth:
-            user = {"role": "admin"}
+        user = _resolve_request_user(request)
         if not user or user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
 

@@ -352,7 +352,12 @@ class TestEarlyAccess:
         assert response.status_code == 200
         assert response.json()["message"] == "Early access request submitted successfully"
 
-        list_response = client.get("/admin/early-access-signups")
+        login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
+        token = login_response.json()["access_token"]
+        list_response = client.get(
+            "/admin/early-access-signups",
+            headers={"Authorization": f"Bearer {token}"},
+        )
         assert list_response.status_code == 200
         data = list_response.json()
         assert data["count"] == 1

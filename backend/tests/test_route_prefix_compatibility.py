@@ -28,6 +28,8 @@ def _minimal_deps():
         "get_historical_sessions": _json_response({}),
         "compare_model_versions": _json_response({}),
         "export_session_results": _json_response({}),
+        "submit_early_access": _json_response({"message": "ok"}),
+        "list_early_access_signups": _json_response({"count": 0, "signups": []}),
         "login": _json_response({}),
         "register": _json_response({}),
         "list_users": _json_response({}),
@@ -69,3 +71,17 @@ def test_auth_validate_route_available_with_and_without_api_prefix():
     assert plain.status_code == 200
     assert prefixed.status_code == 200
     assert plain.json() == prefixed.json() == {}
+
+
+def test_early_access_route_available_with_and_without_api_prefix():
+    app = FastAPI()
+    register_routes(app, _minimal_deps())
+    client = TestClient(app)
+
+    payload = {"email": "user@example.com", "role": "researcher"}
+    plain = client.post("/early-access", json=payload)
+    prefixed = client.post("/api/early-access", json=payload)
+
+    assert plain.status_code == 200
+    assert prefixed.status_code == 200
+    assert plain.json() == prefixed.json() == {"message": "ok"}

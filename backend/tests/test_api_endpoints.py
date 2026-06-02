@@ -101,6 +101,7 @@ class TestEarlyAccess:
         assert response.json()["message"] == "Early access request submitted successfully"
 
         login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
+        assert login_response.status_code == 200
         token = login_response.json()["access_token"]
         list_response = client.get(
             "/admin/early-access-signups",

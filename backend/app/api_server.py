@@ -457,7 +457,7 @@ def _send_early_access_notification(signup: Dict[str, Any]) -> None:
                 f"Email: {signup['email']}",
                 f"Role: {signup.get('role') or 'unspecified'}",
                 f"Submitted At: {signup['submitted_at']}",
-                f"Sender: {sender_email}",
+                f"From: {sender_email}",
             ]
         )
     )

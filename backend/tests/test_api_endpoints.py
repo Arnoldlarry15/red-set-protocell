@@ -6,6 +6,8 @@ Tests for the new API endpoints:
 """
 
 import os
+import csv
+import io
 import logging
 from pathlib import Path
 from types import SimpleNamespace
@@ -30,6 +32,7 @@ os.environ["RSP_ALLOWED_ORIGINS"] = "http://localhost:3000"
 # Provide a provider key to satisfy production validation (tests run with production check)
 os.environ["OPENAI_API_KEY"] = _fake_openai_key()
 os.environ["RSP_EARLY_ACCESS_STORAGE_PATH"] = "/tmp/rsp_test_early_access_signups.jsonl"
+os.environ["RSP_DATABASE_URL"] = "sqlite:////tmp/rsp_test_early_access_signups.db"
 
 from app.api_server import app  # noqa: E402
 
@@ -40,6 +43,7 @@ DEMO_USERNAME = "admin"
 DEMO_PASSWORD = TEST_DEMO_PASSWORD
 EARLY_ACCESS_TEST_STORAGE = Path(os.environ["RSP_EARLY_ACCESS_STORAGE_PATH"])
 EARLY_ACCESS_DEFAULT_STORAGE = Path(__file__).resolve().parents[1] / "data" / "early_access_signups.jsonl"
+EARLY_ACCESS_TEST_DB = Path("/tmp/rsp_test_early_access_signups.db")
 
 
 class TestInfraDashboard:
@@ -335,14 +339,28 @@ class TestEarlyAccess:
     """Test early access signup endpoints."""
 
     def setup_method(self):
+        from app.early_access import Base, EarlyAccessSignup, engine
+
         for path in (EARLY_ACCESS_TEST_STORAGE, EARLY_ACCESS_DEFAULT_STORAGE):
             if path.exists():
                 path.unlink()
+        Base.metadata.drop_all(bind=engine, tables=[EarlyAccessSignup.__table__])
+        Base.metadata.create_all(bind=engine, tables=[EarlyAccessSignup.__table__])
 
     def teardown_method(self):
+        from app.early_access import Base, EarlyAccessSignup, engine
+
         for path in (EARLY_ACCESS_TEST_STORAGE, EARLY_ACCESS_DEFAULT_STORAGE):
             if path.exists():
                 path.unlink()
+        Base.metadata.drop_all(bind=engine, tables=[EarlyAccessSignup.__table__])
+        Base.metadata.create_all(bind=engine, tables=[EarlyAccessSignup.__table__])
+
+    @staticmethod
+    def _admin_headers():
+        login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
+        token = login_response.json()["access_token"]
+        return {"Authorization": "Bearer " + token}
 
     def test_submit_early_access(self):
         response = client.post(
@@ -350,19 +368,21 @@ class TestEarlyAccess:
             json={"email": "early@example.com", "role": "researcher"},
         )
         assert response.status_code == 200
-        assert response.json()["message"] == "Early access request submitted successfully"
+        assert response.json()["message"].startswith("Early access request submitted successfully")
+        assert response.json()["signup_id"] > 0
 
-        login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
-        token = login_response.json()["access_token"]
         list_response = client.get(
             "/admin/early-access-signups",
-            headers={"Authorization": f"Bearer {token}"},
+            headers=self._admin_headers(),
         )
         assert list_response.status_code == 200
         data = list_response.json()
         assert data["count"] == 1
         assert data["signups"][0]["email"] == "early@example.com"
         assert data["signups"][0]["role"] == "researcher"
+        assert data["signups"][0]["status"] == "pending"
+        assert data["page"] == 1
+        assert data["page_size"] == 20
         assert data["storage_path"].endswith("early_access_signups.jsonl")
 
     def test_submit_early_access_invalid_email(self):
@@ -371,6 +391,89 @@ class TestEarlyAccess:
             json={"email": "invalid-email", "role": "researcher"},
         )
         assert response.status_code == 422
+
+    def test_submit_early_access_duplicate_email(self):
+        first = client.post("/early-access", json={"email": "duplicate@example.com", "role": "developer"})
+        assert first.status_code == 200
+        second = client.post("/early-access", json={"email": "duplicate@example.com", "role": "developer"})
+        assert second.status_code == 409
+
+    def test_submit_early_access_sends_email_notification(self):
+        from unittest.mock import MagicMock, patch
+
+        with (
+            patch("app.api_server.os.getenv") as mock_getenv,
+            patch("app.api_server.smtplib.SMTP") as mock_smtp,
+        ):
+            env_map = {
+                "RSP_SMTP_HOST": "smtp.gmail.com",
+                "RSP_SMTP_PORT": "587",
+                "RSP_SMTP_USER": "sender@example.com",
+                "RSP_SMTP_PASSWORD": "pw",
+                "RSP_ADMIN_EMAIL": "admin@example.com",
+            }
+            mock_getenv.side_effect = lambda key, default=None: env_map.get(key, default)
+            smtp_instance = MagicMock()
+            mock_smtp.return_value.__enter__.return_value = smtp_instance
+
+            response = client.post(
+                "/early-access",
+                json={"email": "notify@example.com", "role": "investor"},
+            )
+
+            assert response.status_code == 200
+            smtp_instance.starttls.assert_called_once()
+            smtp_instance.login.assert_called_once_with("sender@example.com", "pw")
+            smtp_instance.send_message.assert_called_once()
+
+    def test_list_early_access_signups_filters_and_pagination(self):
+        client.post("/early-access", json={"email": "a@example.com", "role": "developer"})
+        client.post("/early-access", json={"email": "b@example.com", "role": "researcher"})
+        client.post("/early-access", json={"email": "c@example.com", "role": "researcher"})
+
+        response = client.get(
+            "/admin/early-access-signups?page=1&page_size=1&role=researcher&email_query=%40example.com",
+            headers=self._admin_headers(),
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["count"] == 2
+        assert len(data["signups"]) == 1
+        assert data["signups"][0]["role"] == "researcher"
+
+    def test_verify_delete_and_export_signups(self):
+        create = client.post("/early-access", json={"email": "export@example.com", "role": "security"})
+        signup_id = create.json()["signup_id"]
+
+        verify_response = client.post(
+            f"/admin/early-access-signups/{signup_id}/verify",
+            headers=self._admin_headers(),
+        )
+        assert verify_response.status_code == 200
+        assert verify_response.json()["signup"]["status"] == "verified"
+
+        export_json = client.get(
+            "/admin/early-access-signups/export?format=json",
+            headers=self._admin_headers(),
+        )
+        assert export_json.status_code == 200
+        assert export_json.json()["count"] == 1
+
+        export_csv = client.get(
+            "/admin/early-access-signups/export?format=csv",
+            headers=self._admin_headers(),
+        )
+        assert export_csv.status_code == 200
+        rows = list(csv.DictReader(io.StringIO(export_csv.text)))
+        assert len(rows) == 1
+        assert rows[0]["email"] == "export@example.com"
+
+        delete_response = client.delete(
+            f"/admin/early-access-signups/{signup_id}",
+            headers=self._admin_headers(),
+        )
+        assert delete_response.status_code == 200
+        assert delete_response.json()["deleted"] is True
 
     @pytest.mark.asyncio
     async def test_list_early_access_requires_admin_role(self):

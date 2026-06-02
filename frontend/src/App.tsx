@@ -7,6 +7,7 @@ import AboutPage from './pages/AboutPage';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminEarlyAccessPage from './pages/AdminEarlyAccessPage';
 import PRManagement from './pages/PRManagement';
 import Navigation from './components/Navigation';
 import { User } from './types';
@@ -83,6 +84,14 @@ function App() {
               <AdminDashboard user={user} apiKey={apiKey} /> : 
               <Navigate to="/login" replace />
           } 
+        />
+        <Route
+          path="/admin/early-access"
+          element={
+            authenticated && user ?
+              <AdminEarlyAccessPage user={user} /> :
+              <Navigate to="/login" replace />
+          }
         />
         <Route
           path="/pull-requests"

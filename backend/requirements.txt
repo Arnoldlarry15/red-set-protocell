@@ -27,4 +27,4 @@ websockets>=12.0
 pydantic>=2.0.0
 
 # Security and authentication
-PyJWT>=2.8.0  # JWT token generation and validation
+PyJWT>=2.13.0  # JWT token generation and validation

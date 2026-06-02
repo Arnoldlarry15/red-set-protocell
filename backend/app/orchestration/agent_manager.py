@@ -33,11 +33,9 @@ class AgentState(str, Enum):
 
     REGISTERED = "registered"
     INITIALIZED = "initialized"
-    RUNNING = "running"
+    RUNNING = "active"
     STOPPED = "stopped"
     ERROR = "error"
-
-    ACTIVE = "active"
     COMPLETED = "completed"
     FAILED = "failed"
 
@@ -148,7 +146,7 @@ class SniperLifecycleManager:
     def stop_all(self) -> None:
         """Stop all running/active agents."""
         for desc in self._agents.values():
-            if desc.state in (AgentState.RUNNING, AgentState.ACTIVE):
+            if desc.state == AgentState.RUNNING:
                 desc.state = AgentState.STOPPED
 
     def teardown_all(self) -> None:

@@ -124,26 +124,25 @@ class IterativeAttackLoopEngine:
         """Persist validated experiment configuration."""
         if config.max_iterations < 1:
             raise ValueError("max_iterations must be >= 1")
-        if "exploit_score_threshold" in config.parameters:
-            try:
-                exploit_threshold = float(config.parameters["exploit_score_threshold"])
-            except (TypeError, ValueError) as exc:
-                raise ValueError("exploit_score_threshold must be a float in [0.0, 1.0]") from exc
-            if not 0.0 <= exploit_threshold <= 1.0:
-                raise ValueError("exploit_score_threshold must be in [0.0, 1.0]")
-            config.parameters["exploit_score_threshold"] = exploit_threshold
+        raw_exploit_threshold = config.parameters.get("exploit_score_threshold", 0.8)
+        try:
+            exploit_threshold = float(raw_exploit_threshold)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("exploit_score_threshold must be a float in [0.0, 1.0]") from exc
+        if not 0.0 <= exploit_threshold <= 1.0:
+            raise ValueError("exploit_score_threshold must be in [0.0, 1.0]")
+        config.parameters["exploit_score_threshold"] = exploit_threshold
 
-        if "failure_threshold" in config.parameters:
-            raw_failure_threshold = config.parameters["failure_threshold"]
-            if isinstance(raw_failure_threshold, bool):
-                raise ValueError("failure_threshold must be an integer >= 1")
-            try:
-                failure_threshold = int(raw_failure_threshold)
-            except (TypeError, ValueError) as exc:
-                raise ValueError("failure_threshold must be an integer >= 1") from exc
-            if failure_threshold < 1:
-                raise ValueError("failure_threshold must be >= 1")
-            config.parameters["failure_threshold"] = failure_threshold
+        raw_failure_threshold = config.parameters.get("failure_threshold", 3)
+        if isinstance(raw_failure_threshold, bool):
+            raise ValueError("failure_threshold must be an integer >= 1")
+        try:
+            failure_threshold = int(raw_failure_threshold)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("failure_threshold must be an integer >= 1") from exc
+        if failure_threshold < 1:
+            raise ValueError("failure_threshold must be >= 1")
+        config.parameters["failure_threshold"] = failure_threshold
         self.config = config
 
     def stop(self) -> None:
@@ -156,8 +155,8 @@ class IterativeAttackLoopEngine:
         if self.config is None:
             raise ValueError("Engine must be configured before run()")
 
-        exploit_threshold = float(self.config.parameters.get("exploit_score_threshold", 0.8))
-        failure_threshold = int(self.config.parameters.get("failure_threshold", 3))
+        exploit_threshold = float(self.config.parameters["exploit_score_threshold"])
+        failure_threshold = int(self.config.parameters["failure_threshold"])
 
         self._stopped = False
         self._prior_metadata = []

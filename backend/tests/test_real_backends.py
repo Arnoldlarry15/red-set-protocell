@@ -23,7 +23,10 @@ def _is_valid_api_key(key: Optional[str]) -> bool:
 
 
 def _real_mode_enabled() -> bool:
-    return os.environ.get("PROVIDER_MODE", "mock").lower() == "real" and os.environ.get("SKIP_REAL_API_TESTS", "").lower() != "true"
+    return (
+        os.environ.get("PROVIDER_MODE", "mock").lower() == "real"
+        and os.environ.get("SKIP_REAL_API_TESTS", "").lower() != "true"
+    )
 
 
 async def _call_with_retry(coro_factory, max_attempts: int = 3, base_delay: float = 1.0, timeout_seconds: float = 30.0):

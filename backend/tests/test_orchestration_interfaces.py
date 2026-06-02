@@ -7,6 +7,7 @@ without introducing business logic implementations.
 import asyncio
 
 import pytest
+
 from app.orchestration import (
     AgentDescriptor,
     AgentState,

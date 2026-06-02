@@ -120,7 +120,6 @@ class IterativeAttackLoopEngine:
     def _utcnow_iso() -> str:
         """Return UTC timestamp in ISO format."""
         return datetime.now(timezone.utc).isoformat()
-
     def configure(self, config: ExperimentConfig) -> None:
         """Persist validated experiment configuration."""
         if config.max_iterations < 1:
@@ -213,7 +212,9 @@ class IterativeAttackLoopEngine:
             prompt, attack_domain = await self.sniper.generate_prompt(prior_metadata=prior_metadata)
             logger.info("loop.iteration.prompt_generated iteration=%s", iteration)
 
-            response = await self.target.execute(prompt, metadata={"iteration": iteration, "attack_domain": str(attack_domain)})
+            response = await self.target.execute(
+                prompt, metadata={"iteration": iteration, "attack_domain": str(attack_domain)}
+            )
             logger.info("loop.iteration.target_executed iteration=%s", iteration)
 
             evaluation = await self.spotter.evaluate(response, attack_domain=str(attack_domain), prompt=prompt)
@@ -373,7 +374,6 @@ class ExperimentBatchRunner:
     def parse_config(config_input: Any) -> List[ExperimentConfig]:
         """Parse experiment config from dict/JSON into config objects."""
         import json
-
         if isinstance(config_input, str):
             payload = json.loads(config_input)
         elif isinstance(config_input, Mapping):

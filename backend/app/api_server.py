@@ -6,16 +6,18 @@ Integrates with the existing RSP core system.
 """
 
 import asyncio
+import json
 import logging
 import os
+import re
 import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.agents.orchestrator import Orchestrator, StateManager
 from app.agents.sniper import Sniper
@@ -276,6 +278,29 @@ class LLMKeyValidation(BaseModel):
     backend: str  # 'openai', 'anthropic', or 'openrouter'
 
 
+class EarlyAccessRequest(BaseModel):
+    email: str
+    role: Optional[str] = None
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        normalized = value.strip().lower()
+        if not EARLY_ACCESS_EMAIL_RE.fullmatch(normalized):
+            raise ValueError("Please enter a valid email address")
+        return normalized
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, value: Optional[str]) -> Optional[str]:
+        if value is None or not value.strip():
+            return None
+        normalized = value.strip().lower()
+        if normalized not in EARLY_ACCESS_ROLES:
+            raise ValueError("Invalid role")
+        return normalized
+
+
 class GitHubPRListRequest(BaseModel):
     owner: str
     repo: str
@@ -308,6 +333,21 @@ background_tasks: Set[asyncio.Task] = set()
 # Asyncio is single-threaded by default, but callbacks/executors may evolve over time.
 # Guard registry mutations with a lock for future thread-safety hardening.
 background_tasks_lock = threading.Lock()
+early_access_lock = threading.Lock()
+
+# Early access signup storage
+EARLY_ACCESS_EMAIL_RE = re.compile(
+    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@"
+    r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?"
+    r"(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$"
+)
+EARLY_ACCESS_ROLES = {"developer", "researcher", "security", "investor", "other"}
+EARLY_ACCESS_STORAGE_PATH = Path(
+    os.getenv(
+        "RSP_EARLY_ACCESS_STORAGE_PATH",
+        str(Path(__file__).resolve().parents[1] / "data" / "early_access_signups.jsonl"),
+    )
+)
 
 
 # Utility functions
@@ -350,6 +390,60 @@ def estimate_token_cost(
     output_cost = (estimated_response_tokens / 1000) * output_cost_per_1k
 
     return input_cost + output_cost
+
+
+def _persist_early_access_signup(entry: Dict[str, Any]) -> None:
+    """Persist one early-access signup entry as JSONL."""
+    EARLY_ACCESS_STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with early_access_lock:
+        with EARLY_ACCESS_STORAGE_PATH.open("a", encoding="utf-8") as file:
+            file.write(json.dumps(entry) + "\n")
+
+
+def _load_early_access_signups() -> List[Dict[str, Any]]:
+    """Load early-access signups from JSONL storage."""
+    if not EARLY_ACCESS_STORAGE_PATH.exists():
+        return []
+
+    signups: List[Dict[str, Any]] = []
+    with early_access_lock:
+        with EARLY_ACCESS_STORAGE_PATH.open("r", encoding="utf-8") as file:
+            for line_number, line in enumerate(file, start=1):
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                try:
+                    parsed = json.loads(stripped)
+                    if isinstance(parsed, dict):
+                        signups.append(parsed)
+                except json.JSONDecodeError:
+                    logger.warning(f"Skipping malformed early access signup record at line {line_number}")
+    return signups
+
+
+def _resolve_request_user(request: Request) -> Optional[Dict[str, Any]]:
+    """Resolve user context from middleware state or Authorization header."""
+    state_user = getattr(request.state, "user", None)
+    if isinstance(state_user, dict):
+        return state_user
+
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+
+    token = auth_header.removeprefix("Bearer ").strip()
+    if not token:
+        return None
+
+    payload = token_manager.verify_token(token)
+    if not payload:
+        return None
+
+    return {
+        "username": payload.get("sub"),
+        "role": payload.get("role"),
+        "email": payload.get("email"),
+    }
 
 
 # SECURITY WARNING: Demo authentication system
@@ -913,6 +1007,42 @@ async def export_session_results(session_id: str, format: str = "json", db_path:
         return {"session_id": session_id, "format": format, "data": result}
     except Exception as e:
         log_exception_safely("Error exporting session", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def submit_early_access(request: EarlyAccessRequest):
+    """Public endpoint for early access requests."""
+    try:
+        signup = {
+            "submitted_at": datetime.now(timezone.utc).isoformat(),
+            "email": request.email,
+            "role": request.role,
+        }
+        _persist_early_access_signup(signup)
+        logger.info("Early access request submitted")
+        return {"message": "Early access request submitted successfully"}
+    except Exception as e:
+        log_exception_safely("Error saving early access request", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def list_early_access_signups(request: Request):
+    """List stored early access requests."""
+    try:
+        user = _resolve_request_user(request)
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+        signups = _load_early_access_signups()
+        return {
+            "count": len(signups),
+            "signups": signups,
+            "storage_path": str(EARLY_ACCESS_STORAGE_PATH),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_exception_safely("Error reading early access requests", e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

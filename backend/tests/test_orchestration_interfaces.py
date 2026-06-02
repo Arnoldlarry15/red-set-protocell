@@ -6,6 +6,8 @@ without introducing business logic implementations.
 
 import asyncio
 
+import pytest
+
 from app.orchestration import (
     AgentDescriptor,
     AgentState,
@@ -460,3 +462,25 @@ def test_iterative_loop_engine_replay_attack_sequence():
         '[{"iteration": 1, "timestamp": "2026-01-01T00:00:01+00:00", "status": "completed", "score": 0.4}]'
     )
     assert replayed_from_json[0]["iteration"] == 1
+
+
+def test_iterative_loop_engine_rejects_invalid_thresholds():
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    engine = IterativeAttackLoopEngine(sniper=DummySniper(), target=DummyTarget(), spotter=DummySpotter())
+
+    with pytest.raises(ValueError, match="exploit_score_threshold must be in \\[0.0, 1.0\\]"):
+        engine.configure(
+            ExperimentConfig(
+                experiment_id="invalid-exploit-threshold",
+                parameters={"exploit_score_threshold": 1.2},
+            )
+        )
+
+    with pytest.raises(ValueError, match="failure_threshold must be >= 1"):
+        engine.configure(
+            ExperimentConfig(
+                experiment_id="invalid-failure-threshold",
+                parameters={"failure_threshold": 0},
+            )
+        )

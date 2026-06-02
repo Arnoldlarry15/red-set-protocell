@@ -147,7 +147,7 @@ class DummySniper:
 def test_sniper_lifecycle_manager_spawn_and_iterations():
     manager = SniperLifecycleManager(default_iterations=2)
 
-    names = manager.spawn_snipers(lambda: DummySniper(), count=3, name_prefix="sniper")
+    names = manager.spawn_snipers(DummySniper, count=3, name_prefix="sniper")
     assert names == ["sniper_1", "sniper_2", "sniper_3"]
 
     manager.initialize_all()
@@ -461,6 +461,8 @@ def test_iterative_loop_engine_replay_attack_sequence():
         '[{"iteration": 1, "timestamp": "2026-01-01T00:00:01+00:00", "status": "completed", "score": 0.4}]'
     )
     assert replayed_from_json[0]["iteration"] == 1
+
+
 def test_iterative_loop_engine_rejects_invalid_thresholds():
     from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
 

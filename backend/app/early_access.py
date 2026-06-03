@@ -10,9 +10,13 @@ from typing import Any, Dict, Generator, Optional
 
 from sqlalchemy import DateTime, Integer, String, create_engine
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, declarative_base, mapped_column, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, mapped_column, sessionmaker
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    """Base class for SQLAlchemy ORM models."""
+
+    pass
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "data" / "early_access_signups.db"
 DATABASE_URL = os.getenv("RSP_DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
@@ -54,7 +58,7 @@ class EarlyAccessSignup(Base):
 
 def init_early_access_db() -> None:
     """Create the early-access signup table if it does not already exist."""
-    Base.metadata.create_all(bind=engine, tables=[EarlyAccessSignup.__table__])
+    Base.metadata.create_all(bind=engine)
 
 
 @contextmanager

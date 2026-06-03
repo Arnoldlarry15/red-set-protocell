@@ -1188,7 +1188,10 @@ async def delete_early_access_signup(request: Request, signup_id: int):
         if not user or user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         deleted = delete_signup(signup_id)
-        _append_early_access_audit("signup_deleted", deleted)
+        try:
+            _append_early_access_audit("signup_deleted", deleted)
+        except Exception as exc:
+            log_exception_safely("Failed to append early access delete audit event", exc)
         return {"deleted": True, "signup": deleted}
     except LookupError:
         raise HTTPException(status_code=404, detail="Signup not found")
@@ -1206,7 +1209,10 @@ async def verify_early_access_signup(request: Request, signup_id: int):
         if not user or user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
         verified = verify_signup(signup_id)
-        _append_early_access_audit("signup_verified", verified)
+        try:
+            _append_early_access_audit("signup_verified", verified)
+        except Exception as exc:
+            log_exception_safely("Failed to append early access verify audit event", exc)
         return {"verified": True, "signup": verified}
     except LookupError:
         raise HTTPException(status_code=404, detail="Signup not found")

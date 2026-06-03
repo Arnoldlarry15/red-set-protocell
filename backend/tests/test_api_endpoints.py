@@ -498,6 +498,27 @@ class TestEarlyAccess:
         assert delete_response.status_code == 200
         assert delete_response.json()["deleted"] is True
 
+    def test_verify_delete_succeeds_when_audit_write_fails(self):
+        from unittest.mock import patch
+
+        create = client.post("/early-access", json={"email": "audit-admin-fail@example.com", "role": "security"})
+        signup_id = create.json()["signup_id"]
+
+        with patch("app.api_server._append_early_access_audit", side_effect=RuntimeError("disk full")):
+            verify_response = client.post(
+                f"/admin/early-access-signups/{signup_id}/verify",
+                headers=self._admin_headers(),
+            )
+            assert verify_response.status_code == 200
+            assert verify_response.json()["verified"] is True
+
+            delete_response = client.delete(
+                f"/admin/early-access-signups/{signup_id}",
+                headers=self._admin_headers(),
+            )
+            assert delete_response.status_code == 200
+            assert delete_response.json()["deleted"] is True
+
     @pytest.mark.asyncio
     async def test_list_early_access_requires_admin_role(self):
         from app.api_server import list_early_access_signups

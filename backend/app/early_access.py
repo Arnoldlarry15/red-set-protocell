@@ -18,6 +18,7 @@ class Base(DeclarativeBase):
 
     pass
 
+
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "data" / "early_access_signups.db"
 DATABASE_URL = os.getenv("RSP_DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
 

@@ -88,7 +88,7 @@ function App() {
         <Route
           path="/admin/early-access"
           element={
-            authenticated && user ?
+            authenticated && user?.role === 'admin' ?
               <AdminEarlyAccessPage user={user} /> :
               <Navigate to="/login" replace />
           }

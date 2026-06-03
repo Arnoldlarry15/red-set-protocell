@@ -47,7 +47,7 @@ const AdminEarlyAccessPage: React.FC<AdminEarlyAccessPageProps> = ({ user }) => 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const headers = useMemo(() => (user.token ? { 'X-User-Token': user.token } : undefined), [user.token]);
+  const headers = useMemo(() => (user.token ? { Authorization: 'Bearer ' + user.token } : undefined), [user.token]);
 
   const fetchSignups = useCallback(async () => {
     setLoading(true);
@@ -215,7 +215,12 @@ const AdminEarlyAccessPage: React.FC<AdminEarlyAccessPageProps> = ({ user }) => 
             {signups.map((signup) => (
               <tr key={signup.id}>
                 <td>
-                  <input type="checkbox" checked={selectedIds.has(signup.id)} onChange={() => toggleSelection(signup.id)} />
+                  <input
+                    type="checkbox"
+                    aria-label={`Select signup ${signup.email}`}
+                    checked={selectedIds.has(signup.id)}
+                    onChange={() => toggleSelection(signup.id)}
+                  />
                 </td>
                 <td>{signup.email}</td>
                 <td>{signup.role || 'N/A'}</td>

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, Generator, Optional
 
 from sqlalchemy import DateTime, Integer, String, create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import DeclarativeBase, Session, mapped_column, sessionmaker
 
@@ -59,6 +60,10 @@ class EarlyAccessSignup(Base):
 
 def init_early_access_db() -> None:
     """Create the early-access signup table if it does not already exist."""
+    if DATABASE_URL.startswith("sqlite"):
+        sqlite_path = make_url(DATABASE_URL).database
+        if sqlite_path and sqlite_path != ":memory:":
+            Path(sqlite_path).expanduser().parent.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(bind=engine)
 
 

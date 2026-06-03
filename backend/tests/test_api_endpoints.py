@@ -43,7 +43,6 @@ DEMO_USERNAME = "admin"
 DEMO_PASSWORD = TEST_DEMO_PASSWORD
 EARLY_ACCESS_TEST_STORAGE = Path(os.environ["RSP_EARLY_ACCESS_STORAGE_PATH"])
 EARLY_ACCESS_DEFAULT_STORAGE = Path(__file__).resolve().parents[1] / "data" / "early_access_signups.jsonl"
-EARLY_ACCESS_TEST_DB = Path("/tmp/rsp_test_early_access_signups.db")
 
 
 class TestInfraDashboard:
@@ -425,6 +424,30 @@ class TestEarlyAccess:
             smtp_instance.starttls.assert_called_once()
             smtp_instance.login.assert_called_once_with("sender@example.com", "pw")
             smtp_instance.send_message.assert_called_once()
+
+    def test_submit_early_access_succeeds_when_notification_fails(self):
+        from unittest.mock import patch
+
+        with patch("app.api_server._send_early_access_notification", side_effect=RuntimeError("smtp down")):
+            response = client.post(
+                "/early-access",
+                json={"email": "notify-fail@example.com", "role": "investor"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["signup_id"] > 0
+
+    def test_submit_early_access_succeeds_when_audit_write_fails(self):
+        from unittest.mock import patch
+
+        with patch("app.api_server._append_early_access_audit", side_effect=RuntimeError("disk full")):
+            response = client.post(
+                "/early-access",
+                json={"email": "audit-fail@example.com", "role": "investor"},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["signup_id"] > 0
 
     def test_list_early_access_signups_filters_and_pagination(self):
         client.post("/early-access", json={"email": "a@example.com", "role": "developer"})

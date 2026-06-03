@@ -1067,11 +1067,18 @@ async def submit_early_access(request: EarlyAccessRequest):
             role=request.role,
             submitted_at=submitted_at,
         )
-        _append_early_access_audit("signup_created", signup)
-        _send_early_access_notification(signup)
+        try:
+            _append_early_access_audit("signup_created", signup)
+        except Exception as exc:
+            log_exception_safely("Failed to append early access audit event", exc)
+
+        try:
+            await asyncio.to_thread(_send_early_access_notification, signup)
+        except Exception as exc:
+            log_exception_safely("Failed to send early access notification", exc)
         logger.info("Early access request submitted")
         return {
-            "message": "Early access request submitted successfully. A confirmation email has been sent to admin.",
+            "message": "Early access request submitted successfully.",
             "signup_id": signup["id"],
         }
     except ValueError as exc:

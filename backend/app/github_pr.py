@@ -41,7 +41,7 @@ def list_pull_requests(
 ) -> List[Dict[str, Any]]:
     """Return pull requests for *owner/repo* matching *state* ('open', 'closed', 'all')."""
     url = f"{GITHUB_API_BASE}/repos/{owner}/{repo}/pulls"
-    params: Dict[str, Any] = {"state": state, "per_page": per_page, "page": page}
+    params: Dict[str, str | int] = {"state": state, "per_page": per_page, "page": page}
     response = requests.get(url, headers=_get_headers(token), params=params, timeout=15)
     _raise_for_github_error(response, "listing pull requests")
     raw: List[Dict[str, Any]] = response.json()

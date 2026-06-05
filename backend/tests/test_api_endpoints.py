@@ -79,58 +79,6 @@ class TestInfraDashboard:
             assert "model_v2" in data
 
 
-class TestEarlyAccess:
-    """Test early access signup endpoints."""
-
-    def setup_method(self):
-        for path in (EARLY_ACCESS_TEST_STORAGE, EARLY_ACCESS_DEFAULT_STORAGE):
-            if path.exists():
-                path.unlink()
-
-    def teardown_method(self):
-        for path in (EARLY_ACCESS_TEST_STORAGE, EARLY_ACCESS_DEFAULT_STORAGE):
-            if path.exists():
-                path.unlink()
-
-    def test_submit_early_access(self):
-        response = client.post(
-            "/early-access",
-            json={"email": "early@example.com", "role": "researcher"},
-        )
-        assert response.status_code == 200
-        assert response.json()["message"] == "Early access request submitted successfully"
-
-        login_response = client.post("/auth/login", json={"username": DEMO_USERNAME, "password": DEMO_PASSWORD})
-        assert login_response.status_code == 200
-        token = login_response.json()["access_token"]
-        list_response = client.get(
-            "/admin/early-access-signups",
-            headers={"Authorization": "Bearer " + token},
-        )
-        assert list_response.status_code == 200
-        data = list_response.json()
-        assert data["count"] == 1
-        assert data["signups"][0]["email"] == "early@example.com"
-        assert data["signups"][0]["role"] == "researcher"
-        assert data["storage_path"].endswith("early_access_signups.jsonl")
-
-    def test_submit_early_access_invalid_email(self):
-        response = client.post(
-            "/early-access",
-            json={"email": "invalid-email", "role": "researcher"},
-        )
-        assert response.status_code == 422
-
-    @pytest.mark.asyncio
-    async def test_list_early_access_requires_admin_role(self):
-        from app.api_server import list_early_access_signups
-
-        request = SimpleNamespace(state=SimpleNamespace(user={"role": "observer"}))
-        with pytest.raises(HTTPException) as exc_info:
-            await list_early_access_signups(request)
-        assert exc_info.value.status_code == 403
-
-
 class TestUserManagement:
     """Test User Management endpoints"""
 

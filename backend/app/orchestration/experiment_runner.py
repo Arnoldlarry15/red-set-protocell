@@ -120,6 +120,7 @@ class IterativeAttackLoopEngine:
     def _utcnow_iso() -> str:
         """Return UTC timestamp in ISO format."""
         return datetime.now(timezone.utc).isoformat()
+
     def configure(self, config: ExperimentConfig) -> None:
         """Persist validated experiment configuration."""
         if config.max_iterations < 1:

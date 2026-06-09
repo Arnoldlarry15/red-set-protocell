@@ -1,6 +1,12 @@
-import asyncio
-
+import pathlib
+import sys
 import pytest
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+import asyncio
 
 from app.providers.factory import create_provider
 

@@ -14,12 +14,14 @@ concurrency:
 
 jobs:
   unit-tests:
-    name: Unit tests (mock mode)
+    name: Unit tests (mock mode) - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
     strategy:
       matrix:
-        python-version: ['3.11', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
     env:
       PROVIDER_MODE: mock
       SKIP_REAL_API_TESTS: "true"
@@ -42,12 +44,14 @@ jobs:
           pytest tests/unit tests/test_orchestration_interfaces.py tests/test_factory_pattern.py -v
 
   integration-tests:
-    name: Integration tests (mock provider)
+    name: Integration tests (mock provider) - Python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: read
     strategy:
       matrix:
-        python-version: ['3.11', '3.13']
+        python-version: ['3.11', '3.12', '3.13']
     env:
       PROVIDER_MODE: mock
       SKIP_REAL_API_TESTS: "true"
@@ -94,7 +98,7 @@ jobs:
         run: |
           pytest tests/ -v --cov=app --cov-report=xml --cov-report=term --cov-report=html
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./backend/coverage.xml
           flags: unittests

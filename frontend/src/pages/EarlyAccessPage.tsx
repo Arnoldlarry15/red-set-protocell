@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import axios from 'axios';
 import NeuralBackground from '../components/NeuralBackground';
+import { API_BASE_URL } from '../utils/config';
 import '../styles/EarlyAccess.css';
 
 type Role = 'developer' | 'researcher' | 'security' | 'investor' | 'other' | '';
@@ -31,10 +33,10 @@ const EarlyAccessPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // Simulate API call (replace with actual backend endpoint)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      console.log('Early access request:', { email, role: role || 'not specified' });
+      await axios.post(`${API_BASE_URL}/early-access`, {
+        email: email.trim(),
+        role: role || null,
+      });
       setSubmitted(true);
       setEmail('');
       setRole('');
@@ -43,8 +45,13 @@ const EarlyAccessPage: React.FC = () => {
       setTimeout(() => {
         setSubmitted(false);
       }, 5000);
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        const detail = err.response?.data?.detail;
+        setError(typeof detail === 'string' ? detail : 'Something went wrong. Please try again.');
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -113,7 +120,7 @@ const EarlyAccessPage: React.FC = () => {
                 <h2>You're on the list!</h2>
                 <p>
                   Welcome to the Red Set network. We'll be in touch soon with onboarding details and 
-                  early access to the platform.
+                  early access to the platform. Our admin team has also received your signup notification.
                 </p>
               </motion.div>
             ) : (

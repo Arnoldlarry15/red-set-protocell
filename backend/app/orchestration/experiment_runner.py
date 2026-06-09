@@ -116,10 +116,34 @@ class IterativeAttackLoopEngine:
         self._prior_metadata: List[Dict[str, Any]] = []
         self._attack_log: List[Dict[str, Any]] = []
 
+    @staticmethod
+    def _utcnow_iso() -> str:
+        """Return UTC timestamp in ISO format."""
+        return datetime.now(timezone.utc).isoformat()
+
     def configure(self, config: ExperimentConfig) -> None:
         """Persist validated experiment configuration."""
         if config.max_iterations < 1:
             raise ValueError("max_iterations must be >= 1")
+        raw_exploit_threshold = config.parameters.get("exploit_score_threshold", 0.8)
+        try:
+            exploit_threshold = float(raw_exploit_threshold)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("exploit_score_threshold must be a float in [0.0, 1.0]") from exc
+        if not 0.0 <= exploit_threshold <= 1.0:
+            raise ValueError("exploit_score_threshold must be in [0.0, 1.0]")
+        config.parameters["exploit_score_threshold"] = exploit_threshold
+
+        raw_failure_threshold = config.parameters.get("failure_threshold", 3)
+        if isinstance(raw_failure_threshold, bool):
+            raise ValueError("failure_threshold must be an integer >= 1")
+        try:
+            failure_threshold = int(raw_failure_threshold)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("failure_threshold must be an integer >= 1") from exc
+        if failure_threshold < 1:
+            raise ValueError("failure_threshold must be >= 1")
+        config.parameters["failure_threshold"] = failure_threshold
         self.config = config
 
     def stop(self) -> None:
@@ -132,8 +156,8 @@ class IterativeAttackLoopEngine:
         if self.config is None:
             raise ValueError("Engine must be configured before run()")
 
-        exploit_threshold = max(0.0, min(1.0, float(self.config.parameters.get("exploit_score_threshold", 0.8))))
-        failure_threshold = max(1, int(self.config.parameters.get("failure_threshold", 3)))
+        exploit_threshold = float(self.config.parameters["exploit_score_threshold"])
+        failure_threshold = int(self.config.parameters["failure_threshold"])
 
         self._stopped = False
         self._prior_metadata = []
@@ -179,7 +203,7 @@ class IterativeAttackLoopEngine:
 
     async def run_iteration(self, iteration: int, context: Optional[Mapping[str, Any]] = None) -> IterationResult:
         """Execute one attack/evaluate step and append output context."""
-        started = datetime.now(timezone.utc).isoformat()
+        started = self._utcnow_iso()
         prior_metadata = list((context or {}).get("prior_metadata", []))
 
         logger.info("loop.iteration.start iteration=%s", iteration)
@@ -219,7 +243,7 @@ class IterativeAttackLoopEngine:
                 iteration=iteration,
                 status="completed",
                 started_at=started,
-                ended_at=datetime.now(timezone.utc).isoformat(),
+                ended_at=self._utcnow_iso(),
                 metrics={
                     "attack_domain": str(attack_domain),
                     "global_score": global_score,
@@ -244,7 +268,7 @@ class IterativeAttackLoopEngine:
                 iteration=iteration,
                 status="failed",
                 started_at=started,
-                ended_at=datetime.now(timezone.utc).isoformat(),
+                ended_at=self._utcnow_iso(),
                 metrics={},
                 error=str(exc),
             )
@@ -261,7 +285,7 @@ class IterativeAttackLoopEngine:
     ) -> None:
         """Record a replayable JSON-friendly attack event."""
         event = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": self._utcnow_iso(),
             "iteration": iteration,
             "status": status,
             "inputs": inputs,

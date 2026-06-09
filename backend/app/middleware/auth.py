@@ -209,6 +209,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         "/",
         "/health",
         "/api/health",
+        "/early-access",
+        "/api/early-access",
         "/api/docs",
         "/api/openapi.json",
         "/api/login",

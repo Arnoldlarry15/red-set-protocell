@@ -120,7 +120,7 @@ const EarlyAccessPage: React.FC = () => {
                 <h2>You're on the list!</h2>
                 <p>
                   Welcome to the Red Set network. We'll be in touch soon with onboarding details and 
-                  early access to the platform.
+                  early access to the platform. Our admin team has also received your signup notification.
                 </p>
               </motion.div>
             ) : (

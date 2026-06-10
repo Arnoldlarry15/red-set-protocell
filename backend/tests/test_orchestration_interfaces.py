@@ -6,6 +6,8 @@ without introducing business logic implementations.
 
 import asyncio
 
+import pytest
+
 from app.orchestration import (
     AgentDescriptor,
     AgentState,
@@ -283,6 +285,29 @@ def test_iterative_loop_engine_failure_threshold_stop():
     assert all(r.status == "failed" for r in results)
 
 
+def test_iterative_loop_engine_stop_on_error_halts_immediately():
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    failing_sniper = DummySniper(should_fail=True)
+    target = DummyTarget()
+    spotter = DummySpotter(score=0.1)
+
+    engine = IterativeAttackLoopEngine(sniper=failing_sniper, target=target, spotter=spotter)
+    engine.configure(
+        ExperimentConfig(
+            experiment_id="exp-loop-stop-on-error",
+            max_iterations=10,
+            stop_on_error=True,
+            parameters={"exploit_score_threshold": 0.99, "failure_threshold": 5},
+        )
+    )
+
+    results = asyncio.run(engine.run())
+
+    assert len(results) == 1
+    assert results[0].status == "failed"
+
+
 def test_experiment_batch_runner_parse_dict_and_json():
     import json
 
@@ -437,3 +462,25 @@ def test_iterative_loop_engine_replay_attack_sequence():
         '[{"iteration": 1, "timestamp": "2026-01-01T00:00:01+00:00", "status": "completed", "score": 0.4}]'
     )
     assert replayed_from_json[0]["iteration"] == 1
+
+
+def test_iterative_loop_engine_rejects_invalid_thresholds():
+    from app.orchestration.experiment_runner import ExperimentConfig, IterativeAttackLoopEngine
+
+    engine = IterativeAttackLoopEngine(sniper=DummySniper(), target=DummyTarget(), spotter=DummySpotter())
+
+    with pytest.raises(ValueError, match="exploit_score_threshold must be in \\[0.0, 1.0\\]"):
+        engine.configure(
+            ExperimentConfig(
+                experiment_id="invalid-exploit-threshold",
+                parameters={"exploit_score_threshold": 1.2},
+            )
+        )
+
+    with pytest.raises(ValueError, match="failure_threshold must be >= 1"):
+        engine.configure(
+            ExperimentConfig(
+                experiment_id="invalid-failure-threshold",
+                parameters={"failure_threshold": 0},
+            )
+        )

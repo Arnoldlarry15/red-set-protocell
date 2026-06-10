@@ -6,16 +6,20 @@ Integrates with the existing RSP core system.
 """
 
 import asyncio
+import csv
+import io
 import json
 import logging
 import os
 import re
+import smtplib
 import threading
 from datetime import datetime, timezone
+from email.message import EmailMessage
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
-from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, HTTPException, Query, Request, Response, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, field_validator
 
@@ -40,6 +44,14 @@ from app.middleware.monitoring import (
     metrics_collector,
 )
 from app.auth import log_exception_safely, redact_sensitive_text
+from app.early_access import (
+    create_signup,
+    delete_signup,
+    init_early_access_db,
+    list_all_signups,
+    list_signups,
+    verify_signup,
+)
 import app.github_pr as github_pr_module
 from app.lifecycle import bind_lifecycle_handlers
 from app.routes import register_routes
@@ -348,6 +360,7 @@ EARLY_ACCESS_STORAGE_PATH = Path(
         str(Path(__file__).resolve().parents[1] / "data" / "early_access_signups.jsonl"),
     )
 )
+init_early_access_db()
 
 
 # Utility functions
@@ -392,33 +405,68 @@ def estimate_token_cost(
     return input_cost + output_cost
 
 
-def _persist_early_access_signup(entry: Dict[str, Any]) -> None:
-    """Persist one early-access signup entry as JSONL."""
+def _append_early_access_audit(event_type: str, payload: Dict[str, Any]) -> None:
+    """Append an auditable early-access event to JSONL backup storage."""
     EARLY_ACCESS_STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "event_type": event_type,
+        "event_at": datetime.now(timezone.utc).isoformat(),
+        "payload": payload,
+    }
     with early_access_lock:
         with EARLY_ACCESS_STORAGE_PATH.open("a", encoding="utf-8") as file:
-            file.write(json.dumps(entry) + "\n")
+            file.write(json.dumps(record) + "\n")
 
 
-def _load_early_access_signups() -> List[Dict[str, Any]]:
-    """Load early-access signups from JSONL storage."""
-    if not EARLY_ACCESS_STORAGE_PATH.exists():
-        return []
+def _parse_optional_datetime(value: Optional[str]) -> Optional[datetime]:
+    """Parse an optional ISO timestamp from query params."""
+    if not value:
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    if normalized.endswith("Z"):
+        normalized = normalized[:-1] + "+00:00"
+    parsed = datetime.fromisoformat(normalized)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
-    signups: List[Dict[str, Any]] = []
-    with early_access_lock:
-        with EARLY_ACCESS_STORAGE_PATH.open("r", encoding="utf-8") as file:
-            for line_number, line in enumerate(file, start=1):
-                stripped = line.strip()
-                if not stripped:
-                    continue
-                try:
-                    parsed = json.loads(stripped)
-                    if isinstance(parsed, dict):
-                        signups.append(parsed)
-                except json.JSONDecodeError:
-                    logger.warning(f"Skipping malformed early access signup record at line {line_number}")
-    return signups
+
+def _send_early_access_notification(signup: Dict[str, Any]) -> None:
+    """Send SMTP notification to configured admin mailbox when a signup arrives."""
+    smtp_host = os.getenv("RSP_SMTP_HOST")
+    smtp_port = int(os.getenv("RSP_SMTP_PORT", "587"))
+    smtp_user = os.getenv("RSP_SMTP_USER")
+    smtp_password = os.getenv("RSP_SMTP_PASSWORD")
+    admin_email = os.getenv("RSP_ADMIN_EMAIL")
+    if not smtp_host or not admin_email:
+        logger.info("Skipping early access signup email notification: SMTP host/admin email not configured")
+        return
+
+    sender_email = smtp_user or admin_email
+    message = EmailMessage()
+    message["Subject"] = f"[Red Set] New early-access signup: {signup['email']}"
+    message["From"] = sender_email
+    message["To"] = admin_email
+    message.set_content(
+        "\n".join(
+            [
+                "A new early-access signup has been received.",
+                "",
+                f"Email: {signup['email']}",
+                f"Role: {signup.get('role') or 'unspecified'}",
+                f"Submitted At: {signup['submitted_at']}",
+                f"From: {sender_email}",
+            ]
+        )
+    )
+
+    with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as smtp:
+        smtp.starttls()
+        if smtp_user and smtp_password:
+            smtp.login(smtp_user, smtp_password)
+        smtp.send_message(message)
 
 
 def _resolve_request_user(request: Request) -> Optional[Dict[str, Any]]:
@@ -1013,36 +1061,165 @@ async def export_session_results(session_id: str, format: str = "json", db_path:
 async def submit_early_access(request: EarlyAccessRequest):
     """Public endpoint for early access requests."""
     try:
-        signup = {
-            "submitted_at": datetime.now(timezone.utc).isoformat(),
-            "email": request.email,
-            "role": request.role,
-        }
-        _persist_early_access_signup(signup)
+        submitted_at = datetime.now(timezone.utc)
+        signup = create_signup(
+            email=request.email,
+            role=request.role,
+            submitted_at=submitted_at,
+        )
+        try:
+            _append_early_access_audit("signup_created", signup)
+        except Exception as exc:
+            log_exception_safely("Failed to append early access audit event", exc)
+
+        try:
+            await asyncio.to_thread(_send_early_access_notification, signup)
+        except Exception as exc:
+            log_exception_safely("Failed to send early access notification", exc)
         logger.info("Early access request submitted")
-        return {"message": "Early access request submitted successfully"}
+        return {
+            "message": "Early access request submitted successfully.",
+            "signup_id": signup["id"],
+        }
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     except Exception as e:
         log_exception_safely("Error saving early access request", e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-async def list_early_access_signups(request: Request):
-    """List stored early access requests."""
+async def list_early_access_signups(
+    request: Request,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    role: Optional[str] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    email_query: Optional[str] = Query(default=None),
+    start_date: Optional[str] = Query(default=None),
+    end_date: Optional[str] = Query(default=None),
+):
+    """List stored early-access requests with pagination and filters."""
     try:
         user = _resolve_request_user(request)
         if not user or user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
 
-        signups = _load_early_access_signups()
+        start_dt = _parse_optional_datetime(start_date)
+        end_dt = _parse_optional_datetime(end_date)
+        paged = list_signups(
+            page=page,
+            page_size=page_size,
+            role=role,
+            status=status,
+            email_query=email_query,
+            start_date=start_dt,
+            end_date=end_dt,
+        )
         return {
-            "count": len(signups),
-            "signups": signups,
+            "count": paged["count"],
+            "page": page,
+            "page_size": page_size,
+            "signups": paged["signups"],
             "storage_path": str(EARLY_ACCESS_STORAGE_PATH),
         }
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid date format. Use ISO 8601.")
     except HTTPException:
         raise
     except Exception as e:
         log_exception_safely("Error reading early access requests", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def export_early_access_signups(
+    request: Request,
+    format: str = Query(default="json"),
+    role: Optional[str] = Query(default=None),
+    status: Optional[str] = Query(default=None),
+    email_query: Optional[str] = Query(default=None),
+    start_date: Optional[str] = Query(default=None),
+    end_date: Optional[str] = Query(default=None),
+):
+    """Export early-access signups in JSON or CSV format."""
+    try:
+        user = _resolve_request_user(request)
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+
+        start_dt = _parse_optional_datetime(start_date)
+        end_dt = _parse_optional_datetime(end_date)
+        signups = list_all_signups(
+            role=role,
+            status=status,
+            email_query=email_query,
+            start_date=start_dt,
+            end_date=end_dt,
+        )
+        normalized = format.strip().lower()
+        if normalized == "json":
+            return {"count": len(signups), "signups": signups}
+        if normalized != "csv":
+            raise HTTPException(status_code=400, detail="format must be csv or json")
+
+        buffer = io.StringIO()
+        fieldnames = ["id", "email", "role", "status", "submitted_at", "verified_at", "created_at", "updated_at"]
+        writer = csv.DictWriter(buffer, fieldnames=fieldnames)
+        writer.writeheader()
+        for signup in signups:
+            writer.writerow({name: signup.get(name) for name in fieldnames})
+        return Response(
+            content=buffer.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=early_access_signups.csv"},
+        )
+    except ValueError:
+        raise HTTPException(status_code=422, detail="Invalid date format. Use ISO 8601.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_exception_safely("Error exporting early access requests", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def delete_early_access_signup(request: Request, signup_id: int):
+    """Delete an early-access signup record."""
+    try:
+        user = _resolve_request_user(request)
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        deleted = delete_signup(signup_id)
+        try:
+            _append_early_access_audit("signup_deleted", deleted)
+        except Exception as exc:
+            log_exception_safely("Failed to append early access delete audit event", exc)
+        return {"deleted": True, "signup": deleted}
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Signup not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_exception_safely("Error deleting early access request", e)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+async def verify_early_access_signup(request: Request, signup_id: int):
+    """Mark an early-access signup record as verified/contacted."""
+    try:
+        user = _resolve_request_user(request)
+        if not user or user.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Admin access required")
+        verified = verify_signup(signup_id)
+        try:
+            _append_early_access_audit("signup_verified", verified)
+        except Exception as exc:
+            log_exception_safely("Failed to append early access verify audit event", exc)
+        return {"verified": True, "signup": verified}
+    except LookupError:
+        raise HTTPException(status_code=404, detail="Signup not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_exception_safely("Error verifying early access request", e)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

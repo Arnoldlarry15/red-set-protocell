@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, Shield, GitPullRequest, LogOut } from 'lucide-react';
+import { Home, Shield, GitPullRequest, LogOut, Mail } from 'lucide-react';
 import { User } from '../types';
 
 interface NavigationProps {
@@ -43,6 +43,17 @@ const Navigation: React.FC<NavigationProps> = ({ user, onLogout }) => {
           >
             <Shield size={20} />
             <span>Admin</span>
+          </button>
+        )}
+
+        {user && user.role === 'admin' && (
+          <button
+            className={`nav-link ${isActive('/admin/early-access') ? 'active' : ''}`}
+            onClick={() => navigate('/admin/early-access')}
+            aria-label="Early Access Admin"
+          >
+            <Mail size={20} />
+            <span>Early Access</span>
           </button>
         )}
 
